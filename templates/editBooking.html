@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Booking</title>
+</head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f4f7fb;
+        }
+
+        .edit-card {
+            border: none;
+            border-radius: 18px;
+            overflow: hidden;
+        }
+
+        .edit-header {
+            background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+            padding: 18px 24px;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        .btn {
+            border-radius: 10px;
+            padding: 10px 18px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container py-5">
+    <div class="card shadow-lg edit-card">
+        <div class="card-header edit-header text-white d-flex justify-content-between align-items-center">
+            <a href="/" class="btn btn-light btn-sm px-3">← Back</a>
+            <h4 class="mb-0">Edit Booking</h4>
+        </div>
+
+        <div class="card-body p-4">
+            <form action="/update/{{ booking.id }}" method="POST">
+
+                <div class="mb-3">
+                    <label class="form-label">Swimmer Name</label>
+                    <input type="text" name="student" class="form-control" value="{{ booking.student }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Date</label>
+                    <input type="date" name="date" class="form-control" value="{{ booking.start_date }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Package</label>
+
+                    <select name="package" id="packageSelect" class="form-select">
+                        <option value="Single" {% if booking.package == 'Single' %}selected{% endif %}>Single</option>
+                        <option value="Monthly" {% if booking.package == 'Monthly' %}selected{% endif %}>Monthly</option>
+                        <option value="Custom" {% if booking.package == 'Custom' %}selected{% endif %}>Custom</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Time</label>
+                    <select name="time" class="form-select">
+                        {% for hour in range(6, 22) %}
+                            {% for minute in [0, 30] %}
+                                {% if not (hour == 21 and minute == 30) %}
+                                    {% set display_hour = hour % 12 if hour % 12 != 0 else 12 %}
+                                    {% set ampm = 'PM' if hour >= 12 else 'AM' %}
+                                    {% set formatted = '%02d:%02d %s' % (display_hour, minute, ampm) %}
+
+                                    <option value="{{ formatted }}"
+                                        {% if booking.time == formatted %}selected{% endif %}>
+                                        {{ formatted }}
+                                    </option>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Select Class Days</label>
+
+                    {% set selected_days = booking.selected_days.split(',') if booking.selected_days else [] %}
+
+                    <div class="d-flex flex-wrap gap-3 mt-2">
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="selected_days" value="Monday"
+                                {% if 'Monday' in selected_days %}checked{% endif %}>
+                            <label class="form-check-label">Mon</label>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="selected_days" value="Tuesday"
+                                {% if 'Tuesday' in selected_days %}checked{% endif %}>
+                            <label class="form-check-label">Tue</label>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="selected_days" value="Wednesday"
+                                {% if 'Wednesday' in selected_days %}checked{% endif %}>
+                            <label class="form-check-label">Wed</label>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="selected_days" value="Thursday"
+                                {% if 'Thursday' in selected_days %}checked{% endif %}>
+                            <label class="form-check-label">Thu</label>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="selected_days" value="Friday"
+                                {% if 'Friday' in selected_days %}checked{% endif %}>
+                            <label class="form-check-label">Fri</label>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="selected_days" value="Saturday"
+                                {% if 'Saturday' in selected_days %}checked{% endif %}>
+                            <label class="form-check-label">Sat</label>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="selected_days" value="Sunday"
+                                {% if 'Sunday' in selected_days %}checked{% endif %}>
+                            <label class="form-check-label">Sun</label>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="mb-3" id="endDateContainer">
+                    <label class="form-label">End Date</label>
+                    <input type="date" name="end_date" class="form-control" value="{{ booking.end_date or '' }}">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Location</label>
+                    <input
+                        type="text"
+                        name="location"
+                        class="form-control"
+                        value="{{ booking.location or '' }}"
+                        placeholder="Enter swimming pool location"
+                    >
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">No of Persons</label>
+
+                        <input
+                            type="number"
+                            name="persons"
+                            id="personsInput"
+                            class="form-control"
+                            min="1"
+                            value="{{ booking.persons or 1 }}"
+                        >
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Payment Status</label>
+
+                        <select name="payment_status" class="form-select">
+                            <option value="Not Paid" {% if booking.status == 'Not Paid' %}selected{% endif %}>Not Paid</option>
+                            <option value="Paid" {% if booking.status == 'Paid' %}selected{% endif %}>Paid</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Fee</label>
+
+                        <input
+                            type="number"
+                            name="fee"
+                            id="feeInput"
+                            class="form-control"
+                            value="{{ booking.fee }}"
+                        >
+                    </div>
+
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="/" class="btn btn-outline-secondary px-4">Cancel</a>
+                    <button type="submit" class="btn btn-success px-4">Update Booking</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+const pkg = document.getElementById('packageSelect');
+const endDateContainer = document.getElementById('endDateContainer');
+const startDateInput = document.querySelector('input[name="date"]');
+const endDateInput = document.querySelector('input[name="end_date"]');
+const dayCheckboxes = document.querySelectorAll('input[name="selected_days"]');
+
+function updateEditBookingRules() {
+
+    if (!pkg || !startDateInput) return;
+
+    const selectedDate = new Date(startDateInput.value);
+
+    const days = [
+        'Sunday',
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday'
+    ];
+
+    const allowedDay = days[selectedDate.getDay()];
+
+    // SINGLE PACKAGE
+    if (pkg.value === 'Single') {
+
+        dayCheckboxes.forEach(cb => {
+            cb.checked = false;
+
+            if (cb.value === allowedDay) {
+                cb.disabled = false;
+                cb.checked = true;
+            } else {
+                cb.disabled = true;
+            }
+        });
+
+        if (endDateContainer) {
+            endDateContainer.style.display = 'none';
+        }
+    }
+
+    // MONTHLY + CUSTOM
+    else {
+
+        dayCheckboxes.forEach(cb => {
+            cb.disabled = false;
+        });
+
+        if (endDateContainer) {
+            endDateContainer.style.display = 'block';
+        }
+
+        // MONTHLY AUTO END DATE
+        if (pkg.value === 'Monthly') {
+
+            const autoEndDate = new Date(selectedDate);
+
+            autoEndDate.setMonth(autoEndDate.getMonth() + 1);
+            autoEndDate.setDate(autoEndDate.getDate() - 1);
+
+            const yyyy = autoEndDate.getFullYear();
+            const mm = String(autoEndDate.getMonth() + 1).padStart(2, '0');
+            const dd = String(autoEndDate.getDate()).padStart(2, '0');
+
+            if (endDateInput) {
+                endDateInput.value = `${yyyy}-${mm}-${dd}`;
+            }
+        }
+    }
+}
+
+function validateSelectedDaysLimit() {
+
+    const checked = [...dayCheckboxes].filter(cb => cb.checked);
+
+    // MONTHLY => max 3 days
+    if (pkg.value === 'Monthly' && checked.length > 3) {
+
+        alert('Monthly package allows maximum 3 class days');
+
+        checked[checked.length - 1].checked = false;
+    }
+}
+
+if (pkg) {
+    pkg.addEventListener('change', updateEditBookingRules);
+}
+
+if (startDateInput) {
+    startDateInput.addEventListener('change', updateEditBookingRules);
+}
+
+if (dayCheckboxes.length > 0) {
+    dayCheckboxes.forEach(cb => {
+        cb.addEventListener('change', validateSelectedDaysLimit);
+    });
+}
+
+updateEditBookingRules();
+</script>
+
+</body>
+</html>

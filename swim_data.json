@@ -1,0 +1,154 @@
+{
+    "students": [
+        {
+            "name": "Avantika",
+            "owner_name": "Divya",
+            "owner_phone": "9999999999"
+        },
+        {
+            "name": "Vihan",
+            "owner_name": "Sreekanth",
+            "owner_phone": "8888888888"
+        },
+        {
+            "name": "Havish",
+            "owner_name": "Pragathi",
+            "owner_phone": "7777777777"
+        },
+        {
+            "name": "A",
+            "owner_name": "Malavika",
+            "owner_phone": "6666666666"
+        },
+        {
+            "name": "B",
+            "owner_name": "Malavika",
+            "owner_phone": "6666666666"
+        },
+        {
+            "name": "C",
+            "owner_name": "Malavika",
+            "owner_phone": "6666666666"
+        },
+        {
+            "name": "Gayatri",
+            "owner_name": "Harsha",
+            "owner_phone": "5555555555"
+        }
+    ],
+    "bookings": [
+        {
+            "id": "cb215d0b8757bb308c96d50e06a2d474",
+            "student": "Avantika",
+            "created_by": "Divya",
+            "start_date": "2026-05-19",
+            "end_date": "2026-06-18",
+            "package": "Custom",
+            "selected_days": "Thursday, Saturday, Sunday",
+            "location": "Appasani's Farm House, Kokapet",
+            "time": "06:00 AM",
+            "fee": 9000,
+            "status": "Paid",
+            "owner_name": "Divya",
+            "owner_phone": "9999999999"
+        },
+        {
+            "id": "3025253a4fab4d9d8c0f2f1e34a08242",
+            "student": "Vihan",
+            "created_by": "Sreekanth",
+            "start_date": "2026-05-22",
+            "end_date": "2026-06-21",
+            "package": "Monthly",
+            "selected_days": "Monday",
+            "location": "Niharika Signature, Indira nagar",
+            "time": "06:30 AM",
+            "fee": 7000,
+            "status": "Paid",
+            "owner_name": "Sreekanth",
+            "owner_phone": "8888888888",
+            "persons": "1"
+        },
+        {
+            "id": "96b1063114c4cd59e1101f2b2ee12bd9",
+            "student": "Havish",
+            "created_by": "Pragathi",
+            "start_date": "2026-06-04",
+            "end_date": "2026-07-03",
+            "package": "Monthly",
+            "selected_days": "Monday, Tuesday, Wednesday",
+            "location": "Niharika signatures, Indira nagar",
+            "time": "07:30 AM",
+            "fee": 6500,
+            "status": "Paid",
+            "owner_name": "Pragathi",
+            "owner_phone": "7777777777"
+        },
+        {
+            "id": "55bb96f040de40da547a361dcb6e398e",
+            "student": "A",
+            "created_by": "Malavika",
+            "start_date": "2026-05-12",
+            "end_date": "2026-06-11",
+            "package": "Monthly",
+            "selected_days": "Monday",
+            "location": "Whisper Valley, Raidhurg",
+            "time": "07:30 AM",
+            "fee": 9000,
+            "status": "Paid",
+            "payment_request": "paid",
+            "owner_name": "Malavika",
+            "owner_phone": "6666666666",
+            "persons": 1
+        },
+        {
+            "id": "9fd4680d0c888f726a81fbcfc3c5946c",
+            "student": "B",
+            "created_by": "Malavika",
+            "start_date": "2026-05-12",
+            "end_date": "2026-06-11",
+            "package": "Monthly",
+            "selected_days": "Monday",
+            "location": "",
+            "time": "07:30 AM",
+            "fee": 9000,
+            "status": "Not Paid",
+            "payment_request": "Not Paid",
+            "owner_name": "Malavika",
+            "owner_phone": "6666666666",
+            "persons": "1"
+        },
+        {
+            "id": "b481a1100fc60102d98863987c0b8e3f",
+            "student": "C",
+            "created_by": "Malavika",
+            "start_date": "2026-05-12",
+            "end_date": "2026-06-11",
+            "package": "Monthly",
+            "selected_days": "Monday",
+            "location": "Wishper Valley, Raidhurg",
+            "persons": "1",
+            "time": "07:30 AM",
+            "fee": 21600,
+            "status": "Paid",
+            "owner_name": "Malavika",
+            "owner_phone": "6666666666"
+        },
+        {
+            "id": "900a11f51f7e977ca032d13152f75e37",
+            "student": "Gayatri",
+            "created_by": "Harsha",
+            "start_date": "2026-05-09",
+            "end_date": "",
+            "package": "Single",
+            "selected_days": "Saturday",
+            "location": "",
+            "persons": "1",
+            "time": "10:30 AM",
+            "fee": 750,
+            "status": "Not Paid",
+            "payment_request": "Not Paid",
+            "owner_name": "Harsha",
+            "owner_phone": "5555555555"
+        }
+    ]
+}
