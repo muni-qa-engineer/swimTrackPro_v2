@@ -5,79 +5,262 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <title>SwimTrack Login</title>
     <style>
-        body { background: linear-gradient(135deg, #6fb1fc, #4364f7); height: 100vh; display: flex; align-items: center; }
-        .login-card { border-radius: 20px; padding: 2rem; background: white; width: 100%; max-width: 400px; margin: auto; }
-        input::placeholder {
-            color: rgba(107, 114, 128, 0.45) !important;
-            opacity: 1 !important;
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background:
+                linear-gradient(rgba(255,255,255,0.38), rgba(255,255,255,0.38)),
+                url("{{ url_for('static', filename='images/swim-login-bg.webp') }}") center center / cover no-repeat;
+            background-size: cover;
+            background-position: center;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 460px;
+            background: rgba(255,255,255,0.82);
+            border-radius: 26px;
+            padding: 34px 30px;
+            box-shadow: 0 10px 35px rgba(0,0,0,0.10);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.40);
+            margin: auto;
+        }
+
+        .logo-icon {
+            font-size: 34px;
+            text-align: center;
+            color: #2563eb;
+            margin-bottom: 2px;
+        }
+
+        .login-title {
+            text-align: center;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #2563eb;
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .login-subtitle {
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.98rem;
+            margin-bottom: 24px;
             font-weight: 400;
+        }
+        .selectRole {
+            display: flex;
+            width: 100%;
+            gap: 12px;
+            margin: 0 0 24px 0;
+        }
+
+        .form-label {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .input-group {
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid rgba(209,213,219,0.80);
+            background: rgba(255,255,255,0.92);
+        }
+
+        .form-control,
+        .input-group-text {
+            height: 52px;
+            border: none !important;
+            font-size: 0.95rem;
+            background: transparent;
+        }
+
+        .input-group-text {
+            padding: 0 18px;
+            color: #9ca3af;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .form-control {
-            color: #1f2937;
+            padding-left: 6px;
+            color: #111827;
+            box-shadow: none !important;
+        }
+
+        .form-control:focus {
+            box-shadow: none;
+            border-color: #2563eb;
+        }
+
+        input::placeholder {
+            color: rgba(107, 114, 128, 0.55) !important;
+            opacity: 1;
+        }
+
+        .login-btn {
+            width: 100%;
+            height: 54px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(90deg, #2563eb, #1d4ed8);
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-top: 4px;
+            transition: 0.2s ease;
+            box-shadow: 0 6px 18px rgba(37,99,235,0.18);
+        }
+
+        .login-btn:hover {
+            transform: translateY(-1px);
+            opacity: 0.95;
+        }
+
+        .divider {
+            display: flex;
+            justify-content: center;
+            /* align-items: center; */
+            gap: 8px;
+            margin: 10px 0;
+            color: #6b7280;
+            font-weight: 500;
+            font-size: 0.90rem;
+        }
+
+        .mode-btn {
+            width: 100%;
+            height: 48px;
+            border-radius: 14px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            border: 2px solid #2563eb;
+            background: rgba(255,255,255,0.90);
+            color: #2563eb;
+            transition: 0.2s ease;
+            margin-top: 0;
+        }
+
+        .mode-btn:hover {
+            background: #eff6ff;
         }
         .active-mode {
-            background-color: #0d6efd !important;
+            background: linear-gradient(90deg, #2563eb, #1d4ed8) !important;
             color: white !important;
-            border: none;
+            border-color: #2563eb !important;
         }
-        .mode-btn {
-            border-radius: 12px;
-            font-weight: 600;
-            padding: 10px 0;
+
+        .top-mode-switch {
+            display: flex;
+        }
+
+        .footer-text {
+            text-align: center;
+            margin-top: 14px;
+            color: #6b7280;
+            font-size: 0.82rem;
+        }
+
+        @media (max-width: 768px) {
+            .login-card {
+                max-width: 100%;
+                padding: 28px 22px;
+                border-radius: 22px;
+            }
+
+            .login-title {
+                font-size: 1.9rem;
+            }
+
+            .top-mode-switch {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="login-card shadow">
-            <h3 class="text-center mb-4">🏊‍♂️ SwimTrack Pro</h3>
-            <div class="d-flex gap-2 mb-4">
-                <button type="button" id="guestBtn" class="btn btn-outline-primary flex-fill mode-btn active-mode">
+            <div class="logo-icon">🏊</div>
+            <h1 class="login-title">Learn Swimming</h1>
+            <p class="login-subtitle">Please sign in to continue</p>
+            <div class="selectRole">
+                <button type="button"
+                        id="guestBtn"
+                        class="btn btn-outline-primary flex-fill mode-btn active-mode">
                     Guest
                 </button>
 
-                <button type="button" id="adminBtn" class="btn btn-outline-dark flex-fill mode-btn">
+                <button type="button"
+                        id="adminBtn"
+                        class="btn btn-outline-dark flex-fill mode-btn">
                     Admin
                 </button>
             </div>
-
             <form action="/login" method="post" id="loginForm">
                 <input type="hidden" name="role" id="roleInput" value="guest">
 
-                <div class="mb-3">
-                    <input type="text" name="name" class="form-control form-control-lg" placeholder="Enter your name" required>
+                <div class="mb-4 mt-2">
+                    <label class="form-label">Username</label>
+                    <div class="input-group">
+                        <span class="input-group-text">👤</span>
+                        <input type="text" name="name" class="form-control" placeholder="Enter username" required>
+                    </div>
                 </div>
 
-                <div class="mb-3 d-none" id="passwordField">
-                    <input
-                        type="password"
-                        name="password"
-                        id="passwordInput"
-                        class="form-control form-control-lg"
-                        placeholder="Enter admin password"
-                    >
+                <div class="mb-4 d-none" id="passwordField">
+                    <label class="form-label">Mobile Number</label>
+
+                    <div class="input-group">
+                        <span class="input-group-text">📞</span>
+
+                        <input
+                            type="tel"
+                            name="password"
+                            id="passwordInput"
+                            class="form-control"
+                            placeholder="Enter mobile number"
+                        >
+<!-- 
+                        <span class="input-group-text">👁️</span> -->
+                    </div>
                 </div>
 
-                <div class="mb-3" id="phoneField">
-                    <!-- <label class="form-label fw-semibold mb-2">Phone Number</label> -->
+                <div class="mb-4" id="phoneField">
+                    <label class="form-label">Mobile Number</label>
 
-                    <div class="input-group input-group-lg">
-                        <span class="input-group-text bg-white border-end-0">
-                            🇮🇳 +91
-                        </span>
+                    <div class="input-group">
+                        <span class="input-group-text">📞</span>
 
                         <input
                             type="tel"
                             id="phoneInput"
                             name="phone"
-                            class="form-control border-start-0"
-                            placeholder="Enter 10-digit number"
+                            class="form-control"
+                            placeholder="Enter mobile number"
                             maxlength="10"
                             pattern="[0-9]{10}"
                             inputmode="numeric"
                             required
                         >
+
+                        <!-- <span class="input-group-text">👁️</span> -->
                     </div>
 
                     <small id="phoneError" class="text-danger d-none">
@@ -85,7 +268,23 @@
                     </small>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100 btn-lg">Login</button>
+                <button type="submit" class="login-btn">
+                    Login as Guest
+                </button>
+
+                <!-- <div class="divider" style="display: flex; justify-content: center;">or</div> -->
+                <!-- <div class="divider">or</div> -->
+
+                <!-- <button type="button"
+                        id="adminBtn"
+                        class="btn btn-outline-dark flex-fill mode-btn"
+                        style="margin-top:2px;">
+                    Continue as Admin
+                </button> -->
+
+                <div class="footer-text">
+                    © 2025 Swim School. All rights reserved.
+                </div>
             </form>
         </div>
     </div>
@@ -100,10 +299,35 @@
     const passwordField = document.getElementById('passwordField');
     const passwordInput = document.getElementById('passwordInput');
 
+
+    function activateAdminMode() {
+        roleInput.value = 'admin';
+
+        adminBtn.classList.add('active-mode');
+
+        if (guestBtn) {
+            guestBtn.classList.remove('active-mode');
+        }
+
+        phoneField.classList.add('d-none');
+        passwordField.classList.remove('d-none');
+
+        phoneInput.required = false;
+        passwordInput.required = true;
+
+        const loginButton = document.querySelector('.login-btn');
+        if (loginButton) {
+            loginButton.textContent = 'Login as Admin';
+        }
+    }
+
     function activateGuestMode() {
         roleInput.value = 'guest';
 
-        guestBtn.classList.add('active-mode');
+        if (guestBtn) {
+            guestBtn.classList.add('active-mode');
+        }
+
         adminBtn.classList.remove('active-mode');
 
         phoneField.classList.remove('d-none');
@@ -111,27 +335,19 @@
 
         phoneInput.required = true;
         passwordInput.required = false;
-    }
 
-    function activateAdminMode() {
-        roleInput.value = 'admin';
-
-        adminBtn.classList.add('active-mode');
-        guestBtn.classList.remove('active-mode');
-
-        phoneField.classList.add('d-none');
-        passwordField.classList.remove('d-none');
-
-        phoneInput.required = false;
-        passwordInput.required = true;
-    }
-
-    if (guestBtn) {
-        guestBtn.addEventListener('click', activateGuestMode);
+        const loginButton = document.querySelector('.login-btn');
+        if (loginButton) {
+            loginButton.textContent = 'Login as Guest';
+        }
     }
 
     if (adminBtn) {
         adminBtn.addEventListener('click', activateAdminMode);
+    }
+
+    if (guestBtn) {
+        guestBtn.addEventListener('click', activateGuestMode);
     }
 
     if (phoneInput) {
