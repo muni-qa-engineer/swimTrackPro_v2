@@ -16,11 +16,16 @@
             align-items: center;
             justify-content: center;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background:
+            /* background:
                 linear-gradient(rgba(255,255,255,0.38), rgba(255,255,255,0.38)),
-                url("{{ url_for('static', filename='images/swim-login-bg.webp') }}") center center / cover no-repeat;
+                url("{{ url_for('static', filename='images/swim-login-bg.jpg') }}") center center / cover no-repeat;
             background-size: cover;
+            background-position: center; */
+            background-image: linear-gradient(rgba(255,255,255,0.38), rgba(255,255,255,0.38)), url("../static/images/myswimpro-butterfly-login.jpg");
+            background-repeat: no-repeat; /* Prevents tiling */
+            background-size: cover;      /* Scales image to fill container */
             background-position: center;
+            /* opacity: 0.5;  */
             overflow: hidden;
             padding: 20px;
         }
@@ -283,7 +288,7 @@
                 </button> -->
 
                 <div class="footer-text">
-                    © 2025 Swim School. All rights reserved.
+                    © 2026 Swimming Summer Camp. All rights reserved.
                 </div>
             </form>
         </div>

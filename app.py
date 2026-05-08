@@ -4,15 +4,13 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
-app.secret_key = "swimtrack_secret_key" # Change this for production
+from config import ADMIN_USERNAME, ADMIN_PASSWORD, SECRET_KEY
+app.secret_key = SECRET_KEY
 
 # --- CONFIG & PERSISTENCE ---
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / 'database' / 'swim_data.db'
 DATA_FILE = "swim_data.json"  # Backup only
-
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "admin123"
 
 def generate_booking_id(student, start_date, time_str):
     return hashlib.md5(f"{student}{start_date}{time_str}".encode()).hexdigest()
@@ -191,7 +189,8 @@ def login():
     # ADMIN LOGIN
     if role == 'admin':
 
-        if name == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        # if name == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        if name.lower() == ADMIN_USERNAME.lower() and password == ADMIN_PASSWORD:
             session['user_name'] = 'Admin'
             session['role'] = 'admin'
             return redirect(url_for('index'))
