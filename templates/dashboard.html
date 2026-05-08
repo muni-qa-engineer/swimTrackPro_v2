@@ -149,7 +149,9 @@
     <button id="tabCalendar" class="btn btn-outline-primary">
       📅 Monthly Calendar
     </button>
+    {% if role != 'admin' %}
     <button id="tabBook" class="btn btn-outline-primary">📝 Book a Slot</button>
+    {% endif %}
     <button id="tabBookings" class="btn btn-outline-primary active">
       📋 My Bookings
     </button>
@@ -335,6 +337,7 @@
   </div>
 </div>
 
+{% if role != 'admin' %}
 <div id="bookSlotSection" class="row gx-4 gy-3 px-2 mt-2" style="display:none;">
     <div class="col-md-4 pe-md-3">
         <!-- Swimmer Panel -->
@@ -521,6 +524,7 @@
         </div>
     </div>
 </div>
+{% endif %}
 <script>
 function formatDate(dateObj) {
   const yyyy = dateObj.getFullYear();
@@ -878,11 +882,15 @@ const studentSelect = document.getElementById('studentSelect');
 
 function showBookings() {
   bookingsSection.style.display = 'block';
-  bookSlotSection.style.display = 'none';
+  if (bookSlotSection) {
+    bookSlotSection.style.display = 'none';
+  }
   calendarSection.style.display = 'none';
 
   tabBookings.classList.add('active');
-  tabBook.classList.remove('active');
+  if (tabBook) {
+    tabBook.classList.remove('active');
+  }
   tabCalendar.classList.remove('active');
 
   localStorage.setItem('activeTab', 'bookings');
@@ -890,10 +898,14 @@ function showBookings() {
 
 function showBookSlot() {
   bookingsSection.style.display = 'none';
-  bookSlotSection.style.display = 'flex';
+  if (bookSlotSection) {
+    bookSlotSection.style.display = 'flex';
+  }
   calendarSection.style.display = 'none';
 
-  tabBook.classList.add('active');
+  if (tabBook) {
+    tabBook.classList.add('active');
+  }
   tabBookings.classList.remove('active');
   tabCalendar.classList.remove('active');
 
@@ -902,12 +914,16 @@ function showBookSlot() {
 
 function showCalendar() {
   bookingsSection.style.display = 'none';
-  bookSlotSection.style.display = 'none';
+  if (bookSlotSection) {
+    bookSlotSection.style.display = 'none';
+  }
   calendarSection.style.display = 'block';
 
   tabCalendar.classList.add('active');
   tabBookings.classList.remove('active');
-  tabBook.classList.remove('active');
+  if (tabBook) {
+    tabBook.classList.remove('active');
+  }
 
   localStorage.setItem('activeTab', 'calendar');
 
@@ -1011,13 +1027,17 @@ function activateSwimmer(name) {
   localStorage.setItem('activeSwimmer', name);
 }
 
-if (tabBookings && tabBook && tabCalendar) {
+if (tabBookings && tabCalendar) {
   tabBookings.addEventListener('click', showBookings);
-  tabBook.addEventListener('click', showBookSlot);
   tabCalendar.addEventListener('click', showCalendar);
 
+  if (tabBook) {
+    tabBook.addEventListener('click', showBookSlot);
+  }
+
   const savedTab = localStorage.getItem('activeTab');
-  if (savedTab === 'book_slot') {
+
+  if (savedTab === 'book_slot' && tabBook) {
     showBookSlot();
   }
   else if (savedTab === 'calendar') {

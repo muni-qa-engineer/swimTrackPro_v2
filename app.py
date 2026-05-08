@@ -239,6 +239,9 @@ def login():
 
 @app.route('/add_swimmer', methods=['POST'])
 def add_swimmer():
+    if session.get('role') == 'admin':
+        flash('Admin cannot add swimmers directly')
+        return redirect(url_for('index'))
     data = load_data()
 
     name = (request.form.get('name') or '').strip()
@@ -322,6 +325,9 @@ def delete_swimmer(name):
 
 @app.route('/book', methods=['POST'])
 def book():
+    if session.get('role') == 'admin':
+        flash('Admin cannot create bookings directly')
+        return redirect(url_for('index'))
     data = load_data()
     # Enhanced validation and logic for booking
     student = request.form['student']
@@ -565,8 +571,11 @@ def delete_booking(booking_id):
     deleted_student = deleted_booking.get('student')
 
     # Check if swimmer still has remaining bookings
+    # Use deleted booking owner details instead of current session
     has_remaining_bookings = any(
-        b.get('student') == deleted_student
+        b.get('student', '').strip() == deleted_student.strip()
+        and b.get('owner_name') == deleted_booking.get('owner_name')
+        and b.get('owner_phone') == deleted_booking.get('owner_phone')
         for b in data['bookings']
     )
 
@@ -577,8 +586,8 @@ def delete_booking(booking_id):
             if not (
                 isinstance(s, dict)
                 and s.get('name') == deleted_student
-                and s.get('owner_name') == session.get('user_name')
-                and s.get('owner_phone') == session.get('phone')
+                and s.get('owner_name') == deleted_booking.get('owner_name')
+                and s.get('owner_phone') == deleted_booking.get('owner_phone')
             )
         ]
 
@@ -593,16 +602,15 @@ def delete_booking(booking_id):
 
     # Remove swimmer if no remaining bookings exist
     if not has_remaining_bookings:
-
         cursor.execute('''
         DELETE FROM students
-        WHERE student_name = ?
+        WHERE TRIM(student_name) = TRIM(?)
         AND owner_name = ?
         AND owner_phone = ?
         ''', (
             deleted_student,
-            session.get('user_name'),
-            session.get('phone')
+            deleted_booking.get('owner_name'),
+            deleted_booking.get('owner_phone')
         ))
 
     conn.commit()
