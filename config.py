@@ -1,3 +1,6 @@
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "91335"
-SECRET_KEY = "swimtrack_secret_key"
+import os
+
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+SECRET_KEY = os.getenv("SECRET_KEY")
+DATABASE_URL = os.getenv("DATABASE_URL")

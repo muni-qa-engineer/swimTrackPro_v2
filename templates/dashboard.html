@@ -129,6 +129,27 @@
     border-radius: 10px;
   }
 
+  .calendar-booking {
+    font-size: 11px;
+    padding: 5px 7px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    background: #dbeafe;
+    color: #1e3a8a;
+    font-weight: 500;
+    border: 1px solid #bfdbfe;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .past-session {
+    opacity: 0.45;
+    filter: grayscale(35%);
+    text-decoration: line-through;
+  }
+
   .ml-6 {
     margin-left: 6px;
   }
@@ -214,13 +235,17 @@
                             <div class="mb-3 small">
                                 <div class="d-flex justify-content-between mb-2">
                                     <span class="text-muted">📅 Start Date</span>
-                                    <span class="fw-semibold">{{ b.start_date }}</span>
+                                    <span class="fw-semibold">
+                                      {{ b.start_date[8:10] }}/{{ b.start_date[5:7] }}/{{ b.start_date[0:4] }}
+                                    </span>
                                 </div>
 
                                 {% if b.end_date %}
                                 <div class="d-flex justify-content-between mb-2">
                                     <span class="text-muted">🗓 End Date</span>
-                                    <span class="fw-semibold">{{ b.end_date }}</span>
+                                    <span class="fw-semibold">
+                                      {{ b.end_date[8:10] }}/{{ b.end_date[5:7] }}/{{ b.end_date[0:4] }}
+                                    </span>
                                 </div>
                                 {% endif %}
 
@@ -963,14 +988,9 @@ function renderCalendar() {
     const isPastDay = isPastDate(currentDate);
 
     const dayBookings = bookings.filter(b => {
-      if (!b.start_date) return false;
-
-      const bookingDate = new Date(b.start_date);
-
-      return bookingDate.toISOString().split('T')[0] === fullDate;
+      const recurringDates = b.calendar_dates || [];
+      return recurringDates.includes(fullDate);
     });
-
-    const swimmers = dayBookings.map(b => b.student).join(', ');
 
     const card = document.createElement('div');
     card.className = 'col-md-2 col-sm-3 col-6';
@@ -983,17 +1003,50 @@ function renderCalendar() {
           <div class="small fw-semibold text-secondary">${dayName}</div>
         </div>
 
-        ${dayBookings.length > 0
-          ? `<div class="small text-dark">
-              👥 ${dayBookings.length} Booking(s)<br>
-              ${swimmers}
-            </div>`
-          : `<div class="small text-muted">No Bookings</div>`
-        }
+        <div class="calendar-events"></div>
       </div>
     `;
 
     calendarGrid.appendChild(card);
+
+    const eventsContainer = card.querySelector('.calendar-events');
+
+    if (dayBookings.length === 0) {
+      eventsContainer.innerHTML = '<div class="small text-muted">No Bookings</div>';
+      continue;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const eventDate = new Date(fullDate);
+    eventDate.setHours(0, 0, 0, 0);
+
+    const isPastSession = eventDate < today;
+
+    dayBookings.forEach(booking => {
+
+      const bookingDiv = document.createElement('div');
+      bookingDiv.className = 'calendar-booking';
+
+      if (isPastSession) {
+        bookingDiv.classList.add('past-session');
+      }
+
+      bookingDiv.innerHTML = `🏊 ${booking.student} • ⏰ ${booking.time || 'N/A'}`;
+
+      const existingEvents = eventsContainer.querySelectorAll('.calendar-booking');
+
+      const duplicateExists = Array.from(existingEvents).some(el => {
+        return el.innerText.trim() === bookingDiv.innerText.trim();
+      });
+
+      if (duplicateExists) {
+        return;
+      }
+
+      eventsContainer.appendChild(bookingDiv);
+    });
   }
 }
 

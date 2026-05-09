@@ -1,10 +1,11 @@
 import os, json, hashlib, sqlite3
+import psycopg2
 from pathlib import Path
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
-from config import ADMIN_USERNAME, ADMIN_PASSWORD, SECRET_KEY
+from config import ADMIN_USERNAME, ADMIN_PASSWORD, SECRET_KEY, DATABASE_URL
 app.secret_key = SECRET_KEY
 
 # --- CONFIG & PERSISTENCE ---
@@ -12,20 +13,77 @@ BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / 'database' / 'swim_data.db'
 DATA_FILE = "swim_data.json"  # Backup only
 
+
 def generate_booking_id(student, start_date, time_str):
     return hashlib.md5(f"{student}{start_date}{time_str}".encode()).hexdigest()
 
 
+# --- Recurring Booking Engine ---
+def parse_selected_days(days_string):
+    if not days_string:
+        return []
+
+    return [d.strip()[:3].lower() for d in days_string.split(',') if d.strip()]
+
+
+def generate_recurring_dates(start_date_str, end_date_str, selected_days):
+    generated_dates = []
+
+    try:
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+    except:
+        return generated_dates
+
+    weekday_map = {
+        'mon': 0,
+        'tue': 1,
+        'wed': 2,
+        'thu': 3,
+        'fri': 4,
+        'sat': 5,
+        'sun': 6
+    }
+
+    valid_days = {
+        weekday_map[d]
+        for d in parse_selected_days(selected_days)
+        if d in weekday_map
+    }
+
+    current = start_date
+
+    while current <= end_date:
+
+        # Single package fallback
+        if not valid_days:
+            generated_dates.append(current.strftime('%Y-%m-%d'))
+            break
+
+        if current.weekday() in valid_days:
+            generated_dates.append(current.strftime('%Y-%m-%d'))
+
+        current += timedelta(days=1)
+
+    return generated_dates
+
+
 # --- SQLite Persistence Layer ---
+
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
 
 
+def get_pg_connection():
+    return psycopg2.connect(DATABASE_URL)
+
+
 def load_data():
-    conn = get_db_connection()
+    conn = get_pg_connection()
     cursor = conn.cursor()
+    columns = [desc[0] for desc in cursor.description] if cursor.description else []
 
     # Load students
     cursor.execute('SELECT * FROM students')
@@ -35,9 +93,9 @@ def load_data():
 
     for s in student_rows:
         students.append({
-            'name': s['student_name'],
-            'owner_name': s['owner_name'],
-            'owner_phone': s['owner_phone']
+            'name': s[1],
+            'owner_name': s[2],
+            'owner_phone': s[3]
         })
 
     # Load bookings
@@ -48,21 +106,26 @@ def load_data():
 
     for b in booking_rows:
         bookings.append({
-            'id': b['id'],
-            'student': b['student_name'],
-            'created_by': b['created_by'],
-            'start_date': b['start_date'],
-            'end_date': b['end_date'],
-            'package': b['package'],
-            'selected_days': b['selected_days'],
-            'location': b['location'],
-            'persons': b['persons'],
-            'time': b['time'],
-            'fee': b['fee'],
-            'status': b['status'],
-            'payment_request': b['payment_request'],
-            'owner_name': b['owner_name'],
-            'owner_phone': b['owner_phone']
+            'id': b[0],
+            'student': b[1],
+            'created_by': b[2],
+            'start_date': b[3],
+            'end_date': b[4],
+            'package': b[5],
+            'selected_days': b[6],
+            'location': b[7],
+            'persons': b[8],
+            'time': b[9],
+            'fee': b[10],
+            'status': b[11],
+            'payment_request': b[12],
+            'owner_name': b[13],
+            'owner_phone': b[14],
+            'calendar_dates': generate_recurring_dates(
+                str(b[3]),
+                str(b[4]),
+                b[6]
+            )
         })
 
     conn.close()
@@ -75,7 +138,7 @@ def load_data():
 
 
 def save_data(students, bookings):
-    conn = get_db_connection()
+    conn = get_pg_connection()
     cursor = conn.cursor()
 
     # Clear existing data
@@ -89,7 +152,7 @@ def save_data(students, bookings):
             student_name,
             owner_name,
             owner_phone
-        ) VALUES (?, ?, ?)
+        ) VALUES (%s, %s, %s)
         ''', (
             student.get('name', ''),
             student.get('owner_name', ''),
@@ -115,7 +178,7 @@ def save_data(students, bookings):
             owner_name,
             owner_phone,
             persons
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''', (
             booking.get('id', ''),
             booking.get('student', ''),
@@ -263,7 +326,7 @@ def add_swimmer():
     if existing_swimmer:
         return redirect(url_for('index', swimmer_exists='true'))
 
-    conn = get_db_connection()
+    conn = get_pg_connection()
     cursor = conn.cursor()
 
     cursor.execute('''
@@ -271,7 +334,7 @@ def add_swimmer():
         student_name,
         owner_name,
         owner_phone
-    ) VALUES (?, ?, ?)
+    ) VALUES (%s, %s, %s)
     ''', (
         name,
         session.get('user_name'),
@@ -290,15 +353,15 @@ def delete_swimmer(name):
     current_user = session.get('user_name')
     current_phone = session.get('phone')
 
-    conn = get_db_connection()
+    conn = get_pg_connection()
     cursor = conn.cursor()
 
     # Delete swimmer
     cursor.execute('''
     DELETE FROM students
-    WHERE student_name = ?
-    AND owner_name = ?
-    AND owner_phone = ?
+    WHERE student_name = %s
+    AND owner_name = %s
+    AND owner_phone = %s
     ''', (
         name,
         current_user,
@@ -308,9 +371,9 @@ def delete_swimmer(name):
     # Delete all bookings of that swimmer
     cursor.execute('''
     DELETE FROM bookings
-    WHERE student_name = ?
-    AND owner_name = ?
-    AND owner_phone = ?
+    WHERE student_name = %s
+    AND owner_name = %s
+    AND owner_phone = %s
     ''', (
         name,
         current_user,
@@ -351,13 +414,26 @@ def book():
     # Prevent overlapping bookings within 1 hour
     booking_time = datetime.strptime(time_str, '%I:%M %p')
 
+    new_booking_dates = generate_recurring_dates(
+        date_str,
+        end_date,
+        request.form.get('selected_days', '')
+    )
+
     for b in data['bookings']:
 
-        same_student = b.get('student') == student
-        same_date = b.get('start_date') == date_str
-        same_owner = b.get('owner_name') == session.get('user_name')
+        existing_booking_dates = generate_recurring_dates(
+            str(b.get('start_date', '')),
+            str(b.get('end_date', b.get('start_date', ''))),
+            b.get('selected_days', '')
+        )
 
-        if same_student and same_date and same_owner:
+        overlapping_dates = set(new_booking_dates) & set(existing_booking_dates)
+
+        same_owner = b.get('owner_name') == session.get('user_name')
+        same_student = b.get('student') == student
+
+        if overlapping_dates and same_owner and same_student:
 
             existing_time_str = b.get('time')
 
@@ -398,7 +474,7 @@ def book():
         "owner_name": session.get('user_name'),
         "owner_phone": session.get('phone'),
     }
-    conn = get_db_connection()
+    conn = get_pg_connection()
     cursor = conn.cursor()
 
     cursor.execute('''
@@ -418,7 +494,7 @@ def book():
         payment_request,
         owner_name,
         owner_phone
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     ''', (
         new_booking['id'],
         new_booking['student'],
@@ -514,24 +590,24 @@ def update_booking(booking_id):
         else:
             booking['status'] = 'Not Paid'
 
-    conn = get_db_connection()
+    conn = get_pg_connection()
     cursor = conn.cursor()
 
     cursor.execute('''
     UPDATE bookings
     SET
-        student_name = ?,
-        start_date = ?,
-        end_date = ?,
-        package = ?,
-        selected_days = ?,
-        location = ?,
-        time = ?,
-        fee = ?,
-        persons = ?,
-        status = ?,
-        payment_request = ?
-    WHERE id = ?
+        student_name = %s,
+        start_date = %s,
+        end_date = %s,
+        package = %s,
+        selected_days = %s,
+        location = %s,
+        time = %s,
+        fee = %s,
+        persons = %s,
+        status = %s,
+        payment_request = %s
+    WHERE id = %s
     ''', (
         booking['student'],
         booking['start_date'],
@@ -590,12 +666,12 @@ def delete_booking(booking_id):
             )
         ]
 
-    conn = get_db_connection()
+    conn = get_pg_connection()
     cursor = conn.cursor()
 
     # Delete booking directly
     cursor.execute(
-        'DELETE FROM bookings WHERE id = ?',
+        'DELETE FROM bookings WHERE id = %s',
         (booking_id,)
     )
 
@@ -603,9 +679,9 @@ def delete_booking(booking_id):
     if not has_remaining_bookings:
         cursor.execute('''
         DELETE FROM students
-        WHERE TRIM(student_name) = TRIM(?)
-        AND owner_name = ?
-        AND owner_phone = ?
+        WHERE TRIM(student_name) = TRIM(%s)
+        AND owner_name = %s
+        AND owner_phone = %s
         ''', (
             deleted_student,
             deleted_booking.get('owner_name'),
