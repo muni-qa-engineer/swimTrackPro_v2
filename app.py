@@ -299,12 +299,44 @@ def index():
             and s.get('owner_name') == current_user
             and s.get('owner_phone') == current_phone
         ]
-        
+    # -----------------------------
+    # Dashboard Analytics
+    # -----------------------------
+    total_swimmers = len(user_students)
+
+    active_bookings = sum(
+        1 for b in user_bookings
+        if not b.get('is_completed', False)
+    )
+
+    completed_bookings = sum(
+        1 for b in user_bookings
+        if b.get('is_completed', False)
+    )
+
+    monthly_revenue = sum(
+        int(b.get('fee', 0) or 0)
+        for b in user_bookings
+        if str(b.get('status', '')).lower() == 'paid'
+    )
+
+    pending_payments = sum(
+        int(b.get('fee', 0) or 0)
+        for b in user_bookings
+        if str(b.get('status', '')).lower() != 'paid'
+    )
+
     return render_template('dashboard.html', 
                            user_name=session['user_name'],
                            role=session.get('role', 'guest'),
                            bookings=user_bookings,
-                           students=user_students)
+                           students=user_students,
+                           total_swimmers=total_swimmers,
+                           active_bookings=active_bookings,
+                           completed_bookings=completed_bookings,
+                           monthly_revenue=monthly_revenue,
+                           pending_payments=pending_payments
+    )
 
 @app.route('/login', methods=['POST'])
 def login():
