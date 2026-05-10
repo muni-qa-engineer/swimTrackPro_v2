@@ -242,10 +242,23 @@ function updateEditBookingRules() {
     // SINGLE PACKAGE
     if (pkg.value === 'Single') {
 
+        // Automatically select the weekday that matches the chosen start date.
+        const weekdayMap = {
+            'Sunday': 'Sun',
+            'Monday': 'Mon',
+            'Tuesday': 'Tue',
+            'Wednesday': 'Wed',
+            'Thursday': 'Thu',
+            'Friday': 'Fri',
+            'Saturday': 'Sat'
+        };
+
+        const selectedDayValue = weekdayMap[allowedDay];
+
         dayCheckboxes.forEach(cb => {
             cb.checked = false;
 
-            if (cb.value === allowedDay) {
+            if (cb.value === selectedDayValue) {
                 cb.disabled = false;
                 cb.checked = true;
             } else {
@@ -335,7 +348,9 @@ function updateEditBookingFee() {
         discount = 30;
     }
 
-    const finalFee = Math.round(baseFee * (100 - discount) / 100);
+    // Calculate total fee for all persons, then apply the group discount.
+    const totalFee = baseFee * persons;
+    const finalFee = Math.round(totalFee * (100 - discount) / 100);
     feeInput.value = finalFee;
 }
 
