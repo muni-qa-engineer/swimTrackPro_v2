@@ -484,7 +484,19 @@ function renderCalendar() {
 
   calendarGrid.innerHTML = '';
 
-  for (let day = 1; day <= totalDays; day++) {
+  const firstDayIndex = new Date(year, month - 1, 1).getDay();
+  const totalCells = 42;
+
+  for (let cellIndex = 0; cellIndex < totalCells; cellIndex++) {
+    const day = cellIndex - firstDayIndex + 1;
+
+    // Empty cells before the first day and after the last day
+    if (day < 1 || day > totalDays) {
+      const emptyCell = document.createElement('div');
+      emptyCell.className = 'calendar-empty-cell';
+      calendarGrid.appendChild(emptyCell);
+      continue;
+    }
 
     const formattedDay = getFormattedDay(day);
     const fullDate = `${year}-${month}-${formattedDay}`;
@@ -788,4 +800,6 @@ function updateSwimmerBookingState() {
   }
 }
 
+
 window.addEventListener('load', updateSwimmerBookingState);
+
