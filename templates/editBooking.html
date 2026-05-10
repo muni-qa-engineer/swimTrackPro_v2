@@ -214,6 +214,8 @@ const endDateContainer = document.getElementById('endDateContainer');
 const startDateInput = document.querySelector('input[name="date"]');
 const endDateInput = document.querySelector('input[name="end_date"]');
 const dayCheckboxes = document.querySelectorAll('input[name="selected_days"]');
+const personsInput = document.getElementById('personsInput');
+const feeInput = document.getElementById('feeInput');
 
 function updateEditBookingRules() {
 
@@ -250,6 +252,12 @@ function updateEditBookingRules() {
         if (endDateContainer) {
             endDateContainer.style.display = 'none';
         }
+        if (endDateInput) {
+            endDateInput.value = startDateInput.value;
+        }
+        if (endDateInput) {
+            endDateInput.readOnly = true;
+        }
     }
 
     // MONTHLY + CUSTOM
@@ -261,6 +269,9 @@ function updateEditBookingRules() {
 
         if (endDateContainer) {
             endDateContainer.style.display = 'block';
+        }
+        if (endDateInput) {
+            endDateInput.readOnly = (pkg.value === 'Monthly');
         }
 
         // MONTHLY AUTO END DATE
@@ -277,9 +288,35 @@ function updateEditBookingRules() {
 
             if (endDateInput) {
                 endDateInput.value = `${yyyy}-${mm}-${dd}`;
+                endDateInput.readOnly = true;
             }
         }
+        if (pkg.value === 'Custom' && endDateInput) {
+            endDateInput.readOnly = false;
+        }
     }
+    updateEditBookingFee();
+}
+
+function updateEditBookingFee() {
+
+    if (!feeInput) return;
+
+    const persons = parseInt(personsInput?.value || '1', 10);
+    let fee = 0;
+
+    if (pkg.value === 'Single') {
+        fee = 750 * persons;
+    }
+    else if (pkg.value === 'Monthly') {
+        fee = 9000 * persons;
+    }
+    else {
+        // Keep existing fee for Custom package
+        return;
+    }
+
+    feeInput.value = fee;
 }
 
 function validateSelectedDaysLimit() {
@@ -303,6 +340,10 @@ if (startDateInput) {
     startDateInput.addEventListener('change', updateEditBookingRules);
 }
 
+if (personsInput) {
+    personsInput.addEventListener('input', updateEditBookingFee);
+}
+
 if (dayCheckboxes.length > 0) {
     dayCheckboxes.forEach(cb => {
         cb.addEventListener('change', validateSelectedDaysLimit);
@@ -310,6 +351,7 @@ if (dayCheckboxes.length > 0) {
 }
 
 updateEditBookingRules();
+updateEditBookingFee();
 </script>
 
 </body>

@@ -1,17 +1,11 @@
-import os, json, hashlib, sqlite3
+import hashlib
 import psycopg2
-from pathlib import Path
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
 from config import ADMIN_USERNAME, ADMIN_PASSWORD, SECRET_KEY, DATABASE_URL
 app.secret_key = SECRET_KEY
-
-# --- CONFIG & PERSISTENCE ---
-BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = BASE_DIR / 'database' / 'swim_data.db'
-DATA_FILE = "swim_data.json"  # Backup only
 
 
 def generate_booking_id(student, start_date, time_str):
@@ -67,13 +61,6 @@ def generate_recurring_dates(start_date_str, end_date_str, selected_days):
 
     return generated_dates
 
-
-# --- SQLite Persistence Layer ---
-
-def get_db_connection():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
 
 
 def get_pg_connection():
@@ -210,7 +197,7 @@ def index():
     if 'user_name' not in session:
         return render_template('login.html')
     
-    data = load_data() # Loads your swim_data.json
+    data = load_data()  # Loads data from PostgreSQL
     
     current_user = session.get('user_name')
     current_phone = session.get('phone')
@@ -285,8 +272,6 @@ def login():
         # Register new user if they don't exist
         if name not in users:
             users[name] = phone
-
-        # SQLite migration phase → skip JSON user persistence
 
         session['role'] = 'guest'
         # Set Guest session
@@ -399,6 +384,14 @@ def book():
     end_date = request.form.get('end_date', date_str)
     fee = int(request.form.get('fee', 0))
 
+    # Normalize end date based on package
+    if package == 'Single':
+        end_date = date_str
+    elif package == 'Monthly':
+        start_dt = datetime.strptime(date_str, '%Y-%m-%d').date()
+        next_month = start_dt + timedelta(days=31)
+        end_date = (next_month - timedelta(days=1)).strftime('%Y-%m-%d')
+
     # Validate past date
     try:
         selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
@@ -412,7 +405,11 @@ def book():
     booking_id = generate_booking_id(student, date_str, time_str)
 
     # Prevent overlapping bookings within 1 hour
-    booking_time = datetime.strptime(time_str, '%I:%M %p')
+    try:
+        booking_time = datetime.strptime(time_str, '%I:%M %p')
+    except Exception:
+        flash('Invalid time format')
+        return redirect(url_for('index'))
 
     new_booking_dates = generate_recurring_dates(
         date_str,
@@ -421,22 +418,26 @@ def book():
     )
 
     for b in data['bookings']:
+        try:
+            existing_start = str(b.get('start_date', ''))
+            existing_end = str(b.get('end_date', b.get('start_date', '')))
+            existing_days = b.get('selected_days', '')
 
-        existing_booking_dates = generate_recurring_dates(
-            str(b.get('start_date', '')),
-            str(b.get('end_date', b.get('start_date', ''))),
-            b.get('selected_days', '')
-        )
+            existing_booking_dates = generate_recurring_dates(
+                existing_start,
+                existing_end,
+                existing_days
+            )
 
-        overlapping_dates = set(new_booking_dates) & set(existing_booking_dates)
+            overlapping_dates = set(new_booking_dates) & set(existing_booking_dates)
 
-        same_owner = b.get('owner_name') == session.get('user_name')
-        same_student = b.get('student') == student
+            same_owner = b.get('owner_name') == session.get('user_name')
+            same_student = b.get('student') == student
 
-        if overlapping_dates and same_owner and same_student:
+            if not (overlapping_dates and same_owner and same_student):
+                continue
 
             existing_time_str = b.get('time')
-
             if not existing_time_str:
                 continue
 
@@ -449,6 +450,10 @@ def book():
             # Minimum 1 hour gap required
             if time_difference < 60:
                 return redirect('/?booking_conflict=true')
+
+        except Exception:
+            # Ignore malformed historical records and continue checking others
+            continue
 
     payment_choice = request.form.get('payment_status', 'Not Paid')
 
@@ -552,6 +557,14 @@ def update_booking(booking_id):
     package = request.form.get('package', 'Single')
     end_date = request.form.get('end_date', date_str)
     fee = int(request.form.get('fee', 0))
+
+    # Normalize end date based on package
+    if package == 'Single':
+        end_date = date_str
+    elif package == 'Monthly':
+        start_dt = datetime.strptime(date_str, '%Y-%m-%d').date()
+        next_month = start_dt + timedelta(days=31)
+        end_date = (next_month - timedelta(days=1)).strftime('%Y-%m-%d')
 
     # Get selected class days
     selected_days = request.form.getlist('selected_days')
