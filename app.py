@@ -99,24 +99,36 @@ def load_data():
         )
 
         is_completed = False
+        total_classes = len(calendar_dates)
+        completed_classes = 0
+        remaining_classes = total_classes
 
         try:
             if calendar_dates and b[9]:
-                last_class_date = calendar_dates[-1]
+                for class_date in calendar_dates:
+                    class_datetime = datetime.strptime(
+                        f"{class_date} {b[9]}",
+                        '%Y-%m-%d %I:%M %p'
+                    )
 
-                last_class_datetime = datetime.strptime(
-                    f"{last_class_date} {b[9]}",
-                    '%Y-%m-%d %I:%M %p'
+                    # Each session duration = 1 hour
+                    class_end_datetime = class_datetime + timedelta(hours=1)
+
+                    if datetime.now() >= class_end_datetime:
+                        completed_classes += 1
+
+                remaining_classes = max(
+                    total_classes - completed_classes,
+                    0
                 )
 
-                # Each session duration = 1 hour
-                completion_datetime = last_class_datetime + timedelta(hours=1)
-
-                if datetime.now() >= completion_datetime:
+                if completed_classes >= total_classes and total_classes > 0:
                     is_completed = True
 
         except Exception:
             is_completed = False
+            completed_classes = 0
+            remaining_classes = total_classes
 
         bookings.append({
             'id': b[0],
@@ -138,7 +150,10 @@ def load_data():
             'delete_requested_at': b[16] if len(b) > 16 else None,
             'delete_requested_by': b[17] if len(b) > 17 else None,
             'calendar_dates': calendar_dates,
-            'is_completed': is_completed
+            'is_completed': is_completed,
+            'total_classes': total_classes,
+            'completed_classes': completed_classes,
+            'remaining_classes': remaining_classes
         })
 
     conn.close()
@@ -416,6 +431,18 @@ def book():
         next_month = start_dt + timedelta(days=31)
         end_date = (next_month - timedelta(days=1)).strftime('%Y-%m-%d')
 
+        # Validate that end date is not earlier than start date
+        try:
+            start_dt = datetime.strptime(date_str, '%Y-%m-%d').date()
+            end_dt = datetime.strptime(end_date, '%Y-%m-%d').date()
+
+            if end_dt < start_dt:
+                flash('End date cannot be earlier than start date')
+                return redirect(url_for('index'))
+        except Exception:
+            flash('Invalid start or end date')
+            return redirect(url_for('index'))
+
     # Validate past date
     try:
         selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
@@ -589,6 +616,18 @@ def update_booking(booking_id):
         start_dt = datetime.strptime(date_str, '%Y-%m-%d').date()
         next_month = start_dt + timedelta(days=31)
         end_date = (next_month - timedelta(days=1)).strftime('%Y-%m-%d')
+
+        # Validate that end date is not earlier than start date
+        try:
+            start_dt = datetime.strptime(date_str, '%Y-%m-%d').date()
+            end_dt = datetime.strptime(end_date, '%Y-%m-%d').date()
+
+            if end_dt < start_dt:
+                flash('End date cannot be earlier than start date')
+                return redirect(url_for('edit_booking', booking_id=booking_id))
+        except Exception:
+            flash('Invalid start or end date')
+            return redirect(url_for('edit_booking', booking_id=booking_id))
 
     # Get selected class days
     selected_days = request.form.getlist('selected_days')
