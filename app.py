@@ -92,6 +92,32 @@ def load_data():
     bookings = []
 
     for b in booking_rows:
+        calendar_dates = generate_recurring_dates(
+            str(b[3]),
+            str(b[4]),
+            b[6]
+        )
+
+        is_completed = False
+
+        try:
+            if calendar_dates and b[9]:
+                last_class_date = calendar_dates[-1]
+
+                last_class_datetime = datetime.strptime(
+                    f"{last_class_date} {b[9]}",
+                    '%Y-%m-%d %I:%M %p'
+                )
+
+                # Each session duration = 1 hour
+                completion_datetime = last_class_datetime + timedelta(hours=1)
+
+                if datetime.now() >= completion_datetime:
+                    is_completed = True
+
+        except Exception:
+            is_completed = False
+
         bookings.append({
             'id': b[0],
             'student': b[1],
@@ -108,21 +134,19 @@ def load_data():
             'payment_request': b[12],
             'owner_name': b[13],
             'owner_phone': b[14],
-            'calendar_dates': generate_recurring_dates(
-                str(b[3]),
-                str(b[4]),
-                b[6]
-            )
+            'delete_requested': b[15] if len(b) > 15 else False,
+            'delete_requested_at': b[16] if len(b) > 16 else None,
+            'delete_requested_by': b[17] if len(b) > 17 else None,
+            'calendar_dates': calendar_dates,
+            'is_completed': is_completed
         })
 
     conn.close()
 
     return {
         'students': students,
-        'bookings': bookings,
-        'users': {}
+        'bookings': bookings
     }
-
 
 def save_data(students, bookings):
     conn = get_pg_connection()
@@ -700,69 +724,235 @@ def update_booking(booking_id):
     flash("Booking updated successfully")
     return redirect(url_for('index'))
 
+
 @app.route('/delete/<booking_id>', methods=['POST'])
 def delete_booking(booking_id):
-    data = load_data()
-
-    # Find booking index
-    index = next((i for i, b in enumerate(data['bookings']) if b['id'] == booking_id), None)
-
-    if index is None:
-        flash("Booking not found")
-        return redirect(url_for('index'))
-
-    # Remove booking
-    deleted_booking = data['bookings'].pop(index)
-
-    deleted_student = deleted_booking.get('student')
-
-    # Check if swimmer still has remaining bookings
-    # Use deleted booking owner details instead of current session
-    has_remaining_bookings = any(
-        b.get('student', '').strip() == deleted_student.strip()
-        and b.get('owner_name') == deleted_booking.get('owner_name')
-        and b.get('owner_phone') == deleted_booking.get('owner_phone')
-        for b in data['bookings']
-    )
-
-    # Remove swimmer if no bookings exist
-    if not has_remaining_bookings:
-        data['students'] = [
-            s for s in data['students']
-            if not (
-                isinstance(s, dict)
-                and s.get('name') == deleted_student
-                and s.get('owner_name') == deleted_booking.get('owner_name')
-                and s.get('owner_phone') == deleted_booking.get('owner_phone')
-            )
-        ]
+    role = session.get('role', 'guest')
 
     conn = get_pg_connection()
     cursor = conn.cursor()
 
-    # Delete booking directly
+    # Load booking details
+    cursor.execute('''
+    SELECT student_name, owner_name, owner_phone, start_date, time
+    FROM bookings
+    WHERE id = %s
+    ''', (booking_id,))
+
+    row = cursor.fetchone()
+
+    if not row:
+        conn.close()
+        flash('Booking not found')
+        return redirect(url_for('index'))
+
+    deleted_student = row[0]
+    owner_name = row[1]
+    owner_phone = row[2]
+    start_date = row[3]
+    booking_time_str = row[4]
+
+    # Guest users can delete immediately only before the first class starts.
+    # After the first class start time, admin approval is required.
+    if role != 'admin':
+        try:
+            first_class_datetime = datetime.strptime(
+                f"{start_date} {booking_time_str}",
+                '%Y-%m-%d %I:%M %p'
+            )
+        except Exception:
+            first_class_datetime = None
+
+        # If current time is before the first class, delete immediately.
+        if first_class_datetime and datetime.now() < first_class_datetime:
+            cursor.execute(
+                'DELETE FROM bookings WHERE id = %s',
+                (booking_id,)
+            )
+
+            # Check if swimmer still has any bookings
+            cursor.execute('''
+            SELECT COUNT(*)
+            FROM bookings
+            WHERE TRIM(student_name) = TRIM(%s)
+              AND owner_name = %s
+              AND owner_phone = %s
+            ''', (
+                deleted_student,
+                owner_name,
+                owner_phone
+            ))
+
+            remaining_count = cursor.fetchone()[0]
+
+            # Remove swimmer if no bookings remain
+            if remaining_count == 0:
+                cursor.execute('''
+                DELETE FROM students
+                WHERE TRIM(student_name) = TRIM(%s)
+                  AND owner_name = %s
+                  AND owner_phone = %s
+                ''', (
+                    deleted_student,
+                    owner_name,
+                    owner_phone
+                ))
+
+            conn.commit()
+            conn.close()
+
+            flash(f'Booking deleted for {deleted_student}')
+            return redirect(url_for('index'))
+
+        # After the first class starts, create a delete request.
+        cursor.execute('''
+        UPDATE bookings
+        SET
+            delete_requested = TRUE,
+            delete_requested_at = %s,
+            delete_requested_by = %s
+        WHERE id = %s
+        ''', (
+            datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            session.get('user_name'),
+            booking_id
+        ))
+
+        conn.commit()
+        conn.close()
+
+        flash(f'Delete request submitted for {deleted_student}')
+        return redirect(url_for('index'))
+
+    # Admin deletes immediately
     cursor.execute(
         'DELETE FROM bookings WHERE id = %s',
         (booking_id,)
     )
 
-    # Remove swimmer if no remaining bookings exist
-    if not has_remaining_bookings:
+    # Check if swimmer still has any bookings
+    cursor.execute('''
+    SELECT COUNT(*)
+    FROM bookings
+    WHERE TRIM(student_name) = TRIM(%s)
+      AND owner_name = %s
+      AND owner_phone = %s
+    ''', (
+        deleted_student,
+        owner_name,
+        owner_phone
+    ))
+
+    remaining_count = cursor.fetchone()[0]
+
+    # Remove swimmer if no bookings remain
+    if remaining_count == 0:
         cursor.execute('''
         DELETE FROM students
         WHERE TRIM(student_name) = TRIM(%s)
-        AND owner_name = %s
-        AND owner_phone = %s
+          AND owner_name = %s
+          AND owner_phone = %s
         ''', (
             deleted_student,
-            deleted_booking.get('owner_name'),
-            deleted_booking.get('owner_phone')
+            owner_name,
+            owner_phone
         ))
 
     conn.commit()
     conn.close()
 
-    flash(f"Booking deleted for {deleted_booking['student']}")
+    flash(f'Booking deleted for {deleted_student}')
+    return redirect(url_for('index'))
+
+
+# --- Approve and Reject Delete Booking Routes ---
+@app.route('/approve_delete/<booking_id>', methods=['POST'])
+def approve_delete(booking_id):
+    if session.get('role') != 'admin':
+        flash('Unauthorized action')
+        return redirect(url_for('index'))
+
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+
+    # Load booking details before deletion
+    cursor.execute('''
+    SELECT student_name, owner_name, owner_phone
+    FROM bookings
+    WHERE id = %s
+    ''', (booking_id,))
+
+    row = cursor.fetchone()
+
+    if not row:
+        conn.close()
+        flash('Booking not found')
+        return redirect(url_for('index'))
+
+    deleted_student = row[0]
+    owner_name = row[1]
+    owner_phone = row[2]
+
+    # Permanently delete the booking
+    cursor.execute('DELETE FROM bookings WHERE id = %s', (booking_id,))
+
+    # Check if swimmer still has any bookings
+    cursor.execute('''
+    SELECT COUNT(*)
+    FROM bookings
+    WHERE TRIM(student_name) = TRIM(%s)
+      AND owner_name = %s
+      AND owner_phone = %s
+    ''', (
+        deleted_student,
+        owner_name,
+        owner_phone
+    ))
+
+    remaining_count = cursor.fetchone()[0]
+
+    # Remove swimmer if no bookings remain
+    if remaining_count == 0:
+        cursor.execute('''
+        DELETE FROM students
+        WHERE TRIM(student_name) = TRIM(%s)
+          AND owner_name = %s
+          AND owner_phone = %s
+        ''', (
+            deleted_student,
+            owner_name,
+            owner_phone
+        ))
+
+    conn.commit()
+    conn.close()
+
+    flash(f'Delete approved for {deleted_student}')
+    return redirect(url_for('index'))
+
+
+@app.route('/reject_delete/<booking_id>', methods=['POST'])
+def reject_delete(booking_id):
+    if session.get('role') != 'admin':
+        flash('Unauthorized action')
+        return redirect(url_for('index'))
+
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+
+    cursor.execute('''
+    UPDATE bookings
+    SET
+        delete_requested = FALSE,
+        delete_requested_at = NULL,
+        delete_requested_by = NULL
+    WHERE id = %s
+    ''', (booking_id,))
+
+    conn.commit()
+    conn.close()
+
+    flash('Delete request rejected')
     return redirect(url_for('index'))
 
 @app.route('/logout')

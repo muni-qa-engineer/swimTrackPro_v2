@@ -312,8 +312,24 @@ function updateEditBookingFee() {
         fee = 9000 * persons;
     }
     else {
-        // Keep existing fee for Custom package
-        return;
+        // Custom package: ₹750 per class day per week × number of weeks × persons
+        const checkedDays = [...dayCheckboxes].filter(cb => cb.checked).length;
+
+        if (!startDateInput?.value || !endDateInput?.value || checkedDays === 0) {
+            return;
+        }
+
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+
+        if (isNaN(startDate) || isNaN(endDate) || endDate < startDate) {
+            return;
+        }
+
+        const diffDays = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+        const weeks = Math.ceil(diffDays / 7);
+
+        fee = 750 * checkedDays * weeks * persons;
     }
 
     feeInput.value = fee;
@@ -339,6 +355,9 @@ if (pkg) {
 if (startDateInput) {
     startDateInput.addEventListener('change', updateEditBookingRules);
 }
+if (endDateInput) {
+    endDateInput.addEventListener('change', updateEditBookingFee);
+}
 
 if (personsInput) {
     personsInput.addEventListener('input', updateEditBookingFee);
@@ -347,6 +366,7 @@ if (personsInput) {
 if (dayCheckboxes.length > 0) {
     dayCheckboxes.forEach(cb => {
         cb.addEventListener('change', validateSelectedDaysLimit);
+        cb.addEventListener('change', updateEditBookingFee);
     });
 }
 
