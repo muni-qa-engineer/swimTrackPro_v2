@@ -194,6 +194,10 @@
                             class="form-control"
                             value="{{ booking.fee }}"
                         >
+
+                        <div class="form-text">
+                            Fee is calculated automatically based on package and number of persons.
+                        </div>
                     </div>
 
                 </div>
@@ -302,37 +306,37 @@ function updateEditBookingFee() {
 
     if (!feeInput) return;
 
-    const persons = parseInt(personsInput?.value || '1', 10);
-    let fee = 0;
+    const persons = Math.max(parseInt(personsInput?.value || '1', 10), 1);
+    let baseFee = 0;
 
     if (pkg.value === 'Single') {
-        fee = 750 * persons;
+        baseFee = 750;
     }
     else if (pkg.value === 'Monthly') {
-        fee = 9000 * persons;
+        baseFee = 9000;
     }
     else {
-        // Custom package: ₹750 per class day per week × number of weeks × persons
-        const checkedDays = [...dayCheckboxes].filter(cb => cb.checked).length;
-
-        if (!startDateInput?.value || !endDateInput?.value || checkedDays === 0) {
-            return;
-        }
-
-        const startDate = new Date(startDateInput.value);
-        const endDate = new Date(endDateInput.value);
-
-        if (isNaN(startDate) || isNaN(endDate) || endDate < startDate) {
-            return;
-        }
-
-        const diffDays = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-        const weeks = Math.ceil(diffDays / 7);
-
-        fee = 750 * checkedDays * weeks * persons;
+        // Custom package currently uses the same base as Monthly.
+        baseFee = 9000;
     }
 
-    feeInput.value = fee;
+    let discount = 0;
+
+    if (persons === 2) {
+        discount = 10;
+    }
+    else if (persons === 3) {
+        discount = 20;
+    }
+    else if (persons === 4) {
+        discount = 25;
+    }
+    else if (persons >= 5) {
+        discount = 30;
+    }
+
+    const finalFee = Math.round(baseFee * (100 - discount) / 100);
+    feeInput.value = finalFee;
 }
 
 function validateSelectedDaysLimit() {

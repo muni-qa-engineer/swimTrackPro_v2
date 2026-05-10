@@ -61,7 +61,45 @@ def generate_recurring_dates(start_date_str, end_date_str, selected_days):
 
     return generated_dates
 
+def calculate_discounted_fee(package, persons):
+    """
+    Calculate fee based on package and number of persons.
 
+    Discount rules:
+    1 person  -> 0%
+    2 persons -> 10%
+    3 persons -> 20%
+    4 persons -> 25%
+    5+        -> 30%
+    """
+    try:
+        persons = max(int(persons or 1), 1)
+    except Exception:
+        persons = 1
+
+    # Base fees
+    if package == 'Single':
+        base_fee = 750
+    elif package == 'Monthly':
+        base_fee = 9000
+    else:
+        # Custom package currently uses the same base as Monthly
+        base_fee = 9000
+
+    # Discount rules
+    if persons == 1:
+        discount = 0
+    elif persons == 2:
+        discount = 10
+    elif persons == 3:
+        discount = 20
+    elif persons == 4:
+        discount = 25
+    else:
+        discount = 30
+
+    final_fee = round(base_fee * (100 - discount) / 100)
+    return final_fee
 
 def get_pg_connection():
     return psycopg2.connect(DATABASE_URL)
@@ -421,7 +459,18 @@ def book():
     time_str = request.form['time']
     package = request.form.get('package', 'Single')
     end_date = request.form.get('end_date', date_str)
-    fee = int(request.form.get('fee', 0))
+    persons = request.form.get('persons', 1)
+
+    # Default fee based on package and group discount.
+    fee = calculate_discounted_fee(package, persons)
+
+    # Allow manual fee override when an admin or user enters a custom amount.
+    manual_fee = (request.form.get('fee') or '').strip()
+    if manual_fee:
+        try:
+            fee = int(float(manual_fee))
+        except ValueError:
+            pass
 
     # Normalize end date based on package
     if package == 'Single':
@@ -430,18 +479,17 @@ def book():
         start_dt = datetime.strptime(date_str, '%Y-%m-%d').date()
         next_month = start_dt + timedelta(days=31)
         end_date = (next_month - timedelta(days=1)).strftime('%Y-%m-%d')
+    # Validate that end date is not earlier than start date
+    try:
+        start_dt = datetime.strptime(date_str, '%Y-%m-%d').date()
+        end_dt = datetime.strptime(end_date, '%Y-%m-%d').date()
 
-        # Validate that end date is not earlier than start date
-        try:
-            start_dt = datetime.strptime(date_str, '%Y-%m-%d').date()
-            end_dt = datetime.strptime(end_date, '%Y-%m-%d').date()
-
-            if end_dt < start_dt:
-                flash('End date cannot be earlier than start date')
-                return redirect(url_for('index'))
-        except Exception:
-            flash('Invalid start or end date')
+        if end_dt < start_dt:
+            flash('End date cannot be earlier than start date')
             return redirect(url_for('index'))
+    except Exception:
+        flash('Invalid start or end date')
+        return redirect(url_for('index'))
 
     # Validate past date
     try:
@@ -522,7 +570,7 @@ def book():
         "package": package,
         "selected_days": request.form.get('selected_days', ''),
         "location": request.form.get('location', '').strip(),
-        "persons": request.form.get('persons', 1),
+        "persons": persons,
         "time": time_str,
         "fee": fee,
         "status": status,
@@ -607,7 +655,18 @@ def update_booking(booking_id):
     time_str = request.form['time']
     package = request.form.get('package', 'Single')
     end_date = request.form.get('end_date', date_str)
-    fee = int(request.form.get('fee', 0))
+    persons = request.form.get('persons', 1)
+
+    # Default fee based on package and group discount.
+    fee = calculate_discounted_fee(package, persons)
+
+    # Allow manual fee override when an admin enters a negotiated amount.
+    manual_fee = (request.form.get('fee') or '').strip()
+    if manual_fee:
+        try:
+            fee = int(float(manual_fee))
+        except ValueError:
+            pass
 
     # Normalize end date based on package
     if package == 'Single':
@@ -616,18 +675,17 @@ def update_booking(booking_id):
         start_dt = datetime.strptime(date_str, '%Y-%m-%d').date()
         next_month = start_dt + timedelta(days=31)
         end_date = (next_month - timedelta(days=1)).strftime('%Y-%m-%d')
+    # Validate that end date is not earlier than start date
+    try:
+        start_dt = datetime.strptime(date_str, '%Y-%m-%d').date()
+        end_dt = datetime.strptime(end_date, '%Y-%m-%d').date()
 
-        # Validate that end date is not earlier than start date
-        try:
-            start_dt = datetime.strptime(date_str, '%Y-%m-%d').date()
-            end_dt = datetime.strptime(end_date, '%Y-%m-%d').date()
-
-            if end_dt < start_dt:
-                flash('End date cannot be earlier than start date')
-                return redirect(url_for('edit_booking', booking_id=booking_id))
-        except Exception:
-            flash('Invalid start or end date')
+        if end_dt < start_dt:
+            flash('End date cannot be earlier than start date')
             return redirect(url_for('edit_booking', booking_id=booking_id))
+    except Exception:
+        flash('Invalid start or end date')
+        return redirect(url_for('edit_booking', booking_id=booking_id))
 
     # Get selected class days
     selected_days = request.form.getlist('selected_days')
@@ -700,7 +758,7 @@ def update_booking(booking_id):
     booking['time'] = time_str
     booking['fee'] = fee
 
-    booking['persons'] = request.form.get('persons', 1)
+    booking['persons'] = persons
 
     payment_choice = request.form.get('payment_status', 'Not Paid')
     booking['payment_request'] = payment_choice
