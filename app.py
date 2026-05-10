@@ -569,12 +569,70 @@ def update_booking(booking_id):
     # Get selected class days
     selected_days = request.form.getlist('selected_days')
 
+    # Convert selected days list to comma-separated string
+    selected_days_str = ', '.join(selected_days)
+
+    # Prevent overlapping bookings when editing
+    try:
+        booking_time = datetime.strptime(time_str, '%I:%M %p')
+    except Exception:
+        flash('Invalid time format')
+        return redirect(url_for('edit_booking', booking_id=booking_id))
+
+    new_booking_dates = generate_recurring_dates(
+        date_str,
+        end_date,
+        selected_days_str
+    )
+
+    for b in data['bookings']:
+        try:
+            # Skip the booking currently being edited
+            if str(b.get('id')) == str(booking_id):
+                continue
+
+            existing_start = str(b.get('start_date', ''))
+            existing_end = str(b.get('end_date', b.get('start_date', '')))
+            existing_days = b.get('selected_days', '')
+
+            existing_booking_dates = generate_recurring_dates(
+                existing_start,
+                existing_end,
+                existing_days
+            )
+
+            overlapping_dates = set(new_booking_dates) & set(existing_booking_dates)
+
+            same_owner = b.get('owner_name') == session.get('user_name')
+            same_student = b.get('student') == student
+
+            if not (overlapping_dates and same_owner and same_student):
+                continue
+
+            existing_time_str = b.get('time')
+            if not existing_time_str:
+                continue
+
+            existing_time = datetime.strptime(existing_time_str, '%I:%M %p')
+
+            time_difference = abs(
+                (booking_time - existing_time).total_seconds()
+            ) / 60
+
+            # Minimum 1 hour gap required
+            if time_difference < 60:
+                return redirect('/?booking_conflict=true')
+
+        except Exception:
+            # Ignore malformed historical records
+            continue
+
     # Update values
     booking['student'] = student
     booking['start_date'] = date_str
     booking['end_date'] = end_date
     booking['package'] = package
-    booking['selected_days'] = ', '.join(selected_days)
+    booking['selected_days'] = selected_days_str
     booking['location'] = request.form.get('location', '').strip()
     booking['time'] = time_str
     booking['fee'] = fee
