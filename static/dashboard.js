@@ -112,9 +112,10 @@ function isPastDate(dateObj) {
   };
 
   const GROUP_DISCOUNTS = {
-    2: 15,
+    2: 10,
     3: 20,
-    4: 25
+    4: 25,
+    5: 30
   };
 
   // Smart weekday validation based on selected Start Date
