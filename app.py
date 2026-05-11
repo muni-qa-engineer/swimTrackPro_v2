@@ -46,7 +46,8 @@ Phone: {booking.get('owner_phone', '')}
         message['From'] = SMTP_EMAIL
         message['To'] = ADMIN_NOTIFICATION_EMAIL
 
-        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+        # Use a short timeout so email issues never block booking creation.
+        with smtplib.SMTP('smtp.gmail.com', 587, timeout=10) as server:
             server.starttls()
             server.login(SMTP_EMAIL, SMTP_PASSWORD)
             server.sendmail(
