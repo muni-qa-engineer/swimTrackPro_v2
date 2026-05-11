@@ -47,7 +47,7 @@ Phone: {booking.get('owner_phone', '')}
         message['To'] = ADMIN_NOTIFICATION_EMAIL
 
         # Use a short timeout so email issues never block booking creation.
-        with smtplib.SMTP('smtp-relay.brevo.com', 587, timeout=10) as server:
+        with smtplib.SMTP('smtp-relay.brevo.com', 587, timeout=30) as server:
             server.starttls()
             server.login(SMTP_EMAIL, SMTP_PASSWORD)
             server.sendmail(
