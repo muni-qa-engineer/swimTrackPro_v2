@@ -728,6 +728,23 @@ if (swimmerAddForm && swimmerNameInput) {
 
 if (bookingForm) {
   bookingForm.addEventListener('submit', () => {
+    const confirmBookingBtn = document.getElementById('confirmBookingBtn');
+    const confirmBookingSpinner = document.getElementById('confirmBookingSpinner');
+    const confirmBookingText = document.getElementById('confirmBookingText');
+
+    // Show loading state immediately to prevent duplicate clicks.
+    if (confirmBookingBtn) {
+      confirmBookingBtn.disabled = true;
+    }
+
+    if (confirmBookingSpinner) {
+      confirmBookingSpinner.classList.remove('d-none');
+    }
+
+    if (confirmBookingText) {
+      confirmBookingText.textContent = 'Processing...';
+    }
+
     localStorage.setItem('bookingSuccess', 'true');
     localStorage.setItem('activeTab', 'bookings');
 
