@@ -1,11 +1,62 @@
 import hashlib
+import smtplib
+from email.mime.text import MIMEText
 import psycopg2
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
-from config import ADMIN_USERNAME, ADMIN_PASSWORD, SECRET_KEY, DATABASE_URL
+from config import (
+    ADMIN_USERNAME,
+    ADMIN_PASSWORD,
+    SECRET_KEY,
+    DATABASE_URL,
+    SMTP_EMAIL,
+    SMTP_PASSWORD,
+    ADMIN_NOTIFICATION_EMAIL,
+)
 app.secret_key = SECRET_KEY
+
+
+def send_booking_notification(booking):
+    """Send an email notification when a new booking is created."""
+    if not SMTP_EMAIL or not SMTP_PASSWORD or not ADMIN_NOTIFICATION_EMAIL:
+        return
+
+    try:
+        subject = f"New Booking - {booking.get('student', 'SwimTrackPro')}"
+
+        body = f"""New booking created in SwimTrackPro.
+
+Swimmer: {booking.get('student', '')}
+Package: {booking.get('package', '')}
+Start Date: {booking.get('start_date', '')}
+End Date: {booking.get('end_date', '')}
+Time: {booking.get('time', '')}
+Persons: {booking.get('persons', '')}
+Fee: ₹{booking.get('fee', 0)}
+Payment Status: {booking.get('payment_request', '')}
+Location: {booking.get('location', '')}
+Booked By: {booking.get('owner_name', '')}
+Phone: {booking.get('owner_phone', '')}
+"""
+
+        message = MIMEText(body)
+        message['Subject'] = subject
+        message['From'] = SMTP_EMAIL
+        message['To'] = ADMIN_NOTIFICATION_EMAIL
+
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(SMTP_EMAIL, SMTP_PASSWORD)
+            server.sendmail(
+                SMTP_EMAIL,
+                [ADMIN_NOTIFICATION_EMAIL],
+                message.as_string()
+            )
+
+    except Exception as e:
+        print(f"Email notification failed: {e}")
 
 
 def generate_booking_id(student, start_date, time_str):
@@ -651,6 +702,10 @@ def book():
 
     conn.commit()
     conn.close()
+
+    # Send email notification to admin.
+    # Notification errors are handled internally and will not affect booking creation.
+    send_booking_notification(new_booking)
 
     return redirect(url_for('index'))
 
