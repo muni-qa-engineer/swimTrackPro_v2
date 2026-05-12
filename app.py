@@ -113,9 +113,9 @@ def generate_recurring_dates(start_date_str, end_date_str, selected_days):
 
     return generated_dates
 
-def calculate_discounted_fee(package, persons):
+def calculate_discounted_fee(package, persons, session_count=None):
     """
-    Calculate fee based on package and number of persons.
+    Calculate fee based on package, number of persons, and optional session count.
 
     Discount rules:
     1 person  -> 0%
@@ -123,6 +123,11 @@ def calculate_discounted_fee(package, persons):
     3 persons -> 20%
     4 persons -> 25%
     5+        -> 30%
+
+    Package pricing:
+    - Single  -> ₹750
+    - Monthly -> ₹9000
+    - Custom  -> session_count × ₹750
     """
     try:
         persons = max(int(persons or 1), 1)
@@ -134,8 +139,15 @@ def calculate_discounted_fee(package, persons):
         base_fee = 750
     elif package == 'Monthly':
         base_fee = 9000
+    elif package == 'Custom':
+        try:
+            session_count = max(int(session_count or 0), 0)
+        except Exception:
+            session_count = 0
+
+        # Custom package fee is calculated per session.
+        base_fee = session_count * 750
     else:
-        # Custom package currently uses the same base as Monthly
         base_fee = 9000
 
     # Discount rules
@@ -546,7 +558,17 @@ def book():
     persons = request.form.get('persons', 1)
 
     # Default fee based on package and group discount.
-    fee = calculate_discounted_fee(package, persons)
+    session_count = None
+    if package == 'Custom':
+        session_count = len(
+            generate_recurring_dates(
+                date_str,
+                end_date,
+                request.form.get('selected_days', '')
+            )
+        )
+
+    fee = calculate_discounted_fee(package, persons, session_count)
 
     # Allow manual fee override when an admin or user enters a custom amount.
     manual_fee = (request.form.get('fee') or '').strip()
@@ -746,7 +768,19 @@ def update_booking(booking_id):
     persons = request.form.get('persons', 1)
 
     # Default fee based on package and group discount.
-    fee = calculate_discounted_fee(package, persons)
+    session_count = None
+    if package == 'Custom':
+        selected_days = request.form.getlist('selected_days')
+        selected_days_str = ', '.join(selected_days)
+        session_count = len(
+            generate_recurring_dates(
+                date_str,
+                end_date,
+                selected_days_str
+            )
+        )
+
+    fee = calculate_discounted_fee(package, persons, session_count)
 
     # Allow manual fee override when an admin enters a negotiated amount.
     manual_fee = (request.form.get('fee') or '').strip()
