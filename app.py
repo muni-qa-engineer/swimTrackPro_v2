@@ -570,13 +570,15 @@ def book():
 
     fee = calculate_discounted_fee(package, persons, session_count)
 
-    # Allow manual fee override when an admin or user enters a custom amount.
-    manual_fee = (request.form.get('fee') or '').strip()
-    if manual_fee:
-        try:
-            fee = int(float(manual_fee))
-        except ValueError:
-            pass
+    # Allow manual fee override only for admin users.
+    # Guest users always use the system-calculated fee.
+    if session.get('role') == 'admin':
+        manual_fee = (request.form.get('fee') or '').strip()
+        if manual_fee:
+            try:
+                fee = int(float(manual_fee))
+            except ValueError:
+                pass
 
     # Normalize end date based on package
     if package == 'Single':
@@ -782,13 +784,15 @@ def update_booking(booking_id):
 
     fee = calculate_discounted_fee(package, persons, session_count)
 
-    # Allow manual fee override when an admin enters a negotiated amount.
-    manual_fee = (request.form.get('fee') or '').strip()
-    if manual_fee:
-        try:
-            fee = int(float(manual_fee))
-        except ValueError:
-            pass
+    # Allow manual fee override only for admin users.
+    # Guest users always use the system-calculated fee.
+    if session.get('role') == 'admin':
+        manual_fee = (request.form.get('fee') or '').strip()
+        if manual_fee:
+            try:
+                fee = int(float(manual_fee))
+            except ValueError:
+                pass
 
     # Normalize end date based on package
     if package == 'Single':
