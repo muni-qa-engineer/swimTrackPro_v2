@@ -281,9 +281,19 @@
                                       </span>
                                   {% endif %}
                               {% else %}
+                                  {% if (b.completed_classes or 0) == 0 %}
                                   <form action="/edit/{{ b.id }}" method="GET" class="inline-form" onsubmit="saveScrollPosition()">
                                       <button type="submit" class="btn btn-outline-primary btn-sm">Edit</button>
                                   </form>
+                                  {% else %}
+                                  <button
+                                      type="button"
+                                      class="btn btn-outline-secondary btn-sm"
+                                      disabled
+                                      title="Editing is disabled after the first session has started.">
+                                      Edit Locked
+                                  </button>
+                                  {% endif %}
                                   <form action="/delete/{{ b.id }}" method="POST" class="inline-form ml-6" onsubmit="saveScrollPosition(); return confirm('Are you sure you want to delete this booking?');">
                                       <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
                                   </form>

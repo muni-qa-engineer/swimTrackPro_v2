@@ -115,55 +115,78 @@ def generate_recurring_dates(start_date_str, end_date_str, selected_days):
 
 def calculate_discounted_fee(package, persons, session_count=None):
     """
-    Calculate fee based on package, number of persons, and optional session count.
+    Final pricing model for SwimTrackPro.
 
-    Discount rules:
-    1 person  -> 0%
-    2 persons -> 10%
-    3 persons -> 20%
-    4 persons -> 25%
-    5+        -> 30%
+    Returns:
+        int  -> final fee
+        None -> requires trainer discussion
 
-    Package pricing:
-    - Single  -> ₹750
-    - Monthly -> ₹9000
-    - Custom  -> session_count × ₹750
+    Rules:
+    - Maximum 5 persons per booking.
+    - Single and Monthly packages use group discounts.
+    - Custom package:
+        * 3 to 11 sessions  -> sessions × ₹750 × persons
+        * 12 to 14 sessions -> ₹9,000 × persons
+        * More than 14      -> trainer discussion (None)
+    - Group discounts for all package types:
+        * 1 person  -> 0%
+        * 2 persons -> 10%
+        * 3 persons -> 20%
+        * 4 persons -> 27%
+        * 5 persons -> 33%
     """
     try:
-        persons = max(int(persons or 1), 1)
+        persons = max(1, int(persons or 1))
     except Exception:
         persons = 1
 
-    # Base fees
-    if package == 'Single':
-        base_fee = 750
-    elif package == 'Monthly':
-        base_fee = 9000
-    elif package == 'Custom':
+    # Maximum allowed group size
+    if persons > 5:
+        return None
+
+    # Discount rules
+    discount_map = {
+        1: 0,
+        2: 10,
+        3: 20,
+        4: 27,
+        5: 33,
+    }
+
+    discount = discount_map.get(persons, 0)
+
+    # Custom package special rules
+    if package == 'Custom':
         try:
             session_count = max(int(session_count or 0), 0)
         except Exception:
             session_count = 0
 
-        # Custom package fee is calculated per session.
-        base_fee = session_count * 750
-    else:
-        base_fee = 9000
+        # More than 14 sessions requires trainer discussion
+        if session_count > 14:
+            return None
 
-    # Discount rules
-    if persons == 1:
-        discount = 0
-    elif persons == 2:
-        discount = 10
-    elif persons == 3:
-        discount = 20
-    elif persons == 4:
-        discount = 25
-    else:
-        discount = 30
+        # 12 to 14 sessions are capped at monthly equivalent
+        if 12 <= session_count <= 14:
+            actual_amount = 9000 * persons
+        else:
+            actual_amount = session_count * 750 * persons
 
-    final_fee = round(base_fee * (100 - discount) / 100)
-    return final_fee
+    # Single package
+    elif package == 'Single':
+        actual_amount = 750 * persons
+
+    # Monthly package
+    elif package == 'Monthly':
+        actual_amount = 9000 * persons
+
+    # Fallback
+    else:
+        actual_amount = 9000 * persons
+
+    final_amount = actual_amount * (100 - discount) / 100
+
+    return round(final_amount)
 
 def get_pg_connection():
     return psycopg2.connect(DATABASE_URL)

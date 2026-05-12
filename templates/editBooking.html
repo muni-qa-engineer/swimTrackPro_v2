@@ -316,41 +316,107 @@ function updateEditBookingRules() {
 }
 
 function updateEditBookingFee() {
-
-    if (!feeInput) return;
+    if (!feeInput) {
+        return;
+    }
 
     const persons = Math.max(parseInt(personsInput?.value || '1', 10), 1);
-    let baseFee = 0;
 
+    // Maximum 5 persons allowed.
+    if (persons > 5) {
+        feeInput.value = '';
+        feeInput.placeholder = 'Discuss with your trainer';
+        return;
+    }
+
+    // Discount rules for all package types.
+    const discountMap = {
+        1: 0,
+        2: 10,
+        3: 20,
+        4: 27,
+        5: 33
+    };
+
+    const discount = discountMap[persons] || 0;
+    let actualAmount = 0;
+
+    // Single package
     if (pkg.value === 'Single') {
-        baseFee = 750;
+        actualAmount = 750 * persons;
     }
+
+    // Monthly package
     else if (pkg.value === 'Monthly') {
-        baseFee = 9000;
-    }
-    else {
-        // Custom package currently uses the same base as Monthly.
-        baseFee = 9000;
+        actualAmount = 9000 * persons;
     }
 
-    let discount = 0;
+    // Custom package
+    else if (pkg.value === 'Custom') {
+        const startValue = startDateInput?.value;
+        const endValue = endDateInput?.value;
+        const checkedDays = [...dayCheckboxes].filter(cb => cb.checked);
 
-    if (persons === 2) {
-        discount = 10;
-    }
-    else if (persons === 3) {
-        discount = 20;
-    }
-    else if (persons === 4) {
-        discount = 25;
-    }
-    else if (persons >= 5) {
-        discount = 30;
+        if (!startValue || !endValue || checkedDays.length === 0) {
+            feeInput.value = 0;
+            feeInput.placeholder = '';
+            return;
+        }
+
+        const startDate = new Date(startValue + 'T00:00:00');
+        const endDate = new Date(endValue + 'T00:00:00');
+
+        const weekdayMap = {
+            'Sun': 0,
+            'Mon': 1,
+            'Tue': 2,
+            'Wed': 3,
+            'Thu': 4,
+            'Fri': 5,
+            'Sat': 6,
+            'Sunday': 0,
+            'Monday': 1,
+            'Tuesday': 2,
+            'Wednesday': 3,
+            'Thursday': 4,
+            'Friday': 5,
+            'Saturday': 6
+        };
+
+        const selectedWeekdays = checkedDays.map(
+            cb => weekdayMap[cb.value]
+        );
+
+        let sessionCount = 0;
+        const current = new Date(startDate);
+
+        while (current <= endDate) {
+            if (selectedWeekdays.includes(current.getDay())) {
+                sessionCount++;
+            }
+            current.setDate(current.getDate() + 1);
+        }
+
+        // More than 14 sessions requires trainer discussion.
+        if (sessionCount > 14) {
+            feeInput.value = '';
+            feeInput.placeholder = 'Discuss with your trainer';
+            return;
+        }
+
+        // 12 to 14 sessions are capped at monthly equivalent.
+        if (sessionCount >= 12) {
+            actualAmount = 9000 * persons;
+        } else {
+            actualAmount = sessionCount * 750 * persons;
+        }
     }
 
-    // Calculate total fee for all persons, then apply the group discount.
-    const totalFee = baseFee * persons;
-    const finalFee = Math.round(totalFee * (100 - discount) / 100);
+    const finalFee = Math.round(
+        actualAmount * (100 - discount) / 100
+    );
+
+    feeInput.placeholder = '';
     feeInput.value = finalFee;
 }
 

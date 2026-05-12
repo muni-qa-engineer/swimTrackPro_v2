@@ -226,41 +226,57 @@ function isPastDate(dateObj) {
       ? selected.join(', ')
       : 'No days selected';
 
-    let baseFee = 0;
+    // Maximum 5 persons allowed.
+    if (persons > 5) {
+      feeInput.value = '';
+      feeInput.placeholder = 'Discuss with your trainer';
+      return;
+    }
+
+    // Discount rules for all package types.
+    const discountMap = {
+      1: 0,
+      2: 10,
+      3: 20,
+      4: 27,
+      5: 33
+    };
+
+    const discountPercent = discountMap[persons] || 0;
+    let actualAmount = 0;
 
     if (pkg.value === 'Single') {
-      baseFee = PRICING.SINGLE_DAY;
+      actualAmount = 750 * persons;
     }
     else if (pkg.value === 'Monthly') {
-      baseFee = PRICING.MONTHLY_PACKAGE;
+      actualAmount = 9000 * persons;
     }
-    else {
+    else if (pkg.value === 'Custom') {
       const startDateInput = document.querySelector('input[name="date"]');
       const endDateInput = document.querySelector('input[name="end_date"]');
 
-      if (!startDateInput.value || !endDateInput.value) {
+      if (!startDateInput.value || !endDateInput.value || selected.length === 0) {
         feeInput.value = 0;
+        feeInput.placeholder = '';
         return;
       }
 
-      const start = new Date(startDateInput.value);
-      const end = new Date(endDateInput.value);
+      const start = new Date(startDateInput.value + 'T00:00:00');
+      const end = new Date(endDateInput.value + 'T00:00:00');
+
+      const dayMap = {
+        'Sunday': 0,
+        'Monday': 1,
+        'Tuesday': 2,
+        'Wednesday': 3,
+        'Thursday': 4,
+        'Friday': 5,
+        'Saturday': 6
+      };
+
+      const selectedDayIndexes = selected.map(day => dayMap[day]);
 
       let totalClasses = 0;
-
-      const selectedDayIndexes = selected.map(day => {
-        const map = {
-          'Sunday': 0,
-          'Monday': 1,
-          'Tuesday': 2,
-          'Wednesday': 3,
-          'Thursday': 4,
-          'Friday': 5,
-          'Saturday': 6
-        };
-        return map[day];
-      });
-
       const current = new Date(start);
 
       while (current <= end) {
@@ -270,24 +286,26 @@ function isPastDate(dateObj) {
         current.setDate(current.getDate() + 1);
       }
 
-      const feePer12Classes = PRICING.CUSTOM_PACKAGE_BASE;
-      baseFee = Math.ceil((totalClasses / 12) * feePer12Classes);
+      // More than 14 sessions requires trainer discussion.
+      if (totalClasses > 14) {
+        feeInput.value = '';
+        feeInput.placeholder = 'Discuss with your trainer';
+        return;
+      }
+
+      // 12 to 14 sessions are capped at monthly equivalent.
+      if (totalClasses >= 12) {
+        actualAmount = 9000 * persons;
+      } else {
+        actualAmount = totalClasses * 750 * persons;
+      }
     }
 
-    // GROUP DISCOUNT SLABS
-    let discountPercent = 0;
+    const finalFee = Math.round(
+      actualAmount * (100 - discountPercent) / 100
+    );
 
-    if (persons >= 4) {
-      discountPercent = GROUP_DISCOUNTS[4];
-    }
-    else if (GROUP_DISCOUNTS[persons]) {
-      discountPercent = GROUP_DISCOUNTS[persons];
-    }
-
-    const totalFee = baseFee * persons;
-    const discountAmount = Math.ceil((totalFee * discountPercent) / 100);
-    const finalFee = totalFee - discountAmount;
-
+    feeInput.placeholder = '';
     feeInput.value = finalFee;
   }
 
