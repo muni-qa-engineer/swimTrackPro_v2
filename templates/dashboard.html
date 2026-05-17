@@ -11,36 +11,38 @@
     <div class="d-flex align-items-center ms-auto gap-2 flex-wrap">
 
       <span class="text-white me-1">👤 {{ user_name }}</span>
-      {% if role != 'admin' %}
-        <div class="dropdown">
-          <button
-            class="btn btn-outline-light btn-sm"
-            type="button"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-            title="Menu">
-            ☰
-          </button>
 
-          <ul class="dropdown-menu dropdown-menu-end">
-            <li>
-              <a class="dropdown-item" href="/about-trainer">
-                👨‍🏫 About Your Trainer
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item" href="/help">
-                📞 Help & Contact
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item" href="/logout">
-                🚪 Sign Out
-              </a>
-            </li>
-          </ul>
-        </div>
-      {% endif %}
+      <div class="dropdown">
+        <button
+          class="btn btn-outline-light btn-sm"
+          type="button"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+          title="Menu">
+          ☰
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end">
+          {% if role != 'admin' %}
+          <li>
+            <a class="dropdown-item" href="/about-trainer">
+              👨‍🏫 About Your Trainer
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="/help">
+              📞 Help & Contact
+            </a>
+          </li>
+          {% endif %}
+
+          <li>
+            <a class="dropdown-item" href="/logout">
+              🚪 Sign Out
+            </a>
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
 </nav>
