@@ -529,6 +529,47 @@ function renderCalendar() {
       return recurringDates.includes(fullDate);
     });
 
+    // --------------------------------------
+    // V0033.0 Step 12.1 - Add standalone make-up request events
+    // --------------------------------------
+    const standaloneMakeupEvents = [];
+
+    bookings.forEach(booking => {
+      if (!Array.isArray(booking.makeup_requests)) {
+        return;
+      }
+
+      booking.makeup_requests.forEach(request => {
+        // Skip if the requested date is already part of the
+        // regular booking schedule.
+        const isRegularBookingDate =
+          Array.isArray(booking.calendar_dates) &&
+          booking.calendar_dates.includes(request.requested_date);
+
+        if (isRegularBookingDate) {
+          return;
+        }
+
+        // Only render on the requested replacement date.
+        if (request.requested_date !== fullDate) {
+          return;
+        }
+
+        // Create a temporary booking-like object so the existing
+        // rendering and modal logic can be reused.
+        standaloneMakeupEvents.push({
+          ...booking,
+          calendar_dates: [request.requested_date],
+          pending_request_id:
+            request.status === 'pending' ? request.id : '',
+          makeup_requests: [request]
+        });
+      });
+    });
+
+    // Merge standalone make-up events into this day's events.
+    dayBookings.push(...standaloneMakeupEvents);
+
     const card = document.createElement('div');
     card.className = 'col-md-2 col-sm-3 col-6';
 
@@ -564,13 +605,109 @@ function renderCalendar() {
     dayBookings.forEach(booking => {
 
       const bookingDiv = document.createElement('div');
-      bookingDiv.className = 'calendar-booking';
+      bookingDiv.className = 'calendar-booking calendar-session';
+      bookingDiv.style.cursor = 'pointer';
+      bookingDiv.title = 'Click to open session options';
+
+      // Data used by the calendar modal in dashboard.html
+      bookingDiv.dataset.bookingId = booking.id || '';
+      bookingDiv.dataset.student = booking.student || '';
+      bookingDiv.dataset.package = booking.package || booking.package_type || '';
+      bookingDiv.dataset.sessionDate = fullDate;
+      // --------------------------------------
+      // V0033.0 Step 9 - Available Make-Up Credit
+      // --------------------------------------
+      bookingDiv.dataset.availableMakeupCreditId =
+        booking.available_makeup_credit_id || '';
+
+      bookingDiv.dataset.hasAvailableMakeupCredit =
+        booking.has_available_makeup_credit ? 'true' : 'false';
+      bookingDiv.dataset.endDate = booking.end_date || '';
+      bookingDiv.dataset.pendingRequestId =
+        booking.pending_request_id || '';
+
+      // --------------------------------------
+      // V0033.0 Step 7 - Skip Eligibility Rules
+      // --------------------------------------
+      const packageType = booking.package || booking.package_type || '';
+      const scheduledClasses = (booking.calendar_dates || []).length;
+
+      // Count already-used skip credits for this booking from the data
+      // loaded on the page, if available.
+      const usedSkips = Number(booking.makeup_credits_used || 0);
+
+      let maxSkips = 0;
+      let validUntil = '';
+
+      if (packageType === 'Monthly') {
+        // Monthly package: maximum 2 skips.
+        maxSkips = 2;
+
+        // Valid until package end date + 5 days.
+        if (booking.end_date) {
+          const expiry = new Date(booking.end_date + 'T00:00:00');
+          expiry.setDate(expiry.getDate() + 5);
+          validUntil = formatDate(expiry);
+        }
+      } else if (packageType === 'Custom') {
+        // Custom package: 1 skip for every 7 scheduled classes.
+        maxSkips = Math.floor(scheduledClasses / 7);
+
+        // Valid within 3 days from the skipped date.
+        const sessionDateObj = new Date(fullDate + 'T00:00:00');
+        sessionDateObj.setDate(sessionDateObj.getDate() + 3);
+        validUntil = formatDate(sessionDateObj);
+      }
+
+      const skipRemaining = Math.max(0, maxSkips - usedSkips);
+
+      bookingDiv.dataset.skipRemaining = String(skipRemaining);
+      bookingDiv.dataset.validUntil = validUntil;
+      bookingDiv.dataset.skipEligible = skipRemaining > 0 ? 'true' : 'false';
 
       if (isPastSession) {
         bookingDiv.classList.add('past-session');
       }
 
-      bookingDiv.innerHTML = `🏊 ${booking.student} • ⏰ ${booking.time || 'N/A'}`;
+      // --------------------------------------
+      // V0033.0 Step 10 - Calendar Status Indicators
+      // --------------------------------------
+      let statusLines = [];
+
+      // Show "Skipped" on the original skipped session date.
+      if (Array.isArray(booking.skipped_dates) &&
+          booking.skipped_dates.includes(fullDate)) {
+        statusLines.push(
+          '<div class="small text-warning fw-semibold">🔶 Skipped</div>'
+        );
+      }
+
+      // Show pending/approved/rejected on requested replacement dates.
+      if (Array.isArray(booking.makeup_requests)) {
+        booking.makeup_requests.forEach(request => {
+          if (request.requested_date !== fullDate) {
+            return;
+          }
+
+          if (request.status === 'pending') {
+            statusLines.push(
+              '<div class="small text-warning fw-semibold">🟡 Pending Approval</div>'
+            );
+          } else if (request.status === 'approved') {
+            statusLines.push(
+              '<div class="small text-success fw-semibold">🟢 Approved</div>'
+            );
+          } else if (request.status === 'rejected') {
+            statusLines.push(
+              '<div class="small text-danger fw-semibold">🔴 Rejected</div>'
+            );
+          }
+        });
+      }
+
+      bookingDiv.innerHTML =
+        `🏊 ${booking.student} • ⏰ ${booking.time || 'N/A'}` +
+        (statusLines.length ? `<br>${statusLines.join('')}` : '');
 
       const existingEvents = eventsContainer.querySelectorAll('.calendar-booking');
 
@@ -837,5 +974,46 @@ function updateSwimmerBookingState() {
 }
 
 
+
 window.addEventListener('load', updateSwimmerBookingState);
+
+// --------------------------------------
+// V0034.0.1 - Generic Form Loading Helper
+// Used for Update Notice Board spinner.
+// --------------------------------------
+function enableFormLoading(formId, loadingText) {
+  const form = document.getElementById(formId);
+
+  if (!form) {
+    return;
+  }
+
+  form.addEventListener('submit', function() {
+    const submitButton = form.querySelector('button[type="submit"]');
+
+    if (!submitButton || submitButton.disabled) {
+      return;
+    }
+
+    submitButton.disabled = true;
+
+    const spinner = submitButton.querySelector('.spinner-border');
+    if (spinner) {
+      spinner.classList.remove('d-none');
+    }
+
+    const textSpan =
+      submitButton.querySelector('#updateNoticeText') ||
+      submitButton.querySelector('span:last-child');
+
+    if (textSpan) {
+      textSpan.textContent = loadingText;
+    } else {
+      submitButton.textContent = loadingText;
+    }
+  });
+}
+
+// Enable loading animation for the Admin Notice Board form.
+enableFormLoading('updateNoticeForm', 'Updating...');
 

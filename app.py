@@ -4,6 +4,8 @@ from email.mime.text import MIMEText
 import psycopg2
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from datetime import datetime, timedelta
+import os
+import json
 
 app = Flask(__name__)
 from config import (
@@ -192,10 +194,136 @@ def get_pg_connection():
     return psycopg2.connect(DATABASE_URL)
 
 
-def load_data():
+# V0033.0 - Make-Up Class Management
+def ensure_makeup_tables():
+    """
+    V0033.0 - Make-Up Class Management
+
+    Creates the PostgreSQL tables required for:
+    1. makeup_credits  - Stores skipped classes as reusable credits.
+    2. makeup_requests - Stores replacement date requests and approvals.
+
+    This function is safe to call multiple times because it uses
+    CREATE TABLE IF NOT EXISTS.
+    """
     conn = get_pg_connection()
     cursor = conn.cursor()
-    columns = [desc[0] for desc in cursor.description] if cursor.description else []
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS makeup_credits (
+        id SERIAL PRIMARY KEY,
+        booking_id TEXT NOT NULL,
+        original_date DATE NOT NULL,
+        status VARCHAR(20) NOT NULL DEFAULT 'available',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        used_at TIMESTAMP,
+        notes TEXT
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS makeup_requests (
+        id SERIAL PRIMARY KEY,
+        credit_id INTEGER NOT NULL REFERENCES makeup_credits(id) ON DELETE CASCADE,
+        booking_id TEXT NOT NULL,
+        original_date DATE NOT NULL,
+        requested_date DATE NOT NULL,
+        status VARCHAR(20) NOT NULL DEFAULT 'pending',
+        requested_by VARCHAR(100),
+        approved_by VARCHAR(100),
+        decision_notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        decided_at TIMESTAMP
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+# --- Make-Up Credit Helpers ---
+def has_makeup_credit(booking_id, original_date):
+    """Return True if a make-up credit already exists for this booking/date."""
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT 1
+        FROM makeup_credits
+        WHERE booking_id = %s
+          AND original_date = %s
+        LIMIT 1
+    """, (str(booking_id), original_date))
+
+    exists = cursor.fetchone() is not None
+    conn.close()
+    return exists
+
+
+def create_makeup_credit(booking_id, original_date, notes='Skipped session'):
+    """
+    Create a make-up credit for a skipped class.
+    Returns True if a new credit was created, False if one already exists.
+    """
+    if has_makeup_credit(booking_id, original_date):
+        return False
+
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO makeup_credits (
+            booking_id,
+            original_date,
+            status,
+            notes
+        ) VALUES (%s, %s, 'available', %s)
+    """, (
+        str(booking_id),
+        original_date,
+        notes
+    ))
+
+    conn.commit()
+    conn.close()
+    return True
+
+
+# --- Make-Up Credit Query Helper ---
+def get_available_makeup_credits(booking_id):
+    """
+    Return all available make-up credits for a booking.
+    """
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id, original_date, notes, created_at
+        FROM makeup_credits
+        WHERE booking_id = %s
+          AND status = 'available'
+        ORDER BY original_date
+    """, (str(booking_id),))
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    credits = []
+    for row in rows:
+        credits.append({
+            'id': row[0],
+            'original_date': str(row[1]),
+            'notes': row[2] or '',
+            'created_at': str(row[3]) if row[3] else ''
+        })
+
+    return credits
+
+
+def load_data():
+    ensure_makeup_tables()
+    conn = get_pg_connection()
+    cursor = conn.cursor()
 
     # Load students
     cursor.execute('SELECT * FROM students')
@@ -255,7 +383,7 @@ def load_data():
             completed_classes = 0
             remaining_classes = total_classes
 
-        bookings.append({
+        booking = {
             'id': b[0],
             'student': b[1],
             'created_by': b[2],
@@ -269,6 +397,9 @@ def load_data():
             'fee': b[10],
             'status': b[11],
             'payment_request': b[12],
+            # Alias used by editBooking.html to preselect the
+            # Payment Status dropdown correctly.
+            'payment_status': b[12],
             'owner_name': b[13],
             'owner_phone': b[14],
             'delete_requested': b[15] if len(b) > 15 else False,
@@ -279,7 +410,92 @@ def load_data():
             'total_classes': total_classes,
             'completed_classes': completed_classes,
             'remaining_classes': remaining_classes
-        })
+        }
+
+        # --------------------------------------
+        # V0033.0 Step 8/9 - Load Make-Up Counts
+        # --------------------------------------
+        conn_makeup = get_pg_connection()
+        cursor_makeup = conn_makeup.cursor()
+
+        # Total skipped sessions already created for this booking.
+        cursor_makeup.execute("""
+            SELECT COUNT(*)
+            FROM makeup_credits
+            WHERE booking_id = %s
+        """, (str(booking['id']),))
+
+        booking['makeup_credits_used'] = (
+            cursor_makeup.fetchone()[0] or 0
+        )
+
+        # First available make-up credit (if any).
+        cursor_makeup.execute("""
+            SELECT id
+            FROM makeup_credits
+            WHERE booking_id = %s
+              AND status = 'available'
+            ORDER BY original_date
+            LIMIT 1
+        """, (str(booking['id']),))
+
+        row_makeup = cursor_makeup.fetchone()
+
+        booking['available_makeup_credit_id'] = (
+            row_makeup[0] if row_makeup else None
+        )
+
+        booking['has_available_makeup_credit'] = (
+            booking['available_makeup_credit_id'] is not None
+        )
+
+
+        # --------------------------------------
+        # V0033.0 Step 10 - Calendar Status Data
+        # --------------------------------------
+
+        # Load all skipped dates for this booking.
+        cursor_makeup.execute("""
+            SELECT original_date, status
+            FROM makeup_credits
+            WHERE booking_id = %s
+            ORDER BY original_date
+        """, (str(booking['id']),))
+
+        skipped_rows = cursor_makeup.fetchall()
+
+        booking['skipped_dates'] = [
+            str(row[0])
+            for row in skipped_rows
+        ]
+
+        # Original skipped dates whose make-up credit has already been used.
+        booking['used_makeup_dates'] = [
+            str(row[0])
+            for row in skipped_rows
+            if row[1] == 'used'
+        ]
+
+        # Load all make-up requests for this booking.
+        cursor_makeup.execute("""
+            SELECT id, requested_date, status
+            FROM makeup_requests
+            WHERE booking_id = %s
+            ORDER BY requested_date
+        """, (str(booking['id']),))
+
+        booking['makeup_requests'] = [
+            {
+                'id': row[0],
+                'requested_date': str(row[1]),
+                'status': row[2]
+            }
+            for row in cursor_makeup.fetchall()
+        ]
+
+        conn_makeup.close()
+
+        bookings.append(booking)
 
     conn.close()
 
@@ -413,16 +629,23 @@ def index():
         if str(b.get('status', '')).lower() != 'paid'
     )
 
-    return render_template('dashboard.html', 
-                           user_name=session['user_name'],
-                           role=session.get('role', 'guest'),
-                           bookings=user_bookings,
-                           students=user_students,
-                           total_swimmers=total_swimmers,
-                           active_bookings=active_bookings,
-                           completed_bookings=completed_bookings,
-                           monthly_revenue=monthly_revenue,
-                           pending_payments=pending_payments
+    return render_template(
+        'dashboard.html',
+        user_name=session['user_name'],
+        role=session.get('role', 'guest'),
+        bookings=user_bookings,
+        students=user_students,
+        total_swimmers=total_swimmers,
+        active_bookings=active_bookings,
+        completed_bookings=completed_bookings,
+        monthly_revenue=monthly_revenue,
+        pending_payments=pending_payments,
+        notice_message=get_setting(
+            'notice_message',
+            '💰 Monthly fees are due before 5 days of the package end date • '
+            '🏆 Special coaching sessions available • '
+            '📞 Contact the trainer for any schedule changes'
+        )
     )
 
 @app.route('/login', methods=['POST'])
@@ -444,35 +667,53 @@ def login():
         flash('Invalid admin credentials')
         return redirect(url_for('index'))
 
-    if role == "guest" and name:
-        # Validate 10-digit phone number for guests
-        if not phone.isdigit() or len(phone) != 10:
-            flash("Invalid phone number. Please enter exactly 10 digits.")
+    if role == 'guest' and name:
+        # Normalize values
+        normalized_name = name.lower()
+        phone = ''.join(ch for ch in phone if ch.isdigit())
+
+        # Validate 10-digit phone number
+        if len(phone) != 10:
+            flash('Please enter a valid 10-digit mobile number.')
             return redirect(url_for('index'))
 
-        data = load_data()
-        users = {}
+        conn = get_pg_connection()
+        cursor = conn.cursor()
 
-        # Existing name check: Verify phone matches if user exists
-        if name in users:
-            if users[name] != phone:
-                flash("This name is already registered with a different phone number.")
+        # Find any existing users with the same phone number
+        # from the students and bookings tables.
+        cursor.execute("""
+        SELECT owner_name
+        FROM students
+        WHERE owner_phone = %s
+
+        UNION
+
+        SELECT owner_name
+        FROM bookings
+        WHERE owner_phone = %s
+
+        LIMIT 1
+        """, (phone, phone))
+
+        existing_row = cursor.fetchone()
+        conn.close()
+
+        # If this phone number already belongs to a different user
+        # (case-insensitive comparison), reject the login.
+        if existing_row:
+            existing_name = (existing_row[0] or '').strip().lower()
+
+            if existing_name != normalized_name:
+                flash('User already exists with this mobile number.')
                 return redirect(url_for('index'))
 
-        # Existing phone check: Ensure phone isn't taken by a different name
-        for existing_name, existing_phone in users.items():
-            if existing_phone == phone and existing_name != name:
-                flash("This phone number is already registered to another user.")
-                return redirect(url_for('index'))
-
-        # Register new user if they don't exist
-        if name not in users:
-            users[name] = phone
-
+        # Valid guest login. Preserve the entered display name
+        # and store the normalized phone number.
         session['role'] = 'guest'
-        # Set Guest session
         session['user_name'] = name
         session['phone'] = phone
+
         return redirect(url_for('index'))
 
     # Fallback if no valid role or name is provided
@@ -529,8 +770,6 @@ def add_swimmer():
 
 @app.route('/delete_swimmer/<name>', methods=['POST'])
 def delete_swimmer(name):
-    data = load_data()
-
     current_user = session.get('user_name')
     current_phone = session.get('phone')
 
@@ -770,8 +1009,12 @@ def edit_booking(booking_id):
         flash("Booking not found")
         return redirect(url_for('index'))
 
-    # Render edit page with booking data
-    return render_template('editBooking.html', booking=booking)
+    # Render edit page with booking data and user role
+    return render_template(
+        'editBooking.html',
+        booking=booking,
+        role=session.get('role', 'guest')
+    )
 
 @app.route('/update/<booking_id>', methods=['POST'])
 def update_booking(booking_id):
@@ -1199,6 +1442,527 @@ def reject_delete(booking_id):
     conn.close()
 
     flash('Delete request rejected')
+    return redirect(url_for('index'))
+
+
+# --- Skip Session and Create Make-Up Credit Route ---
+
+@app.route('/skip_session/<booking_id>/<session_date>', methods=['POST'])
+def skip_session(booking_id, session_date):
+    """
+    V0033.0 Step 2 - Skip a scheduled class and create a make-up credit.
+
+    session_date format: YYYY-MM-DD
+    """
+    if 'user_name' not in session:
+        flash('Please log in first')
+        return redirect(url_for('index'))
+
+    # Validate that the booking exists directly from PostgreSQL.
+    # Avoid calling load_data() here because load_data() may trigger
+    # logic that rewrites existing bookings and causes duplicate
+    # primary key errors.
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT
+        id,
+        student_name,
+        owner_name,
+        owner_phone,
+        start_date,
+        end_date,
+        selected_days
+    FROM bookings
+    WHERE id = %s
+    LIMIT 1
+    """, (str(booking_id),))
+
+    row = cursor.fetchone()
+    conn.close()
+
+    if row:
+        booking = {
+            'id': row[0],
+            'student': row[1],
+            'owner_name': row[2],
+            'owner_phone': row[3],
+            'calendar_dates': generate_recurring_dates(
+                str(row[4]),
+                str(row[5]),
+                row[6]
+            )
+        }
+    else:
+        booking = None
+
+    if not booking:
+        flash('Booking not found')
+        return redirect(url_for('index'))
+
+    # Guests may skip only their own bookings.
+    if session.get('role') != 'admin':
+        if (
+            booking.get('owner_name') != session.get('user_name')
+            or booking.get('owner_phone') != session.get('phone')
+        ):
+            flash('Unauthorized action')
+            return redirect(url_for('index'))
+
+    # Validate that the selected date belongs to this booking schedule.
+    calendar_dates = booking.get('calendar_dates', [])
+    if session_date not in calendar_dates:
+        flash('Invalid session date')
+        return redirect(url_for('index'))
+
+    # Create one make-up credit for this skipped session.
+    created = create_makeup_credit(
+        booking_id,
+        session_date,
+        f"Skipped session for {booking.get('student', '')}"
+    )
+
+    if created:
+        flash(
+            f"Session on {session_date} marked as skipped. "
+            "One make-up credit has been created."
+        )
+    else:
+        flash('A make-up credit already exists for this session.')
+
+    return redirect(url_for('index'))
+
+
+# --- Undo Skip Session Route ---
+@app.route('/undo_skip_session/<booking_id>/<session_date>', methods=['POST'])
+def undo_skip_session(booking_id, session_date):
+    """
+    Remove a skipped-session credit when no make-up request has been created.
+
+    This allows a swimmer to reverse an accidental skip before the credit
+    is used to submit a pending or approved make-up request.
+    """
+    if 'user_name' not in session:
+        flash('Please log in first')
+        return redirect(url_for('index'))
+
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+
+    # Load the booking to verify ownership.
+    cursor.execute("""
+    SELECT owner_name, owner_phone
+    FROM bookings
+    WHERE id = %s
+    LIMIT 1
+    """, (str(booking_id),))
+
+    booking_row = cursor.fetchone()
+
+    if not booking_row:
+        conn.close()
+        flash('Booking not found.')
+        return redirect(url_for('index'))
+
+    # Guests may undo only their own skipped sessions.
+    if session.get('role') != 'admin':
+        if (
+            booking_row[0] != session.get('user_name')
+            or booking_row[1] != session.get('phone')
+        ):
+            conn.close()
+            flash('Unauthorized action')
+            return redirect(url_for('index'))
+
+    # Find an available make-up credit for this skipped date.
+    cursor.execute("""
+    SELECT id
+    FROM makeup_credits
+    WHERE booking_id = %s
+      AND original_date = %s
+      AND status = 'available'
+    LIMIT 1
+    """, (
+        str(booking_id),
+        session_date
+    ))
+
+    credit_row = cursor.fetchone()
+
+    if not credit_row:
+        conn.close()
+        flash('This skipped session cannot be undone.')
+        return redirect(url_for('index'))
+
+    credit_id = credit_row[0]
+
+    # Safety check: do not allow undo if any make-up request already exists.
+    cursor.execute("""
+    SELECT 1
+    FROM makeup_requests
+    WHERE credit_id = %s
+    LIMIT 1
+    """, (credit_id,))
+
+    if cursor.fetchone():
+        conn.close()
+        flash('Cannot undo because a make-up request already exists.')
+        return redirect(url_for('index'))
+
+    # Delete the unused make-up credit.
+    cursor.execute("""
+    DELETE FROM makeup_credits
+    WHERE id = %s
+    """, (credit_id,))
+
+    conn.commit()
+    conn.close()
+
+    flash('Skipped session has been restored.')
+    return redirect(url_for('index'))
+
+
+@app.route('/makeup_request/<booking_id>')
+def makeup_request_form(booking_id):
+    """
+    Display the make-up request form for all available credits.
+    """
+    if 'user_name' not in session:
+        flash('Please log in first')
+        return redirect(url_for('index'))
+
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT student_name, owner_name, owner_phone
+    FROM bookings
+    WHERE id = %s
+    LIMIT 1
+    """, (str(booking_id),))
+
+    row = cursor.fetchone()
+    conn.close()
+
+    if not row:
+        flash('Booking not found')
+        return redirect(url_for('index'))
+
+    # Guests may access only their own bookings.
+    if session.get('role') != 'admin':
+        if row[1] != session.get('user_name') or row[2] != session.get('phone'):
+            flash('Unauthorized action')
+            return redirect(url_for('index'))
+
+    credits = get_available_makeup_credits(booking_id)
+
+    if not credits:
+        flash('No available make-up credits.')
+        return redirect(url_for('index'))
+
+    return render_template(
+        'makeup_request.html',
+        booking_id=booking_id,
+        student_name=row[0],
+        credits=credits
+    )
+
+
+
+@app.route('/submit_makeup_request', methods=['POST'])
+def submit_makeup_request():
+    """
+    Create a make-up request for a selected credit and replacement date.
+    """
+    if 'user_name' not in session:
+        flash('Please log in first')
+        return redirect(url_for('index'))
+
+    booking_id = (request.form.get('booking_id') or '').strip()
+    credit_id = (request.form.get('credit_id') or '').strip()
+    requested_date = (request.form.get('requested_date') or '').strip()
+
+    if not booking_id or not credit_id or not requested_date:
+        flash('All fields are required.')
+        return redirect(url_for('index'))
+
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+
+    # Validate the selected credit.
+    cursor.execute("""
+    SELECT original_date
+    FROM makeup_credits
+    WHERE id = %s
+      AND booking_id = %s
+      AND status = 'available'
+    LIMIT 1
+    """, (credit_id, str(booking_id)))
+
+    row = cursor.fetchone()
+
+    if not row:
+        conn.close()
+        flash('Selected make-up credit is no longer available.')
+        return redirect(url_for('index'))
+
+    original_date = row[0]
+
+    # --------------------------------------
+    # V0033.1 Step 1 - Prevent Same-Day Selection
+    # Users can only request a replacement on a future date.
+    # The requested date must be strictly greater than the skipped date.
+    # --------------------------------------
+    try:
+        requested_dt = datetime.strptime(
+            requested_date,
+            '%Y-%m-%d'
+        ).date()
+
+        original_dt = original_date
+
+        if requested_dt <= original_dt:
+            conn.close()
+            flash(
+                'Replacement date must be after the skipped session date.'
+            )
+            return redirect(url_for('index'))
+
+    except Exception:
+        conn.close()
+        flash('Invalid replacement date.')
+        return redirect(url_for('index'))
+
+    # Prevent duplicate pending requests for the same credit.
+    cursor.execute("""
+    SELECT 1
+    FROM makeup_requests
+    WHERE credit_id = %s
+      AND status IN ('pending', 'approved')
+    LIMIT 1
+    """, (credit_id,))
+
+    if cursor.fetchone():
+        conn.close()
+        flash('A make-up request already exists for this skipped session.')
+        return redirect(url_for('index'))
+
+    # Create pending request.
+    cursor.execute("""
+    INSERT INTO makeup_requests (
+        credit_id,
+        booking_id,
+        original_date,
+        requested_date,
+        status,
+        requested_by
+    ) VALUES (%s, %s, %s, %s, 'pending', %s)
+    """, (
+        int(credit_id),
+        str(booking_id),
+        original_date,
+        requested_date,
+        session.get('user_name')
+    ))
+
+    conn.commit()
+    conn.close()
+
+    flash('Make-up request submitted successfully for admin approval.')
+    return redirect(url_for('index'))
+
+
+# --- Approve and Reject Make-Up Request Routes ---
+
+@app.route('/approve_makeup_request/<int:request_id>', methods=['POST'])
+def approve_makeup_request(request_id):
+    """
+    Approve a pending make-up request and consume the related credit.
+    """
+    if session.get('role') != 'admin':
+        flash('Unauthorized action')
+        return redirect(url_for('index'))
+
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+
+    # Load the pending request and its credit.
+    cursor.execute("""
+    SELECT credit_id
+    FROM makeup_requests
+    WHERE id = %s
+      AND status = 'pending'
+    LIMIT 1
+    """, (request_id,))
+
+    row = cursor.fetchone()
+
+    if not row:
+        conn.close()
+        flash('Pending make-up request not found.')
+        return redirect(url_for('index'))
+
+    credit_id = row[0]
+
+    # Mark the request as approved.
+    cursor.execute("""
+    UPDATE makeup_requests
+    SET
+        status = 'approved',
+        approved_by = %s,
+        decided_at = CURRENT_TIMESTAMP
+    WHERE id = %s
+    """, (
+        session.get('user_name', 'Admin'),
+        request_id
+    ))
+
+    # Mark the associated credit as used.
+    cursor.execute("""
+    UPDATE makeup_credits
+    SET
+        status = 'used',
+        used_at = CURRENT_TIMESTAMP
+    WHERE id = %s
+    """, (credit_id,))
+
+    conn.commit()
+    conn.close()
+
+    flash('Make-up request approved successfully.')
+    return redirect(url_for('index'))
+
+
+@app.route('/reject_makeup_request/<int:request_id>', methods=['POST'])
+def reject_makeup_request(request_id):
+    """
+    Reject or undo a pending make-up request.
+
+    Behavior:
+    - Delete the pending record from makeup_requests.
+    - Restore the related makeup_credits row to status = 'available'.
+    """
+    if session.get('role') not in ('admin', 'guest'):
+        flash('Unauthorized action')
+        return redirect(url_for('index'))
+
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+
+    # Load the pending request and related credit.
+    cursor.execute("""
+    SELECT credit_id
+    FROM makeup_requests
+    WHERE id = %s
+      AND status = 'pending'
+    LIMIT 1
+    """, (request_id,))
+
+    row = cursor.fetchone()
+
+    if not row:
+        conn.close()
+        flash('Pending make-up request not found.')
+        return redirect(url_for('index'))
+
+    credit_id = row[0]
+
+    # Restore the make-up credit so it can be used again.
+    cursor.execute("""
+    UPDATE makeup_credits
+    SET
+        status = 'available',
+        used_at = NULL
+    WHERE id = %s
+    """, (credit_id,))
+
+    # Remove the pending request completely.
+    cursor.execute("""
+    DELETE FROM makeup_requests
+    WHERE id = %s
+    """, (request_id,))
+
+    conn.commit()
+    conn.close()
+
+    flash('Pending make-up request has been revoked.')
+    return redirect(url_for('index'))
+
+@app.route('/about-trainer')
+def about_trainer():
+    if 'user_name' not in session:
+        return redirect(url_for('index'))
+
+    return render_template('about_trainer.html')
+
+# --- Help Page Route ---
+
+@app.route('/help')
+def help_page():
+    if 'user_name' not in session:
+        return redirect(url_for('index'))
+
+    return render_template('help.html')
+
+
+
+# --- Notice Board Settings Helpers and Route ---
+def get_setting(setting_key, default_value=''):
+    settings_file = os.path.join(
+        os.path.dirname(__file__),
+        'settings.json'
+    )
+
+    if not os.path.exists(settings_file):
+        return default_value
+
+    try:
+        with open(settings_file, 'r', encoding='utf-8') as f:
+            settings = json.load(f)
+        return settings.get(setting_key, default_value)
+    except Exception:
+        return default_value
+
+
+def set_setting(setting_key, value):
+    settings_file = os.path.join(
+        os.path.dirname(__file__),
+        'settings.json'
+    )
+    settings = {}
+
+    if os.path.exists(settings_file):
+        try:
+            with open(settings_file, 'r', encoding='utf-8') as f:
+                settings = json.load(f)
+        except Exception:
+            settings = {}
+
+    settings[setting_key] = value
+
+    with open(settings_file, 'w', encoding='utf-8') as f:
+        json.dump(settings, f, ensure_ascii=False, indent=2)
+
+
+@app.route('/update_notice', methods=['POST'])
+def update_notice():
+    if 'user_name' not in session:
+        return redirect(url_for('index'))
+
+    if session.get('role') != 'admin':
+        flash('Only admin can update the Notice Board.', 'danger')
+        return redirect(url_for('index'))
+
+    notice_message = request.form.get('notice_message', '').strip()
+
+    if not notice_message:
+        flash('Notice Board message cannot be empty.', 'warning')
+        return redirect(url_for('index'))
+
+    set_setting('notice_message', notice_message)
+
+    flash('Notice Board updated successfully.', 'success')
     return redirect(url_for('index'))
 
 @app.route('/logout')

@@ -221,12 +221,24 @@
             <form action="/login" method="post" id="loginForm">
                 <input type="hidden" name="role" id="roleInput" value="guest">
 
+
                 <div class="mb-4 mt-2">
                     <label class="form-label">Username</label>
                     <div class="input-group">
                         <span class="input-group-text">👤</span>
-                        <input type="text" name="name" class="form-control" placeholder="Enter username" required>
+                        <input
+                            type="text"
+                            name="name"
+                            id="nameInput"
+                            class="form-control"
+                            placeholder="Enter username"
+                            maxlength="50"
+                            required
+                        >
                     </div>
+                    <small id="nameError" class="text-danger d-none">
+                        Please enter a valid username
+                    </small>
                 </div>
 
                 <div class="mb-4 d-none" id="passwordField">
@@ -271,10 +283,22 @@
                     <small id="phoneError" class="text-danger d-none">
                         Please enter valid 10-digit mobile number
                     </small>
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            <small class="text-danger d-block mt-1" style="font-size: 0.78rem;">
+                                ⚠️ {{ messages[-1] }}
+                            </small>
+                        {% endif %}
+                    {% endwith %}
                 </div>
 
                 <button type="submit" class="login-btn">
-                    Login as Guest
+                    <span
+                        class="spinner-border spinner-border-sm me-2 d-none"
+                        role="status"
+                        aria-hidden="true">
+                    </span>
+                    <span>Login as Guest</span>
                 </button>
 
                 <!-- <div class="divider" style="display: flex; justify-content: center;">or</div> -->
@@ -303,6 +327,8 @@
     const phoneField = document.getElementById('phoneField');
     const passwordField = document.getElementById('passwordField');
     const passwordInput = document.getElementById('passwordInput');
+    const nameInput = document.getElementById('nameInput');
+    const nameError = document.getElementById('nameError');
 
 
     function activateAdminMode() {
@@ -368,18 +394,67 @@
 
 if (loginForm) {
     loginForm.addEventListener('submit', (e) => {
+        // Reset previous validation messages
+        if (phoneError) {
+            phoneError.classList.add('d-none');
+        }
+
+        if (nameError) {
+            nameError.classList.add('d-none');
+        }
+
+        if (phoneInput) {
+            phoneInput.classList.remove('is-invalid');
+        }
+
+        if (nameInput) {
+            nameInput.classList.remove('is-invalid');
+        }
+
+        // Normalize username (trim spaces)
+        if (nameInput) {
+            nameInput.value = nameInput.value.trim();
+        }
+
+        // Username validation
+        if (!nameInput || nameInput.value.length === 0) {
+            e.preventDefault();
+
+            if (nameError) {
+                nameError.textContent = 'Please enter a valid username';
+                nameError.classList.remove('d-none');
+            }
+
+            if (nameInput) {
+                nameInput.classList.add('is-invalid');
+            }
+
+            return;
+        }
 
         if (roleInput.value === 'guest') {
             const phone = phoneInput.value.trim();
 
-            if (!/^\d{10}$/.test(phone)) {
+            // Normalize phone number to digits only
+            phoneInput.value = phone.replace(/\D/g, '');
+
+            if (!/^\d{10}$/.test(phoneInput.value)) {
                 e.preventDefault();
-                phoneError.classList.remove('d-none');
+
+                if (phoneError) {
+                    phoneError.textContent =
+                        'Please enter a valid 10-digit mobile number';
+                    phoneError.classList.remove('d-none');
+                }
+
                 phoneInput.classList.add('is-invalid');
+                return;
             }
         }
     });
 }
 </script>
 </body>
+<script src="{{ url_for('static', filename='login.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </html>
