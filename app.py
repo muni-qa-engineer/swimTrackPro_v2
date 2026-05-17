@@ -6,6 +6,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from datetime import datetime, timedelta
 import os
 import json
+from email_service import send_email
 
 app = Flask(__name__)
 from config import (
@@ -21,42 +22,34 @@ app.secret_key = SECRET_KEY
 
 
 def send_booking_notification(booking):
-    """Send an email notification when a new booking is created."""
-    if not SMTP_EMAIL or not SMTP_PASSWORD or not ADMIN_NOTIFICATION_EMAIL:
-        return
-
+    """Send a booking alert email using Brevo."""
     try:
         subject = f"New Booking - {booking.get('student', 'SwimTrackPro')}"
 
-        body = f"""New booking created in SwimTrackPro.
+        html_content = f"""
+        <h2>🏊 New Booking Alert</h2>
+        <table border="1" cellpadding="6" cellspacing="0">
+            <tr><td><strong>Swimmer</strong></td><td>{booking.get('student', '')}</td></tr>
+            <tr><td><strong>Package</strong></td><td>{booking.get('package', '')}</td></tr>
+            <tr><td><strong>Start Date</strong></td><td>{booking.get('start_date', '')}</td></tr>
+            <tr><td><strong>End Date</strong></td><td>{booking.get('end_date', '')}</td></tr>
+            <tr><td><strong>Time</strong></td><td>{booking.get('time', '')}</td></tr>
+            <tr><td><strong>Persons</strong></td><td>{booking.get('persons', '')}</td></tr>
+            <tr><td><strong>Fee</strong></td><td>₹{booking.get('fee', 0)}</td></tr>
+            <tr><td><strong>Payment Status</strong></td><td>{booking.get('payment_request', '')}</td></tr>
+            <tr><td><strong>Location</strong></td><td>{booking.get('location', '')}</td></tr>
+            <tr><td><strong>Booked By</strong></td><td>{booking.get('owner_name', '')}</td></tr>
+            <tr><td><strong>Phone</strong></td><td>{booking.get('owner_phone', '')}</td></tr>
+        </table>
+        """
 
-Swimmer: {booking.get('student', '')}
-Package: {booking.get('package', '')}
-Start Date: {booking.get('start_date', '')}
-End Date: {booking.get('end_date', '')}
-Time: {booking.get('time', '')}
-Persons: {booking.get('persons', '')}
-Fee: ₹{booking.get('fee', 0)}
-Payment Status: {booking.get('payment_request', '')}
-Location: {booking.get('location', '')}
-Booked By: {booking.get('owner_name', '')}
-Phone: {booking.get('owner_phone', '')}
-"""
+        success = send_email(
+            subject=subject,
+            html_content=html_content
+        )
 
-        message = MIMEText(body)
-        message['Subject'] = subject
-        message['From'] = SMTP_EMAIL
-        message['To'] = ADMIN_NOTIFICATION_EMAIL
-
-        # Use a short timeout so email issues never block booking creation.
-        with smtplib.SMTP('smtp-relay.brevo.com', 587, timeout=10) as server:
-            server.starttls()
-            server.login(SMTP_EMAIL, SMTP_PASSWORD)
-            server.sendmail(
-                SMTP_EMAIL,
-                [ADMIN_NOTIFICATION_EMAIL],
-                message.as_string()
-            )
+        if not success:
+            print("Booking notification email was not sent.")
 
     except Exception as e:
         print(f"Email notification failed: {e}")
