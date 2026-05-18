@@ -351,16 +351,22 @@ def load_data():
 
         try:
             if calendar_dates and b[9]:
+                # Capture the current time once so all session comparisons
+                # use the same timestamp during this request.
+                current_datetime = datetime.now()
+
                 for class_date in calendar_dates:
                     class_datetime = datetime.strptime(
                         f"{class_date} {b[9]}",
                         '%Y-%m-%d %I:%M %p'
                     )
 
-                    # Each session duration = 1 hour
+                    # Each session duration = 1 hour.
+                    # Mark the class as completed immediately after the
+                    # scheduled end time has passed.
                     class_end_datetime = class_datetime + timedelta(hours=1)
 
-                    if datetime.now() >= class_end_datetime:
+                    if current_datetime >= class_end_datetime:
                         completed_classes += 1
 
                 remaining_classes = max(
