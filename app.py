@@ -312,7 +312,6 @@ def get_available_makeup_credits(booking_id):
 
     return credits
 
-
 def load_data():
     ensure_makeup_tables()
     conn = get_pg_connection()
@@ -323,7 +322,6 @@ def load_data():
     student_rows = cursor.fetchall()
 
     students = []
-
     for s in student_rows:
         students.append({
             'name': s[1],
@@ -334,6 +332,39 @@ def load_data():
     # Load bookings
     cursor.execute('SELECT * FROM bookings')
     booking_rows = cursor.fetchall()
+
+    # -------------------------------------------------------
+    # OPTIMIZATION: Bulk-fetch all makeup data in 2 queries
+    # instead of opening a new connection per booking.
+    # -------------------------------------------------------
+
+    # All credits grouped by booking_id
+    cursor.execute("""
+        SELECT id, booking_id, original_date, status, created_at
+        FROM makeup_credits
+        ORDER BY original_date
+    """)
+    all_credits = cursor.fetchall()
+
+    credits_by_booking = {}
+    for row in all_credits:
+        bid = str(row[1])
+        credits_by_booking.setdefault(bid, []).append(row)
+
+    # All requests grouped by booking_id
+    cursor.execute("""
+        SELECT id, booking_id, requested_date, status
+        FROM makeup_requests
+        ORDER BY requested_date
+    """)
+    all_requests = cursor.fetchall()
+
+    requests_by_booking = {}
+    for row in all_requests:
+        bid = str(row[1])
+        requests_by_booking.setdefault(bid, []).append(row)
+
+    # -------------------------------------------------------
 
     bookings = []
 
@@ -351,8 +382,6 @@ def load_data():
 
         try:
             if calendar_dates and b[9]:
-                # Capture the current time once so all session comparisons
-                # use the same timestamp during this request.
                 current_datetime = datetime.now()
 
                 for class_date in calendar_dates:
@@ -360,19 +389,12 @@ def load_data():
                         f"{class_date} {b[9]}",
                         '%Y-%m-%d %I:%M %p'
                     )
-
-                    # Each session duration = 1 hour.
-                    # Mark the class as completed immediately after the
-                    # scheduled end time has passed.
                     class_end_datetime = class_datetime + timedelta(hours=1)
 
                     if current_datetime >= class_end_datetime:
                         completed_classes += 1
 
-                remaining_classes = max(
-                    total_classes - completed_classes,
-                    0
-                )
+                remaining_classes = max(total_classes - completed_classes, 0)
 
                 if completed_classes >= total_classes and total_classes > 0:
                     is_completed = True
@@ -396,8 +418,6 @@ def load_data():
             'fee': b[10],
             'status': b[11],
             'payment_request': b[12],
-            # Alias used by editBooking.html to preselect the
-            # Payment Status dropdown correctly.
             'payment_status': b[12],
             'owner_name': b[13],
             'owner_phone': b[14],
@@ -411,88 +431,46 @@ def load_data():
             'remaining_classes': remaining_classes
         }
 
-        # --------------------------------------
-        # V0033.0 Step 8/9 - Load Make-Up Counts
-        # --------------------------------------
-        conn_makeup = get_pg_connection()
-        cursor_makeup = conn_makeup.cursor()
+        # -------------------------------------------------------
+        # Map pre-fetched makeup data — no DB calls inside loop
+        # -------------------------------------------------------
+        bid = str(booking['id'])
+        booking_credits = credits_by_booking.get(bid, [])
+        booking_requests = requests_by_booking.get(bid, [])
 
-        # Total skipped sessions already created for this booking.
-        cursor_makeup.execute("""
-            SELECT COUNT(*)
-            FROM makeup_credits
-            WHERE booking_id = %s
-        """, (str(booking['id']),))
+        # Total credits created for this booking
+        booking['makeup_credits_used'] = len(booking_credits)
 
-        booking['makeup_credits_used'] = (
-            cursor_makeup.fetchone()[0] or 0
-        )
-
-        # First available make-up credit (if any).
-        cursor_makeup.execute("""
-            SELECT id
-            FROM makeup_credits
-            WHERE booking_id = %s
-              AND status = 'available'
-            ORDER BY original_date
-            LIMIT 1
-        """, (str(booking['id']),))
-
-        row_makeup = cursor_makeup.fetchone()
+        # First available credit
+        available_credits = [
+            r for r in booking_credits if r[3] == 'available'
+        ]
+        first_available = available_credits[0] if available_credits else None
 
         booking['available_makeup_credit_id'] = (
-            row_makeup[0] if row_makeup else None
+            first_available[0] if first_available else None
         )
+        booking['has_available_makeup_credit'] = first_available is not None
 
-        booking['has_available_makeup_credit'] = (
-            booking['available_makeup_credit_id'] is not None
-        )
-
-
-        # --------------------------------------
-        # V0033.0 Step 10 - Calendar Status Data
-        # --------------------------------------
-
-        # Load all skipped dates for this booking.
-        cursor_makeup.execute("""
-            SELECT original_date, status
-            FROM makeup_credits
-            WHERE booking_id = %s
-            ORDER BY original_date
-        """, (str(booking['id']),))
-
-        skipped_rows = cursor_makeup.fetchall()
-
+        # Skipped dates
         booking['skipped_dates'] = [
-            str(row[0])
-            for row in skipped_rows
+            str(r[2]) for r in booking_credits
         ]
 
-        # Original skipped dates whose make-up credit has already been used.
+        # Dates where the credit was already used
         booking['used_makeup_dates'] = [
-            str(row[0])
-            for row in skipped_rows
-            if row[1] == 'used'
+            str(r[2]) for r in booking_credits if r[3] == 'used'
         ]
 
-        # Load all make-up requests for this booking.
-        cursor_makeup.execute("""
-            SELECT id, requested_date, status
-            FROM makeup_requests
-            WHERE booking_id = %s
-            ORDER BY requested_date
-        """, (str(booking['id']),))
-
+        # Makeup requests
         booking['makeup_requests'] = [
             {
-                'id': row[0],
-                'requested_date': str(row[1]),
-                'status': row[2]
+                'id': r[0],
+                'requested_date': str(r[2]),
+                'status': r[3]
             }
-            for row in cursor_makeup.fetchall()
+            for r in booking_requests
         ]
-
-        conn_makeup.close()
 
         bookings.append(booking)
 

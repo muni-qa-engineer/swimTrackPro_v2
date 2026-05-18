@@ -1,5 +1,3 @@
-
-
 // ================================
 // SwimTrack Pro Dashboard Scripts
 // Phase: V0015.10 JS Modular Split
@@ -112,11 +110,12 @@ function isPastDate(dateObj) {
   };
 
   const GROUP_DISCOUNTS = {
+    1: 0,
     2: 10,
     3: 20,
-    4: 25,
-    5: 30
-  };
+    4: 27,
+    5: 33
+};
 
   // Smart weekday validation based on selected Start Date
   const dayCheckboxes = document.querySelectorAll('.class-day');
@@ -233,13 +232,12 @@ function isPastDate(dateObj) {
       return;
     }
 
-    // Discount rules for all package types.
     const discountMap = {
-      1: 0,
-      2: 10,
-      3: 20,
-      4: 27,
-      5: 33
+        1: 0,
+        2: 10,
+        3: 20,
+        4: 27,
+        5: 33
     };
 
     const discountPercent = discountMap[persons] || 0;
@@ -902,10 +900,8 @@ if (bookingForm) {
 
     localStorage.setItem('bookingSuccess', 'true');
     localStorage.setItem('activeTab', 'bookings');
-
-    setTimeout(() => {
-      resetBookingForm();
-    }, 100);
+    
+    // REMOVED the setTimeout that was clearing form parameters prematurely!
   });
 }
 
