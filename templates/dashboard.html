@@ -546,13 +546,6 @@
         <!-- Swimmer Panel -->
         <div class="card shadow-sm mb-4 border-0 h-100">
             <div class="card-header bg-secondary text-white">👥 My Swimmers</div>
-            <form action="/add_swimmer" method="POST" class="mb-3">
-                <input type="hidden" name="active_tab" value="book_slot">
-                <div class="input-group px-3 pt-3">
-                    <input id="swimmerNameInput" type="text" name="name" class="form-control" placeholder="Add swimmer to book a slot" required>
-                    <button class="btn btn-primary" type="submit">Add</button>
-                </div>
-            </form>
             <div class="card-body swimmer-list-container">
                 {% if students and students|length > 0 %}
                   {% for s in students %}
@@ -589,13 +582,25 @@
                 <form action="/book" method="POST" id="bookingForm">
                     <input type="hidden" name="active_tab" value="book_slot">
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Swimmer</label>
-                        <select id="studentSelect" name="student" class="form-select form-control-lg" required>
-                            <option value="">Select swimmer</option>
+                        <label class="form-label fw-semibold">Swimmer Name</label>
+                        <input
+                            type="text"
+                            id="studentSelect"
+                            name="student"
+                            class="form-control form-control-lg"
+                            list="swimmersList"
+                            placeholder="Enter swimmer name or select from existing swimmers"
+                            required>
+
+                        <datalist id="swimmersList">
                             {% for s in students %}
-                                <option value="{{ s.name }}">{{ s.name }}</option>
+                                <option value="{{ s.name }}"></option>
                             {% endfor %}
-                        </select>
+                        </datalist>
+
+                        <div class="form-text">
+                            Type a new swimmer name or choose an existing swimmer.
+                        </div>
                     </div>
 
                     <div class="row">

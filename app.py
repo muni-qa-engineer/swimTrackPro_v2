@@ -925,6 +925,38 @@ def book():
         "owner_name": session.get('user_name'),
         "owner_phone": session.get('phone'),
     }
+
+    # V0037.1 - Automatically create the swimmer if it does not already exist.
+    existing_swimmer = next(
+        (
+            s for s in data['students']
+            if isinstance(s, dict)
+            and (s.get('name') or '').strip().lower() == student.strip().lower()
+            and s.get('owner_name') == session.get('user_name')
+            and s.get('owner_phone') == session.get('phone')
+        ),
+        None
+    )
+
+    if not existing_swimmer:
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+
+        cursor.execute('''
+        INSERT INTO students (
+            student_name,
+            owner_name,
+            owner_phone
+        ) VALUES (%s, %s, %s)
+        ''', (
+            student.strip(),
+            session.get('user_name'),
+            session.get('phone')
+        ))
+
+        conn.commit()
+        conn.close()
+
     conn = get_pg_connection()
     cursor = conn.cursor()
 
