@@ -205,6 +205,13 @@ function isPastDate(dateObj) {
       return updateSelectedDays();
     }
 
+    // Insert: Monthly package must have 2 or 3 days
+    if (pkg.value === 'Monthly' && selected.length === 1) {
+      feeInput.value = '';
+      feeInput.placeholder = 'Select 2 or 3 class days';
+      return;
+    }
+
     if (pkg.value === 'Custom' && selected.length > 7) {
       alert('Custom package allows maximum 7 class days');
 
@@ -247,7 +254,18 @@ function isPastDate(dateObj) {
       actualAmount = 750 * persons;
     }
     else if (pkg.value === 'Monthly') {
-      actualAmount = 9000 * persons;
+      if (selected.length < 2 || selected.length > 3) {
+        feeInput.value = '';
+        feeInput.placeholder = 'Select 2 or 3 class days';
+        return;
+      }
+
+      if (selected.length === 2) {
+        actualAmount = 6000 * persons;
+      }
+      else {
+        actualAmount = 9000 * persons;
+      }
     }
     else if (pkg.value === 'Custom') {
       const startDateInput = document.querySelector('input[name="date"]');
@@ -880,10 +898,27 @@ if (swimmerAddForm && swimmerNameInput) {
 }
 
 if (bookingForm) {
-  bookingForm.addEventListener('submit', () => {
+  bookingForm.addEventListener('submit', (event) => {
     const confirmBookingBtn = document.getElementById('confirmBookingBtn');
     const confirmBookingSpinner = document.getElementById('confirmBookingSpinner');
     const confirmBookingText = document.getElementById('confirmBookingText');
+
+    // Monthly package requires exactly 2 or 3 selected class days.
+    if (pkg && pkg.value === 'Monthly') {
+      const selectedCount = document.querySelectorAll('.class-day:checked').length;
+
+      if (selectedCount < 2 || selectedCount > 3) {
+        event.preventDefault();
+
+        createToast(
+          'Monthly package requires selecting 2 or 3 class days.',
+          'danger',
+          3000
+        );
+
+        return;
+      }
+    }
 
     // Show loading state immediately to prevent duplicate clicks.
     if (confirmBookingBtn) {
@@ -900,7 +935,6 @@ if (bookingForm) {
 
     localStorage.setItem('bookingSuccess', 'true');
     localStorage.setItem('activeTab', 'bookings');
-    
     // REMOVED the setTimeout that was clearing form parameters prematurely!
   });
 }
