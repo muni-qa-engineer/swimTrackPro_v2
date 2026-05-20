@@ -375,28 +375,38 @@ def load_data():
             b[6]
         )
 
+        # V0037.3 - Real-Time Class Progress Completion
+        # A class is considered completed when the current time is
+        # greater than or equal to the session start time + 1 hour.
         is_completed = False
         total_classes = len(calendar_dates)
         completed_classes = 0
         remaining_classes = total_classes
 
         try:
-            if calendar_dates and b[9]:
+            if calendar_dates:
                 current_datetime = datetime.now()
+                booking_time = (b[9] or '06:00 AM').strip()
 
                 for class_date in calendar_dates:
                     class_datetime = datetime.strptime(
-                        f"{class_date} {b[9]}",
+                        f"{class_date} {booking_time}",
                         '%Y-%m-%d %I:%M %p'
                     )
+
+                    # Each session duration is 1 hour.
                     class_end_datetime = class_datetime + timedelta(hours=1)
 
+                    # Mark as completed immediately after session end time.
                     if current_datetime >= class_end_datetime:
                         completed_classes += 1
 
-                remaining_classes = max(total_classes - completed_classes, 0)
+                remaining_classes = max(
+                    total_classes - completed_classes,
+                    0
+                )
 
-                if completed_classes >= total_classes and total_classes > 0:
+                if total_classes > 0 and completed_classes >= total_classes:
                     is_completed = True
 
         except Exception:
