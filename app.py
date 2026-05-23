@@ -570,8 +570,8 @@ def index():
     current_phone = session.get('phone')
     current_role = session.get('role', 'guest')
 
-    # ADMIN => view everything
-    if current_role == 'admin':
+    # TRAINER => view everything
+    if current_role == 'trainer':
         user_bookings = data['bookings']
         user_students = data.get('students', [])
 
@@ -642,16 +642,20 @@ def login():
     password = (request.form.get('password') or '').strip()
     phone = (request.form.get('phone') or '').strip()
 
-    # ADMIN LOGIN
-    if role == 'admin':
+    # TRAINER LOGIN
+    if role == 'trainer':
 
-        # if name == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-        if name.lower() == ADMIN_USERNAME.lower() and password == ADMIN_PASSWORD:
-            session['user_name'] = 'Admin'
-            session['role'] = 'admin'
+        if (
+            ADMIN_USERNAME
+            and ADMIN_PASSWORD
+            and name.lower() == ADMIN_USERNAME.lower()
+            and password == ADMIN_PASSWORD
+        ):
+            session['user_name'] = 'Trainer'
+            session['role'] = 'trainer'
             return redirect(url_for('index'))
 
-        flash('Invalid admin credentials')
+        flash('Invalid trainer credentials')
         return redirect(url_for('index'))
 
     if role == 'guest' and name:
@@ -710,8 +714,8 @@ def login():
 
 @app.route('/add_swimmer', methods=['POST'])
 def add_swimmer():
-    if session.get('role') == 'admin':
-        flash('Admin cannot add swimmers directly')
+    if session.get('role') == 'trainer':
+        flash('Trainer cannot add swimmers directly')
         return redirect(url_for('index'))
     data = load_data()
 
@@ -794,8 +798,8 @@ def delete_swimmer(name):
 
 @app.route('/book', methods=['POST'])
 def book():
-    if session.get('role') == 'admin':
-        flash('Admin cannot create bookings directly')
+    if session.get('role') == 'trainer':
+        flash('Trainer cannot create bookings directly')
         return redirect(url_for('index'))
     data = load_data()
     # Enhanced validation and logic for booking
@@ -821,7 +825,7 @@ def book():
 
     # Allow manual fee override only for admin users.
     # Guest users always use the system-calculated fee.
-    if session.get('role') == 'admin':
+    if session.get('role') == 'trainer':
         manual_fee = (request.form.get('fee') or '').strip()
         if manual_fee:
             try:
@@ -1071,7 +1075,7 @@ def update_booking(booking_id):
 
     # Allow manual fee override only for admin users.
     # Guest users always use the system-calculated fee.
-    if session.get('role') == 'admin':
+    if session.get('role') == 'trainer':
         manual_fee = (request.form.get('fee') or '').strip()
         if manual_fee:
             try:
@@ -1177,17 +1181,17 @@ def update_booking(booking_id):
     role = session.get('role')
 
     # Guest payment request flow
-    if role != 'admin':
+    if role != 'trainer':
 
         if payment_choice == 'Paid':
             booking['status'] = 'Pending'
         else:
             booking['status'] = 'Not Paid'
 
-    # Admin edit flow
+    # Trainer edit flow
     else:
 
-        # Admin uses same edit dropdown
+        # Trainer uses same edit dropdown
         if payment_choice == 'Paid':
             booking['status'] = 'Paid'
         else:
@@ -1261,8 +1265,8 @@ def delete_booking(booking_id):
     booking_time_str = row[4]
 
     # Guest users can delete immediately only before the first class starts.
-    # After the first class start time, admin approval is required.
-    if role != 'admin':
+    # After the first class start time, trainer approval is required.
+    if role != 'trainer':
         try:
             first_class_datetime = datetime.strptime(
                 f"{start_date} {booking_time_str}",
@@ -1332,7 +1336,7 @@ def delete_booking(booking_id):
         flash(f'Delete request submitted for {deleted_student}')
         return redirect(url_for('index'))
 
-    # Admin deletes immediately
+    # Trainer deletes immediately
     cursor.execute(
         'DELETE FROM bookings WHERE id = %s',
         (booking_id,)
@@ -1376,7 +1380,7 @@ def delete_booking(booking_id):
 # --- Approve and Reject Delete Booking Routes ---
 @app.route('/approve_delete/<booking_id>', methods=['POST'])
 def approve_delete(booking_id):
-    if session.get('role') != 'admin':
+    if session.get('role') != 'trainer':
         flash('Unauthorized action')
         return redirect(url_for('index'))
 
@@ -1441,7 +1445,7 @@ def approve_delete(booking_id):
 
 @app.route('/reject_delete/<booking_id>', methods=['POST'])
 def reject_delete(booking_id):
-    if session.get('role') != 'admin':
+    if session.get('role') != 'trainer':
         flash('Unauthorized action')
         return redirect(url_for('index'))
 
@@ -1521,7 +1525,7 @@ def skip_session(booking_id, session_date):
         return redirect(url_for('index'))
 
     # Guests may skip only their own bookings.
-    if session.get('role') != 'admin':
+    if session.get('role') != 'trainer':
         if (
             booking.get('owner_name') != session.get('user_name')
             or booking.get('owner_phone') != session.get('phone')
@@ -1585,7 +1589,7 @@ def undo_skip_session(booking_id, session_date):
         return redirect(url_for('index'))
 
     # Guests may undo only their own skipped sessions.
-    if session.get('role') != 'admin':
+    if session.get('role') != 'trainer':
         if (
             booking_row[0] != session.get('user_name')
             or booking_row[1] != session.get('phone')
@@ -1669,7 +1673,7 @@ def makeup_request_form(booking_id):
         return redirect(url_for('index'))
 
     # Guests may access only their own bookings.
-    if session.get('role') != 'admin':
+    if session.get('role') != 'trainer':
         if row[1] != session.get('user_name') or row[2] != session.get('phone'):
             flash('Unauthorized action')
             return redirect(url_for('index'))
@@ -1799,7 +1803,7 @@ def approve_makeup_request(request_id):
     """
     Approve a pending make-up request and consume the related credit.
     """
-    if session.get('role') != 'admin':
+    if session.get('role') != 'trainer':
         flash('Unauthorized action')
         return redirect(url_for('index'))
 
@@ -1862,7 +1866,7 @@ def reject_makeup_request(request_id):
     - Delete the pending record from makeup_requests.
     - Restore the related makeup_credits row to status = 'available'.
     """
-    if session.get('role') not in ('admin', 'guest'):
+    if session.get('role') not in ('trainer', 'guest'):
         flash('Unauthorized action')
         return redirect(url_for('index'))
 
@@ -1969,8 +1973,8 @@ def update_notice():
     if 'user_name' not in session:
         return redirect(url_for('index'))
 
-    if session.get('role') != 'admin':
-        flash('Only admin can update the Notice Board.', 'danger')
+    if session.get('role') != 'trainer':
+        flash('Only trainer can update the Notice Board.', 'danger')
         return redirect(url_for('index'))
 
     notice_message = request.form.get('notice_message', '').strip()

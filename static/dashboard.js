@@ -1044,6 +1044,6 @@ function enableFormLoading(formId, loadingText) {
   });
 }
 
-// Enable loading animation for the Admin Notice Board form.
+// Enable loading animation for the trainer Notice Board form.
 enableFormLoading('updateNoticeForm', 'Updating...');
 

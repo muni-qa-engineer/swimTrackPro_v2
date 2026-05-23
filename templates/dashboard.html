@@ -23,7 +23,7 @@
         </button>
 
         <ul class="dropdown-menu dropdown-menu-end">
-          {% if role != 'admin' %}
+          {% if role != 'trainer' %}
           <li>
             <a class="dropdown-item" href="/about-trainer">
               👨‍🏫 About Your Trainer
@@ -104,7 +104,7 @@
 </div>
 
 <div class="container mt-4">
-{% if role != 'admin' %}
+{% if role != 'trainer' %}
 <div id="noticeBoardSection" class="mb-4">
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-warning-subtle">
@@ -126,7 +126,7 @@
     <button id="tabCalendar" class="btn btn-outline-primary">
       📅 Monthly Calendar
     </button>
-    {% if role != 'admin' %}
+    {% if role != 'trainer' %}
     <button id="tabBook" class="btn btn-outline-primary">📝 Book a Slot</button>
     {% endif %}
     <button id="tabBookings" class="btn btn-outline-primary active">
@@ -311,7 +311,7 @@
                                       ✅ Completed
                                   </span>
 
-                                  {% if role == 'admin' %}
+                                  {% if role == 'trainer' %}
                                       <div class="mt-3 text-end">
                                           <form action="/edit/{{ b.id }}" method="GET" class="inline-form" onsubmit="saveScrollPosition()">
                                               <button type="submit" class="btn btn-outline-primary btn-sm">Edit</button>
@@ -319,7 +319,7 @@
                                       </div>
                                   {% endif %}
                               {% elif b.delete_requested %}
-                                  {% if role == 'admin' %}
+                                  {% if role == 'trainer' %}
                                       <form action="/approve_delete/{{ b.id }}" method="POST" class="inline-form" onsubmit="saveScrollPosition(); return confirm('Permanently delete this booking?');">
                                           <button type="submit" class="btn btn-success btn-sm">✓ Approve</button>
                                       </form>
@@ -332,7 +332,7 @@
                                       </span>
                                   {% endif %}
                               {% else %}
-                                  {% if role == 'admin' or (b.completed_classes or 0) == 0 %}
+                                  {% if role == 'trainer' or (b.completed_classes or 0) == 0 %}
                                   <form action="/edit/{{ b.id }}" method="GET" class="inline-form" onsubmit="saveScrollPosition()">
                                       <button type="submit" class="btn btn-outline-primary btn-sm">Edit</button>
                                   </form>
@@ -359,7 +359,7 @@
  </div>
 </div>
 
-{% if role == 'admin' %}
+{% if role == 'trainer' %}
 <div class="mt-4">
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-warning-subtle">
@@ -540,7 +540,7 @@
   </div>
 </div>
 
-{% if role != 'admin' %}
+{% if role != 'trainer' %}
 <div id="bookSlotSection" class="row gx-4 gy-3 px-2 mt-2" style="display:none;">
     <div class="col-md-4 pe-md-3">
         <!-- Swimmer Panel -->
@@ -903,8 +903,8 @@
       useMakeupForm.style.display = 'none';
     }
 
-    const adminActions = document.getElementById('adminApprovalActions');
-    const isAdmin = {{ 'true' if role == 'admin' else 'false' }};
+    const trainerActions = document.getElementById('adminApprovalActions');
+    const isTrainer = {{ 'true' if role == 'trainer' else 'false' }};
 
     if (sessionData.pending_request_id) {
       const undoUrl =
@@ -926,7 +926,7 @@
         // Hide request/undo actions because the workflow is complete.
         useMakeupForm.style.display = 'none';
         makeupUndoContainer.style.display = 'none';
-        adminActions.style.display = 'none';
+        trainerActions.style.display = 'none';
 
       } else {
         // Pending request: allow undo and admin approval.
@@ -937,7 +937,7 @@
             'btn btn-secondary w-100';
         }
 
-        if (isAdmin) {
+        if (isTrainer) {
           document.getElementById('approveMakeupForm').action =
             '/approve_makeup_request/' +
             encodeURIComponent(sessionData.pending_request_id);
@@ -945,9 +945,9 @@
           document.getElementById('rejectMakeupForm').action =
             undoUrl;
 
-          adminActions.style.display = 'block';
+          trainerActions.style.display = 'block';
         } else {
-          adminActions.style.display = 'none';
+          trainerActions.style.display = 'none';
         }
       }
     } else if (
@@ -980,10 +980,10 @@
           'btn btn-secondary w-100';
       }
 
-      adminActions.style.display = 'none';
+      trainerActions.style.display = 'none';
 
     } else {
-      adminActions.style.display = 'none';
+      trainerActions.style.display = 'none';
     }
 
     const modalElement = document.getElementById('sessionOptionsModal');

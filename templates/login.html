@@ -211,11 +211,10 @@
                         class="btn btn-outline-primary flex-fill mode-btn active-mode">
                     Guest
                 </button>
-
                 <button type="button"
-                        id="adminBtn"
-                        class="btn btn-outline-dark flex-fill mode-btn">
-                    Admin
+                        id="trainerBtn"
+                        class="btn btn-outline-success flex-fill mode-btn">
+                    Trainer
                 </button>
             </div>
             <form action="/login" method="post" id="loginForm">
@@ -301,16 +300,6 @@
                     <span>Login as Guest</span>
                 </button>
 
-                <!-- <div class="divider" style="display: flex; justify-content: center;">or</div> -->
-                <!-- <div class="divider">or</div> -->
-
-                <!-- <button type="button"
-                        id="adminBtn"
-                        class="btn btn-outline-dark flex-fill mode-btn"
-                        style="margin-top:2px;">
-                    Continue as Admin
-                </button> -->
-
                 <div class="footer-text">
                     © 2026 Swimming Summer Camp. All rights reserved.
                 </div>
@@ -322,7 +311,7 @@
     const phoneError = document.getElementById('phoneError');
     const loginForm = document.getElementById('loginForm');
     const guestBtn = document.getElementById('guestBtn');
-    const adminBtn = document.getElementById('adminBtn');
+    const trainerBtn = document.getElementById('trainerBtn');
     const roleInput = document.getElementById('roleInput');
     const phoneField = document.getElementById('phoneField');
     const passwordField = document.getElementById('passwordField');
@@ -330,12 +319,10 @@
     const nameInput = document.getElementById('nameInput');
     const nameError = document.getElementById('nameError');
 
+    function activateTrainerMode() {
+        roleInput.value = 'trainer';
 
-    function activateAdminMode() {
-        roleInput.value = 'admin';
-
-        adminBtn.classList.add('active-mode');
-
+        trainerBtn.classList.add('active-mode');
         if (guestBtn) {
             guestBtn.classList.remove('active-mode');
         }
@@ -348,9 +335,10 @@
 
         const loginButton = document.querySelector('.login-btn');
         if (loginButton) {
-            loginButton.textContent = 'Login as Admin';
+            loginButton.textContent = 'Login as Trainer';
         }
     }
+
 
     function activateGuestMode() {
         roleInput.value = 'guest';
@@ -359,7 +347,9 @@
             guestBtn.classList.add('active-mode');
         }
 
-        adminBtn.classList.remove('active-mode');
+        if (trainerBtn) {
+            trainerBtn.classList.remove('active-mode');
+        }
 
         phoneField.classList.remove('d-none');
         passwordField.classList.add('d-none');
@@ -373,8 +363,8 @@
         }
     }
 
-    if (adminBtn) {
-        adminBtn.addEventListener('click', activateAdminMode);
+    if (trainerBtn) {
+        trainerBtn.addEventListener('click', activateTrainerMode);
     }
 
     if (guestBtn) {
