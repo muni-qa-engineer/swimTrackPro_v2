@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import os
 import json
 from email_service import send_email
+from services.pricing_service import calculate_discounted_fee
 
 app = Flask(__name__)
 from config import (
@@ -157,81 +158,6 @@ def generate_recurring_dates(start_date_str, end_date_str, selected_days):
         current += timedelta(days=1)
 
     return generated_dates
-
-def calculate_discounted_fee(package, persons, session_count=None):
-    """
-    Final pricing model for SwimTrackPro.
-
-    Returns:
-        int  -> final fee
-        None -> requires trainer discussion
-
-    Rules:
-    - Maximum 5 persons per booking.
-    - Single and Monthly packages use group discounts.
-    - Custom package:
-        * 3 to 11 sessions  -> sessions × ₹750 × persons
-        * 12 to 14 sessions -> ₹9,000 × persons
-        * More than 14      -> trainer discussion (None)
-    - Group discounts for all package types:
-        * 1 person  -> 0%
-        * 2 persons -> 10%
-        * 3 persons -> 20%
-        * 4 persons -> 27%
-        * 5 persons -> 33%
-    """
-    try:
-        persons = max(1, int(persons or 1))
-    except Exception:
-        persons = 1
-
-    # Maximum allowed group size
-    if persons > 5:
-        return None
-
-    # Discount rules
-    discount_map = {
-        1: 0,
-        2: 10,
-        3: 20,
-        4: 27,
-        5: 33,
-    }
-
-    discount = discount_map.get(persons, 0)
-
-    # Custom package special rules
-    if package == 'Custom':
-        try:
-            session_count = max(int(session_count or 0), 0)
-        except Exception:
-            session_count = 0
-
-        # More than 14 sessions requires trainer discussion
-        if session_count > 14:
-            return None
-
-        # 12 to 14 sessions are capped at monthly equivalent
-        if 12 <= session_count <= 14:
-            actual_amount = 9000 * persons
-        else:
-            actual_amount = session_count * 750 * persons
-
-    # Single package
-    elif package == 'Single':
-        actual_amount = 750 * persons
-
-    # Monthly package
-    elif package == 'Monthly':
-        actual_amount = 9000 * persons
-
-    # Fallback
-    else:
-        actual_amount = 9000 * persons
-
-    final_amount = actual_amount * (100 - discount) / 100
-
-    return round(final_amount)
 
 def get_pg_connection():
     return psycopg2.connect(DATABASE_URL)
