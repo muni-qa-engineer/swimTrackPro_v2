@@ -56,6 +56,55 @@ def send_booking_notification(booking):
         print(f"Email notification failed: {e}")
 
 
+# --- Booking Confirmation Email to Swimmer ---
+def send_booking_confirmation_email(booking):
+    """Send booking confirmation email to swimmer."""
+
+    try:
+        email = (booking.get('email') or '').strip()
+
+        if not email:
+            return
+
+        subject = "🏊 Booking Confirmed - SwimTrackPro"
+
+        html_content = f"""
+        <h2>🏊 Booking Confirmation</h2>
+
+        <p>Hello {booking.get('owner_name', 'Swimmer')},</p>
+
+        <p>Your booking has been successfully created.</p>
+
+        <table border="1" cellpadding="6" cellspacing="0">
+            <tr><td><strong>Swimmer</strong></td><td>{booking.get('student', '')}</td></tr>
+            <tr><td><strong>Package</strong></td><td>{booking.get('package', '')}</td></tr>
+            <tr><td><strong>Start Date</strong></td><td>{booking.get('start_date', '')}</td></tr>
+            <tr><td><strong>End Date</strong></td><td>{booking.get('end_date', '')}</td></tr>
+            <tr><td><strong>Time</strong></td><td>{booking.get('time', '')}</td></tr>
+            <tr><td><strong>Location</strong></td><td>{booking.get('location', '')}</td></tr>
+            <tr><td><strong>Persons</strong></td><td>{booking.get('persons', '')}</td></tr>
+            <tr><td><strong>Fee</strong></td><td>₹{booking.get('fee', 0)}</td></tr>
+            <tr><td><strong>Payment Status</strong></td><td>{booking.get('payment_request', '')}</td></tr>
+        </table>
+
+        <br>
+
+        <p>Thank you for choosing SwimTrackPro.</p>
+
+        <p>For any schedule changes or questions, please contact your trainer.</p>
+        """
+
+        send_email(
+            subject=subject,
+            html_content=html_content,
+            to_email=email,
+            to_name=booking.get('owner_name', 'Swimmer')
+        )
+
+    except Exception as e:
+        print(f"Booking confirmation email failed: {e}")
+
+
 def generate_booking_id(student, start_date, time_str):
     return hashlib.md5(f"{student}{start_date}{time_str}".encode()).hexdigest()
 
@@ -1020,9 +1069,11 @@ def book():
     conn.commit()
     conn.close()
 
-    # Send email notification to admin.
-    # Notification errors are handled internally and will not affect booking creation.
+    # Send admin notification.
     send_booking_notification(new_booking)
+
+    # Send swimmer confirmation email.
+    send_booking_confirmation_email(new_booking)
 
     return redirect(url_for('index'))
 
