@@ -13,3 +13,9 @@ SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', '')
 
 # Preferred variable name
 ADMIN_NOTIFICATION_EMAIL = os.getenv('ADMIN_NOTIFICATION_EMAIL', '')
+
+
+BREVO_API_KEY = os.getenv("BREVO_API_KEY", "")
+BREVO_SENDER_EMAIL = os.getenv("BREVO_SENDER_EMAIL", "")
+BREVO_SENDER_NAME = os.getenv("BREVO_SENDER_NAME", "SwimTrackPro")
+ADMIN_ALERT_EMAIL = os.getenv("ADMIN_ALERT_EMAIL", "")

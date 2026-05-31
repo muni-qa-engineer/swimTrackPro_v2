@@ -16,12 +16,6 @@ Environment Variables Required:
 import os
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
-from config import (
-    BREVO_API_KEY,
-    BREVO_SENDER_EMAIL,
-    BREVO_SENDER_NAME,
-    ADMIN_ALERT_EMAIL,
-)
 
 
 def send_email(subject, html_content, to_email=None, to_name="Admin"):
@@ -38,11 +32,10 @@ def send_email(subject, html_content, to_email=None, to_name="Admin"):
     Returns:
         bool: True if email was sent successfully, False otherwise.
     """
-    api_key = BREVO_API_KEY
-    sender_email = BREVO_SENDER_EMAIL
-    sender_name = BREVO_SENDER_NAME or "SwimTrackPro"
-    default_recipient = ADMIN_ALERT_EMAIL
-    print(f"BREVO_API_KEY loaded: {'YES' if api_key else 'NO'}")
+    api_key = os.getenv("BREVO_API_KEY")
+    sender_email = os.getenv("BREVO_SENDER_EMAIL")
+    sender_name = os.getenv("BREVO_SENDER_NAME", "SwimTrackPro")
+    default_recipient = os.getenv("ADMIN_ALERT_EMAIL")
 
     # Validate required configuration.
     if not api_key:
