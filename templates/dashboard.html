@@ -151,7 +151,7 @@
                 {% set grouped_bookings = {} %}
 
                 {% for b in bookings|sort(attribute='start_date') %}
-                    {% set group_key = (b.created_by or 'N/A') ~ '|' ~ (b.owner_phone or 'No Phone') %}
+                    {% set group_key = ((b.created_by or 'N/A')|lower|trim) ~ '|' ~ ((b.owner_phone or 'No Phone')|trim) %}
 
                     {% if group_key not in grouped_bookings %}
                         {% set _ = grouped_bookings.update({group_key: []}) %}
@@ -162,7 +162,7 @@
 
                 {% for group_key, group_items in grouped_bookings.items() %}
 
-                {% set group_name = group_key.split('|')[0] %}
+                {% set group_name = group_items[0].created_by or 'N/A' %}
                 {% set group_phone = group_key.split('|')[1] %}
 
                 <div class="col-12 mb-4">

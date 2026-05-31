@@ -557,14 +557,14 @@ def index():
     else:
         user_bookings = [
             b for b in data['bookings']
-            if b.get('owner_name') == current_user
+            if (b.get('owner_name') or '').strip().lower() == current_user
             and b.get('owner_phone') == current_phone
         ]
 
         user_students = [
             s for s in data.get('students', [])
             if isinstance(s, dict)
-            and s.get('owner_name') == current_user
+            and (s.get('owner_name') or '').strip().lower() == current_user
             and s.get('owner_phone') == current_phone
         ]
     # -----------------------------
@@ -680,7 +680,7 @@ def login():
         # Valid guest login. Preserve the entered display name
         # and store the normalized phone number.
         session['role'] = 'guest'
-        session['user_name'] = name
+        session['user_name'] = normalized_name
         session['phone'] = phone
 
         return redirect(url_for('index'))

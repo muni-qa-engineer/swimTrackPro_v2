@@ -25,7 +25,7 @@ def calculate_discounted_fee(package, persons, session_count=None):
 
     Returns:
         int  -> final fee
-        None -> requires trainer discussion
+        0 -> requires trainer discussion / invalid pricing case
 
     Rules:
     - Maximum 5 persons per booking.
@@ -48,7 +48,7 @@ def calculate_discounted_fee(package, persons, session_count=None):
 
     # Maximum allowed group size
     if persons > 5:
-        return None
+        return 0
 
     # Discount rules
     discount_map = {
@@ -70,7 +70,7 @@ def calculate_discounted_fee(package, persons, session_count=None):
 
         # More than 14 sessions requires trainer discussion
         if session_count > 14:
-            return None
+            return 0
 
         # 12 to 14 sessions are capped at monthly equivalent
         if 12 <= session_count <= 14:
