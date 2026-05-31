@@ -38,6 +38,7 @@ def send_booking_notification(booking):
             <tr><td><strong>Fee</strong></td><td>₹{booking.get('fee', 0)}</td></tr>
             <tr><td><strong>Payment Status</strong></td><td>{booking.get('payment_request', '')}</td></tr>
             <tr><td><strong>Location</strong></td><td>{booking.get('location', '')}</td></tr>
+            <tr><td><strong>Email</strong></td><td>{booking.get('email', '')}</td></tr>
             <tr><td><strong>Booked By</strong></td><td>{booking.get('owner_name', '')}</td></tr>
             <tr><td><strong>Phone</strong></td><td>{booking.get('owner_phone', '')}</td></tr>
         </table>
@@ -186,7 +187,6 @@ def calculate_discounted_fee(package, persons, session_count=None):
 def get_pg_connection():
     return psycopg2.connect(DATABASE_URL)
 
-
 # V0033.0 - Make-Up Class Management
 def ensure_makeup_tables():
     """
@@ -332,6 +332,7 @@ def load_data():
     # Load bookings
     cursor.execute('SELECT * FROM bookings')
     booking_rows = cursor.fetchall()
+    print("BOOKING COLUMN COUNT =", len(booking_rows[0]) if booking_rows else 0)
 
     # -------------------------------------------------------
     # OPTIMIZATION: Bulk-fetch all makeup data in 2 queries
@@ -431,6 +432,7 @@ def load_data():
             'payment_status': b[12],
             'owner_name': b[13],
             'owner_phone': b[14],
+            'email': b[24] if len(b) > 24 else '',
             'delete_requested': b[15] if len(b) > 15 else False,
             'delete_requested_at': b[16] if len(b) > 16 else None,
             'delete_requested_by': b[17] if len(b) > 17 else None,
@@ -531,8 +533,9 @@ def save_data(students, bookings):
             payment_request,
             owner_name,
             owner_phone,
-            persons
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            persons,
+            email
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''', (
             booking.get('id', ''),
             booking.get('student', ''),
@@ -548,7 +551,8 @@ def save_data(students, bookings):
             booking.get('payment_request', 'NOT_PAID'),
             booking.get('owner_name', ''),
             booking.get('owner_phone', ''),
-            int(booking.get('persons', 1))
+            int(booking.get('persons', 1)),
+            booking.get('email', '')
         ))
 
     conn.commit()
@@ -806,6 +810,7 @@ def book():
     student = request.form['student']
     date_str = request.form['date']
     time_str = request.form['time']
+    email = (request.form.get('email') or '').strip()
     package = request.form.get('package', 'Single')
     end_date = request.form.get('end_date', date_str)
     persons = request.form.get('persons', 1)
@@ -931,6 +936,7 @@ def book():
         "package": package,
         "selected_days": request.form.get('selected_days', ''),
         "location": request.form.get('location', '').strip(),
+        "email": email,
         "persons": persons,
         "time": time_str,
         "fee": fee,
@@ -990,8 +996,9 @@ def book():
         status,
         payment_request,
         owner_name,
-        owner_phone
-    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        owner_phone,
+        email
+    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     ''', (
         new_booking['id'],
         new_booking['student'],
@@ -1007,7 +1014,8 @@ def book():
         new_booking['status'],
         new_booking['payment_request'],
         new_booking['owner_name'],
-        new_booking['owner_phone']
+        new_booking['owner_phone'],
+        new_booking['email']
     ))
 
     conn.commit()
@@ -1494,6 +1502,7 @@ def skip_session(booking_id, session_date):
         student_name,
         owner_name,
         owner_phone,
+        email,
         start_date,
         end_date,
         selected_days
@@ -1511,10 +1520,11 @@ def skip_session(booking_id, session_date):
             'student': row[1],
             'owner_name': row[2],
             'owner_phone': row[3],
+            'email': row[4] or '',
             'calendar_dates': generate_recurring_dates(
-                str(row[4]),
                 str(row[5]),
-                row[6]
+                str(row[6]),
+                row[7]
             )
         }
     else:
