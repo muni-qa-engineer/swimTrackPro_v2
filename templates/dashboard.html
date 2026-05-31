@@ -121,19 +121,24 @@
     </div>
 </div>
 {% endif %}
-<div class="mb-3">
-  <div class="btn-group" role="group">
-    <button id="tabCalendar" class="btn btn-outline-primary">
-      📅 Monthly Calendar
-    </button>
-    {% if role != 'trainer' %}
-    <button id="tabBook" class="btn btn-outline-primary">📝 Book a Slot</button>
-    {% endif %}
-    <button id="tabBookings" class="btn btn-outline-primary active">
-      📋 My Bookings
-    </button>
+<div class="mb-4">
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <div class="d-flex text-center overflow-auto">
+        <button id="tabCalendar" class="btn btn-outline-primary">
+          📅 Monthly Calendar
+        </button>
+        {% if role != 'trainer' %}
+        <button id="tabBook" class="btn btn-outline-primary">📝 Book a Slot</button>
+        {% endif %}
+        <button id="tabBookings" class="btn btn-outline-primary active">
+          📋 My Bookings
+        </button>
+      </div>
+    </div>
   </div>
 </div>
+
 <div id="bookingsSection">
     <div class="row">
         <div class="col-md-12">
@@ -546,7 +551,7 @@
 </div>
 
 {% if role != 'trainer' %}
-<div id="bookSlotSection" class="row gx-4 gy-3 px-2 mt-2" style="display:none;">
+<div id="bookSlotSection" class="row gx-4 gy-3 px-4 mt-4" style="display:none;">
     <div class="col-md-4 pe-md-3">
         <!-- Swimmer Panel -->
         <div class="card shadow-sm mb-4 border-0 h-100">

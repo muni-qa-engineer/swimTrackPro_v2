@@ -347,3 +347,25 @@ input::placeholder {
     font-size: 0.75rem;
   }
 }
+
+#tabCalendar,
+#tabBook,
+#tabBookings {
+    color: #6c757d;
+    background: #fff;
+    border-bottom: 3px solid transparent !important;
+    min-width: 140px;
+    margin-right: 4px;
+}
+.d-flex.text-center.overflow-auto {
+
+    gap: 4px;
+
+}
+#tabCalendar.active,
+#tabBook.active,
+#tabBookings.active {
+    color: #0d6efd !important;
+    border-bottom: 3px solid #0d6efd !important;
+    background: #fff !important;
+}
