@@ -332,7 +332,6 @@ def load_data():
     # Load bookings
     cursor.execute('SELECT * FROM bookings')
     booking_rows = cursor.fetchall()
-    print("BOOKING COLUMN COUNT =", len(booking_rows[0]) if booking_rows else 0)
 
     # -------------------------------------------------------
     # OPTIMIZATION: Bulk-fetch all makeup data in 2 queries
