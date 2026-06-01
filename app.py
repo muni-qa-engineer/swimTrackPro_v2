@@ -1,4 +1,3 @@
-import hashlib
 import psycopg2
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from datetime import datetime, timedelta
@@ -10,6 +9,15 @@ from services.email_service import (
 )
 from services.pricing_service import calculate_discounted_fee
 
+from services.booking_engine import (
+    generate_booking_id,
+    generate_recurring_dates,
+)
+from services.makeup_service import (
+    create_makeup_credit,
+    get_available_makeup_credits,
+)
+
 app = Flask(__name__)
 from config import (
     ADMIN_USERNAME,
@@ -18,59 +26,6 @@ from config import (
     DATABASE_URL
 )
 app.secret_key = SECRET_KEY
-
-def generate_booking_id(student, start_date, time_str):
-    return hashlib.md5(f"{student}{start_date}{time_str}".encode()).hexdigest()
-
-
-# --- Recurring Booking Engine ---
-def parse_selected_days(days_string):
-    if not days_string:
-        return []
-
-    return [d.strip()[:3].lower() for d in days_string.split(',') if d.strip()]
-
-
-def generate_recurring_dates(start_date_str, end_date_str, selected_days):
-    generated_dates = []
-
-    try:
-        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
-        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
-    except:
-        return generated_dates
-
-    weekday_map = {
-        'mon': 0,
-        'tue': 1,
-        'wed': 2,
-        'thu': 3,
-        'fri': 4,
-        'sat': 5,
-        'sun': 6
-    }
-
-    valid_days = {
-        weekday_map[d]
-        for d in parse_selected_days(selected_days)
-        if d in weekday_map
-    }
-
-    current = start_date
-
-    while current <= end_date:
-
-        # Single package fallback
-        if not valid_days:
-            generated_dates.append(current.strftime('%Y-%m-%d'))
-            break
-
-        if current.weekday() in valid_days:
-            generated_dates.append(current.strftime('%Y-%m-%d'))
-
-        current += timedelta(days=1)
-
-    return generated_dates
 
 def get_pg_connection():
     return psycopg2.connect(DATABASE_URL)
@@ -120,85 +75,6 @@ def ensure_makeup_tables():
 
     conn.commit()
     conn.close()
-
-
-# --- Make-Up Credit Helpers ---
-def has_makeup_credit(booking_id, original_date):
-    """Return True if a make-up credit already exists for this booking/date."""
-    conn = get_pg_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT 1
-        FROM makeup_credits
-        WHERE booking_id = %s
-          AND original_date = %s
-        LIMIT 1
-    """, (str(booking_id), original_date))
-
-    exists = cursor.fetchone() is not None
-    conn.close()
-    return exists
-
-
-def create_makeup_credit(booking_id, original_date, notes='Skipped session'):
-    """
-    Create a make-up credit for a skipped class.
-    Returns True if a new credit was created, False if one already exists.
-    """
-    if has_makeup_credit(booking_id, original_date):
-        return False
-
-    conn = get_pg_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        INSERT INTO makeup_credits (
-            booking_id,
-            original_date,
-            status,
-            notes
-        ) VALUES (%s, %s, 'available', %s)
-    """, (
-        str(booking_id),
-        original_date,
-        notes
-    ))
-
-    conn.commit()
-    conn.close()
-    return True
-
-
-# --- Make-Up Credit Query Helper ---
-def get_available_makeup_credits(booking_id):
-    """
-    Return all available make-up credits for a booking.
-    """
-    conn = get_pg_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT id, original_date, notes, created_at
-        FROM makeup_credits
-        WHERE booking_id = %s
-          AND status = 'available'
-        ORDER BY original_date
-    """, (str(booking_id),))
-
-    rows = cursor.fetchall()
-    conn.close()
-
-    credits = []
-    for row in rows:
-        credits.append({
-            'id': row[0],
-            'original_date': str(row[1]),
-            'notes': row[2] or '',
-            'created_at': str(row[3]) if row[3] else ''
-        })
-
-    return credits
 
 def load_data():
     ensure_makeup_tables()
