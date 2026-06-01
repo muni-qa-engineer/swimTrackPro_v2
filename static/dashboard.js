@@ -400,6 +400,7 @@ function generateTimeSlots() {
 function handleStartDateChange() {
   updateAllowedDays();
   generateTimeSlots();
+  checkLocationConflict();
 }
 
 const endDateInput = document.querySelector('input[name="end_date"]');
@@ -427,6 +428,21 @@ function initializeBookingEventListeners() {
     dayCheckboxes.forEach(cb => {
       cb.addEventListener('change', updateSelectedDays);
     });
+  }
+
+    const locationInput = document.querySelector('input[name="location"]');
+
+  if (timeSelect) {
+    timeSelect.addEventListener('change', checkLocationConflict);
+  }
+
+  if (startDateInput) {
+    startDateInput.addEventListener('change', checkLocationConflict);
+  }
+
+  if (locationInput) {
+    locationInput.addEventListener('input', checkLocationConflict);
+    locationInput.addEventListener('change', checkLocationConflict);
   }
 }
 
@@ -812,6 +828,54 @@ const swimmerAddForm = document.querySelector('form[action="/add_swimmer"]');
 const swimmerNameInput = document.getElementById('swimmerNameInput');
 const bookingForm = document.querySelector('form[action="/book"]');
 
+function checkLocationConflict() {
+  const bookings = window.bookingsData || [];
+
+  const dateInput = document.querySelector('input[name="date"]');
+  const locationInput = document.querySelector('input[name="location"]');
+  const timeSelect = document.getElementById('timeSelect');
+  const confirmBookingBtn = document.getElementById('confirmBookingBtn');
+  const warning = document.getElementById('locationConflictWarning');
+
+  if (!dateInput || !locationInput || !timeSelect || !confirmBookingBtn || !warning) {
+    return;
+  }
+
+  const selectedDate = (dateInput.value || '').trim();
+  const selectedTime = (timeSelect.value || '').trim();
+  const selectedLocation = (locationInput.value || '').trim().toLowerCase();
+
+  if (!selectedDate || !selectedTime || !selectedLocation) {
+    warning.style.display = 'none';
+    updateSwimmerBookingState();
+    return;
+  }
+
+  const conflictFound = bookings.some(booking => {
+    const bookingDate = String(booking.start_date || '').trim();
+    const bookingTime = String(booking.time || '').trim();
+    const bookingLocation = String(booking.location || '').trim().toLowerCase();
+
+    return (
+      bookingDate === selectedDate &&
+      bookingTime === selectedTime &&
+      bookingLocation &&
+      bookingLocation !== selectedLocation
+    );
+  });
+
+  if (conflictFound) {
+    warning.style.display = 'block';
+    confirmBookingBtn.disabled = true;
+  } else {
+    warning.style.display = 'none';
+
+    // Re-enable booking when conflict is cleared.
+    confirmBookingBtn.disabled = false;
+
+    updateSwimmerBookingState();
+  }
+}
 // ---------- SCROLL POSITION HELPERS ----------
 function saveScrollPosition() {
   sessionStorage.setItem('dashboardScrollY', window.scrollY);
@@ -933,7 +997,6 @@ if (bookingForm) {
       confirmBookingText.textContent = 'Processing...';
     }
 
-    localStorage.setItem('bookingSuccess', 'true');
     localStorage.setItem('activeTab', 'bookings');
     // REMOVED the setTimeout that was clearing form parameters prematurely!
   });
@@ -941,18 +1004,10 @@ if (bookingForm) {
 
 window.addEventListener('load', () => {
   restoreScrollPosition();
-  const bookingSuccess = localStorage.getItem('bookingSuccess');
   const swimmerAdded = localStorage.getItem('swimmerAdded');
   const urlParams = new URLSearchParams(window.location.search);
   const swimmerExists = urlParams.get('swimmer_exists');
   const bookingConflict = window.location.search.includes('booking_conflict');
-
-  if (bookingSuccess === 'true' && !bookingConflict) {
-    createToast('✅ Booking successful', 'success', 2000);
-    localStorage.removeItem('bookingSuccess');
-    showBookings();
-    resetBookingForm();
-  }
 
   if (bookingConflict) {
     createToast('⏰ Duplicate bookings', 'danger', 2500);
@@ -995,7 +1050,11 @@ function updateSwimmerBookingState() {
       studentSelect.parentElement.appendChild(warning);
     }
   } else {
-    confirmBookingBtn.disabled = false;
+    const conflictWarning = document.getElementById('locationConflictWarning');
+
+    if (!conflictWarning || conflictWarning.style.display === 'none') {
+      confirmBookingBtn.disabled = false;
+    }
 
     if (warning) {
       warning.remove();

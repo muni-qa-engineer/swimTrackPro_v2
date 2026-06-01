@@ -384,6 +384,28 @@ def index():
         if str(b.get('status', '')).lower() != 'paid'
     )
 
+    # -----------------------------
+    # Location Suggestions
+    # -----------------------------
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+
+    cursor.execute('''
+    SELECT DISTINCT location
+    FROM bookings
+    WHERE location IS NOT NULL
+      AND TRIM(location) <> ''
+    ORDER BY location
+    ''')
+
+    location_suggestions = [
+        row[0]
+        for row in cursor.fetchall()
+        if row[0]
+    ]
+
+    conn.close()
+
     return render_template(
         'dashboard.html',
         user_name=session['user_name'],
@@ -395,6 +417,7 @@ def index():
         completed_bookings=completed_bookings,
         monthly_revenue=monthly_revenue,
         pending_payments=pending_payments,
+        location_suggestions=location_suggestions,
         notice_message=get_setting(
             'notice_message',
             '💰 Monthly fees are due before 5 days of the package end date • '
@@ -645,6 +668,39 @@ def book():
         end_date,
         request.form.get('selected_days', '')
     )
+
+    # -------------------------------------------------
+    # V0038.0 - Basic Trainer Location Conflict Check
+    # Same Date + Same Time + Different Location
+    # -------------------------------------------------
+    new_location = (request.form.get('location') or '').strip().lower()
+
+    for b in data['bookings']:
+        try:
+            existing_time = (b.get('time') or '').strip()
+            existing_location = (b.get('location') or '').strip().lower()
+            existing_start_date = str(b.get('start_date', ''))
+
+            # Only compare exact slot date and exact slot time
+            if existing_start_date != date_str:
+                continue
+
+            if existing_time != time_str:
+                continue
+
+            # Same location is allowed
+            if existing_location == new_location:
+                continue
+
+            flash(
+                'Selected time slot is already booked at another location. '
+                'Please choose a different time slot or location.',
+                'warning'
+            )
+            return redirect('/?location_conflict=true')
+
+        except Exception:
+            continue
 
     for b in data['bookings']:
         try:

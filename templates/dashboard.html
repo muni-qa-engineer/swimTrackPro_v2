@@ -718,13 +718,26 @@
                         <input
                             type="text"
                             name="location"
+                            list="locationSuggestions"
                             class="form-control form-control-lg"
                             placeholder="Enter swimming pool location"
                             required
                         >
-                        <div class="form-text">
-                            Location is required and will be used for booking and trainer assignment purposes.
-                        </div>
+                        <datalist id="locationSuggestions">
+                            {% for location in location_suggestions %}
+                                <option value="{{ location }}"></option>
+                            {% endfor %}
+                        </datalist>
+                    <div class="form-text">
+                        Location is required and will be used for booking and trainer assignment purposes.
+                    </div>
+                    <div
+                        id="locationConflictWarning"
+                        class="alert alert-warning mt-2 mb-0"
+                        style="display:none;">
+                        ⚠ Selected time slot is already booked at another location.
+                        Please choose a different time slot or location.
+                    </div>
                     </div>
 
 
