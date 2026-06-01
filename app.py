@@ -1,12 +1,13 @@
 import hashlib
-import smtplib
-from email.mime.text import MIMEText
 import psycopg2
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from datetime import datetime, timedelta
 import os
 import json
-from email_service import send_email
+from services.email_service import (
+    send_booking_notification,
+    send_booking_confirmation_email
+)
 from services.pricing_service import calculate_discounted_fee
 
 app = Flask(__name__)
@@ -14,97 +15,9 @@ from config import (
     ADMIN_USERNAME,
     ADMIN_PASSWORD,
     SECRET_KEY,
-    DATABASE_URL,
-    SMTP_EMAIL,
-    SMTP_PASSWORD,
-    ADMIN_NOTIFICATION_EMAIL,
+    DATABASE_URL
 )
 app.secret_key = SECRET_KEY
-
-
-def send_booking_notification(booking):
-    """Send a booking alert email using Brevo."""
-    try:
-        subject = f"New Booking - {booking.get('student', 'SwimTrackPro')}"
-
-        html_content = f"""
-        <h2>🏊 New Booking Alert</h2>
-        <table border="1" cellpadding="6" cellspacing="0">
-            <tr><td><strong>Swimmer</strong></td><td>{booking.get('student', '')}</td></tr>
-            <tr><td><strong>Package</strong></td><td>{booking.get('package', '')}</td></tr>
-            <tr><td><strong>Start Date</strong></td><td>{booking.get('start_date', '')}</td></tr>
-            <tr><td><strong>End Date</strong></td><td>{booking.get('end_date', '')}</td></tr>
-            <tr><td><strong>Time</strong></td><td>{booking.get('time', '')}</td></tr>
-            <tr><td><strong>Persons</strong></td><td>{booking.get('persons', '')}</td></tr>
-            <tr><td><strong>Fee</strong></td><td>₹{booking.get('fee', 0)}</td></tr>
-            <tr><td><strong>Payment Status</strong></td><td>{booking.get('payment_request', '')}</td></tr>
-            <tr><td><strong>Location</strong></td><td>{booking.get('location', '')}</td></tr>
-            <tr><td><strong>Email</strong></td><td>{booking.get('email', '')}</td></tr>
-            <tr><td><strong>Booked By</strong></td><td>{booking.get('owner_name', '')}</td></tr>
-            <tr><td><strong>Phone</strong></td><td>{booking.get('owner_phone', '')}</td></tr>
-        </table>
-        """
-
-        success = send_email(
-            subject=subject,
-            html_content=html_content
-        )
-
-        if not success:
-            print("Booking notification email was not sent.")
-
-    except Exception as e:
-        print(f"Email notification failed: {e}")
-
-
-# --- Booking Confirmation Email to Swimmer ---
-def send_booking_confirmation_email(booking):
-    """Send booking confirmation email to swimmer."""
-
-    try:
-        email = (booking.get('email') or '').strip()
-
-        if not email:
-            return
-
-        subject = "🏊 Booking Confirmed - SwimTrackPro"
-
-        html_content = f"""
-        <h2>🏊 Booking Confirmation</h2>
-
-        <p>Hello {booking.get('owner_name', 'Swimmer')},</p>
-
-        <p>Your booking has been successfully created.</p>
-
-        <table border="1" cellpadding="6" cellspacing="0">
-            <tr><td><strong>Swimmer</strong></td><td>{booking.get('student', '')}</td></tr>
-            <tr><td><strong>Package</strong></td><td>{booking.get('package', '')}</td></tr>
-            <tr><td><strong>Start Date</strong></td><td>{booking.get('start_date', '')}</td></tr>
-            <tr><td><strong>End Date</strong></td><td>{booking.get('end_date', '')}</td></tr>
-            <tr><td><strong>Time</strong></td><td>{booking.get('time', '')}</td></tr>
-            <tr><td><strong>Location</strong></td><td>{booking.get('location', '')}</td></tr>
-            <tr><td><strong>Persons</strong></td><td>{booking.get('persons', '')}</td></tr>
-            <tr><td><strong>Fee</strong></td><td>₹{booking.get('fee', 0)}</td></tr>
-            <tr><td><strong>Payment Status</strong></td><td>{booking.get('payment_request', '')}</td></tr>
-        </table>
-
-        <br>
-
-        <p>Thank you for choosing SwimTrackPro.</p>
-
-        <p>For any schedule changes or questions, please contact your trainer.</p>
-        """
-
-        send_email(
-            subject=subject,
-            html_content=html_content,
-            to_email=email,
-            to_name=booking.get('owner_name', 'Swimmer')
-        )
-
-    except Exception as e:
-        print(f"Booking confirmation email failed: {e}")
-
 
 def generate_booking_id(student, start_date, time_str):
     return hashlib.md5(f"{student}{start_date}{time_str}".encode()).hexdigest()
