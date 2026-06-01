@@ -456,10 +456,12 @@ generateTimeSlots();
 const tabBookings = document.getElementById('tabBookings');
 const tabBook = document.getElementById('tabBook');
 const tabCalendar = document.getElementById('tabCalendar');
+const tabPayments = document.getElementById('tabPayments');
 
 const bookingsSection = document.getElementById('bookingsSection');
 const bookSlotSection = document.getElementById('bookSlotSection');
 const calendarSection = document.getElementById('calendarSection');
+const paymentsSection = document.getElementById('paymentsSection');
 
 const calendarMonthInput = document.getElementById('calendarMonthInput');
 const calendarGrid = document.getElementById('calendarGrid');
@@ -472,12 +474,18 @@ function showBookings() {
     bookSlotSection.style.display = 'none';
   }
   calendarSection.style.display = 'none';
+  if (paymentsSection) {
+    paymentsSection.style.display = 'none';
+  }
 
   tabBookings.classList.add('active');
   if (tabBook) {
     tabBook.classList.remove('active');
   }
   tabCalendar.classList.remove('active');
+  if (tabPayments) {
+    tabPayments.classList.remove('active');
+  }
 
   localStorage.setItem('activeTab', 'bookings');
 }
@@ -488,12 +496,18 @@ function showBookSlot() {
     bookSlotSection.style.display = 'flex';
   }
   calendarSection.style.display = 'none';
+  if (paymentsSection) {
+    paymentsSection.style.display = 'none';
+  }
 
   if (tabBook) {
     tabBook.classList.add('active');
   }
   tabBookings.classList.remove('active');
   tabCalendar.classList.remove('active');
+  if (tabPayments) {
+    tabPayments.classList.remove('active');
+  }
 
   localStorage.setItem('activeTab', 'book_slot');
 }
@@ -504,11 +518,17 @@ function showCalendar() {
     bookSlotSection.style.display = 'none';
   }
   calendarSection.style.display = 'block';
+  if (paymentsSection) {
+    paymentsSection.style.display = 'none';
+  }
 
   tabCalendar.classList.add('active');
   tabBookings.classList.remove('active');
   if (tabBook) {
     tabBook.classList.remove('active');
+  }
+  if (tabPayments) {
+    tabPayments.classList.remove('active');
   }
 
   localStorage.setItem('activeTab', 'calendar');
@@ -520,6 +540,196 @@ function showCalendar() {
   }
 
   renderCalendar();
+}
+
+// Payment summary calculation support
+function updatePaymentSummary() {
+  const bookings = window.bookingsData || [];
+
+  let paidAmount = 0;
+  let pendingAmount = 0;
+  let notPaidAmount = 0;
+
+  bookings.forEach(booking => {
+    const amount = Number(booking.fee || 0);
+    const status = String(booking.status || '').trim().toLowerCase();
+
+    if (status === 'paid') {
+      paidAmount += amount;
+    }
+    else if (status === 'pending') {
+      pendingAmount += amount;
+    }
+    else {
+      notPaidAmount += amount;
+    }
+  });
+
+  const paidCard = document.getElementById('paidAmountCard');
+  const pendingCard = document.getElementById('pendingAmountCard');
+  const notPaidCard = document.getElementById('notPaidAmountCard');
+
+  if (paidCard) {
+    paidCard.textContent = `₹${paidAmount.toLocaleString()}`;
+  }
+
+  if (pendingCard) {
+    pendingCard.textContent = `₹${pendingAmount.toLocaleString()}`;
+  }
+
+  if (notPaidCard) {
+    notPaidCard.textContent = `₹${notPaidAmount.toLocaleString()}`;
+  }
+}
+
+function updatePaymentTable() {
+  const bookings = window.bookingsData || [];
+  const currentRole = window.currentUserRole || '';
+  const tableBody = document.getElementById('paymentTableBody');
+
+  if (!tableBody) {
+    return;
+  }
+
+  if (bookings.length === 0) {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="6" class="text-center text-muted py-3">
+          No payment records found.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tableBody.innerHTML = bookings.map(booking => {
+    const owner = booking.owner || booking.created_by || '-';
+    const swimmer = booking.student || '-';
+    const packageName = booking.package || '-';
+    const status = booking.status || 'Not Paid';
+    const amount = Number(booking.fee || 0).toLocaleString();
+    const isGuestPaid = currentRole !== 'trainer' && status === 'Paid';
+
+    return `
+      <tr>
+        <td>${owner}</td>
+        <td>${swimmer}</td>
+        <td>${packageName}</td>
+        <td>
+          ${isGuestPaid ? `
+            <span class="fw-semibold text-success">Paid</span>
+          ` : `
+            <select
+              class="form-select form-select-sm payment-status-select"
+              style="width: 120px;"
+              data-booking-id="${booking.id || ''}">
+              <option value="Not Paid" ${status === 'Not Paid' ? 'selected' : ''}>Not Paid</option>
+              <option value="Pending Verification" ${status === 'Pending Verification' ? 'selected' : ''}>Pending Verification</option>
+              <option value="Paid" ${status === 'Paid' ? 'selected' : ''}>Paid</option>
+            </select>
+          `}
+        </td>
+        <td>₹${amount}</td>
+        <td>
+          ${isGuestPaid ? `
+            <span class="text-muted">Verified</span>
+          ` : `
+            <button
+              type="button"
+              class="btn btn-sm btn-success payment-status-update-btn"
+              data-booking-id="${booking.id || ''}">
+              Update Payment Status
+            </button>
+          `}
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function initializePaymentStatusActions() {
+  const buttons = document.querySelectorAll('.payment-status-update-btn');
+
+  buttons.forEach(button => {
+    button.addEventListener('click', async function() {
+      const bookingId = this.dataset.bookingId;
+
+      const row = this.closest('tr');
+      const statusSelect = row?.querySelector('.payment-status-select');
+
+      if (!bookingId || !statusSelect) {
+        createToast('Unable to update payment status.', 'danger');
+        return;
+      }
+
+      const selectedStatus = statusSelect.value;
+      const originalHtml = this.innerHTML;
+
+      this.disabled = true;
+      this.innerHTML = `
+        <span class="spinner-border spinner-border-sm me-1"></span>
+        Updating...
+      `;
+
+      try {
+        const formData = new FormData();
+        formData.append('status', selectedStatus);
+
+        const response = await fetch(
+          `/update_payment_status/${bookingId}`,
+          {
+            method: 'POST',
+            body: formData
+          }
+        );
+
+        if (response.ok) {
+          createToast('Payment status updated successfully');
+
+          setTimeout(() => {
+            window.location.reload();
+          }, 800);
+        } else {
+          throw new Error('Update failed');
+        }
+      } catch (error) {
+        createToast('Failed to update payment status', 'danger');
+
+        this.disabled = false;
+        this.innerHTML = originalHtml;
+      }
+    });
+  });
+}
+
+function showPayments() {
+  bookingsSection.style.display = 'none';
+
+  if (bookSlotSection) {
+    bookSlotSection.style.display = 'none';
+  }
+
+  calendarSection.style.display = 'none';
+
+  if (paymentsSection) {
+    paymentsSection.style.display = 'block';
+    updatePaymentSummary();
+    updatePaymentTable();
+    initializePaymentStatusActions();
+  }
+
+  tabBookings.classList.remove('active');
+  tabCalendar.classList.remove('active');
+
+  if (tabBook) {
+    tabBook.classList.remove('active');
+  }
+
+  if (tabPayments) {
+    tabPayments.classList.add('active');
+  }
+
+  localStorage.setItem('activeTab', 'payments');
 }
 
 function renderCalendar() {
@@ -797,6 +1007,9 @@ if (tabBookings && tabCalendar) {
   if (tabBook) {
     tabBook.addEventListener('click', showBookSlot);
   }
+  if (tabPayments) {
+    tabPayments.addEventListener('click', showPayments);
+  }
 
   const savedTab = localStorage.getItem('activeTab');
 
@@ -805,6 +1018,9 @@ if (tabBookings && tabCalendar) {
   }
   else if (savedTab === 'calendar') {
     showCalendar();
+  }
+  else if (savedTab === 'payments') {
+    showPayments();
   }
   else {
     showBookings();

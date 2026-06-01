@@ -423,7 +423,10 @@ def index():
             '💰 Monthly fees are due before 5 days of the package end date • '
             '🏆 Special coaching sessions available • '
             '📞 Contact the trainer for any schedule changes'
-        )
+        ),
+        account_holder_name=get_setting("account_holder_name", ""),
+        trainer_phone=get_setting("trainer_phone", ""),
+        upi_id=get_setting("upi_id", "")
     )
 
 @app.route('/login', methods=['POST'])
@@ -1068,6 +1071,72 @@ def update_booking(booking_id):
     conn.close()
 
     flash("Booking updated successfully")
+    return redirect(url_for('index'))
+
+
+# --- Update Payment Status Route ---
+@app.route('/update_payment_status/<booking_id>', methods=['POST'])
+def update_payment_status(booking_id):
+    if 'user_name' not in session:
+        return redirect(url_for('index'))
+
+    new_status = (request.form.get('status') or '').strip()
+
+    allowed_statuses = [
+        'Not Paid',
+        'Pending Verification',
+        'Paid'
+    ]
+
+    if new_status not in allowed_statuses:
+        flash('Invalid payment status selected')
+        return redirect(url_for('index'))
+
+    # Guest users cannot directly mark a booking as Paid.
+    if (
+        session.get('role') != 'trainer'
+        and new_status == 'Paid'
+    ):
+        flash('Only trainer can mark a payment as Paid')
+        return redirect(url_for('index'))
+
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+
+    if session.get('role') == 'trainer':
+        cursor.execute('''
+        UPDATE bookings
+        SET
+            status = %s,
+            payment_request = %s
+        WHERE id = %s
+        ''', (
+            new_status,
+            'Paid' if new_status in ('Pending Verification', 'Paid') else 'Not Paid',
+            booking_id
+        ))
+
+    else:
+        cursor.execute('''
+        UPDATE bookings
+        SET
+            status = %s,
+            payment_request = %s
+        WHERE id = %s
+          AND owner_name = %s
+          AND owner_phone = %s
+        ''', (
+            new_status,
+            'Paid' if new_status == 'Pending Verification' else 'Not Paid',
+            booking_id,
+            session.get('user_name'),
+            session.get('phone')
+        ))
+
+    conn.commit()
+    conn.close()
+
+    flash('Payment status updated successfully')
     return redirect(url_for('index'))
 
 
