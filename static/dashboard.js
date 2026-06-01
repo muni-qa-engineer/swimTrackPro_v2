@@ -104,6 +104,7 @@ function isPastDate(dateObj) {
 
   // CENTRALIZED CONFIG
   const PRICING = {
+    DEMO_DAY: 500,
     SINGLE_DAY: 750,
     MONTHLY_PACKAGE: 9000,
     CUSTOM_PACKAGE_BASE: 9000
@@ -143,7 +144,7 @@ function isPastDate(dateObj) {
 
     const allowedDay = days[selectedDate.getDay()];
 
-    if (pkg.value === 'Single') {
+    if (pkg.value === 'Single' || pkg.value === 'Demo') {
       dayCheckboxes.forEach(cb => {
         cb.checked = false;
 
@@ -250,7 +251,10 @@ function isPastDate(dateObj) {
     const discountPercent = discountMap[persons] || 0;
     let actualAmount = 0;
 
-    if (pkg.value === 'Single') {
+    if (pkg.value === 'Demo') {
+      actualAmount = 500 * persons;
+    }
+    else if (pkg.value === 'Single') {
       actualAmount = 750 * persons;
     }
     else if (pkg.value === 'Monthly') {

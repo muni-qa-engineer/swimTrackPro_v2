@@ -614,6 +614,8 @@ def book():
         )
 
     fee = calculate_discounted_fee(package, persons, session_count)
+    if package == 'Demo':
+        fee = 500 * int(persons)
 
     # Allow manual fee override only for admin users.
     # Guest users always use the system-calculated fee.
@@ -626,7 +628,7 @@ def book():
                 pass
 
     # Normalize end date based on package
-    if package == 'Single':
+    if package in ('Single', 'Demo'):
         end_date = date_str
     elif package == 'Monthly':
         start_dt = datetime.strptime(date_str, '%Y-%m-%d').date()
@@ -902,6 +904,8 @@ def update_booking(booking_id):
         )
 
     fee = calculate_discounted_fee(package, persons, session_count)
+    if package == 'Demo':
+        fee = 500 * int(persons)
 
     # Allow manual fee override only for admin users.
     # Guest users always use the system-calculated fee.
@@ -914,7 +918,7 @@ def update_booking(booking_id):
                 pass
 
     # Normalize end date based on package
-    if package == 'Single':
+    if package in ('Single', 'Demo'):
         end_date = date_str
     elif package == 'Monthly':
         start_dt = datetime.strptime(date_str, '%Y-%m-%d').date()
