@@ -1,14 +1,11 @@
 import psycopg2
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from datetime import datetime, timedelta
-import os
-import json
 from services.email_service import (
     send_booking_notification,
     send_booking_confirmation_email
 )
 from services.pricing_service import calculate_discounted_fee
-
 from services.booking_engine import (
     generate_booking_id,
     generate_recurring_dates,
@@ -16,6 +13,10 @@ from services.booking_engine import (
 from services.makeup_service import (
     create_makeup_credit,
     get_available_makeup_credits,
+)
+from services.settings_service import (
+    get_setting,
+    set_setting,
 )
 
 app = Flask(__name__)
@@ -1702,46 +1703,6 @@ def help_page():
         return redirect(url_for('index'))
 
     return render_template('help.html')
-
-
-
-# --- Notice Board Settings Helpers and Route ---
-def get_setting(setting_key, default_value=''):
-    settings_file = os.path.join(
-        os.path.dirname(__file__),
-        'settings.json'
-    )
-
-    if not os.path.exists(settings_file):
-        return default_value
-
-    try:
-        with open(settings_file, 'r', encoding='utf-8') as f:
-            settings = json.load(f)
-        return settings.get(setting_key, default_value)
-    except Exception:
-        return default_value
-
-
-def set_setting(setting_key, value):
-    settings_file = os.path.join(
-        os.path.dirname(__file__),
-        'settings.json'
-    )
-    settings = {}
-
-    if os.path.exists(settings_file):
-        try:
-            with open(settings_file, 'r', encoding='utf-8') as f:
-                settings = json.load(f)
-        except Exception:
-            settings = {}
-
-    settings[setting_key] = value
-
-    with open(settings_file, 'w', encoding='utf-8') as f:
-        json.dump(settings, f, ensure_ascii=False, indent=2)
-
 
 @app.route('/update_notice', methods=['POST'])
 def update_notice():
