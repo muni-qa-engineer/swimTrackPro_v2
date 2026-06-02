@@ -112,10 +112,10 @@ function isPastDate(dateObj) {
 
   const GROUP_DISCOUNTS = {
     1: 0,
-    2: 10,
-    3: 20,
-    4: 27,
-    5: 33
+    2: 6,
+    3: 11,
+    4: 16,
+    5: 21
 };
 
   // Smart weekday validation based on selected Start Date
@@ -242,10 +242,10 @@ function isPastDate(dateObj) {
 
     const discountMap = {
         1: 0,
-        2: 10,
-        3: 20,
-        4: 27,
-        5: 33
+        2: 6,
+        3: 11,
+        4: 16,
+        5: 21
     };
 
     const discountPercent = discountMap[persons] || 0;

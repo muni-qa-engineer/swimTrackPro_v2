@@ -78,7 +78,9 @@
                     <label class="form-label">Package</label>
 
                     <select name="package" id="packageSelect" class="form-select">
+                        <option value="Demo" {% if booking.package == 'Demo' %}selected{% endif %}>Demo</option>
                         <option value="Single" {% if booking.package == 'Single' %}selected{% endif %}>Single</option>
+                        <!-- <option value="Demo" {% if booking.package == 'Demo' %}selected{% endif %}>Demo</option> -->
                         <option value="Monthly" {% if booking.package == 'Monthly' %}selected{% endif %}>Monthly</option>
                         <option value="Custom" {% if booking.package == 'Custom' %}selected{% endif %}>Custom</option>
                     </select>
@@ -269,8 +271,8 @@ function updateEditBookingRules() {
 
     const allowedDay = days[selectedDate.getDay()];
 
-    // SINGLE PACKAGE
-    if (pkg.value === 'Single') {
+    // SINGLE + DEMO PACKAGE
+    if (pkg.value === 'Single' || pkg.value === 'Demo') {
 
         // Automatically select the weekday that matches the chosen start date.
         const weekdayMap = {
@@ -362,23 +364,39 @@ function updateEditBookingFee() {
     // Discount rules for all package types.
     const discountMap = {
         1: 0,
-        2: 10,
-        3: 20,
-        4: 27,
-        5: 33
+        2: 6,
+        3: 11,
+        4: 16,
+        5: 21
     };
 
     const discount = discountMap[persons] || 0;
     let actualAmount = 0;
-
+    // Demo package
+    if (pkg.value === 'Demo') {
+        actualAmount = 500 * persons;
+    }
+    
     // Single package
-    if (pkg.value === 'Single') {
+    else if (pkg.value === 'Single') {
         actualAmount = 750 * persons;
     }
 
+    // Demo package
+    // else if (pkg.value === 'Demo') {
+    //     actualAmount = 500 * persons;
+    // }
+
     // Monthly package
     else if (pkg.value === 'Monthly') {
-        actualAmount = 9000 * persons;
+        const checkedDays = [...dayCheckboxes].filter(cb => cb.checked);
+        const daysCount = checkedDays.length;
+
+        // Monthly pricing:
+        // 1 day = 3000
+        // 2 days = 6000
+        // 3 days = 9000
+        actualAmount = (daysCount * 3000) * persons;
     }
 
     // Custom package

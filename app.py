@@ -158,7 +158,6 @@ def load_data():
                         f"{class_date} {booking_time}",
                         '%Y-%m-%d %I:%M %p'
                     )
-
                     # Each session duration is 1 hour.
                     class_end_datetime = class_datetime + timedelta(hours=1)
 
@@ -174,7 +173,7 @@ def load_data():
                 if total_classes > 0 and completed_classes >= total_classes:
                     is_completed = True
 
-        except Exception:
+        except Exception as e:
             is_completed = False
             completed_classes = 0
             remaining_classes = total_classes
@@ -944,6 +943,14 @@ def update_booking(booking_id):
 
     # Convert selected days list to comma-separated string
     selected_days_str = ', '.join(selected_days)
+
+    # Recalculate fee after selected days are finalized
+    if package == 'Monthly':
+        fee = len(selected_days) * 3000 * int(persons)
+    elif package == 'Single':
+        fee = 750 * int(persons)
+    elif package == 'Demo':
+        fee = 500 * int(persons)
 
     # Prevent overlapping bookings when editing
     try:

@@ -36,10 +36,10 @@ def calculate_discounted_fee(package, persons, session_count=None):
         * More than 14      -> trainer discussion (None)
     - Group discounts for all package types:
         * 1 person  -> 0%
-        * 2 persons -> 10%
-        * 3 persons -> 20%
-        * 4 persons -> 27%
-        * 5 persons -> 33%
+        * 2 persons -> 6%
+        * 3 persons -> 11%
+        * 4 persons -> 16%
+        * 5 persons -> 21%
     """
     try:
         persons = max(1, int(persons or 1))
@@ -53,10 +53,10 @@ def calculate_discounted_fee(package, persons, session_count=None):
     # Discount rules
     discount_map = {
         1: 0,
-        2: 10,
-        3: 20,
-        4: 27,
-        5: 33,
+        2: 6,
+        3: 11,
+        4: 16,
+        5: 21,
     }
 
     discount = discount_map.get(persons, 0)
