@@ -153,6 +153,13 @@ def load_data():
                 current_datetime = datetime.now()
                 booking_time = (b[9] or '06:00 AM').strip()
 
+                print("--------------------------------")
+                print("Student:", b[1])
+                print("Package:", b[5])
+                print("Current:", current_datetime)
+                print("Booking Time:", booking_time)
+                print("Calendar Dates:", calendar_dates)
+
                 for class_date in calendar_dates:
                     class_datetime = datetime.strptime(
                         f"{class_date} {booking_time}",
@@ -164,6 +171,9 @@ def load_data():
                     # Mark as completed immediately after session end time.
                     if current_datetime >= class_end_datetime:
                         completed_classes += 1
+
+                print("Completed Classes:", completed_classes)
+                print("Total Classes:", total_classes)
 
                 remaining_classes = max(
                     total_classes - completed_classes,
@@ -177,6 +187,14 @@ def load_data():
             is_completed = False
             completed_classes = 0
             remaining_classes = total_classes
+
+        print(
+            "RESULT =>",
+            b[1],
+            "completed=", completed_classes,
+            "remaining=", remaining_classes,
+            "is_completed=", is_completed
+        )
 
         booking = {
             'id': b[0],
