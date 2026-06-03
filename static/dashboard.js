@@ -1326,3 +1326,65 @@ function enableFormLoading(formId, loadingText) {
 // Enable loading animation for the trainer Notice Board form.
 enableFormLoading('updateNoticeForm', 'Updating...');
 
+// --------------------------------------
+// V0033.5.0 - Auto Logout After Inactivity
+// --------------------------------------
+(function () {
+  let inactivityTimer;
+  let countdownTimer;
+  let countdown = 30;
+
+  const INACTIVITY_MS = 30 * 1000; // 30 seconds
+
+  const toast = document.getElementById('inactiveLogoutToast');
+  const countdownElement = document.getElementById('logoutCountdown');
+  const stayLoggedInBtn = document.getElementById('stayLoggedInBtn');
+
+
+  if (!toast || !countdownElement || !stayLoggedInBtn) {
+    return;
+  }
+
+  function resetInactivityTimer() {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(showLogoutWarning, INACTIVITY_MS);
+  }
+
+  function showLogoutWarning() {
+    countdown = 30;
+    countdownElement.textContent = countdown;
+    toast.style.display = 'block';
+
+    clearInterval(countdownTimer);
+
+    countdownTimer = setInterval(() => {
+      countdown--;
+      countdownElement.textContent = countdown;
+
+      if (countdown <= 0) {
+        clearInterval(countdownTimer);
+        window.location.href = '/logout';
+      }
+    }, 1000);
+  }
+
+  function stayLoggedIn() {
+    toast.style.display = 'none';
+    clearInterval(countdownTimer);
+    resetInactivityTimer();
+  }
+
+  stayLoggedInBtn.addEventListener('click', stayLoggedIn);
+
+  ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll']
+    .forEach(eventName => {
+      document.addEventListener(
+        eventName,
+        resetInactivityTimer,
+        true
+      );
+    });
+
+  resetInactivityTimer();
+})();
+
