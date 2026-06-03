@@ -350,7 +350,8 @@ input::placeholder {
 
 #tabCalendar,
 #tabBook,
-#tabBookings {
+#tabBookings,
+#tabPayments {
     color: #6c757d;
     background: #fff;
     border-bottom: 3px solid transparent !important;
@@ -364,7 +365,8 @@ input::placeholder {
 }
 #tabCalendar.active,
 #tabBook.active,
-#tabBookings.active {
+#tabBookings.active,
+#tabPayments.active {
     color: #0d6efd !important;
     border-bottom: 3px solid #0d6efd !important;
     background: #fff !important;

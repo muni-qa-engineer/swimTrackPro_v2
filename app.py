@@ -955,6 +955,16 @@ def update_booking(booking_id):
     elif package == 'Demo':
         fee = 500 * int(persons)
 
+    # Trainer can override the calculated fee
+    if session.get('role') == 'trainer':
+        manual_fee = (request.form.get('fee') or '').strip()
+
+        if manual_fee:
+            try:
+                fee = int(float(manual_fee))
+            except ValueError:
+                pass
+
     # Prevent overlapping bookings when editing
     try:
         booking_time = datetime.strptime(time_str, '%I:%M %p')
