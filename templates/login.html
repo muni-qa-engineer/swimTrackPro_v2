@@ -36,7 +36,7 @@
             background-size: cover;      /* Scales image to fill container */
             background-position: center;
             /* opacity: 0.5;  */
-            overflow: hidden;
+            overflow-y: auto;
             padding: 20px;
         }
 
@@ -343,9 +343,9 @@
         phoneInput.required = false;
         passwordInput.required = true;
 
-        const loginButton = document.querySelector('.login-btn');
-        if (loginButton) {
-            loginButton.textContent = 'Login as Trainer';
+        const loginButtonLabel = document.querySelector('.login-btn span:last-child');
+        if (loginButtonLabel) {
+            loginButtonLabel.textContent = 'Login as Trainer';
         }
     }
 
@@ -367,9 +367,9 @@
         phoneInput.required = true;
         passwordInput.required = false;
 
-        const loginButton = document.querySelector('.login-btn');
-        if (loginButton) {
-            loginButton.textContent = 'Login as Guest';
+        const loginButtonLabel = document.querySelector('.login-btn span:last-child');
+        if (loginButtonLabel) {
+            loginButtonLabel.textContent = 'Login as Guest';
         }
     }
 
@@ -453,6 +453,33 @@ if (loginForm) {
         }
     });
 }
+// V0038.0 - Mobile Pull To Refresh (Login Page Only)
+let pullStartY = 0;
+let pullCurrentY = 0;
+const PULL_REFRESH_THRESHOLD = 80;
+
+window.addEventListener('touchstart', (e) => {
+    if (window.scrollY === 0) {
+        pullStartY = e.touches[0].clientY;
+    }
+}, { passive: true });
+
+window.addEventListener('touchmove', (e) => {
+    if (window.scrollY === 0) {
+        pullCurrentY = e.touches[0].clientY;
+    }
+}, { passive: true });
+
+window.addEventListener('touchend', () => {
+    const pullDistance = pullCurrentY - pullStartY;
+
+    if (window.scrollY === 0 && pullDistance > PULL_REFRESH_THRESHOLD) {
+        window.location.reload();
+    }
+
+    pullStartY = 0;
+    pullCurrentY = 0;
+});
 </script>
 </body>
 <script src="{{ url_for('static', filename='login.js') }}"></script>
