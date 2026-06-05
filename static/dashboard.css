@@ -371,3 +371,84 @@ input::placeholder {
     border-bottom: 3px solid #0d6efd !important;
     background: #fff !important;
 }
+
+/* V0038.10.1 Mini Calendar */
+
+.calendar-header{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  text-align:center;
+  font-weight:600;
+  margin-bottom:12px;
+  color:#6c757d;
+}
+
+.calendar-grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:10px;
+}
+
+.calendar-day{
+  width:36px;
+  height:36px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  font-weight:500;
+}
+
+.calendar-day.today{
+  background:#0d6efd;
+  color:#fff;
+}
+
+.calendar-day.booked{
+  background:#20c997;
+  color:#fff;
+}
+
+.calendar-day.makeup{
+  background:#fd7e14;
+  color:#fff;
+}
+
+.legend-dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  display:inline-block;
+  margin-right:5px;
+}
+
+/* V0038.10.2 Payment Summary */
+
+.payment-summary-card{
+  border-radius:16px;
+}
+
+.payment-metric{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.payment-icon{
+  width:48px;
+  height:48px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+}
+
+.payment-icon.received{
+  background:#d1fae5;
+}
+
+.payment-icon.pending{
+  background:#fef3c7;
+}

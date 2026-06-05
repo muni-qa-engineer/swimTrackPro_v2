@@ -387,6 +387,254 @@ def index():
     )
 
     # -----------------------------
+    # V0038.6 Dashboard Statistics
+    # -----------------------------
+    total_sessions = sum(
+        int(b.get('total_classes', 0) or 0)
+        for b in user_bookings
+    )
+
+    completed_sessions = sum(
+        int(b.get('completed_classes', 0) or 0)
+        for b in user_bookings
+    )
+
+    remaining_sessions = sum(
+        int(b.get('remaining_classes', 0) or 0)
+        for b in user_bookings
+    )
+
+    makeup_sessions = sum(
+        1
+        for b in user_bookings
+        if b.get('has_available_makeup_credit', False)
+    )
+
+    # -----------------------------
+    # V0039.1 Dynamic Mini Calendar
+    # -----------------------------
+    import calendar
+
+    ist_now = datetime.now(ZoneInfo('Asia/Kolkata'))
+    current_year = ist_now.year
+    current_month = ist_now.month
+    today_day = ist_now.day
+
+    current_month_name = ist_now.strftime('%B %Y')
+
+    booked_dates = set()
+    makeup_dates = set()
+
+    for booking in user_bookings:
+        for session_date in booking.get('calendar_dates', []):
+            try:
+                dt = datetime.strptime(session_date, '%Y-%m-%d')
+
+                if (
+                    dt.year == current_year
+                    and dt.month == current_month
+                ):
+                    booked_dates.add(dt.day)
+            except Exception:
+                pass
+
+        for makeup_date in booking.get('used_makeup_dates', []):
+            try:
+                dt = datetime.strptime(str(makeup_date), '%Y-%m-%d')
+
+                if (
+                    dt.year == current_year
+                    and dt.month == current_month
+                ):
+                    makeup_dates.add(dt.day)
+            except Exception:
+                pass
+
+    cal = calendar.Calendar(firstweekday=0)
+    calendar_days = []
+
+    for week in cal.monthdayscalendar(current_year, current_month):
+        for day in week:
+            if day == 0:
+                calendar_days.append({
+                    'day': None,
+                    'is_today': False,
+                    'is_booked': False,
+                    'is_makeup': False
+                })
+            else:
+                calendar_days.append({
+                    'day': day,
+                    'is_today': day == today_day,
+                    'is_booked': day in booked_dates,
+                    'is_makeup': day in makeup_dates
+                })
+
+    # -----------------------------
+    # V0039.2 Dynamic Hero Banner
+    # -----------------------------
+    current_date_display = ist_now.strftime('%A, %d %b %Y')
+
+    notification_count = 0
+
+    pending_verification_count = sum(
+        1
+        for b in user_bookings
+        if str(b.get('status', '')).lower() == 'pending verification'
+    )
+
+    notification_count += pending_verification_count
+    notification_count += makeup_sessions
+
+    if current_role == 'trainer':
+        hero_message = (
+            f'Manage {len(user_students)} swimmers and '
+            f'{len(user_bookings)} bookings from one place.'
+        )
+    else:
+        hero_message = (
+            'Track sessions, bookings, payments and swimmer progress '
+            'from one place.'
+        )
+
+    upcoming_session_text = ''
+
+    future_dates = []
+
+    for booking in user_bookings:
+        for session_date in booking.get('calendar_dates', []):
+            try:
+                dt = datetime.strptime(session_date, '%Y-%m-%d').date()
+
+                if dt >= ist_now.date():
+                    future_dates.append(dt)
+            except Exception:
+                pass
+
+    if future_dates:
+        next_session = min(future_dates)
+        upcoming_session_text = (
+            f'Next Session: {next_session.strftime("%d %b %Y")}'
+        )
+
+    # -----------------------------
+    # V0039.4 Real Payment Summary Data
+    # -----------------------------
+    active_package_name = 'No Package'
+    active_package_valid_till = '--'
+    package_status = 'Active'
+
+    received_amount = sum(
+        int(b.get('fee', 0) or 0)
+        for b in user_bookings
+        if str(b.get('status', '')).lower() == 'paid'
+    )
+
+    pending_amount = sum(
+        int(b.get('fee', 0) or 0)
+        for b in user_bookings
+        if str(b.get('status', '')).lower() != 'paid'
+    )
+
+    active_booking = None
+
+    for booking in sorted(
+        user_bookings,
+        key=lambda b: str(b.get('end_date', '')),
+        reverse=True
+    ):
+        if not booking.get('is_completed', False):
+            active_booking = booking
+            break
+
+    if active_booking:
+        active_package_name = active_booking.get('package', 'No Package')
+
+        valid_till = active_booking.get('end_date')
+        if valid_till:
+            try:
+                active_package_valid_till = datetime.strptime(
+                    str(valid_till),
+                    '%Y-%m-%d'
+                ).strftime('%d %b %Y')
+            except Exception:
+                active_package_valid_till = str(valid_till)
+
+        try:
+            expiry_date = datetime.strptime(
+                str(active_booking.get('end_date')),
+                '%Y-%m-%d'
+            ).date()
+
+            if expiry_date < ist_now.date():
+                package_status = 'Expired'
+        except Exception:
+            pass
+
+    # -----------------------------
+    # V0039.5 My Swimmers Insights
+    # -----------------------------
+    enriched_students = []
+
+    for swimmer in user_students:
+        swimmer_name = (swimmer.get('name') or '').strip()
+
+        swimmer_bookings = [
+            b for b in user_bookings
+            if (b.get('student') or '').strip().lower() == swimmer_name.lower()
+        ]
+
+        completed_total = sum(
+            int(b.get('completed_classes', 0) or 0)
+            for b in swimmer_bookings
+        )
+
+        sessions_total = sum(
+            int(b.get('total_classes', 0) or 0)
+            for b in swimmer_bookings
+        )
+
+        next_session = ''
+        future_dates = []
+
+        for booking in swimmer_bookings:
+            for session_date in booking.get('calendar_dates', []):
+                try:
+                    dt = datetime.strptime(session_date, '%Y-%m-%d').date()
+                    if dt >= ist_now.date():
+                        future_dates.append(dt)
+                except Exception:
+                    pass
+
+        if future_dates:
+            next_session = min(future_dates).strftime('%d %b %Y')
+
+        active_package = ''
+        active_booking_for_swimmer = None
+
+        for booking in sorted(
+            swimmer_bookings,
+            key=lambda b: str(b.get('end_date', '')),
+            reverse=True
+        ):
+            if not booking.get('is_completed', False):
+                active_booking_for_swimmer = booking
+                break
+
+        if active_booking_for_swimmer:
+            active_package = active_booking_for_swimmer.get('package', '')
+
+        swimmer_copy = dict(swimmer)
+        swimmer_copy['completed_sessions'] = completed_total
+        swimmer_copy['total_sessions'] = sessions_total
+        swimmer_copy['next_session'] = next_session
+        swimmer_copy['package'] = active_package
+
+        enriched_students.append(swimmer_copy)
+
+    user_students = enriched_students
+
+    # -----------------------------
     # Location Suggestions
     # -----------------------------
     conn = get_pg_connection()
@@ -419,7 +667,22 @@ def index():
         completed_bookings=completed_bookings,
         monthly_revenue=monthly_revenue,
         pending_payments=pending_payments,
+        total_sessions=total_sessions,
+        completed_sessions=completed_sessions,
+        remaining_sessions=remaining_sessions,
+        makeup_sessions=makeup_sessions,
         location_suggestions=location_suggestions,
+        current_month_name=current_month_name,
+        calendar_days=calendar_days,
+        notification_count=notification_count,
+        hero_message=hero_message,
+        upcoming_session_text=upcoming_session_text,
+        current_date_display=current_date_display,
+        active_package_name=active_package_name,
+        active_package_valid_till=active_package_valid_till,
+        package_status=package_status,
+        received_amount=received_amount,
+        pending_amount=pending_amount,
         notice_message=get_setting(
             'notice_message',
             '💰 Monthly fees are due before 5 days of the package end date • '
