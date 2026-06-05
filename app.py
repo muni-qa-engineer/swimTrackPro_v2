@@ -694,6 +694,91 @@ def index():
         upi_id=get_setting("upi_id", "")
     )
 
+# -----------------------------
+# V0040.0 Navigation Refactor
+# -----------------------------
+@app.route('/booking')
+def booking_page():
+    print('BOOKING SESSION:', dict(session))
+
+    if 'user_name' not in session:
+        return redirect(url_for('index'))
+
+    data = load_data()
+
+    current_user = session.get('user_name')
+    current_phone = session.get('phone')
+    current_role = session.get('role', 'guest')
+
+    if current_role == 'trainer':
+        user_students = data.get('students', [])
+        user_bookings = data.get('bookings', [])
+    else:
+        user_students = [
+            s for s in data.get('students', [])
+            if isinstance(s, dict)
+            and (s.get('owner_name') or '').strip().lower() == current_user
+            and s.get('owner_phone') == current_phone
+        ]
+
+        user_bookings = [
+            b for b in data.get('bookings', [])
+            if (b.get('owner_name') or '').strip().lower() == current_user
+            and b.get('owner_phone') == current_phone
+        ]
+
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+
+    cursor.execute('''
+    SELECT DISTINCT location
+    FROM bookings
+    WHERE location IS NOT NULL
+      AND TRIM(location) <> ''
+    ORDER BY location
+    ''')
+
+    location_suggestions = [
+        row[0]
+        for row in cursor.fetchall()
+        if row[0]
+    ]
+
+    conn.close()
+
+    return render_template(
+        'booking.html',
+        role=current_role,
+        user_name=current_user,
+        students=user_students,
+        bookings=user_bookings,
+        location_suggestions=location_suggestions
+    )
+
+
+@app.route('/my-bookings')
+def my_bookings_page():
+    if 'user_name' not in session:
+        return redirect(url_for('index'))
+
+    return render_template('my_bookings.html')
+
+
+@app.route('/calendar')
+def calendar_page():
+    if 'user_name' not in session:
+        return redirect(url_for('index'))
+
+    return render_template('calendar.html')
+
+
+@app.route('/payments')
+def payments_page():
+    if 'user_name' not in session:
+        return redirect(url_for('index'))
+
+    return render_template('payments.html')
+
 @app.route('/login', methods=['POST'])
 def login():
     role = (request.form.get('role') or '').lower()

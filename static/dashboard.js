@@ -1249,11 +1249,27 @@ function updateSwimmerBookingState() {
   const studentSelect = document.getElementById('studentSelect');
   const confirmBookingBtn = document.getElementById('confirmBookingBtn');
 
-  if (!studentSelect || !confirmBookingBtn) {
+  if (!confirmBookingBtn) {
     return;
   }
 
-  const hasValidOptions = Array.from(studentSelect.options).some(option => {
+  // V0040 booking page uses an INPUT, not a SELECT.
+  if (studentSelect && studentSelect.tagName === 'INPUT') {
+    const warning = document.getElementById('noSwimmersWarning');
+
+    if (warning) {
+      warning.remove();
+    }
+
+    confirmBookingBtn.disabled = !studentSelect.value.trim();
+    return;
+  }
+
+  if (!studentSelect) {
+    return;
+  }
+
+  const hasValidOptions = Array.from(studentSelect.options || []).some(option => {
     return option.value && option.value.trim() !== '';
   });
 
@@ -1285,6 +1301,12 @@ function updateSwimmerBookingState() {
 
 
 window.addEventListener('load', updateSwimmerBookingState);
+
+const bookingStudentInput = document.getElementById('studentSelect');
+
+if (bookingStudentInput && bookingStudentInput.tagName === 'INPUT') {
+  bookingStudentInput.addEventListener('input', updateSwimmerBookingState);
+}
 
 // --------------------------------------
 // V0034.0.1 - Generic Form Loading Helper

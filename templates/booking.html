@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+
+{% block title %}Book Session - SwimTrackPro{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+  <div class="d-flex align-items-center mb-4">
+    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary me-3">
+      ← Back
+    </a>
+    <h3 class="mb-0">📝 Book a Session</h3>
+  </div>
+
+  <!-- ================================================== -->
+  <!-- V0040.1A BOOKING FORM CONTENT WILL BE MOVED HERE -->
+  <!-- Copy everything between the START and END markers -->
+  <!-- from dashboard.html bookSlotSection -->
+  <!-- ================================================== -->
+
+<!-- ================================================== -->
+<!-- V0040.1A BOOKING PAGE CONTENT START -->
+<!-- Copy this entire section into booking.html -->
+<!-- ================================================== -->
+<div class="container-fluid px-4 mt-4">
+  <div class="row gx-4 gy-3">
+    <div class="col-md-4 pe-md-3">
+        <!-- Swimmer Panel -->
+        <div class="card shadow-sm mb-4 border-0 h-100">
+            <div class="card-header bg-secondary text-white">👥 My Swimmers</div>
+            <div class="card-body swimmer-list-container">
+                {% if students and students|length > 0 %}
+                  {% for s in students %}
+                  <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded swimmer-row cursor-pointer" data-name="{{ s.name }}">
+
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="swimmer-dot text-transparent" style="font-size:10px;">●</span>
+                      <span class="fw-semibold swimmer-name">{{ s.name }}</span>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                      <form action="/delete_swimmer/{{ s.name }}" method="POST" onsubmit="return confirm('Delete swimmer?');">
+                        <button type="submit"
+                                class="btn btn-light border d-flex align-items-center justify-content-center icon-btn"
+                                title="Delete">
+                          🗑️
+                        </button>
+                      </form>
+                    </div>
+
+                  </div>
+                  {% endfor %}
+                {% else %}
+                  <p class="text-muted small">No swimmers yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8 ps-md-3">
+        <!-- Booking Form -->
+        <div class="card shadow-sm mb-4 border-0 h-100">
+            <div class="card-header bg-primary text-white">📝 Book a Slot</div>
+            <div class="card-body">
+                <form action="/book" method="POST" id="bookingForm">
+                    <input type="hidden" name="active_tab" value="book_slot">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Swimmer Name <span class="text-danger">*</span></label>
+                            <input
+                                type="text"
+                                id="studentSelect"
+                                name="student"
+                                class="form-control form-control-lg"
+                                list="swimmersList"
+                                placeholder="Enter name or select from existing list"
+                                required>
+
+                            <datalist id="swimmersList">
+                                {% for s in students %}
+                                    <option value="{{ s.name }}"></option>
+                                {% endfor %}
+                            </datalist>
+
+                            <div class="form-text">
+                                Type a new swimmer name or choose an existing swimmer.
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Email Address</label>
+                            <input
+                                type="email"
+                                name="email"
+                                class="form-control form-control-lg"
+                                placeholder="parent@example.com"
+                            >
+                            <div class="form-text">
+                                Optional – used for communicating the booking details.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Package <span class="text-danger">*</span></label>
+                            <select name="package" class="form-select" id="packageSelect">
+                                <option value="Demo">Demo Class</option>
+                                <option value="Single">Single Day</option>
+                                <option value="Monthly">Monthly</option>
+                                <option value="Custom">Custom</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Start Date <span class="text-danger">*</span></label>
+                            <input type="date" name="date" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Time <span class="text-danger">*</span></label>
+                            <select name="time" id="timeSelect" class="form-select">
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3" id="endDateContainer" style="display:none;">
+                            <label class="form-label fw-semibold">End Date</label>
+                            <input type="date" name="end_date" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+    <label class="form-label fw-semibold">
+        Select Class Days
+        <span
+            id="monthlyPackageHint"
+            class="text-muted small ms-2"
+            style="display: none;">
+            (Monthly: Choose 2 or 3 days/week)
+        </span>
+    </label>
+
+    <div class="d-flex flex-wrap gap-3 mt-2">
+        <div class="form-check">
+            <input class="form-check-input class-day" type="checkbox" value="Monday" id="monday">
+            <label class="form-check-label" for="monday">Mon</label>
+        </div>
+
+        <div class="form-check">
+            <input class="form-check-input class-day" type="checkbox" value="Tuesday" id="tuesday">
+            <label class="form-check-label" for="tuesday">Tue</label>
+        </div>
+
+        <div class="form-check">
+            <input class="form-check-input class-day" type="checkbox" value="Wednesday" id="wednesday">
+            <label class="form-check-label" for="wednesday">Wed</label>
+        </div>
+
+        <div class="form-check">
+            <input class="form-check-input class-day" type="checkbox" value="Thursday" id="thursday">
+            <label class="form-check-label" for="thursday">Thu</label>
+        </div>
+
+        <div class="form-check">
+            <input class="form-check-input class-day" type="checkbox" value="Friday" id="friday">
+            <label class="form-check-label" for="friday">Fri</label>
+        </div>
+
+        <div class="form-check">
+            <input class="form-check-input class-day" type="checkbox" value="Saturday" id="saturday">
+            <label class="form-check-label" for="saturday">Sat</label>
+        </div>
+
+        <div class="form-check">
+            <input class="form-check-input class-day" type="checkbox" value="Sunday" id="sunday">
+            <label class="form-check-label" for="sunday">Sun</label>
+        </div>
+    </div>
+
+    <input type="hidden" name="selected_days" id="selectedDaysInput">
+
+    <div class="mt-3 p-3 border rounded bg-light">
+        <div class="small text-muted mb-1">Selected Days</div>
+        <div id="selectedDaysPreview" class="fw-semibold text-primary">
+            No days selected
+        </div>
+    </div>
+</div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Location <span class="text-danger">*</span></label>
+                        <input
+                            type="text"
+                            name="location"
+                            list="locationSuggestions"
+                            class="form-control form-control-lg"
+                            placeholder="Enter swimming pool location"
+                            required
+                        >
+                        <datalist id="locationSuggestions">
+                            {% for location in location_suggestions %}
+                                <option value="{{ location }}"></option>
+                            {% endfor %}
+                        </datalist>
+                    <div class="form-text">
+                        Location is required and will be used for booking and trainer assignment purposes.
+                    </div>
+                    <div
+                        id="locationConflictWarning"
+                        class="alert alert-warning mt-2 mb-0"
+                        style="display:none;">
+                        ⚠ Selected time slot is already booked at another location.
+                        Please choose a different time slot or location.
+                    </div>
+                    </div>
+
+
+                    <div class="row">
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-semibold">No of Persons</label>
+                            <input
+                                type="number"
+                                id="personsInput"
+                                name="persons"
+                                class="form-control form-control-lg"
+                                min="1"
+                                value="1"
+                            >
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-semibold">Payment Status <span class="text-danger">*</span></label>
+                            <select name="payment_status" class="form-select form-control-lg">
+                                <option value="Not Paid">Not Paid</option>
+                                <option value="Paid">Paid</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-semibold">Fee (₹)</label>
+                            <input
+                                type="number"
+                                id="feeInput"
+                                name="fee"
+                                class="form-control form-control-lg"
+                                value="750"
+                                readonly
+                            >
+                            <div class="form-text">
+                                Fee is calculated automatically based on package and number of persons.
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                    <div class="d-flex gap-3 mt-3">
+                        <button
+                            type="reset"
+                            id="cancelBookingBtn"
+                            class="btn btn-outline-secondary btn-lg w-50">
+                            Cancel
+                        </button>
+
+                        <button
+                            id="confirmBookingBtn"
+                            type="submit"
+                            class="btn btn-success btn-lg w-50">
+                            <span
+                                id="confirmBookingSpinner"
+                                class="spinner-border spinner-border-sm me-2 d-none"
+                                role="status"
+                                aria-hidden="true">
+                            </span>
+                            <span id="confirmBookingText">Confirm Booking</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    </div>
+</div>
+<!-- ================================================== -->
+<!-- V0040.1A BOOKING PAGE CONTENT END -->
+<!-- ================================================== -->
+
+
+</div>
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+{% endblock %}
