@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+
+{% block title %}My Bookings - SwimTrackPro{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+  <div class="d-flex align-items-center mb-4">
+    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary me-3">
+      ← Back
+    </a>
+    <h3 class="mb-0">📋 My Bookings</h3>
+  </div>
+
+<div id="bookingsSection">
+    <div class="row">
+        <div class="col-md-12">
+            <!-- RIGHT SIDE: Your Bookings (The Gallery) -->
+            <!-- <h4>📋 My Training Schedule</h4> -->
+            <div class="row">
+                {% if not bookings %}
+                    <p class="text-muted">No bookings found. Start by booking a slot!</p>
+                {% endif %}
+                {% set grouped_bookings = {} %}
+
+                {% for b in bookings|sort(attribute='start_date') %}
+                    {% set group_key = ((b.created_by or 'N/A')|lower|trim) ~ '|' ~ ((b.owner_phone or 'No Phone')|trim) %}
+
+                    {% if group_key not in grouped_bookings %}
+                        {% set _ = grouped_bookings.update({group_key: []}) %}
+                    {% endif %}
+
+                    {% set _ = grouped_bookings[group_key].append(b) %}
+                {% endfor %}
+
+                {% for group_key, group_items in grouped_bookings.items() %}
+
+                {% set group_name = group_items[0].created_by or 'N/A' %}
+                {% set group_phone = group_key.split('|')[1] %}
+
+                <div class="col-12 mb-4">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>👤 {{ group_name }}</strong>
+                                <span class="text-muted ms-2">📞 {{ group_phone }}</span>
+                            </div>
+
+                            <span class="badge bg-primary px-3 py-2">
+                                {{ group_items|length }} Booking{{ 's' if group_items|length > 1 else '' }}
+                            </span>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="row">
+
+                            {% for b in group_items %}
+
+                            <div class="col-md-6 col-xl-4 mb-3">
+                    <div class="card border-primary h-100 shadow-sm booking-card{% if b.is_completed %} past-session{% endif %}">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title text-primary mb-0">🏊 {{ b.student }}</h5>
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2">
+                                    📦 {{ b.package or 'Single' }}
+                                </span>
+                            </div>
+
+                            <div class="mb-3 small">
+                                <div class="row g-3 mb-2">
+                                    <div class="col-6">
+                                        <div class="fw-semibold">
+                                          <span class="text-muted">📅 Start Date: </span>
+                                          {{ b.start_date[8:10] }}/{{ b.start_date[5:7] }}/{{ b.start_date[0:4] }}
+                                        </div>
+                                    </div>
+
+                                    {% if b.end_date %}
+                                    <div class="col-6">
+                                        <div class="fw-semibold">
+                                          <span class="text-muted">🗓 End Date: </span>
+                                          {{ b.end_date[8:10] }}/{{ b.end_date[5:7] }}/{{ b.end_date[0:4] }}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="row g-3 mb-2">
+                                    <div class="col-6">
+                                        <div class="fw-semibold">
+                                          <span class="text-muted">⏰ Time: </span>
+                                          {{ b.time }}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-6">
+                                        <div class="fw-semibold">
+                                          <span class="text-muted">👥 Persons: </span>
+                                          {{ b.persons or 1 }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <div class="text-muted mb-1">📚 Selected Days</div>
+
+                                    <div class="d-flex flex-wrap gap-2">
+                                        {% if b.selected_days and b.selected_days|trim != '' %}
+                                            {% for day in b.selected_days.split(',') %}
+                                            <span class="badge bg-light text-dark border px-3 py-2">
+                                                {{ day.strip()[:3] }}
+                                            </span>
+                                            {% endfor %}
+
+                                        {% elif b.package == 'Single' %}
+                                            <span class="badge bg-light text-dark border px-3 py-2">
+                                                Single Session
+                                            </span>
+
+                                        {% else %}
+                                            <span class="badge bg-warning-subtle text-dark border px-3 py-2">
+                                                No Days Selected
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if not b.is_completed and b.total_classes and b.total_classes > 0 %}
+                            <div class="mt-3">
+                                <div class="small fw-semibold text-success mb-2">
+                                    <span style="color: black;">Class Progress 📈:</span>
+                                     {{ b.completed_classes }} / {{ b.total_classes }} Completed
+                                    {% if b.remaining_classes > 0 %}
+                                        <span class="text-muted">({{ b.remaining_classes }} Left)</span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="progress mb-3" style="height: 8px;">
+                                    <div
+                                        class="progress-bar bg-success"
+                                        role="progressbar"
+                                        style="width: {{ (b.completed_classes * 100 / b.total_classes)|round(0, 'floor') }}%;"
+                                        aria-valuenow="{{ b.completed_classes }}"
+                                        aria-valuemin="0"
+                                        aria-valuemax="{{ b.total_classes }}">
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <strong>💵 Fee:</strong> ₹{{ b.fee }}
+                                </div>
+
+                                <div class="text-end">
+
+                                    {% if b.status == 'Paid' %}
+                                        {% set badge = 'bg-success' %}
+                                    {% elif b.status == 'Pending' %}
+                                        {% set badge = 'bg-warning text-dark' %}
+                                    {% else %}
+                                        {% set badge = 'bg-danger' %}
+                                    {% endif %}
+
+                                    <span class="badge {{ badge }} px-3 py-2">
+                                        💰 {{ b.status }}
+                                    </span>
+
+
+                                </div>
+                            </div>
+
+                            <div class="mb-2 text-muted small">
+                                📍 {{ b.location or 'Location not added' }}
+                            </div>
+
+
+                            <p class="mb-2 text-muted small">
+                                👤 <b>Booked by</b>: {{ b.created_by or 'N/A' }}
+                                {% if b.owner_phone %}
+                                    • 📞 {{ b.owner_phone }}
+                                {% endif %}
+                            </p>
+
+
+                            <div class="mt-auto text-end">
+                              {% if b.is_completed %}
+                                  <span class="completed-overlay">
+                                      ✅ Completed
+                                  </span>
+
+                                  {% if role == 'trainer' %}
+                                      <div class="mt-3 text-end">
+                                          <form action="/edit/{{ b.id }}" method="GET" class="inline-form" onsubmit="saveScrollPosition()">
+                                              <button type="submit" class="btn btn-outline-primary btn-sm">Edit</button>
+                                          </form>
+                                      </div>
+                                  {% endif %}
+                              {% elif b.delete_requested %}
+                                  {% if role == 'trainer' %}
+                                      <form action="/approve_delete/{{ b.id }}" method="POST" class="inline-form" onsubmit="saveScrollPosition(); return confirm('Permanently delete this booking?');">
+                                          <button type="submit" class="btn btn-success btn-sm">✓ Approve</button>
+                                      </form>
+                                      <form action="/reject_delete/{{ b.id }}" method="POST" class="inline-form ml-6" onsubmit="saveScrollPosition()">
+                                          <button type="submit" class="btn btn-outline-secondary btn-sm">✕ Reject</button>
+                                      </form>
+                                  {% else %}
+                                      <span class="badge bg-warning text-dark px-3 py-2">
+                                          🗑 Delete Requested
+                                      </span>
+                                  {% endif %}
+                              {% else %}
+                                  {% if role == 'trainer' or (b.completed_classes or 0) == 0 %}
+                                  <form action="/edit/{{ b.id }}" method="GET" class="inline-form" onsubmit="saveScrollPosition()">
+                                      <button type="submit" class="btn btn-outline-primary btn-sm">Edit</button>
+                                  </form>
+                                  <form action="/delete/{{ b.id }}" method="POST"
+                                      class="inline-form ml-6 delete-booking-form"
+                                      onsubmit="saveScrollPosition();">
+                                      <button type="submit" class="btn btn-outline-danger btn-sm">
+                                          Delete
+                                      </button>
+                                  </form>
+                                  {% endif %}
+                              {% endif %}
+                          </div>
+                        </div>
+                    </div>
+                </div>
+                            {% endfor %}
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+ </div>
+</div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}Payments - SwimTrackPro{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+    <div class="d-flex align-items-center mb-4">
+        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary me-3">
+            ← Back
+        </a>
+        <h3 class="mb-0">💰 Payments</h3>
+    </div>
+
+    <div id="paymentsSection" class="mt-4">
+  <div class="card shadow-sm border-0">
+
+    <div class="card-header bg-success text-white">
+      💰 Payment Details
+    </div>
+
+    <div class="card-body">
+
+      <div class="row g-3 mb-4">
+
+        <div class="col-md-4">
+          <div class="card border-success h-100">
+            <div class="card-body text-center">
+              <div class="fs-3">✅</div>
+              <h5 class="mt-2">Paid</h5>
+              <h3 id="paidAmountCard">₹0</h3>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card border-warning h-100">
+            <div class="card-body text-center">
+              <div class="fs-3">⏳</div>
+              <h5 class="mt-2">Pending Verification</h5>
+              <h3 id="pendingAmountCard">₹0</h3>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card border-danger h-100">
+            <div class="card-body text-center">
+              <div class="fs-3">❌</div>
+              <h5 class="mt-2">Not Paid</h5>
+              <h3 id="notPaidAmountCard">₹0</h3>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="row g-4 mt-1">
+        <div class="col-lg-4">
+          <div class="card mt-4 border-0 shadow-sm">
+            <div class="card-header bg-light fw-semibold">
+              💳 Payment Information
+            </div>
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-md-8">
+                  <h6 class="fw-bold mb-3">Payment Details</h6>
+                  <p class="mb-2">
+                    <strong>Acc Holder Name:</strong>
+                    {{ account_holder_name }}
+                  </p>
+
+                  <p class="mb-2">
+                    <strong>Phone:</strong>
+                    {{ trainer_phone }}
+                  </p>
+
+                  <p class="mb-2">
+                    <strong>UPI ID:</strong>
+                    {{ upi_id }}
+                  </p>
+                  <div class="alert alert-warning mt-3 mb-0">
+                    ⚠️ After payment, change the status to <strong>Pending Verification</strong> and click <strong>Update Payment Status</strong>.
+                  </div>
+                </div>
+                <div class="col-md-4 text-center">
+                  <h6 class="fw-bold mb-3">QR Code</h6>
+                  <div class="border rounded p-4 bg-light">
+                    [ QR IMAGE ]
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-8">
+          <div class="card mt-4 border-0 shadow-sm">
+            <div class="card-header bg-light fw-semibold">
+              📋 Payment Records
+            </div>
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead>
+                  <tr>
+                    <th>Owner</th>
+                    <th>Swimmer</th>
+                    <th>Package</th>
+                    <th>Status</th>
+                    <th>Amount</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="paymentTableBody">
+                  <tr>
+                    <td colspan="6" class="text-center text-muted py-3">
+                      Loading payment records...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert alert-info mt-4 mb-0">
+        Pending Verification = Payment paid by swimmer and awaiting trainer approval.
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+</div>
+<script>
+    window.bookingsData = {{ bookings|tojson }};
+    window.currentUserRole = "{{ role }}";
+</script>
+
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof updatePaymentSummary === 'function') {
+        updatePaymentSummary();
+    }
+
+    if (typeof updatePaymentTable === 'function') {
+        updatePaymentTable();
+    }
+
+    if (typeof initializePaymentStatusActions === 'function') {
+        initializePaymentStatusActions();
+    }
+});
+</script>
+{% endblock %}

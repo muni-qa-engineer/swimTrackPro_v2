@@ -456,12 +456,10 @@ generateTimeSlots();
 const tabBookings = document.getElementById('tabBookings');
 const tabBook = document.getElementById('tabBook');
 const tabCalendar = document.getElementById('tabCalendar');
-const tabPayments = document.getElementById('tabPayments');
 
 const bookingsSection = document.getElementById('bookingsSection');
 const bookSlotSection = document.getElementById('bookSlotSection');
 const calendarSection = document.getElementById('calendarSection');
-const paymentsSection = document.getElementById('paymentsSection');
 
 const calendarMonthInput = document.getElementById('calendarMonthInput');
 const calendarGrid = document.getElementById('calendarGrid');
@@ -474,18 +472,12 @@ function showBookings() {
     bookSlotSection.style.display = 'none';
   }
   calendarSection.style.display = 'none';
-  if (paymentsSection) {
-    paymentsSection.style.display = 'none';
-  }
 
   tabBookings.classList.add('active');
   if (tabBook) {
     tabBook.classList.remove('active');
   }
   tabCalendar.classList.remove('active');
-  if (tabPayments) {
-    tabPayments.classList.remove('active');
-  }
 
   localStorage.setItem('activeTab', 'bookings');
 }
@@ -496,18 +488,12 @@ function showBookSlot() {
     bookSlotSection.style.display = 'flex';
   }
   calendarSection.style.display = 'none';
-  if (paymentsSection) {
-    paymentsSection.style.display = 'none';
-  }
 
   if (tabBook) {
     tabBook.classList.add('active');
   }
   tabBookings.classList.remove('active');
   tabCalendar.classList.remove('active');
-  if (tabPayments) {
-    tabPayments.classList.remove('active');
-  }
 
   localStorage.setItem('activeTab', 'book_slot');
 }
@@ -518,17 +504,11 @@ function showCalendar() {
     bookSlotSection.style.display = 'none';
   }
   calendarSection.style.display = 'block';
-  if (paymentsSection) {
-    paymentsSection.style.display = 'none';
-  }
 
   tabCalendar.classList.add('active');
   tabBookings.classList.remove('active');
   if (tabBook) {
     tabBook.classList.remove('active');
-  }
-  if (tabPayments) {
-    tabPayments.classList.remove('active');
   }
 
   localStorage.setItem('activeTab', 'calendar');
@@ -702,35 +682,6 @@ function initializePaymentStatusActions() {
   });
 }
 
-function showPayments() {
-  bookingsSection.style.display = 'none';
-
-  if (bookSlotSection) {
-    bookSlotSection.style.display = 'none';
-  }
-
-  calendarSection.style.display = 'none';
-
-  if (paymentsSection) {
-    paymentsSection.style.display = 'block';
-    updatePaymentSummary();
-    updatePaymentTable();
-    initializePaymentStatusActions();
-  }
-
-  tabBookings.classList.remove('active');
-  tabCalendar.classList.remove('active');
-
-  if (tabBook) {
-    tabBook.classList.remove('active');
-  }
-
-  if (tabPayments) {
-    tabPayments.classList.add('active');
-  }
-
-  localStorage.setItem('activeTab', 'payments');
-}
 
 function renderCalendar() {
 
@@ -1007,9 +958,6 @@ if (tabBookings && tabCalendar) {
   if (tabBook) {
     tabBook.addEventListener('click', showBookSlot);
   }
-  if (tabPayments) {
-    tabPayments.addEventListener('click', showPayments);
-  }
 
   const savedTab = localStorage.getItem('activeTab');
 
@@ -1018,9 +966,6 @@ if (tabBookings && tabCalendar) {
   }
   else if (savedTab === 'calendar') {
     showCalendar();
-  }
-  else if (savedTab === 'payments') {
-    showPayments();
   }
   else {
     showBookings();
@@ -1301,6 +1246,28 @@ function updateSwimmerBookingState() {
 
 
 window.addEventListener('load', updateSwimmerBookingState);
+
+// V0040.5 - Quick Action Navigation
+const quickBookBtn = document.getElementById('quickBookBtn');
+if (quickBookBtn) {
+  quickBookBtn.addEventListener('click', () => {
+    window.location.href = '/booking';
+  });
+}
+
+const quickBookingsBtn = document.getElementById('quickBookingsBtn');
+if (quickBookingsBtn) {
+  quickBookingsBtn.addEventListener('click', () => {
+    window.location.href = '/my-bookings';
+  });
+}
+
+const quickPaymentsBtn = document.getElementById('quickPaymentsBtn');
+if (quickPaymentsBtn) {
+  quickPaymentsBtn.addEventListener('click', () => {
+    window.location.href = '/payments';
+  });
+}
 
 const bookingStudentInput = document.getElementById('studentSelect');
 

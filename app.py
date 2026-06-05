@@ -761,7 +761,27 @@ def my_bookings_page():
     if 'user_name' not in session:
         return redirect(url_for('index'))
 
-    return render_template('my_bookings.html')
+    data = load_data()
+
+    current_user = session.get('user_name')
+    current_phone = session.get('phone')
+    current_role = session.get('role', 'guest')
+
+    if current_role == 'trainer':
+        user_bookings = data.get('bookings', [])
+    else:
+        user_bookings = [
+            b for b in data.get('bookings', [])
+            if (b.get('owner_name') or '').strip().lower() == current_user
+            and b.get('owner_phone') == current_phone
+        ]
+
+    return render_template(
+        'my_bookings.html',
+        bookings=user_bookings,
+        role=current_role,
+        user_name=current_user
+    )
 
 
 @app.route('/calendar')
@@ -769,7 +789,27 @@ def calendar_page():
     if 'user_name' not in session:
         return redirect(url_for('index'))
 
-    return render_template('calendar.html')
+    data = load_data()
+
+    current_user = session.get('user_name')
+    current_phone = session.get('phone')
+    current_role = session.get('role', 'guest')
+
+    if current_role == 'trainer':
+        user_bookings = data['bookings']
+    else:
+        user_bookings = [
+            b for b in data['bookings']
+            if (b.get('owner_name') or '').strip().lower() == current_user
+            and b.get('owner_phone') == current_phone
+        ]
+
+    return render_template(
+        'calendar.html',
+        bookings=user_bookings,
+        role=current_role,
+        user_name=current_user
+    )
 
 
 @app.route('/payments')
@@ -777,7 +817,30 @@ def payments_page():
     if 'user_name' not in session:
         return redirect(url_for('index'))
 
-    return render_template('payments.html')
+    data = load_data()
+
+    current_user = session.get('user_name')
+    current_phone = session.get('phone')
+    current_role = session.get('role', 'guest')
+
+    if current_role == 'trainer':
+        user_bookings = data.get('bookings', [])
+    else:
+        user_bookings = [
+            b for b in data.get('bookings', [])
+            if (b.get('owner_name') or '').strip().lower() == current_user
+            and b.get('owner_phone') == current_phone
+        ]
+
+    return render_template(
+        'payments.html',
+        bookings=user_bookings,
+        role=current_role,
+        user_name=current_user,
+        account_holder_name=get_setting('account_holder_name', ''),
+        trainer_phone=get_setting('trainer_phone', ''),
+        upi_id=get_setting('upi_id', '')
+    )
 
 @app.route('/login', methods=['POST'])
 def login():
