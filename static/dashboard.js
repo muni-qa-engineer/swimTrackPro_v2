@@ -55,36 +55,6 @@ function createToast(message, type = 'success', duration = 2000) {
   }, duration);
 }
 
-function formatDate(dateObj) {
-  const yyyy = dateObj.getFullYear();
-  const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
-  const dd = String(dateObj.getDate()).padStart(2, '0');
-
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-function getTodayDate() {
-  return formatDate(new Date());
-}
-
-// --- Calendar/Date Helper Utility Functions V0015.8 ---
-function getWeekDays() {
-  return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-}
-
-function getSelectedMonthParts(monthValue) {
-  return monthValue.split('-');
-}
-
-function getFormattedDay(day) {
-  return String(day).padStart(2, '0');
-}
-
-function isPastDate(dateObj) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return dateObj < today;
-}
 
 (function(){
   const today = getTodayDate();
@@ -1056,24 +1026,6 @@ function restoreScrollPosition() {
   }
 }
 
-function createToast(message, type = 'success', duration = 2000) {
-  const toast = document.createElement('div');
-
-  toast.innerText = message;
-  toast.classList.add('toast-popup');
-
-  if (type === 'danger') {
-    toast.classList.add('toast-danger');
-  } else {
-    toast.classList.add('toast-success');
-  }
-
-  document.body.appendChild(toast);
-
-  setTimeout(() => {
-    toast.remove();
-  }, duration);
-}
 
 function resetBookingForm() {
   if (bookingForm) {
