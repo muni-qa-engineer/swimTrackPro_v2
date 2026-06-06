@@ -218,7 +218,9 @@
                                   <form action="/delete/{{ b.id }}" method="POST"
                                       class="inline-form ml-6 delete-booking-form"
                                       onsubmit="saveScrollPosition();">
-                                      <button type="submit" class="btn btn-outline-danger btn-sm">
+                                      <button type="button"
+                                              class="btn btn-outline-danger btn-sm animated-delete-btn"
+                                              data-confirmed="false">
                                           Delete
                                       </button>
                                   </form>
@@ -266,6 +268,67 @@
   </button>
 
 </div>
+
+<style>
+.delete-toast {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #198754;
+    color: white;
+    padding: 10px 18px;
+    border-radius: 10px;
+    z-index: 9999;
+    box-shadow: 0 4px 12px rgba(0,0,0,.2);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    document.querySelectorAll('.animated-delete-btn').forEach(btn => {
+
+        btn.addEventListener('click', function() {
+
+            if (this.dataset.confirmed !== 'true') {
+                this.dataset.confirmed = 'true';
+                this.classList.remove('btn-outline-danger');
+                this.classList.add('btn-danger');
+                this.innerHTML = '⚠ Confirm Delete';
+
+                clearTimeout(this.resetTimer);
+
+                this.resetTimer = setTimeout(() => {
+                    if (this.dataset.confirmed === 'true' && !this.disabled) {
+                        this.dataset.confirmed = 'false';
+                        this.classList.remove('btn-danger');
+                        this.classList.add('btn-outline-danger');
+                        this.innerHTML = 'Delete';
+                    }
+                }, 5000);
+
+                return;
+            }
+
+            this.disabled = true;
+            clearTimeout(this.resetTimer);
+            this.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Deleting...';
+
+            const toast = document.createElement('div');
+            toast.className = 'delete-toast';
+            toast.innerText = 'Deleting booking, please wait...';
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                this.closest('form').submit();
+            }, 700);
+        });
+
+    });
+
+});
+</script>
 
 <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
 {% endblock %}

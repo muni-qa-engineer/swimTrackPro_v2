@@ -1664,7 +1664,7 @@ def delete_booking(booking_id):
             conn.close()
 
             flash(f'Booking deleted for {deleted_student}')
-            return redirect(url_for('index'))
+            return redirect(url_for('my_bookings_page'))
 
         # After the first class starts, create a delete request.
         cursor.execute('''
@@ -1684,7 +1684,7 @@ def delete_booking(booking_id):
         conn.close()
 
         flash(f'Delete request submitted for {deleted_student}')
-        return redirect(url_for('index'))
+        return redirect(url_for('my_bookings_page'))
 
     # Trainer deletes immediately
     cursor.execute(
@@ -1724,7 +1724,7 @@ def delete_booking(booking_id):
     conn.close()
 
     flash(f'Booking deleted for {deleted_student}')
-    return redirect(url_for('index'))
+    return redirect(url_for('my_bookings_page'))
 
 
 # --- Approve and Reject Delete Booking Routes ---
