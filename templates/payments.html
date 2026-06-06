@@ -5,11 +5,15 @@
 {% block content %}
 <div class="container-fluid px-4 py-4">
 
-    <div class="d-flex align-items-center mb-4">
-        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary me-3">
+    <div class="d-flex justify-content-between align-items-center mb-4 page-title-bar">
+
+        <h3 class="mb-0 fw-bold">💰 Payments</h3>
+
+        <a href="{{ url_for('index') }}"
+           class="btn btn-outline-secondary d-flex align-items-center justify-content-center page-back-btn">
             ← Back
         </a>
-        <h3 class="mb-0">💰 Payments</h3>
+
     </div>
 
     <div id="paymentsSection" class="mt-4">
@@ -181,4 +185,28 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </div>
 
+<style>
+.page-title-bar{
+    width:100%;
+}
+
+.page-back-btn{
+    width:120px;
+    height:40px;
+    border-radius: 0;
+    padding:0;
+}
+
+@media (max-width:768px){
+
+    .container-fluid{
+        padding-left:12px !important;
+        padding-right:12px !important;
+    }
+
+    .page-title-bar h3{
+        font-size:1.25rem;
+    }
+}
+</style>
 {% endblock %}

@@ -10,7 +10,7 @@
 
     <div class="d-flex align-items-center ms-auto gap-2 flex-wrap">
 
-      <span class="text-white me-1">👤 {{ user_name }}</span>
+      <span class="text-white me-1">👤 {{ user_name[:1]|upper }}{{ user_name[1:]|lower }}</span>
 
       <div class="dropdown">
         <button
@@ -68,29 +68,19 @@
       <div class="row g-0">
 
         <div class="col-lg-7 col-md-8">
-          <div class="p-4 p-lg-5">
+          <div class="p-3 p-lg-4">
 
-            <div class="fw-bold fs-2 mb-3">
-              🏊 SwimTrackPro
-            </div>
-
-            <h3 class="fw-bold mb-2">
-              Welcome back, {{ user_name }} 👋
-            </h3>
+            <h4 class="fw-bold mb-1 text-white">
+             Welcome back, {{ user_name[:1]|upper }}{{ user_name[1:]|lower }} 👋
+            </h4>
 
             <div class="hero-subtitle mb-3">
-              {{ hero_message if hero_message is defined else 'Track sessions, bookings, payments and swimmer progress from one place.' }}
+              Track bookings, payments and progress from one place.
             </div>
 
-            <div class="fs-5 opacity-90 mb-2">
+            <div class="fs-6 text-white opacity-90 mb-0">
               📅 {{ current_date_display if current_date_display else 'Today' }}
             </div>
-
-            {% if upcoming_session_text is defined and upcoming_session_text %}
-            <div class="small fw-semibold">
-              🏊 {{ upcoming_session_text }}
-            </div>
-            {% endif %}
 
           </div>
         </div>
@@ -108,8 +98,11 @@
 
 
 <div class="mb-4">
-  <h5 class="fw-bold mb-3">📊 Dashboard Overview</h5>
+  <!-- <h5 class="fw-bold mb-3">📊 Dashboard Overview</h5> -->
   <div class="row g-3 mb-4">
+
+    
+
     <div class="col-6 col-lg-3">
         <div class="card border-0 text-white h-100" style="background:linear-gradient(135deg,#0d6efd,#4f8cff);border-radius:20px;">
             <div class="card-body p-3">
@@ -190,7 +183,7 @@
 
 <div class="row g-4 mb-4">
 
-  <div class="col-lg-8">
+  <div class="col-lg-4">
     <div class="card border-0 shadow h-100" style="border-radius:18px;">
       <div class="card-header border-0 bg-white fw-bold d-flex justify-content-between align-items-center">
         <span>📅 Mini Calendar</span>
@@ -263,6 +256,83 @@
   </div>
 
   <div class="col-lg-4">
+    <div class="card border-0 shadow" style="border-radius:18px;">
+      <div class="card-header border-0 bg-white fw-bold">
+        📈 Track All Booked Sessions
+      </div>
+      <div class="card-body p-3">
+
+      {% set progress_percent = ((completed_sessions * 100) / total_sessions) if total_sessions > 0 else 0 %}
+
+      <div class="d-flex align-items-center justify-content-between px-4 py-2">
+
+        <div class="progress-circle"
+             style="--progress:{{ progress_percent|round(0,'floor') }}; width:70px; height:70px;">
+          <div class="progress-circle-inner" style="width:50px;height:50px;font-size:14px;">
+            {{ progress_percent|round(0,'floor') }}%
+          </div>
+        </div>
+
+        <div class="text-start" style="min-width:120px;">
+          <div class="fw-bold" style="font-size:1.5rem; line-height:0.45;">
+            {{ completed_sessions }} / {{ total_sessions }}
+          </div>
+
+          <div class="text-muted" style="font-size:1rem; margin-top:8px;">
+            Sessions Completed
+          </div>
+
+          <div class="text-muted" style="font-size:0.95rem;">
+            {{ remaining_sessions }} Left
+          </div>
+          <div class="progress mt-2 mb-1 mx-auto" style="height:8px;border-radius:20px;width:92%;">
+            <div class="progress-bar bg-primary"
+                style="width:{{ progress_percent }}%;">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      
+
+      </div>
+    </div>
+    <div class="card border-0 shadow mt-3" style="border-radius:18px;">
+      <div class="card-header border-0 bg-white d-flex justify-content-between align-items-center">
+        <div class="fw-bold">👥 My Swimmers</div>
+        <div class="d-flex align-items-center gap-2">
+          <!-- <a href="#" class="small text-decoration-none fw-semibold">View All →</a> -->
+          <span class="badge bg-primary">{{ students|length if students else 0 }}</span>
+        </div>
+      </div>
+      <div class="card-body" style="max-height:180px;overflow-y:auto;">
+        {% if students and students|length > 0 %}
+          {% for s in students[:5] %}
+          <div class="swimmer-card-row">
+            <div class="swimmer-avatar">{{ s.name[:1]|upper }}</div>
+            <div class="flex-grow-1 ms-3">
+              <div class="fw-bold swimmer-name-text">{{ s.name }}</div>
+              <div class="text-muted small">
+                {% if s.completed_sessions is defined and s.total_sessions is defined and s.total_sessions > 0 %}
+                  {{ s.completed_sessions }}/{{ s.total_sessions }} Sessions Completed
+                {% elif s.next_session is defined and s.next_session %}
+                  Next Session: {{ s.next_session }}
+                {% else %}
+                  Active Swimmer
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-muted">No swimmers added yet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
     <div class="card border-0 shadow h-100" style="border-radius:18px;">
       <div class="card-header border-0 bg-white fw-bold">
         ⚡ Quick Actions
@@ -314,54 +384,6 @@
 </div>
 
 <div class="row g-4 mb-4">
-
-  <div class="col-lg-6">
-    <div class="card border-0 shadow h-100" style="border-radius:18px;">
-      <div class="card-header border-0 bg-white fw-bold">
-        📈 Session Progress
-      </div>
-      <div class="card-body">
-
-  {% set progress_percent = ((completed_sessions * 100) / total_sessions) if total_sessions > 0 else 0 %}
-
-  <div class="row align-items-center">
-
-    <div class="col-md-4 text-center">
-      <div class="progress-circle"
-           style="--progress:{{ progress_percent|round(0,'floor') }};">
-        <div class="progress-circle-inner">
-          {{ progress_percent|round(0,'floor') }}%
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-8">
-
-      <div class="fw-bold fs-2">
-        {{ completed_sessions }} / {{ total_sessions }}
-      </div>
-
-      <div class="text-muted mb-3">
-        Sessions Completed
-      </div>
-
-      <div class="progress mb-3" style="height:10px;border-radius:20px;">
-        <div class="progress-bar bg-primary"
-             style="width:{{ progress_percent }}%;">
-        </div>
-      </div>
-
-      <div class="text-muted">
-        Keep going! You're doing great 💪
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
-    </div>
-  </div>
 
   <div class="col-lg-6">
     <div class="card border-0 shadow h-100" style="border-radius:18px;">
@@ -433,64 +455,6 @@
     </div>
   </div>
 
-</div>
-
-<div class="row g-4 mb-4">
-
-  <div class="col-lg-6">
-    <div class="card border-0 shadow h-100" style="border-radius:18px;">
-      <div class="card-header border-0 bg-white fw-bold d-flex justify-content-between align-items-center">
-        <span>👥 My Swimmers</span>
-        <span class="badge bg-primary">{{ students|length if students else 0 }}</span>
-      </div>
-      <div class="card-body">
-        {% if students and students|length > 0 %}
-          {% for s in students[:5] %}
-
-            <div class="swimmer-card-row">
-
-              <div class="swimmer-avatar">
-                {{ s.name[:1]|upper }}
-              </div>
-
-              <div class="flex-grow-1 ms-3">
-                <div class="fw-bold swimmer-name-text">
-                  {{ s.name }}
-                </div>
-
-                <div class="text-muted small">
-                  {% if s.completed_sessions is defined and s.total_sessions is defined and s.total_sessions > 0 %}
-                    {{ s.completed_sessions }}/{{ s.total_sessions }} Sessions Completed
-                  {% elif s.next_session is defined and s.next_session %}
-                    Next Session: {{ s.next_session }}
-                  {% else %}
-                    Active Swimmer
-                  {% endif %}
-                </div>
-              </div>
-
-              <div class="text-end">
-                {% if s.package is defined and s.package %}
-                  <div class="badge bg-light text-dark border mb-1">
-                    {{ s.package }}
-                  </div>
-                {% endif %}
-
-                <div class="swimmer-arrow">
-                  ›
-                </div>
-              </div>
-
-            </div>
-
-          {% endfor %}
-        {% else %}
-          <div class="text-muted">No swimmers added yet.</div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-
   <div class="col-lg-6">
     <div class="card border-0 shadow h-100" style="border-radius:18px;">
       <div class="card-header border-0 bg-white fw-bold">
@@ -499,49 +463,37 @@
       <div class="card-body">
         <div class="announcement-list">
 
-          <div class="announcement-item">
-            <div class="announcement-date">
-              <div class="announcement-day">04</div>
-              <div class="announcement-month">JUN</div>
-            </div>
+  {% if notice_message %}
 
-            <div class="announcement-content">
-              <div class="fw-bold">Latest Notice</div>
-              <div class="text-muted small">
-                {{ notice_message }}
-              </div>
-            </div>
+    {% for item in notice_message.split('•') %}
+
+      {% set announcement = item.strip() %}
+
+      {% if announcement %}
+      <div class="announcement-row d-flex align-items-start py-2 {% if not loop.last %}border-bottom{% endif %}">
+
+        <div class="announcement-dot me-3"></div>
+
+        <div class="flex-grow-1">
+          <div class="announcement-text">
+            {{ announcement }}
           </div>
-
-          <div class="announcement-item">
-            <div class="announcement-date bg-primary-subtle">
-              <div class="announcement-day">01</div>
-              <div class="announcement-month">JUN</div>
-            </div>
-
-            <div class="announcement-content">
-              <div class="fw-bold">Swimming Updates</div>
-              <div class="text-muted small">
-                Stay updated with upcoming sessions and schedule changes.
-              </div>
-            </div>
-          </div>
-
-          <div class="announcement-item mb-0">
-            <div class="announcement-date bg-success-subtle">
-              <div class="announcement-day">28</div>
-              <div class="announcement-month">MAY</div>
-            </div>
-
-            <div class="announcement-content">
-              <div class="fw-bold">Training Reminder</div>
-              <div class="text-muted small">
-                Arrive 10 minutes early for your scheduled session.
-              </div>
-            </div>
-          </div>
-
         </div>
+
+      </div>
+      {% endif %}
+
+    {% endfor %}
+
+  {% else %}
+
+    <div class="text-muted text-center py-3">
+      No announcements available.
+    </div>
+
+  {% endif %}
+
+</div>
       </div>
     </div>
   </div>
@@ -808,7 +760,27 @@
     </div>
 </div>
 
+
 <style>
+.announcement-row{
+  min-height:44px;
+}
+
+.announcement-dot{
+  width:10px;
+  height:10px;
+  min-width:10px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#0d6efd,#6ea8fe);
+  margin-top:6px;
+}
+
+.announcement-text{
+  font-size:0.95rem;
+  line-height:1.4;
+}
+
+
 .announcement-item{
   display:flex;
   align-items:flex-start;
@@ -908,7 +880,7 @@
 }
 
 .hero-banner {
-  min-height: 220px;
+  min-height: 100px;
 }
 .hero-subtitle{
   font-size:1.05rem;
