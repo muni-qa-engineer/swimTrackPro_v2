@@ -61,19 +61,17 @@
        background-position:center;
        background-repeat:no-repeat;">
 
-    <div class="card-body p-0">
+    <div class="card-body p-0 position-relative">
+      <div class="badge bg-danger rounded-pill px-3 py-2 notification-badge">
+        🔔 {{ notification_count if notification_count is defined else 0 }}
+      </div>
       <div class="row g-0">
 
         <div class="col-lg-7 col-md-8">
           <div class="p-4 p-lg-5">
 
-            <div class="d-flex justify-content-between align-items-start mb-3">
-              <div class="fw-bold fs-2">
-                🏊 SwimTrackPro
-              </div>
-              <div class="badge bg-danger rounded-pill px-3 py-2">
-                🔔 {{ notification_count if notification_count is defined else 0 }}
-              </div>
+            <div class="fw-bold fs-2 mb-3">
+              🏊 SwimTrackPro
             </div>
 
             <h3 class="fw-bold mb-2">
@@ -260,12 +258,6 @@
 
         </div>
 
-        <div class="text-center mt-4">
-          <button id="miniCalendarOpenBtn" class="btn btn-outline-primary">
-            📅 Open Full Calendar
-          </button>
-        </div>
-
       </div>
     </div>
   </div>
@@ -379,28 +371,27 @@
       <div class="card-body">
 
       <div class="border rounded-4 p-3 mb-3 bg-white">
-        <div class="row align-items-center text-center text-md-start">
+        <div class="row text-center align-items-center">
 
           <div class="col-4">
-            <div class="text-muted small">Package Name</div>
-            <div class="fw-bold fs-5">
-              {{ active_package_name if active_package_name is defined else (user_bookings[0].package_type if user_bookings else 'No Package') }}
+            <div class="text-muted small">📦 Total Packages</div>
+            <div class="fw-bold fs-4">
+              {{ total_packages if total_packages is defined else (user_bookings|length if user_bookings else 0) }}
             </div>
           </div>
 
           <div class="col-4">
-            <div class="text-muted small">Valid Till</div>
-            <div class="fw-bold fs-6">
-              {{ active_package_valid_till if active_package_valid_till is defined else (user_bookings[0].valid_till if user_bookings and user_bookings[0].valid_till else '--') }}
+            <div class="text-muted small">🏊 Active Packages</div>
+            <div class="fw-bold fs-4 text-success">
+              {{ active_packages if active_packages is defined else 0 }}
             </div>
           </div>
 
-          <div class="col-4 text-center">
-            <div class="text-muted small">Status</div>
-            <span class="badge {% if package_status is defined and package_status == 'Expired' %}bg-danger{% else %}bg-success{% endif %} px-3 py-2 rounded-pill">
-              {{ package_status if package_status is defined else 'Active' }}
-              {% if package_status is not defined or package_status == 'Active' %}✓{% endif %}
-            </span>
+          <div class="col-4">
+            <div class="text-muted small">✅ Completed Packages</div>
+            <div class="fw-bold fs-4 text-primary">
+              {{ completed_packages if completed_packages is defined else 0 }}
+            </div>
           </div>
 
         </div>
@@ -639,29 +630,27 @@
 
 <!-- V0038.9 Mobile Bottom Navigation -->
 <div class="mobile-bottom-nav d-lg-none">
-
-  <button id="mobileHomeBtn" class="mobile-nav-item active">
+  <button type="button" id="mobileHomeBtn" class="mobile-nav-item active" onclick="window.location.href='/'">
     <div>🏠</div>
     <small>Home</small>
   </button>
 
   {% if role != 'trainer' %}
-  <button id="mobileBookBtn" class="mobile-nav-item">
+  <button type="button" id="mobileBookBtn" class="mobile-nav-item" onclick="window.location.href='/booking'">
     <div>📅</div>
     <small>Book</small>
   </button>
   {% endif %}
 
-  <button id="mobileCalendarBtn" class="mobile-nav-item">
-    <div>🗓️</div>
-    <small>Calendar</small>
+  <button type="button" id="mobileBookingsBtn" class="mobile-nav-item" onclick="window.location.href='/my-bookings'">
+    <div>📋</div>
+    <small>Bookings</small>
   </button>
 
-  <button id="mobileProfileBtn" class="mobile-nav-item">
-    <div>👤</div>
-    <small>Profile</small>
+  <button type="button" id="mobileContactBtn" class="mobile-nav-item" onclick="window.location.href='/help'">
+    <div>🎧</div>
+    <small>Contact</small>
   </button>
-
 </div>
 
 
@@ -1002,6 +991,14 @@
   font-size:1.05rem;
   opacity:.9;
   max-width:600px;
+}
+
+.notification-badge{
+  position:absolute;
+  top:20px;
+  right:20px;
+  z-index:10;
+  font-size:14px;
 }
 
 /* V0038.7 Professional Quick Action Tiles */
@@ -1500,83 +1497,6 @@
     packageSelect.addEventListener('change', updateMonthlyPackageHint);
     updateMonthlyPackageHint();
   }
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  const quickCalendarBtn = document.getElementById('quickCalendarBtn');
-  const quickBookingsBtn = document.getElementById('quickBookingsBtn');
-  const quickPaymentsBtn = document.getElementById('quickPaymentsBtn');
-  const quickBookBtn = document.getElementById('quickBookBtn');
-  const miniCalendarOpenBtn = document.getElementById('miniCalendarOpenBtn');
-  const openFullCalendarBtn = document.getElementById('openFullCalendarBtn');
-
-  const mobileHomeBtn = document.getElementById('mobileHomeBtn');
-  const mobileBookBtn = document.getElementById('mobileBookBtn');
-  const mobileCalendarBtn = document.getElementById('mobileCalendarBtn');
-  const mobileProfileBtn = document.getElementById('mobileProfileBtn');
-
-  const bookingsSection = document.getElementById('bookingsSection');
-  const calendarSection = document.getElementById('calendarSection');
-  const paymentsSection = document.getElementById('paymentsSection');
-  const bookSlotSection = document.getElementById('bookSlotSection');
-
-  const tabCalendar = document.getElementById('tabCalendar');
-  const tabBook = document.getElementById('tabBook');
-  const tabBookings = document.getElementById('tabBookings');
-  const tabPayments = document.getElementById('tabPayments');
-
-  function setActiveTab(activeButton) {
-    [tabCalendar, tabBook, tabBookings, tabPayments]
-      .filter(Boolean)
-      .forEach(btn => btn.classList.remove('active'));
-
-    if (activeButton) {
-      activeButton.classList.add('active');
-    }
-  }
-
-  function hideAllSections() {
-    if (bookingsSection) bookingsSection.style.display = 'none';
-    if (calendarSection) calendarSection.style.display = 'none';
-    if (paymentsSection) paymentsSection.style.display = 'none';
-    if (bookSlotSection) bookSlotSection.style.display = 'none';
-  }
-
-  function showSection(section, activeTabButton) {
-    hideAllSections();
-
-    if (section) {
-      section.style.display = 'block';
-      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    setActiveTab(activeTabButton);
-  }
-
-  if (miniCalendarOpenBtn) miniCalendarOpenBtn.addEventListener('click', () => showSection(calendarSection, tabCalendar));
-  if (openFullCalendarBtn) openFullCalendarBtn.addEventListener('click', () => showSection(calendarSection, tabCalendar));
-
-  if (tabCalendar) {
-    tabCalendar.addEventListener('click', () => showSection(calendarSection, tabCalendar));
-  }
-
-  if (tabBookings) {
-    tabBookings.addEventListener('click', () => showSection(bookingsSection, tabBookings));
-  }
-
-  if (tabPayments) {
-    tabPayments.addEventListener('click', () => showSection(paymentsSection, tabPayments));
-  }
-
-  if (tabBook && bookSlotSection) {
-    tabBook.addEventListener('click', () => showSection(bookSlotSection, tabBook));
-  }
-
-  if (mobileCalendarBtn) mobileCalendarBtn.addEventListener('click', () => showSection(calendarSection, tabCalendar));
-  if (mobileBookBtn) mobileBookBtn.addEventListener('click', () => showSection(bookSlotSection, tabBook));
-  if (mobileHomeBtn) mobileHomeBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-  if (mobileProfileBtn) mobileProfileBtn.addEventListener('click', () => document.querySelector('.dropdown-toggle, .btn-outline-light')?.click());
-});
 </script>
 <script>
   // V0033.2.4 Step 1 - Always open the dashboard at the top.

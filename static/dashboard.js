@@ -1262,12 +1262,23 @@ if (quickBookingsBtn) {
   });
 }
 
+
 const quickPaymentsBtn = document.getElementById('quickPaymentsBtn');
 if (quickPaymentsBtn) {
   quickPaymentsBtn.addEventListener('click', () => {
     window.location.href = '/payments';
   });
 }
+
+// V0042.0.2 - Open Full Calendar Navigation
+const openFullCalendarBtn = document.getElementById('openFullCalendarBtn');
+
+if (openFullCalendarBtn) {
+  openFullCalendarBtn.addEventListener('click', () => {
+    window.location.href = '/calendar';
+  });
+}
+
 
 const bookingStudentInput = document.getElementById('studentSelect');
 

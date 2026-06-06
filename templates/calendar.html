@@ -6,7 +6,7 @@
 <div class="container-fluid px-4 py-4">
 
     <div class="d-flex align-items-center mb-4">
-        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary me-3">
+        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary me-3 d-none d-lg-inline-flex">
             ← Back
         </a>
         <!-- <h3 class="mb-0">📅 Monthly Calendar</h3> -->
@@ -40,4 +40,30 @@
 </script>
 
 <script src="{{ url_for('static', filename='calendar.js') }}"></script>
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+
+<!-- Mobile Bottom Navigation -->
+<div class="mobile-bottom-nav d-lg-none" role="navigation">
+
+  <button type="button" id="mobileHomeBtn" class="mobile-nav-item" onclick="window.location.href='/'">
+    <div>🏠</div>
+    <small>Home</small>
+  </button>
+
+  <button type="button" id="mobileBookBtn" class="mobile-nav-item" onclick="window.location.href='/booking'">
+    <div>📅</div>
+    <small>Book</small>
+  </button>
+
+  <button type="button" id="mobileBookingsBtn" class="mobile-nav-item" onclick="window.location.href='/my-bookings'">
+    <div>📋</div>
+    <small>Bookings</small>
+  </button>
+
+  <button type="button" id="mobileContactBtn" class="mobile-nav-item active" onclick="window.location.href='/help'">
+    <div>🎧</div>
+    <small>Contact</small>
+  </button>
+
+</div>
 {% endblock %}

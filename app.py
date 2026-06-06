@@ -520,6 +520,19 @@ def index():
     # -----------------------------
     # V0039.4 Real Payment Summary Data
     # -----------------------------
+    # V0042.0.3 Payment Summary Rework
+    total_packages = len(user_bookings)
+
+    active_packages = sum(
+        1 for b in user_bookings
+        if not b.get('is_completed', False)
+    )
+
+    completed_packages = sum(
+        1 for b in user_bookings
+        if b.get('is_completed', False)
+    )
+
     active_package_name = 'No Package'
     active_package_valid_till = '--'
     package_status = 'Active'
@@ -681,6 +694,9 @@ def index():
         active_package_name=active_package_name,
         active_package_valid_till=active_package_valid_till,
         package_status=package_status,
+        total_packages=total_packages,
+        active_packages=active_packages,
+        completed_packages=completed_packages,
         received_amount=received_amount,
         pending_amount=pending_amount,
         notice_message=get_setting(
@@ -1265,7 +1281,7 @@ def book():
     # Send swimmer confirmation email.
     send_booking_confirmation_email(new_booking)
 
-    return redirect(url_for('index'))
+    return redirect('/my-bookings')
 
 
 # --- Edit Booking Route ---
@@ -1502,7 +1518,7 @@ def update_booking(booking_id):
     conn.close()
 
     flash("Booking updated successfully")
-    return redirect(url_for('index'))
+    return redirect('/my-bookings')
 
 
 # --- Update Payment Status Route ---
