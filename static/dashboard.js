@@ -558,7 +558,10 @@ function updatePaymentTable() {
     const packageName = booking.package || '-';
     const status = booking.status || 'Not Paid';
     const amount = Number(booking.fee || 0).toLocaleString();
-    const isGuestPaid = currentRole !== 'trainer' && status === 'Paid';
+    // Refactored payment status logic
+    const isTrainer = currentRole === 'trainer';
+    const isPendingVerification = status === 'Pending Verification';
+    const isPaid = status === 'Paid';
 
     return `
       <tr>
@@ -566,32 +569,69 @@ function updatePaymentTable() {
         <td>${swimmer}</td>
         <td>${packageName}</td>
         <td>
-          ${isGuestPaid ? `
-            <span class="fw-semibold text-success">Paid</span>
-          ` : `
-            <select
-              class="form-select form-select-sm payment-status-select"
-              style="width: 120px;"
-              data-booking-id="${booking.id || ''}">
-              <option value="Not Paid" ${status === 'Not Paid' ? 'selected' : ''}>Not Paid</option>
-              <option value="Pending Verification" ${status === 'Pending Verification' ? 'selected' : ''}>Pending Verification</option>
-              <option value="Paid" ${status === 'Paid' ? 'selected' : ''}>Paid</option>
-            </select>
-          `}
-        </td>
+    ${isTrainer ? `
+
+    ${isPendingVerification ? `
+      <div class="d-flex gap-2">
+        <button
+          type="button"
+          class="btn btn-sm btn-success payment-status-action-btn"
+          data-booking-id="${booking.id || ''}"
+          data-status="Paid">
+          ✅ Verify
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-sm btn-danger payment-status-action-btn"
+          data-booking-id="${booking.id || ''}"
+          data-status="Not Paid">
+          ❌ Reject
+        </button>
+      </div>
+    ` : `
+      <span class="fw-semibold ${isPaid ? 'text-success' : 'text-danger'}">
+        ${status}
+      </span>
+    `}
+
+  ` : `
+
+    ${isPaid ? `
+      <span class="fw-semibold text-success">
+        Paid
+      </span>
+    ` : isPendingVerification ? `
+      <span class="fw-semibold text-warning">
+        Pending Verification
+      </span>
+    ` : `
+      <select
+        class="form-select form-select-sm payment-status-select"
+        style="width: 120px;"
+        data-booking-id="${booking.id || ''}">
+        <option value="Not Paid" ${status === 'Not Paid' ? 'selected' : ''}>Not Paid</option>
+        <option value="Paid">Paid</option>
+      </select>
+    `}
+
+  `}
+</td>
         <td>₹${amount}</td>
         <td>
-          ${isGuestPaid ? `
-            <span class="text-muted">Verified</span>
-          ` : `
-            <button
-              type="button"
-              class="btn btn-sm btn-success payment-status-update-btn"
-              data-booking-id="${booking.id || ''}">
-              Update Payment Status
-            </button>
-          `}
-        </td>
+    ${isTrainer ? `
+    ${isPendingVerification ? 'Awaiting Decision' : 'Verified'}
+  ` : `
+    ${isPaid ? 'Verified' : isPendingVerification ? 'Waiting Trainer Approval' : `
+      <button
+        type="button"
+        class="btn btn-sm btn-success payment-status-update-btn"
+        data-booking-id="${booking.id || ''}">
+        Update Payment Status
+      </button>
+    `}
+  `}
+</td>
       </tr>
     `;
   }).join('');
@@ -599,6 +639,37 @@ function updatePaymentTable() {
 
 function initializePaymentStatusActions() {
   const buttons = document.querySelectorAll('.payment-status-update-btn');
+
+  // Trainer action buttons for verifying/rejecting payment
+  const trainerButtons = document.querySelectorAll('.payment-status-action-btn');
+
+  trainerButtons.forEach(button => {
+    button.addEventListener('click', async function() {
+      const bookingId = this.dataset.bookingId;
+      const selectedStatus = this.dataset.status;
+      this.disabled = true;
+      this.textContent = 'Processing...';
+
+      try {
+        const formData = new FormData();
+        formData.append('status', selectedStatus);
+
+        const response = await fetch(`/update_payment_status/${bookingId}`, {
+          method: 'POST',
+          body: formData
+        });
+
+        if (response.ok) {
+          createToast('Payment status updated successfully');
+          setTimeout(() => window.location.reload(), 800);
+        } else {
+          throw new Error('Update failed');
+        }
+      } catch (error) {
+        createToast('Failed to update payment status', 'danger');
+      }
+    });
+  });
 
   buttons.forEach(button => {
     button.addEventListener('click', async function() {

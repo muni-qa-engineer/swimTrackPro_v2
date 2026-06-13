@@ -1549,18 +1549,16 @@ def update_payment_status(booking_id):
         flash('Invalid payment status selected')
         return redirect(url_for('index'))
 
-    # Guest users cannot directly mark a booking as Paid.
-    if (
-        session.get('role') != 'trainer'
-        and new_status == 'Paid'
-    ):
-        flash('Only trainer can mark a payment as Paid')
-        return redirect(url_for('index'))
-
     conn = get_pg_connection()
     cursor = conn.cursor()
 
-    if session.get('role') == 'trainer':
+    role = session.get('role')
+
+    # -------------------------
+    # TRAINER VERIFICATION FLOW
+    # -------------------------
+    if role == 'trainer':
+
         cursor.execute('''
         UPDATE bookings
         SET
@@ -1569,11 +1567,24 @@ def update_payment_status(booking_id):
         WHERE id = %s
         ''', (
             new_status,
-            'Paid' if new_status in ('Pending Verification', 'Paid') else 'Not Paid',
+            'Paid' if new_status == 'Paid' else 'Not Paid',
             booking_id
         ))
 
+    # -------------------------
+    # GUEST PAYMENT REQUEST FLOW
+    # -------------------------
     else:
+
+        # Guest selecting Paid means:
+        # Request trainer verification.
+        if new_status == 'Paid':
+            actual_status = 'Pending Verification'
+            actual_request = 'Paid'
+        else:
+            actual_status = 'Not Paid'
+            actual_request = 'Not Paid'
+
         cursor.execute('''
         UPDATE bookings
         SET
@@ -1583,8 +1594,8 @@ def update_payment_status(booking_id):
           AND owner_name = %s
           AND owner_phone = %s
         ''', (
-            new_status,
-            'Paid' if new_status == 'Pending Verification' else 'Not Paid',
+            actual_status,
+            actual_request,
             booking_id,
             session.get('user_name'),
             session.get('phone')
