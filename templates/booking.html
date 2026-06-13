@@ -318,5 +318,13 @@
 
 </div>
 
+<script>
+  window.bookingsData = {{ bookings|tojson|safe }};
+
+  console.log(
+    'V0044.0 Live Conflict Validation Loaded:',
+    window.bookingsData
+  );
+</script>
 <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
 {% endblock %}
