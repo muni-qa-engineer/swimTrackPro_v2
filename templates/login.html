@@ -332,6 +332,17 @@
     function activateTrainerMode() {
         roleInput.value = 'trainer';
 
+        // Reset form when switching modes
+        nameInput.value = '';
+        phoneInput.value = '';
+        passwordInput.value = '';
+
+        nameError.classList.add('d-none');
+        phoneError.classList.add('d-none');
+
+        nameInput.classList.remove('is-invalid');
+        phoneInput.classList.remove('is-invalid');
+
         trainerBtn.classList.add('active-mode');
         if (guestBtn) {
             guestBtn.classList.remove('active-mode');
@@ -352,6 +363,17 @@
 
     function activateGuestMode() {
         roleInput.value = 'guest';
+
+        // Reset form when switching modes
+        nameInput.value = '';
+        phoneInput.value = '';
+        passwordInput.value = '';
+
+        nameError.classList.add('d-none');
+        phoneError.classList.add('d-none');
+
+        nameInput.classList.remove('is-invalid');
+        phoneInput.classList.remove('is-invalid');
 
         if (guestBtn) {
             guestBtn.classList.add('active-mode');

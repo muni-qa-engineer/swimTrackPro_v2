@@ -185,78 +185,6 @@
 <div class="row g-4 mb-4">
 
   <div class="col-lg-4">
-    <div class="card border-0 shadow h-100" style="border-radius:18px;">
-      <div class="card-header border-0 bg-white fw-bold d-flex justify-content-between align-items-center">
-        <span>📅 Mini Calendar</span>
-        <button id="openFullCalendarBtn" class="btn btn-sm btn-outline-primary">
-          Open Full Calendar
-        </button>
-      </div>
-
-      <div class="card-body">
-
-        <div class="text-center mb-3">
-          <h5 class="fw-bold mb-0">{{ current_month_name }}</h5>
-        </div>
-
-        <div class="mini-calendar">
-
-          <div class="calendar-header">
-            <span>Mon</span>
-            <span>Tue</span>
-            <span>Wed</span>
-            <span>Thu</span>
-            <span>Fri</span>
-            <span>Sat</span>
-            <span>Sun</span>
-          </div>
-
-          <div class="calendar-grid">
-
-            {% for day in calendar_days %}
-
-              {% if not day.day %}
-                <div class="calendar-day empty"></div>
-
-              {% else %}
-                <div class="calendar-day
-                  {% if day.is_today %}today{% endif %}
-                  {% if day.is_booked %} booked{% endif %}
-                  {% if day.is_makeup %} makeup{% endif %}">
-                  {{ day.day }}
-                </div>
-              {% endif %}
-
-            {% endfor %}
-
-          </div>
-
-        </div>
-
-        <div class="d-flex justify-content-center gap-4 mt-4 small">
-
-          <div>
-            <span class="legend-dot bg-success"></span>
-            Booked
-          </div>
-
-          <div>
-            <span class="legend-dot bg-warning"></span>
-            Makeup
-          </div>
-
-          <div>
-            <span class="legend-dot bg-primary"></span>
-            Today
-          </div>
-
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <div class="col-lg-4">
     <div class="card border-0 shadow" style="border-radius:18px;">
       <div class="card-header border-0 bg-white fw-bold">
         📈 Track All Booked Sessions
@@ -378,6 +306,78 @@
           </div>
 
         </div>
+      </div>
+    </div>
+  </div>
+
+    <div class="col-lg-4">
+    <div class="card border-0 shadow h-100" style="border-radius:18px;">
+      <div class="card-header border-0 bg-white fw-bold d-flex justify-content-between align-items-center">
+        <span>📅 Mini Calendar</span>
+        <button id="openFullCalendarBtn" class="btn btn-sm btn-outline-primary">
+          Open Full Calendar
+        </button>
+      </div>
+
+      <div class="card-body">
+
+        <div class="text-center mb-3">
+          <h5 class="fw-bold mb-0">{{ current_month_name }}</h5>
+        </div>
+
+        <div class="mini-calendar">
+
+          <div class="calendar-header">
+            <span>Mon</span>
+            <span>Tue</span>
+            <span>Wed</span>
+            <span>Thu</span>
+            <span>Fri</span>
+            <span>Sat</span>
+            <span>Sun</span>
+          </div>
+
+          <div class="calendar-grid">
+
+            {% for day in calendar_days %}
+
+              {% if not day.day %}
+                <div class="calendar-day empty"></div>
+
+              {% else %}
+                <div class="calendar-day
+                  {% if day.is_today %}today{% endif %}
+                  {% if day.is_booked %} booked{% endif %}
+                  {% if day.is_makeup %} makeup{% endif %}">
+                  {{ day.day }}
+                </div>
+              {% endif %}
+
+            {% endfor %}
+
+          </div>
+
+        </div>
+
+        <div class="d-flex justify-content-center gap-4 mt-4 small">
+
+          <div>
+            <span class="legend-dot bg-success"></span>
+            Booked
+          </div>
+
+          <div>
+            <span class="legend-dot bg-warning"></span>
+            Makeup
+          </div>
+
+          <div>
+            <span class="legend-dot bg-primary"></span>
+            Today
+          </div>
+
+        </div>
+
       </div>
     </div>
   </div>
