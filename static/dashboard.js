@@ -1126,6 +1126,21 @@ window.addEventListener('load', () => {
   const swimmerExists = urlParams.get('swimmer_exists');
   const bookingConflict = window.location.search.includes('booking_conflict');
   const locationConflict = window.location.search.includes('location_conflict');
+  const bookingSuccess = window.location.search.includes('booking_success');
+
+  if (bookingSuccess) {
+  createToast(
+    '✅ Booking created successfully.',
+    'success',
+    3000
+  );
+
+  window.history.replaceState(
+    {},
+    document.title,
+    window.location.pathname
+  );
+}
 
   if (bookingConflict) {
     createToast(

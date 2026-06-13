@@ -1285,7 +1285,7 @@ def book():
     # Send swimmer confirmation email.
     send_booking_confirmation_email(new_booking)
 
-    return redirect('/my-bookings')
+    return redirect('/my-bookings?booking_success=true')
 
 
 # --- Edit Booking Route ---
