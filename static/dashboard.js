@@ -954,9 +954,12 @@ if (studentSelect) {
   });
 }
 
-const savedSwimmer = localStorage.getItem('activeSwimmer');
-if (savedSwimmer) {
-  activateSwimmer(savedSwimmer);
+// Do not auto-populate the swimmer field from a previous session.
+// The field should remain empty when the Booking page opens.
+localStorage.removeItem('activeSwimmer');
+
+if (studentSelect) {
+  studentSelect.value = '';
 }
 
 const swimmerAddForm = document.querySelector('form[action="/add_swimmer"]');

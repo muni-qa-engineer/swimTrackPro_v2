@@ -980,7 +980,7 @@ def add_swimmer():
     conn.commit()
     conn.close()
 
-    return redirect(url_for('index'))
+    return redirect(url_for('booking_page'))
 
 @app.route('/delete_swimmer/<name>', methods=['POST'])
 def delete_swimmer(name):
@@ -1017,7 +1017,7 @@ def delete_swimmer(name):
     conn.commit()
     conn.close()
 
-    return redirect(url_for('index'))
+    return redirect(url_for('booking_page'))
 
 @app.route('/book', methods=['POST'])
 def book():
@@ -1527,7 +1527,7 @@ def update_booking(booking_id):
     conn.commit()
     conn.close()
 
-    flash("Booking updated successfully")
+    # flash("Booking updated successfully")
     return redirect('/my-bookings')
 
 
