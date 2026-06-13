@@ -1131,7 +1131,7 @@ def book():
                 'Please choose a different time slot or location.',
                 'warning'
             )
-            return redirect('/?location_conflict=true')
+            return redirect('/booking?location_conflict=true')
 
         except Exception:
             continue
@@ -1168,7 +1168,11 @@ def book():
 
             # Minimum 1 hour gap required
             if time_difference < 60:
-                return redirect('/?booking_conflict=true')
+                flash(
+                    'Duplicate booking already exists.',
+                    'warning'
+                )
+                return redirect('/booking?booking_conflict=true')
 
         except Exception:
             # Ignore malformed historical records and continue checking others
@@ -1441,7 +1445,13 @@ def update_booking(booking_id):
 
             # Minimum 1 hour gap required
             if time_difference < 60:
-                return redirect('/?booking_conflict=true')
+                flash(
+                    'Duplicate booking already exists.',
+                    'warning'
+                )
+                return redirect(
+                    url_for('edit_booking', booking_id=booking_id)
+                )
 
         except Exception:
             # Ignore malformed historical records

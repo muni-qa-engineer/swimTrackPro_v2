@@ -1125,10 +1125,26 @@ window.addEventListener('load', () => {
   const urlParams = new URLSearchParams(window.location.search);
   const swimmerExists = urlParams.get('swimmer_exists');
   const bookingConflict = window.location.search.includes('booking_conflict');
+  const locationConflict = window.location.search.includes('location_conflict');
 
   if (bookingConflict) {
-    createToast('⏰ Duplicate bookings', 'danger', 2500);
+    createToast(
+      '⚠️ Duplicate booking already exists for this swimmer.',
+      'danger',
+      4000
+    );
+
     localStorage.removeItem('bookingSuccess');
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
+  if (locationConflict) {
+    createToast(
+      '⚠️ Selected time slot is already booked at another location.',
+      'danger',
+      4000
+    );
+
     window.history.replaceState({}, document.title, window.location.pathname);
   }
 
