@@ -1598,6 +1598,8 @@ def update_payment_status(booking_id):
         print('Actual Request:', actual_request)
         print('Owner Name:', session.get('user_name'))
         print('Owner Phone:', session.get('phone'))
+        print('SESSION USER:', repr(session.get('user_name')))
+        print('SESSION PHONE:', repr(session.get('phone')))
         cursor.execute(
             '''
             SELECT owner_name, owner_phone, status, payment_request
@@ -1610,6 +1612,9 @@ def update_payment_status(booking_id):
         booking_row = cursor.fetchone()
 
         print('DB Booking Row:', booking_row)
+        if booking_row:
+            print('DB OWNER NAME:', repr(booking_row[0]))
+            print('DB OWNER PHONE:', repr(booking_row[1]))
         cursor.execute('''
         UPDATE bookings
         SET
@@ -1625,6 +1630,7 @@ def update_payment_status(booking_id):
             session.get('user_name'),
             session.get('phone')
         ))
+        print('ROWS UPDATED:', cursor.rowcount)
 
     conn.commit()
     cursor.execute(
