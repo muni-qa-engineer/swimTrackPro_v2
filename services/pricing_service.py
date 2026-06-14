@@ -84,7 +84,12 @@ def calculate_discounted_fee(package, persons, session_count=None):
 
     # Monthly package
     elif package == 'Monthly':
-        actual_amount = 9000 * persons
+        try:
+            weekly_days = max(int(session_count or 3), 1)
+        except Exception:
+            weekly_days = 3
+
+        actual_amount = weekly_days * 3000 * persons
 
     # Fallback
     else:

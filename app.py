@@ -7,7 +7,9 @@ from services.email_service import (
     send_booking_confirmation_email,
     send_booking_updated_email,
     send_booking_deleted_email,
-    send_booking_deleted_alert
+    send_booking_deleted_alert,
+    send_payment_reminder_email,
+    send_package_completion_email
 )
 from services.pricing_service import calculate_discounted_fee
 from services.booking_engine import (
@@ -203,6 +205,9 @@ def load_data():
             'owner_name': b[13],
             'owner_phone': b[14],
             'email': b[24] if len(b) > 24 else '',
+            'booking_code': b[25] if len(b) > 25 else '',
+            'payment_reminder_sent': b[26] if len(b) > 26 else False,
+            'payment_reminder_sent_at': b[27] if len(b) > 27 else None,
             'delete_requested': b[15] if len(b) > 15 else False,
             'delete_requested_at': b[16] if len(b) > 16 else None,
             'delete_requested_by': b[17] if len(b) > 17 else None,
@@ -719,8 +724,6 @@ def index():
 # -----------------------------
 @app.route('/booking')
 def booking_page():
-    print('BOOKING SESSION:', dict(session))
-
     if 'user_name' not in session:
         return redirect(url_for('index'))
 
@@ -844,13 +847,52 @@ def payments_page():
     current_role = session.get('role', 'guest')
 
     if current_role == 'trainer':
-        user_bookings = data.get('bookings', [])
-    else:
-        user_bookings = [
-            b for b in data.get('bookings', [])
-            if (b.get('owner_name') or '').strip().lower() == current_user
-            and b.get('owner_phone') == current_phone
-        ]
+        reminder_conn = get_pg_connection()
+        reminder_cursor = reminder_conn.cursor()
+
+        for booking in user_bookings:
+            try:
+                payment_status = str(
+                    booking.get('status', '')
+                ).strip().lower()
+
+                remaining_classes = booking.get('remaining_classes', 0)
+                is_completed = booking.get('is_completed', False)
+
+                if (
+                    payment_status == 'paid'
+                    and remaining_classes == 0
+                    and is_completed
+                ):
+                    try:
+                        send_package_completion_email(booking)
+                    except Exception:
+                        pass
+                    continue
+
+                if (
+                    booking.get('remaining_classes', 0) <= 3
+                    and payment_status != 'paid'
+                    and not booking.get('payment_reminder_sent', False)
+                ):
+                    send_payment_reminder_email(booking)
+
+                    reminder_cursor.execute(
+                        '''
+                        UPDATE bookings
+                        SET
+                            payment_reminder_sent = TRUE,
+                            payment_reminder_sent_at = CURRENT_TIMESTAMP
+                        WHERE id = %s
+                        ''',
+                        (booking.get('id'),)
+                    )
+
+            except Exception as exc:
+                print('PAYMENT REMINDER ERROR:', exc)
+
+        reminder_conn.commit()
+        reminder_conn.close()
 
     return render_template(
         'payments.html',
@@ -1040,7 +1082,16 @@ def book():
 
     # Default fee based on package and group discount.
     session_count = None
-    if package == 'Custom':
+
+    if package == 'Monthly':
+        selected_days = request.form.get('selected_days', '')
+        session_count = len([
+            day.strip()
+            for day in selected_days.split(',')
+            if day.strip()
+        ])
+
+    elif package == 'Custom':
         session_count = len(
             generate_recurring_dates(
                 date_str,
@@ -1050,6 +1101,7 @@ def book():
         )
 
     fee = calculate_discounted_fee(package, persons, session_count)
+
     if package == 'Demo':
         fee = 500 * int(persons)
 
@@ -1288,13 +1340,6 @@ def book():
     conn.commit()
     conn.close()
 
-    print('=' * 60)
-    print('BOOKING EMAIL DEBUG')
-    print('Booking ID:', new_booking.get('id'))
-    print('Booking Code:', new_booking.get('booking_code'))
-    print('Email:', new_booking.get('email'))
-    print('=' * 60)
-
     # Send admin notification.
     send_booking_notification(new_booking)
 
@@ -1370,10 +1415,14 @@ def update_booking(booking_id):
     if package == 'Demo':
         fee = 500 * int(persons)
 
-    # Allow manual fee override only for admin users.
-    # Guest users always use the system-calculated fee.
+    # Fee was already calculated above using calculate_discounted_fee().
+    # Do not recalculate here, otherwise Edit Booking can overwrite the
+    # correct pricing engine result (for example Monthly 2-days becoming ₹9000).
+    # Trainer can still manually override the fee.
+    # Only the old package/day-based recalculation was removed.
     if session.get('role') == 'trainer':
         manual_fee = (request.form.get('fee') or '').strip()
+
         if manual_fee:
             try:
                 fee = int(float(manual_fee))
@@ -1404,24 +1453,6 @@ def update_booking(booking_id):
 
     # Convert selected days list to comma-separated string
     selected_days_str = ', '.join(selected_days)
-
-    # Recalculate fee after selected days are finalized
-    if package == 'Monthly':
-        fee = len(selected_days) * 3000 * int(persons)
-    elif package == 'Single':
-        fee = 750 * int(persons)
-    elif package == 'Demo':
-        fee = 500 * int(persons)
-
-    # Trainer can override the calculated fee
-    if session.get('role') == 'trainer':
-        manual_fee = (request.form.get('fee') or '').strip()
-
-        if manual_fee:
-            try:
-                fee = int(float(manual_fee))
-            except ValueError:
-                pass
 
     # Prevent overlapping bookings when editing
     try:

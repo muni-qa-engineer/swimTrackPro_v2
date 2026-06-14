@@ -335,3 +335,100 @@ def send_booking_deleted_alert(booking):
 
     except Exception as exc:
         print(f"Booking deleted alert email failed: {exc}")
+
+
+# --- Payment Reminder Email to Swimmer ---
+def send_payment_reminder_email(booking):
+    """Send payment reminder email when package is nearing completion."""
+    try:
+        email = (booking.get('email') or '').strip()
+
+        if not email:
+            return
+
+        subject = f"💰 Payment Reminder - {booking.get('booking_code', 'SwimTrackPro')}"
+
+        html_content = f"""
+        <h2>💰 Payment Reminder</h2>
+
+        <p>Hello {booking.get('owner_name', 'Swimmer')},</p>
+
+        <p>Your swimming package is nearing completion and payment is still pending.</p>
+
+        <table border="0" cellpadding="4" cellspacing="0">
+            <tr><td><strong>Booking ID</strong></td><td>: {booking.get('booking_code', '')}</td></tr>
+            <tr><td><strong>Swimmer</strong></td><td>: {booking.get('student', '')}</td></tr>
+            <tr><td><strong>Package</strong></td><td>: {booking.get('package', '')}</td></tr>
+            <tr><td><strong>Remaining Sessions</strong></td><td>: {booking.get('remaining_classes', 0)}</td></tr>
+            <tr><td><strong>Amount Due</strong></td><td>: ₹{booking.get('fee', 0)}</td></tr>
+        </table>
+
+        <br>
+
+        <p>Please complete the payment and update your payment status in SwimTrackPro.</p>
+
+        <p>
+        Track your booking:<br>
+        <a href="https://swimtrackpro.onrender.com">https://swimtrackpro.onrender.com</a>
+        </p>
+
+        <p>Thank you for choosing SwimTrackPro 🏊</p>
+        """
+
+        send_email(
+            subject=subject,
+            html_content=html_content,
+            to_email=email,
+            to_name=booking.get('owner_name', 'Swimmer')
+        )
+
+    except Exception as exc:
+        print(f"Payment reminder email failed: {exc}")
+
+
+# --- Package Completion Email to Swimmer ---
+def send_package_completion_email(booking):
+    """Send package completion email when all sessions are completed."""
+    try:
+        email = (booking.get('email') or '').strip()
+
+        if not email:
+            return
+
+        subject = f"🎉 Package Completed - {booking.get('booking_code', 'SwimTrackPro')}"
+
+        html_content = f"""
+        <h2>🎉 Package Completed</h2>
+
+        <p>Hello {booking.get('owner_name', 'Swimmer')},</p>
+
+        <p>Congratulations! Your swimming package has been successfully completed.</p>
+
+        <table border="0" cellpadding="4" cellspacing="0">
+            <tr><td><strong>Booking ID</strong></td><td>: {booking.get('booking_code', '')}</td></tr>
+            <tr><td><strong>Swimmer</strong></td><td>: {booking.get('student', '')}</td></tr>
+            <tr><td><strong>Package</strong></td><td>: {booking.get('package', '')}</td></tr>
+            <tr><td><strong>Sessions Completed</strong></td><td>: {booking.get('total_classes', 0)}/{booking.get('total_classes', 0)}</td></tr>
+        </table>
+
+        <br>
+
+        <p>Ready for the next level?</p>
+
+        <p>
+        Book your next package:<br>
+        <a href="https://swimtrackpro.onrender.com">https://swimtrackpro.onrender.com</a>
+        </p>
+
+        <p>Thank you for choosing SwimTrackPro 🏊</p>
+        """
+
+        send_email(
+            subject=subject,
+            html_content=html_content,
+            to_email=email,
+            to_name=booking.get('owner_name', 'Swimmer')
+        )
+
+    except Exception as exc:
+        print(f"Package completion email failed: {exc}")
