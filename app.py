@@ -1538,6 +1538,12 @@ def update_payment_status(booking_id):
         return redirect(url_for('index'))
 
     new_status = (request.form.get('status') or '').strip()
+    print('=' * 60)
+    print('PAYMENT UPDATE REQUEST')
+    print('Booking ID:', booking_id)
+    print('Role:', session.get('role'))
+    print('Requested Status:', new_status)
+    print('=' * 60)
 
     allowed_statuses = [
         'Not Paid',
@@ -1559,6 +1565,8 @@ def update_payment_status(booking_id):
     # -------------------------
     if role == 'trainer':
 
+        print('TRAINER FLOW')
+        print('Saving status:', new_status)
         cursor.execute('''
         UPDATE bookings
         SET
@@ -1585,6 +1593,11 @@ def update_payment_status(booking_id):
             actual_status = 'Not Paid'
             actual_request = 'Not Paid'
 
+        print('GUEST FLOW')
+        print('Actual Status:', actual_status)
+        print('Actual Request:', actual_request)
+        print('Owner Name:', session.get('user_name'))
+        print('Owner Phone:', session.get('phone'))
         cursor.execute('''
         UPDATE bookings
         SET
@@ -1602,6 +1615,18 @@ def update_payment_status(booking_id):
         ))
 
     conn.commit()
+    cursor.execute(
+        '''
+        SELECT status, payment_request
+        FROM bookings
+        WHERE id = %s
+        ''',
+        (booking_id,)
+    )
+
+    saved_row = cursor.fetchone()
+
+    print('DB Saved Values:', saved_row)
     conn.close()
 
     flash('Payment status updated successfully')
