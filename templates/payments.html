@@ -167,6 +167,25 @@ document.addEventListener('DOMContentLoaded', function () {
 <!-- Mobile Bottom Navigation -->
 <div class="mobile-bottom-nav d-lg-none">
 
+{% if role == 'trainer' %}
+
+  <button type="button" class="mobile-nav-item" onclick="window.location.href='/'">
+    <div>🏠</div>
+    <small>Home</small>
+  </button>
+
+  <button type="button" class="mobile-nav-item" onclick="window.location.href='/my-bookings'">
+    <div>📋</div>
+    <small>Bookings</small>
+  </button>
+
+  <button type="button" class="mobile-nav-item active" onclick="window.location.href='/payments'">
+    <div>💳</div>
+    <small>Payments</small>
+  </button>
+
+{% else %}
+
   <button type="button" id="mobileHomeBtn" class="mobile-nav-item" onclick="window.location.href='/'">
     <div>🏠</div>
     <small>Home</small>
@@ -186,6 +205,8 @@ document.addEventListener('DOMContentLoaded', function () {
     <div>🎧</div>
     <small>Contact</small>
   </button>
+
+{% endif %}
 
 </div>
 
