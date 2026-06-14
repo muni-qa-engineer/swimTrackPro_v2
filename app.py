@@ -1621,14 +1621,10 @@ def update_payment_status(booking_id):
             status = %s,
             payment_request = %s
         WHERE id = %s
-          AND owner_name = %s
-          AND owner_phone = %s
         ''', (
             actual_status,
             actual_request,
-            booking_id,
-            session.get('user_name'),
-            session.get('phone')
+            booking_id
         ))
         print('ROWS UPDATED:', cursor.rowcount)
 
