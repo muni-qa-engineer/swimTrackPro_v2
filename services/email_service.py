@@ -107,10 +107,11 @@ def send_email(subject, html_content, to_email=None, to_name="Admin"):
 def send_booking_notification(booking):
     """Send a booking alert email using Brevo."""
     try:
-        subject = f"New Booking - {booking.get('student', 'SwimTrackPro')}"
+        subject = f"🏊 New Booking Alert - {booking.get('booking_code', '')}"
 
         html_content = f"""
         <h2>🏊 New Booking Alert</h2>
+        <p><strong>Booking ID:</strong> {booking.get('booking_code', '')}</p>
         <table border="1" cellpadding="6" cellspacing="0">
             <tr><td><strong>Swimmer</strong></td><td>{booking.get('student', '')}</td></tr>
             <tr><td><strong>Package</strong></td><td>{booking.get('package', '')}</td></tr>
@@ -148,32 +149,32 @@ def send_booking_confirmation_email(booking):
         if not email:
             return
 
-        subject = "🏊 Booking Confirmed - SwimTrackPro"
+        subject = f"🏊 Booking Confirmed - {booking.get('booking_code', 'SwimTrackPro')}"
 
         html_content = f"""
         <h2>🏊 Booking Confirmation</h2>
 
         <p>Hello {booking.get('owner_name', 'Swimmer')},</p>
 
-        <p>Your booking has been successfully created.</p>
+        <p>Your booking for <strong>{booking.get('student', '')}</strong> has been successfully created.</p>
 
-        <table border="1" cellpadding="6" cellspacing="0">
-            <tr><td><strong>Swimmer</strong></td><td>{booking.get('student', '')}</td></tr>
-            <tr><td><strong>Package</strong></td><td>{booking.get('package', '')}</td></tr>
-            <tr><td><strong>Start Date</strong></td><td>{booking.get('start_date', '')}</td></tr>
-            <tr><td><strong>End Date</strong></td><td>{booking.get('end_date', '')}</td></tr>
-            <tr><td><strong>Time</strong></td><td>{booking.get('time', '')}</td></tr>
-            <tr><td><strong>Location</strong></td><td>{booking.get('location', '')}</td></tr>
-            <tr><td><strong>Persons</strong></td><td>{booking.get('persons', '')}</td></tr>
-            <tr><td><strong>Fee</strong></td><td>₹{booking.get('fee', 0)}</td></tr>
-            <tr><td><strong>Payment Status</strong></td><td>{booking.get('payment_request', '')}</td></tr>
+        <table border="0" cellpadding="4" cellspacing="0">
+            <tr><td><strong>Booking ID</strong></td><td>: {booking.get('booking_code', '')}</td></tr>
+            <tr><td><strong>Package</strong></td><td>: {booking.get('package', '')}</td></tr>
+            <tr><td><strong>Start Date</strong></td><td>: {booking.get('start_date', '')}</td></tr>
+            <tr><td><strong>Time</strong></td><td>: {booking.get('time', '')}</td></tr>
+            <tr><td><strong>Fee</strong></td><td>: ₹{booking.get('fee', 0)}</td></tr>
+            <tr><td><strong>Payment</strong></td><td>: {booking.get('payment_request', 'Not Paid')}</td></tr>
         </table>
 
         <br>
 
-        <p>Thank you for choosing SwimTrackPro.</p>
+        <p>
+        Track your booking:<br>
+        <a href="https://swimtrackpro.onrender.com">https://swimtrackpro.onrender.com</a>
+        </p>
 
-        <p>For any schedule changes or questions, please contact your trainer.</p>
+        <p>Thank you for choosing SwimTrackPro 🏊</p>
         """
 
         send_email(
@@ -185,3 +186,152 @@ def send_booking_confirmation_email(booking):
 
     except Exception as exc:
         print(f"Booking confirmation email failed: {exc}")
+
+
+# --- Booking Updated Email to Swimmer ---
+def send_booking_updated_email(booking, changes):
+    """Send booking updated email to swimmer."""
+    try:
+        email = (booking.get('email') or '').strip()
+
+        if not email:
+            return
+
+        changes_html = ""
+        for change in changes:
+            changes_html += f"<li><strong>{change['field']}</strong>: {change['old']} → {change['new']}</li>"
+
+        subject = f"✏️ Booking Updated - {booking.get('booking_code', 'SwimTrackPro')}"
+
+        html_content = f"""
+        <h2>✏️ Booking Updated</h2>
+
+        <p>Hello {booking.get('owner_name', 'Swimmer')},</p>
+
+        <p>Your booking for <strong>{booking.get('student', '')}</strong> has been updated successfully.</p>
+
+        <p><strong>Booking ID:</strong> {booking.get('booking_code', '')}</p>
+
+        <p><strong>Changes Made:</strong></p>
+        <ul>
+        {changes_html}
+        </ul>
+
+        <p>
+        Track your booking:<br>
+        <a href="https://swimtrackpro.onrender.com">https://swimtrackpro.onrender.com</a>
+        </p>
+
+        <p>Thank you for choosing SwimTrackPro 🏊</p>
+        """
+
+        send_email(
+            subject=subject,
+            html_content=html_content,
+            to_email=email,
+            to_name=booking.get('owner_name', 'Swimmer')
+        )
+
+    except Exception as exc:
+        print(f"Booking updated email failed: {exc}")
+
+
+# --- Booking Update Alert Email to Trainer/Admin ---
+def send_booking_update_alert(booking, changes):
+    """Send booking update alert email to trainer/admin."""
+    try:
+        changes_html = ""
+        for change in changes:
+            changes_html += f"<li><strong>{change['field']}</strong>: {change['old']} → {change['new']}</li>"
+
+        subject = f"✏️ Booking Updated Alert - {booking.get('booking_code', '')}"
+
+        html_content = f"""
+        <h2>🏊 Booking Updated Alert</h2>
+
+        <p><strong>Booking ID:</strong> {booking.get('booking_code', '')}</p>
+        <p><strong>Swimmer:</strong> {booking.get('student', '')}</p>
+        <p><strong>Owner:</strong> {booking.get('owner_name', '')}</p>
+
+        <p><strong>Changes Made:</strong></p>
+        <ul>
+        {changes_html}
+        </ul>
+        """
+
+        send_email(
+            subject=subject,
+            html_content=html_content
+        )
+
+    except Exception as exc:
+        print(f"Booking update alert email failed: {exc}")
+
+
+# --- Booking Deleted Email to Swimmer ---
+def send_booking_deleted_email(booking):
+    """Send booking deleted email to swimmer."""
+    try:
+        email = (booking.get('email') or '').strip()
+
+        if not email:
+            return
+
+        subject = f"❌ Booking Cancelled - {booking.get('booking_code', 'SwimTrackPro')}"
+
+        html_content = f"""
+        <h2>❌ Booking Cancelled</h2>
+
+        <p>Hello {booking.get('owner_name', 'Swimmer')},</p>
+
+        <p>Your booking for <strong>{booking.get('student', '')}</strong> has been cancelled successfully.</p>
+
+        <p><strong>Booking ID:</strong> {booking.get('booking_code', '')}</p>
+        <p><strong>Package:</strong> {booking.get('package', '')}</p>
+        <p><strong>Start Date:</strong> {booking.get('start_date', '')}</p>
+        <p><strong>Time:</strong> {booking.get('time', '')}</p>
+
+        <p>
+        Book a new session:<br>
+        <a href="https://swimtrackpro.onrender.com">https://swimtrackpro.onrender.com</a>
+        </p>
+
+        <p>Thank you for choosing SwimTrackPro 🏊</p>
+        """
+
+        send_email(
+            subject=subject,
+            html_content=html_content,
+            to_email=email,
+            to_name=booking.get('owner_name', 'Swimmer')
+        )
+
+    except Exception as exc:
+        print(f"Booking deleted email failed: {exc}")
+
+
+# --- Booking Deleted Alert Email to Trainer/Admin ---
+def send_booking_deleted_alert(booking):
+    """Send booking deleted alert email to trainer/admin."""
+    try:
+        subject = f"❌ Booking Cancelled Alert - {booking.get('booking_code', '')}"
+
+        html_content = f"""
+        <h2>🏊 Booking Cancelled Alert</h2>
+
+        <p><strong>Booking ID:</strong> {booking.get('booking_code', '')}</p>
+        <p><strong>Swimmer:</strong> {booking.get('student', '')}</p>
+        <p><strong>Owner:</strong> {booking.get('owner_name', '')}</p>
+        <p><strong>Phone:</strong> {booking.get('owner_phone', '')}</p>
+        <p><strong>Package:</strong> {booking.get('package', '')}</p>
+        <p><strong>Start Date:</strong> {booking.get('start_date', '')}</p>
+        <p><strong>Time:</strong> {booking.get('time', '')}</p>
+        """
+
+        send_email(
+            subject=subject,
+            html_content=html_content
+        )
+
+    except Exception as exc:
+        print(f"Booking deleted alert email failed: {exc}")

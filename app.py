@@ -4,11 +4,15 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from services.email_service import (
     send_booking_notification,
-    send_booking_confirmation_email
+    send_booking_confirmation_email,
+    send_booking_updated_email,
+    send_booking_deleted_email,
+    send_booking_deleted_alert
 )
 from services.pricing_service import calculate_discounted_fee
 from services.booking_engine import (
     generate_booking_id,
+    generate_booking_code,
     generate_recurring_dates,
 )
 from services.makeup_service import (
@@ -1090,6 +1094,11 @@ def book():
 
     booking_id = generate_booking_id(student, date_str, time_str)
 
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+    booking_code = generate_booking_code(cursor)
+    print('GENERATED BOOKING CODE:', booking_code)
+
     # Prevent overlapping bookings within 1 hour
     try:
         booking_time = datetime.strptime(time_str, '%I:%M %p')
@@ -1187,6 +1196,7 @@ def book():
 
     new_booking = {
         "id": booking_id,
+        "booking_code": booking_code,
         "student": student,
         "created_by": session.get('user_name'),
         "start_date": date_str,
@@ -1217,10 +1227,10 @@ def book():
     )
 
     if not existing_swimmer:
-        conn = get_pg_connection()
-        cursor = conn.cursor()
+        swimmer_conn = get_pg_connection()
+        swimmer_cursor = swimmer_conn.cursor()
 
-        cursor.execute('''
+        swimmer_cursor.execute('''
         INSERT INTO students (
             student_name,
             owner_name,
@@ -1232,15 +1242,13 @@ def book():
             session.get('phone')
         ))
 
-        conn.commit()
-        conn.close()
-
-    conn = get_pg_connection()
-    cursor = conn.cursor()
+        swimmer_conn.commit()
+        swimmer_conn.close()
 
     cursor.execute('''
     INSERT INTO bookings (
         id,
+        booking_code,
         student_name,
         created_by,
         start_date,
@@ -1256,9 +1264,10 @@ def book():
         owner_name,
         owner_phone,
         email
-    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     ''', (
         new_booking['id'],
+        new_booking['booking_code'],
         new_booking['student'],
         new_booking['created_by'],
         new_booking['start_date'],
@@ -1278,6 +1287,13 @@ def book():
 
     conn.commit()
     conn.close()
+
+    print('=' * 60)
+    print('BOOKING EMAIL DEBUG')
+    print('Booking ID:', new_booking.get('id'))
+    print('Booking Code:', new_booking.get('booking_code'))
+    print('Email:', new_booking.get('email'))
+    print('=' * 60)
 
     # Send admin notification.
     send_booking_notification(new_booking)
@@ -1317,6 +1333,17 @@ def update_booking(booking_id):
     if not booking:
         flash("Booking not found")
         return redirect(url_for('index'))
+    old_values = {
+        'student': booking.get('student', ''),
+        'start_date': booking.get('start_date', ''),
+        'end_date': booking.get('end_date', ''),
+        'package': booking.get('package', ''),
+        'selected_days': booking.get('selected_days', ''),
+        'location': booking.get('location', ''),
+        'time': booking.get('time', ''),
+        'fee': booking.get('fee', ''),
+        'persons': booking.get('persons', '')
+    }
 
     # Get updated values
     student = request.form['student']
@@ -1524,8 +1551,44 @@ def update_booking(booking_id):
         booking_id
     ))
 
+    changes = []
+
+    field_labels = {
+        'student': 'Swimmer',
+        'start_date': 'Start Date',
+        'end_date': 'End Date',
+        'package': 'Package',
+        'selected_days': 'Selected Days',
+        'location': 'Location',
+        'time': 'Time',
+        'fee': 'Fee',
+        'persons': 'Persons'
+    }
+
+    for field, label in field_labels.items():
+        old_value = str(old_values.get(field, ''))
+        new_value = str(booking.get(field, ''))
+
+        if old_value != new_value:
+            changes.append({
+                'field': label,
+                'old': old_value,
+                'new': new_value
+            })
+
     conn.commit()
     conn.close()
+
+    if changes:
+        print('BOOKING UPDATED EMAIL:', changes)
+
+        # Send updated-booking email to swimmer/owner.
+        send_booking_updated_email(booking, changes)
+
+        # Send trainer/admin notification as well.
+        trainer_booking = dict(booking)
+        trainer_booking['update_changes'] = changes
+        send_booking_notification(trainer_booking)
 
     # flash("Booking updated successfully")
     return redirect('/my-bookings')
@@ -1656,7 +1719,14 @@ def delete_booking(booking_id):
 
     # Load booking details
     cursor.execute('''
-    SELECT student_name, owner_name, owner_phone, start_date, time
+    SELECT booking_code,
+           student_name,
+           owner_name,
+           owner_phone,
+           start_date,
+           time,
+           package,
+           email
     FROM bookings
     WHERE id = %s
     ''', (booking_id,))
@@ -1668,11 +1738,22 @@ def delete_booking(booking_id):
         flash('Booking not found')
         return redirect(url_for('index'))
 
-    deleted_student = row[0]
-    owner_name = row[1]
-    owner_phone = row[2]
-    start_date = row[3]
-    booking_time_str = row[4]
+    booking_info = {
+        'booking_code': row[0] or '',
+        'student': row[1] or '',
+        'owner_name': row[2] or '',
+        'owner_phone': row[3] or '',
+        'start_date': str(row[4]) if row[4] else '',
+        'time': row[5] or '',
+        'package': row[6] or '',
+        'email': row[7] or ''
+    }
+
+    deleted_student = booking_info['student']
+    owner_name = booking_info['owner_name']
+    owner_phone = booking_info['owner_phone']
+    start_date = booking_info['start_date']
+    booking_time_str = booking_info['time']
 
     # Guest users can delete immediately only before the first class starts.
     # After the first class start time, trainer approval is required.
@@ -1722,6 +1803,9 @@ def delete_booking(booking_id):
 
             conn.commit()
             conn.close()
+
+            send_booking_deleted_email(booking_info)
+            send_booking_deleted_alert(booking_info)
 
             flash(f'Booking deleted for {deleted_student}')
             return redirect(url_for('my_bookings_page'))
@@ -1782,6 +1866,9 @@ def delete_booking(booking_id):
 
     conn.commit()
     conn.close()
+
+    send_booking_deleted_email(booking_info)
+    send_booking_deleted_alert(booking_info)
 
     flash(f'Booking deleted for {deleted_student}')
     return redirect(url_for('my_bookings_page'))

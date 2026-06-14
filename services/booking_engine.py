@@ -4,6 +4,26 @@ from datetime import datetime, timedelta
 def generate_booking_id(student, start_date, time_str):
     return hashlib.md5(f"{student}{start_date}{time_str}".encode()).hexdigest()
 
+def generate_booking_code(cursor):
+    cursor.execute(
+        '''
+        SELECT booking_code
+        FROM bookings
+        WHERE booking_code IS NOT NULL
+        ORDER BY CAST(REPLACE(booking_code, 'STP', '') AS INTEGER) DESC
+        LIMIT 1
+        '''
+    )
+
+    row = cursor.fetchone()
+
+    if row and row[0]:
+        next_number = int(row[0].replace('STP', '')) + 1
+    else:
+        next_number = 1
+
+    return f"STP{next_number:06d}"
+
 # --- Recurring Booking Engine ---
 def parse_selected_days(days_string):
     if not days_string:
