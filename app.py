@@ -1598,6 +1598,18 @@ def update_payment_status(booking_id):
         print('Actual Request:', actual_request)
         print('Owner Name:', session.get('user_name'))
         print('Owner Phone:', session.get('phone'))
+        cursor.execute(
+            '''
+            SELECT owner_name, owner_phone, status, payment_request
+            FROM bookings
+            WHERE id = %s
+            ''',
+            (booking_id,)
+        )
+
+        booking_row = cursor.fetchone()
+
+        print('DB Booking Row:', booking_row)
         cursor.execute('''
         UPDATE bookings
         SET
