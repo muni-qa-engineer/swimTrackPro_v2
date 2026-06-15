@@ -113,10 +113,46 @@
                     <span style="font-size:28px;">📅</span>
                   </div>
 
-                  <div class="ms-3 text-start">
-                    <div class="small opacity-75">Total Sessions</div>
-                    <div class="fw-bold fs-1 lh-1">{{ total_sessions }}</div>
-                    <div class="small opacity-75">In Package</div>
+                  <div class="ms-3 text-start w-100">
+
+                    {% if role == 'trainer' %}
+
+                      <div class="small opacity-75 mb-2">Upcoming Sessions</div>
+
+                      {% if trainer_upcoming_slots %}
+                        {% for slot in trainer_upcoming_slots %}
+                        <div class="d-flex justify-content-between align-items-center small mb-1">
+                          <span>🕕 {{ slot.slot }}</span>
+                          <span>👥 {{ slot.count }}</span>
+                        </div>
+                        {% endfor %}
+
+                        {% if trainer_remaining_slots > 0 %}
+                        <div class="small opacity-75 mt-1">
+                          +{{ trainer_remaining_slots }} more...
+                        </div>
+                        {% endif %}
+                      {% else %}
+                        <div class="small">No Upcoming Sessions</div>
+                      {% endif %}
+
+                    {% else %}
+
+                      <div class="small opacity-75">Next Session</div>
+
+                      <div class="small opacity-90 mt-1">
+                        {{ next_session_date if next_session_date else '--' }}
+                        {% if next_session_time and next_session_time != '--' %}
+                          • {{ next_session_time }}
+                        {% endif %}
+                      </div>
+
+                      <div class="fw-bold mt-1">
+                        🏊 {{ next_session_name if next_session_name else '--' }}
+                      </div>
+
+                    {% endif %}
+
                   </div>
                 </div>
             </div>

@@ -506,25 +506,68 @@ def index():
             'from one place.'
         )
 
-    upcoming_session_text = ''
+    next_session_name = '--'
+    next_session_date = '--'
+    next_session_time = '--'
 
-    future_dates = []
+    trainer_upcoming_slots = []
+    trainer_remaining_slots = 0
+
+    upcoming_sessions = []
 
     for booking in user_bookings:
+        booking_time = (booking.get('time') or '').strip()
+
         for session_date in booking.get('calendar_dates', []):
             try:
-                dt = datetime.strptime(session_date, '%Y-%m-%d').date()
+                session_datetime = datetime.strptime(
+                    f"{session_date} {booking_time}",
+                    '%Y-%m-%d %I:%M %p'
+                )
 
-                if dt >= ist_now.date():
-                    future_dates.append(dt)
+                current_time = ist_now.replace(tzinfo=None)
+                next_24_hours = current_time + timedelta(hours=24)
+
+                if current_time <= session_datetime <= next_24_hours:
+                    upcoming_sessions.append({
+                        'datetime': session_datetime,
+                        'student': booking.get('student', '--'),
+                        'time': booking_time
+                    })
             except Exception:
-                pass
+                continue
 
-    if future_dates:
-        next_session = min(future_dates)
-        upcoming_session_text = (
-            f'Next Session: {next_session.strftime("%d %b %Y")}'
+    if current_role == 'trainer':
+        slot_counts = {}
+
+        for upcoming_session in upcoming_sessions:
+            slot_key = upcoming_session['datetime'].strftime('%I:%M %p')
+            slot_counts[slot_key] = slot_counts.get(slot_key, 0) + 1
+
+        sorted_slots = sorted(
+            slot_counts.items(),
+            key=lambda x: datetime.strptime(x[0], '%I:%M %p')
         )
+
+        trainer_remaining_slots = max(len(sorted_slots) - 3, 0)
+
+        trainer_upcoming_slots = [
+            {
+                'slot': slot,
+                'count': count
+            }
+            for slot, count in sorted_slots[:3]
+        ]
+
+    elif upcoming_sessions:
+        next_session = min(
+            upcoming_sessions,
+            key=lambda x: x['datetime']
+        )
+
+        next_session_name = next_session['student']
+        next_session_date = next_session['datetime'].strftime('%d %b')
+        next_session_time = next_session['time']
 
     # -----------------------------
     # V0039.4 Real Payment Summary Data
@@ -699,8 +742,12 @@ def index():
         calendar_days=calendar_days,
         notification_count=notification_count,
         hero_message=hero_message,
-        upcoming_session_text=upcoming_session_text,
         current_date_display=current_date_display,
+        next_session_name=next_session_name,
+        next_session_date=next_session_date,
+        next_session_time=next_session_time,
+        trainer_upcoming_slots=trainer_upcoming_slots,
+        trainer_remaining_slots=trainer_remaining_slots,
         active_package_name=active_package_name,
         active_package_valid_till=active_package_valid_till,
         package_status=package_status,
