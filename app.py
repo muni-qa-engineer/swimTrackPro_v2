@@ -695,6 +695,7 @@ def index():
         makeup_sessions=makeup_sessions,
         location_suggestions=location_suggestions,
         current_month_name=current_month_name,
+        today_day=today_day,
         calendar_days=calendar_days,
         notification_count=notification_count,
         hero_message=hero_message,

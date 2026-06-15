@@ -71,9 +71,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
             dayBookings.slice(0, 3).forEach(b => {
                 bookingsHtml += `
-                    <div class="mt-1 d-flex justify-content-between align-items-center" style="font-size:12px;line-height:1.2;">
-                        <span class="text-truncate" style="max-width:65%;font-weight:600;">🏊 ${b.student}</span>
-                        <span class="text-muted" style="font-size:11px;">${b.time}</span>
+                    <div class="calendar-booking-chip">
+                        <div class="calendar-booking-name">
+                            <span>🏊</span>
+                            <span>${b.student}</span>
+                        </div>
+                        <div class="calendar-booking-time">${b.time}</div>
                     </div>`;
             });
 

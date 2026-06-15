@@ -199,6 +199,7 @@
 
         <div class="text-center mb-3">
           <h5 class="fw-bold mb-0">{{ current_month_name }}</h5>
+          <small class="text-muted">Calendar redesign in progress</small>
         </div>
 
         <div class="mini-calendar">
@@ -215,22 +216,11 @@
 
           <div class="calendar-grid">
 
-            {% for day in calendar_days %}
-
-              {% if not day.day %}
-                <div class="calendar-day empty"></div>
-
-              {% else %}
-                <div class="calendar-day
-                  {% if day.is_today %}today{% endif %}
-                  {% if day.is_booked %} booked{% endif %}
-                  {% if day.is_makeup %} makeup{% endif %}">
-                  {{ day.day }}
-                </div>
-              {% endif %}
-
+            {% for day in range(1, 31) %}
+            <div class="calendar-day {% if day == today_day %}today{% endif %}">
+              {{ day }}
+            </div>
             {% endfor %}
-
           </div>
 
         </div>
