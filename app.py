@@ -539,24 +539,26 @@ def index():
 
     if current_role == 'trainer':
         slot_counts = {}
-
         for upcoming_session in upcoming_sessions:
-            slot_key = upcoming_session['datetime'].strftime('%I:%M %p')
+            date_text = upcoming_session['datetime'].strftime('%d %b')
+            time_text = upcoming_session['datetime'].strftime('%I:%M %p')
+            slot_key = (date_text, time_text)
             slot_counts[slot_key] = slot_counts.get(slot_key, 0) + 1
-
         sorted_slots = sorted(
             slot_counts.items(),
-            key=lambda x: datetime.strptime(x[0], '%I:%M %p')
+            key=lambda x: datetime.strptime(
+                f"{x[0][0]} {x[0][1]}",
+                "%d %b %I:%M %p"
+            )
         )
-
         trainer_remaining_slots = max(len(sorted_slots) - 3, 0)
-
         trainer_upcoming_slots = [
             {
-                'slot': slot,
+                'date': date_text,
+                'slot': time_text,
                 'count': count
             }
-            for slot, count in sorted_slots[:3]
+            for (date_text, time_text), count in sorted_slots[:3]
         ]
 
     elif upcoming_sessions:

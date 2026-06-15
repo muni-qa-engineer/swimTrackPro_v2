@@ -122,7 +122,11 @@
                       {% if trainer_upcoming_slots %}
                         {% for slot in trainer_upcoming_slots %}
                         <div class="d-flex justify-content-between align-items-center small mb-1">
-                          <span>🕕 {{ slot.slot }}</span>
+                          <span>
+                            📅 {{ slot.date if slot.date is defined else '--' }}
+                            •
+                            🕕 {{ slot.slot }}
+                          </span>
                           <span>👥 {{ slot.count }}</span>
                         </div>
                         {% endfor %}
