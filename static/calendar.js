@@ -58,30 +58,47 @@ document.addEventListener('DOMContentLoaded', function () {
             calendarGrid.appendChild(emptyCell);
         }
 
+        const today = new Date();
+
         for (let day = 1; day <= totalDays; day++) {
             const cell = document.createElement('div');
-            cell.className = 'calendar-day-card border rounded shadow-sm bg-white p-2';
-            cell.style.minHeight = '100px';
 
             const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
             const dayBookings = sessionMap[dateKey] || [];
 
+            const isToday =
+                day === today.getDate() &&
+                month === today.getMonth() &&
+                year === today.getFullYear();
+
+            cell.className = isToday
+                ? 'calendar-day-card border border-primary rounded shadow-sm p-2 bg-primary-subtle'
+                : 'calendar-day-card border rounded shadow-sm bg-white p-2';
+
+            cell.style.minHeight = '100px';
+
             let bookingsHtml = '';
 
-            dayBookings.slice(0, 3).forEach(b => {
+            if (dayBookings.length > 0) {
                 bookingsHtml += `
-                    <div class="calendar-booking-chip">
-                        <div class="calendar-booking-name">
-                            <span>🏊</span>
-                            <span>${b.student}</span>
-                        </div>
-                        <div class="calendar-booking-time">${b.time}</div>
-                    </div>`;
-            });
+                    <div class="calendar-session-count">
+                        ${dayBookings.length} Session${dayBookings.length > 1 ? 's' : ''}
+                    </div>
+                    <div class="calendar-bookings-container">`;
 
-            if (dayBookings.length > 3) {
-                bookingsHtml += `<div class="small text-muted mt-1">+${dayBookings.length - 3} more</div>`;
+                dayBookings.forEach(b => {
+                    bookingsHtml += `
+                        <div class="calendar-booking-chip">
+                            <div class="calendar-booking-name">
+                                <span>🏊</span>
+                                <span>${b.student}</span>
+                            </div>
+                            <div class="calendar-booking-time">${b.time}</div>
+                        </div>`;
+                });
+
+                bookingsHtml += '</div>';
             }
 
             const dayLabel = new Date(year, month, day)
@@ -90,10 +107,10 @@ document.addEventListener('DOMContentLoaded', function () {
             cell.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <div class="fw-bold text-primary" style="font-size:18px;line-height:1;">${day}</div>
-                    <div class="text-muted small fw-bold">${dayLabel}</div>
+                    <div class="text-muted small fw-bold ${dayLabel === 'Sat' ? 'text-warning' : dayLabel === 'Sun' ? 'text-danger' : ''}">${dayLabel}</div>
                 </div>
-                ${bookingsHtml || '<div class="text-muted" style="font-size:12px;">No Bookings</div>'}
-            `;
+                ${bookingsHtml}
+            `;  
 
             calendarGrid.appendChild(cell);
         }

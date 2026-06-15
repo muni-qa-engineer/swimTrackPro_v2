@@ -354,6 +354,10 @@
         phoneInput.required = false;
         passwordInput.required = true;
 
+        setTimeout(() => {
+            nameInput.focus();
+        }, 50);
+
         const loginButtonLabel = document.querySelector('.login-btn span:last-child');
         if (loginButtonLabel) {
             loginButtonLabel.textContent = 'Login as Trainer';
@@ -388,6 +392,10 @@
 
         phoneInput.required = true;
         passwordInput.required = false;
+
+        setTimeout(() => {
+            nameInput.focus();
+        }, 50);
 
         const loginButtonLabel = document.querySelector('.login-btn span:last-child');
         if (loginButtonLabel) {
@@ -475,6 +483,13 @@ if (loginForm) {
         }
     });
 }
+// Auto-focus username on initial page load
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        nameInput.focus();
+    }, 100);
+});
+
 // V0038.0 - Mobile Pull To Refresh (Login Page Only)
 let pullStartY = 0;
 let pullCurrentY = 0;
