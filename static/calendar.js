@@ -19,7 +19,42 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const sessionMap = {};
 
+        // Debug: log all bookings loaded for the calendar
+        console.log('Calendar bookings loaded:', bookings);
+
         bookings.forEach(booking => {
+            // New booking structure stores generated session dates in calendar_dates
+            if (Array.isArray(booking.calendar_dates) && booking.calendar_dates.length > 0) {
+                booking.calendar_dates.forEach(dateKey => {
+                    if (!sessionMap[dateKey]) {
+                        sessionMap[dateKey] = [];
+                    }
+
+                    sessionMap[dateKey].push({
+                        student: booking.student || booking.student_name || booking.owner_name || 'Swimmer',
+                        time: booking.time || booking.session_time || ''
+                    });
+                });
+
+                return;
+            }
+
+            // Support both recurring-package bookings and generated session dates
+            if (booking.session_date) {
+                const dateKey = booking.session_date;
+
+                if (!sessionMap[dateKey]) {
+                    sessionMap[dateKey] = [];
+                }
+
+                sessionMap[dateKey].push({
+                    student: booking.student || booking.student_name || 'Swimmer',
+                    time: booking.time || booking.session_time || ''
+                });
+
+                return;
+            }
+
             const startDate = new Date(booking.start_date);
             const endDate = new Date(booking.end_date || booking.start_date);
 
@@ -44,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     sessionMap[dateKey].push({
                         student: booking.student || booking.student_name || 'Swimmer',
-                        time: booking.time || ''
+                        time: booking.time || booking.session_time || ''
                     });
                 }
 

@@ -896,6 +896,16 @@ def payments_page():
     current_phone = session.get('phone')
     current_role = session.get('role', 'guest')
 
+    # Restore booking filtering before payment reminder processing
+    if current_role == 'trainer':
+        user_bookings = data.get('bookings', [])
+    else:
+        user_bookings = [
+            b for b in data.get('bookings', [])
+            if (b.get('owner_name') or '').strip().lower() == current_user
+            and b.get('owner_phone') == current_phone
+        ]
+
     if current_role == 'trainer':
         reminder_conn = get_pg_connection()
         reminder_cursor = reminder_conn.cursor()
