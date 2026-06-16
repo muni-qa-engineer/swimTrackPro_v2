@@ -19,8 +19,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const sessionMap = {};
 
-        // Debug: log all bookings loaded for the calendar
-        console.log('Calendar bookings loaded:', bookings);
+        // // Debug: log all bookings loaded for the calendar
+        // console.log('Calendar bookings loaded:', bookings);
 
         bookings.forEach(booking => {
             // New booking structure stores generated session dates in calendar_dates
@@ -30,9 +30,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         sessionMap[dateKey] = [];
                     }
 
+                    const dateIndex = booking.calendar_dates.indexOf(dateKey);
+                    const completedCount = booking.completed_classes || 0;
+
                     sessionMap[dateKey].push({
                         student: booking.student || booking.student_name || booking.owner_name || 'Swimmer',
-                        time: booking.time || booking.session_time || ''
+                        time: booking.time || booking.session_time || '',
+                        completed: dateIndex < completedCount
                     });
                 });
 
@@ -124,12 +128,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 dayBookings.forEach(b => {
                     bookingsHtml += `
-                        <div class="calendar-booking-chip">
+                        <div class="calendar-booking-chip ${b.completed ? 'completed-session' : ''}">
                             <div class="calendar-booking-name">
                                 <span>🏊</span>
-                                <span>${b.student}</span>
+                                <span class="${b.completed ? 'completed-text' : ''}">${b.student}</span>
                             </div>
-                            <div class="calendar-booking-time">${b.time}</div>
+                            <div class="calendar-booking-time ${b.completed ? 'completed-text' : ''}">${b.time}</div>
                         </div>`;
                 });
 
