@@ -982,6 +982,26 @@ def login():
         ):
             session['user_name'] = 'Trainer'
             session['role'] = 'trainer'
+
+            conn = get_pg_connection()
+            cursor = conn.cursor()
+
+            cursor.execute("""
+INSERT INTO user_activity (
+    user_name,
+    phone,
+    role
+)
+VALUES (%s, %s, %s)
+""", (
+    'Trainer',
+    '',
+    'trainer'
+))
+
+            conn.commit()
+            conn.close()
+
             return redirect(url_for('index'))
 
         flash('Invalid trainer credentials')
@@ -1033,6 +1053,25 @@ def login():
         session['role'] = 'guest'
         session['user_name'] = normalized_name
         session['phone'] = phone
+
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+INSERT INTO user_activity (
+    user_name,
+    phone,
+    role
+)
+VALUES (%s, %s, %s)
+""", (
+    normalized_name,
+    phone,
+    'guest'
+))
+
+        conn.commit()
+        conn.close()
 
         return redirect(url_for('index'))
 
