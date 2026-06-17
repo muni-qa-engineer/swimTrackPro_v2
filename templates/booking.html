@@ -3,6 +3,8 @@
 {% block title %}Book Session - SwimTrackPro{% endblock %}
 
 {% block content %}
+
+{% include 'components/page_header.html' %}
 <div class="container-fluid py-3 px-2 px-md-4">
 
   <div class="card shadow-sm border-0 mb-3">
@@ -10,9 +12,9 @@
 
       <h4 class="mb-0 fw-bold text-dark">📝 Book a Session</h4>
 
-      <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+      <!-- <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
         ← Back
-      </a>
+      </a> -->
 
     </div>
   </div>
@@ -123,8 +125,15 @@
         <span
             id="monthlyPackageHint"
             class="text-muted small ms-2"
-            style="display: none;">
-            (Monthly: Choose 2 or 3 days/week)
+            style="display:none;">
+            -> Monthly: Choose 2 or 3 days/week
+        </span>
+
+        <span
+            id="singleDemoHint"
+            class="text-muted small ms-2"
+            style="display:none;">
+            -> Demo & Single: Weekday is automatically selected from Start Date
         </span>
     </label>
 
@@ -324,6 +333,30 @@
     'V0044.0 Live Conflict Validation Loaded:',
     window.bookingsData
   );
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const packageSelect = document.getElementById('packageSelect');
+    const monthlyPackageHint = document.getElementById('monthlyPackageHint');
+    const singleDemoHint = document.getElementById('singleDemoHint');
+
+    function toggleMonthlyHint() {
+        if (!packageSelect || !monthlyPackageHint) return;
+
+        monthlyPackageHint.style.display =
+            packageSelect.value === 'Monthly' ? 'inline' : 'none';
+
+        if (singleDemoHint) {
+            singleDemoHint.style.display =
+                (packageSelect.value === 'Demo' || packageSelect.value === 'Single')
+                    ? 'inline'
+                    : 'none';
+        }
+    }
+
+    toggleMonthlyHint();
+    packageSelect.addEventListener('change', toggleMonthlyHint);
+});
 </script>
 <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
 {% endblock %}
