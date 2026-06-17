@@ -185,6 +185,7 @@
                             id="personsInput"
                             class="form-control"
                             min="1"
+                            max="5"
                             value="{{ booking.persons or 1 }}"
                         >
                     </div>
@@ -346,6 +347,19 @@ function updateEditBookingRules() {
         }
         if (pkg.value === 'Custom' && endDateInput) {
             endDateInput.readOnly = false;
+
+            const maxEndDate = new Date(selectedDate);
+            maxEndDate.setDate(maxEndDate.getDate() + 59);
+
+            const yyyy = maxEndDate.getFullYear();
+            const mm = String(maxEndDate.getMonth() + 1).padStart(2, '0');
+            const dd = String(maxEndDate.getDate()).padStart(2, '0');
+
+            endDateInput.max = `${yyyy}-${mm}-${dd}`;
+
+            if (endDateInput.value && endDateInput.value > endDateInput.max) {
+                endDateInput.value = endDateInput.max;
+            }
         }
     }
     updateEditBookingFee();
@@ -360,9 +374,13 @@ function updateEditBookingFee() {
 
     // Maximum 5 persons allowed.
     if (persons > 5) {
-        feeInput.value = '';
-        feeInput.placeholder = 'Discuss with your trainer';
-        return;
+        alert('Maximum 5 persons allowed.');
+
+        if (personsInput) {
+            personsInput.value = 5;
+        }
+
+        return updateEditBookingFee();
     }
 
     // Discount rules for all package types.
@@ -449,18 +467,45 @@ function updateEditBookingFee() {
             current.setDate(current.getDate() + 1);
         }
 
-        // More than 14 sessions requires trainer discussion.
-        if (sessionCount > 14) {
-            feeInput.value = '';
-            feeInput.placeholder = 'Discuss with your trainer';
-            return;
-        }
+        const durationDays =
+            Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
 
-        // 12 to 14 sessions are capped at monthly equivalent.
-        if (sessionCount >= 12) {
-            actualAmount = 9000 * persons;
-        } else {
+        const monthlyCustomFees = {
+            1: 3000,
+            2: 6000,
+            3: 9000,
+            4: 11000,
+            5: 12000
+        };
+
+        const twoMonthCustomFees = {
+            1: 6000,
+            2: 12000,
+            3: 18000,
+            4: 22000,
+            5: 24000
+        };
+
+        const selectedDaysPerWeek = checkedDays.length;
+
+        if (durationDays >= 1 && durationDays <= 23) {
             actualAmount = sessionCount * 750 * persons;
+        }
+        else if (durationDays >= 24 && durationDays <= 30) {
+            actualAmount =
+                (monthlyCustomFees[selectedDaysPerWeek] || 0) * persons;
+        }
+        else if (durationDays >= 31 && durationDays <= 53) {
+            actualAmount = sessionCount * 650 * persons;
+        }
+        else if (durationDays >= 54 && durationDays <= 60) {
+            actualAmount =
+                (twoMonthCustomFees[selectedDaysPerWeek] || 0) * persons;
+        }
+        else {
+            feeInput.value = '';
+            feeInput.placeholder = 'Maximum 60 days allowed';
+            return;
         }
     }
 
@@ -482,6 +527,12 @@ function validateSelectedDaysLimit() {
         alert('Monthly package allows maximum 3 class days');
 
         checked[checked.length - 1].checked = false;
+    }
+    if (pkg.value === 'Custom' && checked.length > 5) {
+
+    alert('Maximum 5 class days allowed for Custom package');
+
+    checked[checked.length - 1].checked = false;
     }
 }
 

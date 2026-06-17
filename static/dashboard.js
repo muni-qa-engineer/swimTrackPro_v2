@@ -183,8 +183,8 @@ function createToast(message, type = 'success', duration = 2000) {
       return;
     }
 
-    if (pkg.value === 'Custom' && selected.length > 7) {
-      alert('Custom package allows maximum 7 class days');
+    if (pkg.value === 'Custom' && selected.length > 5) {
+      alert('Maximum 5 class days allowed for Custom package');
 
       const lastChecked = selected[selected.length - 1];
 
@@ -203,11 +203,14 @@ function createToast(message, type = 'success', duration = 2000) {
       ? selected.join(', ')
       : 'No days selected';
 
-    // Maximum 5 persons allowed.
     if (persons > 5) {
-      feeInput.value = '';
-      feeInput.placeholder = 'Discuss with your trainer';
-      return;
+      alert('Maximum 5 persons allowed.');
+
+      if (personsInput) {
+        personsInput.value = 5;
+      }
+
+      return updateSelectedDays();
     }
 
     const discountMap = {
@@ -254,6 +257,9 @@ function createToast(message, type = 'success', duration = 2000) {
       const start = new Date(startDateInput.value + 'T00:00:00');
       const end = new Date(endDateInput.value + 'T00:00:00');
 
+      const durationDays =
+        Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
       const dayMap = {
         'Sunday': 0,
         'Monday': 1,
@@ -276,18 +282,42 @@ function createToast(message, type = 'success', duration = 2000) {
         current.setDate(current.getDate() + 1);
       }
 
-      // More than 14 sessions requires trainer discussion.
-      if (totalClasses > 14) {
-        feeInput.value = '';
-        feeInput.placeholder = 'Discuss with your trainer';
-        return;
-      }
+      const monthlyCustomFees = {
+        1: 3000,
+        2: 6000,
+        3: 9000,
+        4: 11000,
+        5: 12000
+      };
 
-      // 12 to 14 sessions are capped at monthly equivalent.
-      if (totalClasses >= 12) {
-        actualAmount = 9000 * persons;
-      } else {
+      const twoMonthCustomFees = {
+        1: 6000,
+        2: 12000,
+        3: 18000,
+        4: 22000,
+        5: 24000
+      };
+
+      const selectedDaysPerWeek = selected.length;
+
+      if (durationDays >= 1 && durationDays <= 23) {
         actualAmount = totalClasses * 750 * persons;
+      }
+      else if (durationDays >= 24 && durationDays <= 30) {
+        actualAmount =
+          (monthlyCustomFees[selectedDaysPerWeek] || 0) * persons;
+      }
+      else if (durationDays >= 31 && durationDays <= 53) {
+        actualAmount = totalClasses * 650 * persons;
+      }
+      else if (durationDays >= 54 && durationDays <= 60) {
+        actualAmount =
+          (twoMonthCustomFees[selectedDaysPerWeek] || 0) * persons;
+      }
+      else {
+        feeInput.value = '';
+        feeInput.placeholder = 'Maximum 60 days allowed';
+        return;
       }
     }
 
@@ -375,6 +405,21 @@ function handleStartDateChange() {
   updateAllowedDays();
   generateTimeSlots();
   checkLocationConflict();
+
+  if (pkg && pkg.value === 'Custom' && startDateInput && endDateInput) {
+    const start = new Date(startDateInput.value + 'T00:00:00');
+
+    if (!isNaN(start)) {
+      const maxEndDate = new Date(start);
+      maxEndDate.setDate(maxEndDate.getDate() + 59);
+
+      endDateInput.max = formatDate(maxEndDate);
+
+      if (endDateInput.value && endDateInput.value > endDateInput.max) {
+        endDateInput.value = endDateInput.max;
+      }
+    }
+  }
 }
 
 const endDateInput = document.querySelector('input[name="end_date"]');

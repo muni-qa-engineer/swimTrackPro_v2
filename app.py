@@ -1134,7 +1134,12 @@ def book():
     # Enhanced validation and logic for booking
     student = request.form['student']
     date_str = request.form['date']
-    time_str = request.form['time']
+    time_str = (request.form.get('time') or '').strip()
+
+    if not time_str:
+        print('DEBUG BOOK FORM KEYS:', list(request.form.keys()))
+        flash('Please select a valid time slot before confirming booking.', 'warning')
+        return redirect('/booking')
     email = (request.form.get('email') or '').strip()
     package = request.form.get('package', 'Single')
     end_date = request.form.get('end_date', date_str)
@@ -1164,6 +1169,13 @@ def book():
 
     if package == 'Demo':
         fee = 500 * int(persons)
+
+    # V0044.0 - Custom package fee is calculated by the frontend fee engine.
+    if package == 'Custom':
+        try:
+            fee = int(float(request.form.get('fee', 0) or 0))
+        except Exception:
+            fee = 0
 
     # Allow manual fee override only for admin users.
     # Guest users always use the system-calculated fee.
@@ -1453,7 +1465,13 @@ def update_booking(booking_id):
     # Get updated values
     student = request.form['student']
     date_str = request.form['date']
-    time_str = request.form['time']
+    time_str = (request.form.get('time') or '').strip()
+
+    if not time_str:
+        print('DEBUG UPDATE FORM KEYS:', list(request.form.keys()))
+        flash('Please select a valid time slot before saving changes.', 'warning')
+        return redirect(url_for('edit_booking', booking_id=booking_id))
+
     package = request.form.get('package', 'Single')
     end_date = request.form.get('end_date', date_str)
     persons = request.form.get('persons', 1)
@@ -1474,6 +1492,13 @@ def update_booking(booking_id):
     fee = calculate_discounted_fee(package, persons, session_count)
     if package == 'Demo':
         fee = 500 * int(persons)
+
+    # V0044.0 - Custom package fee is calculated by the frontend fee engine.
+    if package == 'Custom':
+        try:
+            fee = int(float(request.form.get('fee', 0) or 0))
+        except Exception:
+            fee = 0
 
     # Fee was already calculated above using calculate_discounted_fee().
     # Do not recalculate here, otherwise Edit Booking can overwrite the
