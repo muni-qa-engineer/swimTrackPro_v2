@@ -1131,18 +1131,17 @@ function checkLocationConflict() {
   }
 }
 // ---------- SCROLL POSITION HELPERS ----------
+// V0043.x Fix
+// Always open pages from the top.
+// Previous scroll restoration caused Dashboard,
+// Booking, My Bookings and other pages to reopen
+// in the middle of the page after navigation.
 function saveScrollPosition() {
-  sessionStorage.setItem('dashboardScrollY', window.scrollY);
+  // Disabled intentionally.
 }
 
 function restoreScrollPosition() {
-  const savedScroll = sessionStorage.getItem('dashboardScrollY');
-
-  if (savedScroll !== null) {
-    setTimeout(() => {
-      window.scrollTo(0, parseInt(savedScroll));
-    }, 100);
-  }
+  window.scrollTo(0, 0);
 }
 
 
@@ -1240,6 +1239,7 @@ if (bookingForm) {
 
 window.addEventListener('load', () => {
   restoreScrollPosition();
+  sessionStorage.removeItem('dashboardScrollY');
   const swimmerAdded = localStorage.getItem('swimmerAdded');
   const urlParams = new URLSearchParams(window.location.search);
   const swimmerExists = urlParams.get('swimmer_exists');
