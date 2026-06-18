@@ -211,6 +211,30 @@
                                 <option value="{{ location }}"></option>
                             {% endfor %}
                         </datalist>
+
+                        <!-- TEST VERSION UI: Map Picker & Current Location -->
+                        <div class="d-flex gap-2 mt-2 flex-wrap">
+                            <button
+                                type="button"
+                                id="chooseOnMapBtn"
+                                class="btn btn-outline-primary btn-sm">
+                                🗺️ Choose on Map
+                            </button>
+                            <button
+                                type="button"
+                                id="currentLocationBtn"
+                                class="btn btn-outline-secondary btn-sm">
+                                📍 Current Location
+                            </button>
+                        </div>
+                        <div
+                            id="mapFeatureComingSoon"
+                            class="small text-muted mt-2"
+                            style="display:none;">
+                            Test Branch: Map Picker integration in progress.
+                        </div>
+                        <!-- End TEST VERSION UI -->
+
                     <div
                         id="locationConflictWarning"
                         class="alert alert-warning mt-2 mb-0"
@@ -292,6 +316,34 @@
 
 </div>
 
+<!-- Map Picker Modal -->
+<div class="modal fade" id="mapPickerModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">🗺️ Choose Location</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body p-0">
+        <div id="mapPicker" style="height:400px;"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+
+        <button type="button" id="useSelectedLocationBtn" class="btn btn-primary">
+          Use Selected Location
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <!-- Mobile Bottom Navigation -->
 <div class="mobile-bottom-nav d-lg-none">
 
@@ -347,6 +399,8 @@
     window.bookingsData
   );
 </script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const packageSelect = document.getElementById('packageSelect');
@@ -382,6 +436,140 @@ document.addEventListener('DOMContentLoaded', function() {
 
     toggleMonthlyHint();
     packageSelect.addEventListener('change', toggleMonthlyHint);
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    const chooseOnMapBtn = document.getElementById('chooseOnMapBtn');
+    const currentLocationBtn = document.getElementById('currentLocationBtn');
+    const mapFeatureComingSoon = document.getElementById('mapFeatureComingSoon');
+    const locationInput = document.querySelector('input[name="location"]');
+
+    let map;
+    let selectedLat = null;
+    let selectedLng = null;
+    let selectedMarker = null;
+
+    if (chooseOnMapBtn) {
+        chooseOnMapBtn.addEventListener('click', function() {
+
+            const modal = new bootstrap.Modal(
+                document.getElementById('mapPickerModal')
+            );
+
+            modal.show();
+
+            setTimeout(() => {
+
+                if (!map) {
+
+                    map = L.map('mapPicker').setView([17.4435, 78.3772], 12);
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(map);
+
+                    map.on('click', function(e) {
+
+                        selectedLat = e.latlng.lat.toFixed(6);
+                        selectedLng = e.latlng.lng.toFixed(6);
+
+                        if (selectedMarker) {
+                            map.removeLayer(selectedMarker);
+                        }
+
+                        selectedMarker = L.marker(e.latlng).addTo(map);
+                    });
+
+                } else {
+                    map.invalidateSize();
+                }
+
+            }, 300);
+        });
+    }
+
+    if (currentLocationBtn) {
+        currentLocationBtn.addEventListener('click', function() {
+
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by this browser.');
+                return;
+            }
+
+            currentLocationBtn.disabled = true;
+            currentLocationBtn.innerHTML = '⏳ Getting Location...';
+
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+
+                    const latitude = position.coords.latitude.toFixed(6);
+                    const longitude = position.coords.longitude.toFixed(6);
+
+                    if (locationInput) {
+                        locationInput.value = `${latitude}, ${longitude}`;
+                    }
+
+                    if (mapFeatureComingSoon) {
+                        mapFeatureComingSoon.style.display = 'block';
+                        mapFeatureComingSoon.innerText = `📍 Location captured: ${latitude}, ${longitude}`;
+                    }
+
+                    currentLocationBtn.disabled = false;
+                    currentLocationBtn.innerHTML = '📍 Current Location';
+                },
+                function(error) {
+
+                    let message = 'Unable to fetch location.';
+
+                    if (error.code === 1) {
+                        message = 'Location permission denied.';
+                    } else if (error.code === 2) {
+                        message = 'Location unavailable.';
+                    } else if (error.code === 3) {
+                        message = 'Location request timed out.';
+                    }
+
+                    alert(message);
+
+                    currentLocationBtn.disabled = false;
+                    currentLocationBtn.innerHTML = '📍 Current Location';
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        });
+    }
+
+    const useSelectedLocationBtn = document.getElementById('useSelectedLocationBtn');
+
+    if (useSelectedLocationBtn) {
+
+        useSelectedLocationBtn.addEventListener('click', function() {
+
+            if (!selectedLat || !selectedLng) {
+                alert('Please select a location on the map.');
+                return;
+            }
+
+            if (locationInput) {
+                locationInput.value = `${selectedLat}, ${selectedLng}`;
+            }
+
+            if (mapFeatureComingSoon) {
+                mapFeatureComingSoon.style.display = 'block';
+                mapFeatureComingSoon.innerText = `🗺️ Selected: ${selectedLat}, ${selectedLng}`;
+            }
+
+            bootstrap.Modal.getInstance(
+                document.getElementById('mapPickerModal')
+            ).hide();
+        });
+    }
 });
 </script>
 <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
