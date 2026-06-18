@@ -142,18 +142,32 @@
 
                     {% else %}
 
-                      <div class="small opacity-75">Next Session</div>
+                      {% if next_session_name and next_session_name != '--' %}
 
-                      <div class="small opacity-90 mt-1">
-                        {{ next_session_date if next_session_date else '--' }}
-                        {% if next_session_time and next_session_time != '--' %}
-                          • {{ next_session_time }}
-                        {% endif %}
-                      </div>
+                        <div class="small opacity-75">Next Session</div>
 
-                      <div class="fw-bold mt-1">
-                        🏊 {{ next_session_name if next_session_name else '--' }}
-                      </div>
+                        <div class="small opacity-90 mt-1">
+                          {{ next_session_date if next_session_date else '--' }}
+                          {% if next_session_time and next_session_time != '--' %}
+                            • {{ next_session_time }}
+                          {% endif %}
+                        </div>
+
+                        <div class="fw-bold mt-1">
+                          🏊 {{ next_session_name }}
+                        </div>
+
+                      {% else %}
+
+                        <div class="fw-bold">
+                          No Class Today
+                        </div>
+
+                        <div class="small opacity-75 mt-1">
+                          No upcoming sessions scheduled.
+                        </div>
+
+                      {% endif %}
 
                     {% endif %}
 
