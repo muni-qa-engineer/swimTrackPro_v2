@@ -667,13 +667,16 @@ function updatePaymentTable() {
     ${isTrainer ? `
     ${isPendingVerification ? 'Awaiting Decision' : 'Verified'}
   ` : `
-    ${isPaid ? 'Verified' : isPendingVerification ? 'Waiting Trainer Approval' : `
-      <button
-        type="button"
-        class="btn btn-sm btn-success payment-status-update-btn"
-        data-booking-id="${booking.id || ''}">
-        Update Payment Status
-      </button>
+    ${isPaid ? `
+      <span class="badge bg-success">✅ Paid</span>
+    ` : isPendingVerification ? `
+      <span class="badge bg-warning text-dark">⏳ Pending</span>
+    ` : `
+      <a
+        class="btn btn-sm btn-success"
+        href="upi://pay?pa=${encodeURIComponent(window.upiId || '')}&pn=${encodeURIComponent(window.accountHolderName || '')}&am=${booking.fee || 0}&cu=INR&tn=SwimTrackPro Payment&tr=${booking.id || ''}">
+        💳 Pay Now
+      </a>
     `}
   `}
 </td>
