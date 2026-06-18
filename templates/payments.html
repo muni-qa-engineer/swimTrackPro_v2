@@ -89,16 +89,19 @@
                   <div class="alert alert-warning mt-3 mb-0">
                     ⚠️ After payment, change the status to <strong>Pending Verification</strong> and click <strong>Update Payment Status</strong>.
                   </div>
-                  <div class="small text-muted mt-2">
-                    Click the QR Code or Open UPI App button on mobile devices.
-                  </div>
+                    <div class="small text-muted mt-2">
+                      Click the QR Code or Open UPI App button on mobile devices.
+                    </div>
+                    <div class="small text-success mt-1">
+                      Payment reference: SwimTrackPro Payment
+                    </div>
                 </div>
                 <div class="col-md-4 text-center">
                   <h6 class="fw-bold mb-3">QR Code</h6>
                   <div class="border rounded p-2 bg-light text-center">
 
                     <a id="upiPaymentLink"
-                       href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name }}"
+                       href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name }}&tn=SwimTrackPro%20Payment&cu=INR"
                        title="Open UPI App">
 
                       <img src="{{ url_for('static', filename='images/QR_Code.jpeg') }}"
@@ -111,7 +114,7 @@
                     <div class="mt-2">
                       <a id="upiPaymentBtn"
                          class="btn btn-success btn-sm"
-                         href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name }}">
+                         href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name }}&tn=SwimTrackPro%20Payment&cu=INR">
                          Open UPI App
                       </a>
                     </div>
