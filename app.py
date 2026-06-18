@@ -434,16 +434,31 @@ def index():
     booked_dates = set()
     makeup_dates = set()
 
+    today_date = ist_now.date()
+
     for booking in user_bookings:
+        booking_time = (booking.get('time') or '06:00 AM').strip()
+
         for session_date in booking.get('calendar_dates', []):
             try:
                 dt = datetime.strptime(session_date, '%Y-%m-%d')
 
+                session_datetime = datetime.strptime(
+                    f"{session_date} {booking_time}",
+                    '%Y-%m-%d %I:%M %p'
+                )
+
+                session_end = session_datetime + timedelta(hours=1)
+
+                # Show green only for upcoming / active sessions.
+                # Completed sessions should return to normal calendar state.
                 if (
                     dt.year == current_year
                     and dt.month == current_month
+                    and session_end > ist_now.replace(tzinfo=None)
                 ):
                     booked_dates.add(dt.day)
+
             except Exception:
                 pass
 
@@ -741,6 +756,8 @@ def index():
         location_suggestions=location_suggestions,
         current_month_name=current_month_name,
         today_day=today_day,
+        booked_dates=booked_dates,
+        makeup_dates=makeup_dates,
         calendar_days=calendar_days,
         notification_count=notification_count,
         hero_message=hero_message,

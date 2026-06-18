@@ -271,8 +271,15 @@
           <div class="calendar-grid">
 
             {% for day in range(1, 31) %}
-            <div class="calendar-day {% if day == today_day %}today{% endif %}">
+            <div class="calendar-day
+              {% if day == today_day %}
+                today
+              {% elif day in booked_dates %}
+                booked-day
+              {% endif %}">
+
               {{ day }}
+
             </div>
             {% endfor %}
           </div>
@@ -286,10 +293,10 @@
             Booked
           </div>
 
-          <div>
+          <!-- <div>
             <span class="legend-dot bg-warning"></span>
             Makeup
-          </div>
+          </div> -->
 
           <div>
             <span class="legend-dot bg-primary"></span>
@@ -1036,6 +1043,7 @@
   border:1px solid #f4e4c3;
 }
 
+
 .payment-box-icon{
   width:60px;
   height:60px;
@@ -1046,6 +1054,13 @@
   justify-content:center;
   font-size:28px;
   box-shadow:0 2px 8px rgba(0,0,0,.08);
+}
+
+.booked-day{
+  background:#198754 !important;
+  color:#fff !important;
+  border-radius:50%;
+  font-weight:600;
 }
 
 </style>
