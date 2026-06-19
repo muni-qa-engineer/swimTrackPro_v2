@@ -143,7 +143,34 @@
 
                     {% else %}
 
-                      {% if next_session_name and next_session_name != '--' %}
+                      {% if guest_upcoming_sessions is defined and guest_upcoming_sessions|length > 0 %}
+
+                        <div class="small opacity-75">Next Session</div>
+
+                        <div id="nextSessionCarousel">
+                          {% for session in guest_upcoming_sessions %}
+                          <div class="next-session-slide" {% if not loop.first %}style="display:none;"{% endif %}>
+                            <div class="small opacity-90 mt-1">
+                              {{ session.date }}
+                              {% if session.time %}
+                                • {{ session.time }}
+                              {% endif %}
+                            </div>
+
+                            <div class="fw-bold mt-1">
+                              🏊 {{ session.name }}
+                            </div>
+
+                            {% if guest_upcoming_sessions|length > 1 %}
+                            <div class="small opacity-75 mt-1">
+                              {{ loop.index }} / {{ guest_upcoming_sessions|length }}
+                            </div>
+                            {% endif %}
+                          </div>
+                          {% endfor %}
+                        </div>
+
+                      {% elif next_session_name and next_session_name != '--' %}
 
                         <div class="small opacity-75">Next Session</div>
 
@@ -1477,4 +1504,23 @@
   window.addEventListener('load', function () {
     window.scrollTo(0, 0);
   });
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const slides = document.querySelectorAll('#nextSessionCarousel .next-session-slide');
+
+  if (slides.length <= 1) {
+    return;
+  }
+
+  let currentIndex = 0;
+
+  setInterval(function() {
+    slides[currentIndex].style.display = 'none';
+
+    currentIndex = (currentIndex + 1) % slides.length;
+
+    slides[currentIndex].style.display = 'block';
+  }, 3000);
+});
 </script>

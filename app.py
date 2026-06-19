@@ -524,6 +524,7 @@ def index():
     next_session_name = '--'
     next_session_date = '--'
     next_session_time = '--'
+    guest_upcoming_sessions = []
 
     trainer_upcoming_slots = []
     trainer_remaining_slots = 0
@@ -577,10 +578,21 @@ def index():
         ]
 
     elif upcoming_sessions:
-        next_session = min(
+        sorted_sessions = sorted(
             upcoming_sessions,
             key=lambda x: x['datetime']
         )
+
+        guest_upcoming_sessions = [
+            {
+                'name': s['student'],
+                'date': s['datetime'].strftime('%d %b'),
+                'time': s['time']
+            }
+            for s in sorted_sessions[:5]
+        ]
+
+        next_session = sorted_sessions[0]
 
         next_session_name = next_session['student']
         next_session_date = next_session['datetime'].strftime('%d %b')
@@ -765,6 +777,7 @@ def index():
         next_session_name=next_session_name,
         next_session_date=next_session_date,
         next_session_time=next_session_time,
+        guest_upcoming_sessions=guest_upcoming_sessions,
         trainer_upcoming_slots=trainer_upcoming_slots,
         trainer_remaining_slots=trainer_remaining_slots,
         active_package_name=active_package_name,
