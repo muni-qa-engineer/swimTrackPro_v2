@@ -478,7 +478,7 @@ const calendarSection = document.getElementById('calendarSection');
 
 const calendarMonthInput = document.getElementById('calendarMonthInput');
 const calendarGrid = document.getElementById('calendarGrid');
-const swimmerRows = document.querySelectorAll('.swimmer-row');
+// const swimmerRows = document.querySelectorAll('.swimmer-row');
 const studentSelect = document.getElementById('studentSelect');
 
 function showBookings() {
@@ -1010,35 +1010,35 @@ function renderCalendar() {
   }
 }
 
-function activateSwimmer(name) {
-  swimmerRows.forEach(row => {
-    row.classList.remove('border-primary', 'bg-light');
+// function activateSwimmer(name) {
+//   swimmerRows.forEach(row => {
+//     row.classList.remove('border-primary', 'bg-light');
 
-    const dot = row.querySelector('.swimmer-dot');
-    if (dot) {
-      dot.classList.remove('text-success');
-      dot.classList.add('text-transparent');
-    }
-  });
+//     const dot = row.querySelector('.swimmer-dot');
+//     if (dot) {
+//       dot.classList.remove('text-success');
+//       dot.classList.add('text-transparent');
+//     }
+//   });
 
-  swimmerRows.forEach(row => {
-    if (row.dataset.name === name) {
-      row.classList.add('border-primary', 'bg-light');
+//   swimmerRows.forEach(row => {
+//     if (row.dataset.name === name) {
+//       row.classList.add('border-primary', 'bg-light');
 
-      const dot = row.querySelector('.swimmer-dot');
-      if (dot) {
-        dot.classList.remove('text-transparent');
-        dot.classList.add('text-success');
-      }
-    }
-  });
+//       const dot = row.querySelector('.swimmer-dot');
+//       if (dot) {
+//         dot.classList.remove('text-transparent');
+//         dot.classList.add('text-success');
+//       }
+//     }
+//   });
 
-  if (studentSelect) {
-    studentSelect.value = name;
-  }
+//   if (studentSelect) {
+//     studentSelect.value = name;
+//   }
 
-  localStorage.setItem('activeSwimmer', name);
-}
+//   localStorage.setItem('activeSwimmer', name);
+// }
 
 if (tabBookings && tabCalendar) {
   tabBookings.addEventListener('click', showBookings);
@@ -1061,17 +1061,17 @@ if (tabBookings && tabCalendar) {
   }
 }
 
-swimmerRows.forEach(row => {
-  row.addEventListener('click', () => {
-    activateSwimmer(row.dataset.name);
-  });
-});
+// swimmerRows.forEach(row => {
+//   row.addEventListener('click', () => {
+//     activateSwimmer(row.dataset.name);
+//   });
+// });
 
-if (studentSelect) {
-  studentSelect.addEventListener('change', function() {
-    activateSwimmer(this.value);
-  });
-}
+// if (studentSelect) {
+//   studentSelect.addEventListener('change', function() {
+//     activateSwimmer(this.value);
+//   });
+// }
 
 // Do not auto-populate the swimmer field from a previous session.
 // The field should remain empty when the Booking page opens.

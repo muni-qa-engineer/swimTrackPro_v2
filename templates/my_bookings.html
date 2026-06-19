@@ -240,6 +240,13 @@
                                           Delete
                                       </button>
                                   </form>
+                                  {% if role != 'trainer' and b.status != 'Paid' and (b.fee or 0)|float > 0 %}
+                                  <a
+                                     href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name|urlencode }}&am={{ b.fee }}&tn=SwimTrackPro Payment&tr={{ b.id }}"
+                                     class="btn btn-success btn-sm float-start">
+                                     💳 Pay Now
+                                  </a>
+                                  {% endif %}
                                   {% endif %}
                               {% endif %}
                           </div>
