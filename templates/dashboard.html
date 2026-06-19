@@ -4,6 +4,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-3 shadow-sm sticky-top">
   <div class="container-fluid">
@@ -627,7 +628,7 @@
 
   <button type="button" id="mobileBookBtn" class="mobile-nav-item" onclick="window.location.href='/booking'">
     <div>📅</div>
-    <small>Book</small>
+    <small>Book now</small>
   </button>
 
   <button type="button" id="mobileBookingsBtn" class="mobile-nav-item" onclick="window.location.href='/my-bookings'">
@@ -635,9 +636,10 @@
     <small>Bookings</small>
   </button>
 
-  <button type="button" id="mobileContactBtn" class="mobile-nav-item" onclick="window.location.href='/help'">
-    <div>🎧</div>
-    <small>Contact</small>
+  <button type="button" id="mobileContactBtn" class="mobile-nav-item" onclick="window.location.href='/payments'">
+    <!-- <div><i class="fa-solid fa-indian-rupee-sign fa-lg"></i> </div> -->
+    <div>💳</div>
+    <small>Payments</small>
   </button>
 
   {% endif %}

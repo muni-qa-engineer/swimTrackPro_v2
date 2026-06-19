@@ -172,6 +172,9 @@
 <script>
     window.bookingsData = {{ bookings|tojson }};
     window.currentUserRole = "{{ role }}";
+
+    window.upiId = "{{ upi_id }}";
+    window.accountHolderName = "{{ account_holder_name }}";
 </script>
 
 <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
