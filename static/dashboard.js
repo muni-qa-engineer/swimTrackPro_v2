@@ -1439,7 +1439,7 @@ enableFormLoading('updateNoticeForm', 'Updating...');
   let countdownTimer;
   let countdown = 30;
 
-  const INACTIVITY_MS = 30 * 1000; // 30 seconds
+  const INACTIVITY_MS = 120 * 1000; // 30 seconds
 
   const toast = document.getElementById('inactiveLogoutToast');
   const countdownElement = document.getElementById('logoutCountdown');

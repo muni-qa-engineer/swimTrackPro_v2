@@ -971,11 +971,19 @@ def payments_page():
         reminder_conn.commit()
         reminder_conn.close()
 
+    # V0044.2 - Total Outstanding Amount
+    total_pending_amount = sum(
+        int(b.get('fee', 0) or 0)
+        for b in user_bookings
+        if str(b.get('status', '')).strip().lower() != 'paid'
+    )
+
     return render_template(
         'payments.html',
         bookings=user_bookings,
         role=current_role,
         user_name=current_user,
+        total_pending_amount=total_pending_amount,
         account_holder_name=get_setting('account_holder_name', ''),
         trainer_phone=get_setting('trainer_phone', ''),
         upi_id=get_setting('upi_id', '')

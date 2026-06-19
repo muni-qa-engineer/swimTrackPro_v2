@@ -86,6 +86,10 @@
                     <strong>UPI ID:</strong>
                     {{ upi_id }}
                   </p>
+                  <p class="mb-2 text-success fw-bold">
+                    <strong>Total Outstanding:</strong>
+                    ₹{{ total_pending_amount }}
+                  </p>
                   <div class="alert alert-warning mt-3 mb-0">
                     ⚠️ After payment, change the status to <strong>Pending Verification</strong> and click <strong>Update Payment Status</strong>.
                   </div>
@@ -101,20 +105,19 @@
                   <div class="border rounded p-2 bg-light text-center">
 
                     <a id="upiPaymentLink"
-                       href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name }}&tn=SwimTrackPro%20Payment&cu=INR"
+                       href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name }}&am={{ total_pending_amount }}&cu=INR&tn=SwimTrackPro%20Payment&tr={{ user_name }}"
                        title="Open UPI App">
 
                       <img src="{{ url_for('static', filename='images/QR_Code.jpeg') }}"
                            alt="Payment QR Code"
                            class="img-fluid"
                            style="max-height:220px; cursor:pointer;">
-
                     </a>
 
                     <div class="mt-2">
                       <a id="upiPaymentBtn"
                          class="btn btn-success btn-sm"
-                         href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name }}&tn=SwimTrackPro%20Payment&cu=INR">
+                         href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name }}&am={{ total_pending_amount }}&cu=INR&tn=SwimTrackPro%20Payment&tr={{ user_name }}">
                          Open UPI App
                       </a>
                     </div>
