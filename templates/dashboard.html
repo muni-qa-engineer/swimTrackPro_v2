@@ -121,22 +121,32 @@
                       <div class="small opacity-75 mb-2">Upcoming Sessions</div>
 
                       {% if trainer_upcoming_slots %}
-                        {% for slot in trainer_upcoming_slots %}
-                        <div class="d-flex justify-content-between align-items-center small mb-1">
-                          <span>
-                            📅 {{ slot.date if slot.date is defined else '--' }}
-                            •
-                            🕕 {{ slot.slot }}
-                          </span>
-                          <span>👥 {{ slot.count }}</span>
-                        </div>
-                        {% endfor %}
 
-                        {% if trainer_remaining_slots > 0 %}
-                        <div class="small opacity-75 mt-1">
-                          +{{ trainer_remaining_slots }} more...
-                        </div>
-                        {% endif %}
+<div id="trainerSessionCarousel">
+
+  {% for slot in trainer_upcoming_slots %}
+  <div class="trainer-session-slide"
+       {% if not loop.first %}style="display:none;"{% endif %}>
+
+    <div class="small opacity-90 mt-1">
+      {{ slot.date if slot.date is defined else '--' }} • {{ slot.slot }}
+    </div>
+
+    <div class="fw-bold mt-1">
+      🏊 {{ slot.swimmer_names if slot.swimmer_names is defined else (slot.count ~ ' Swimmers') }}
+    </div>
+
+    {% if trainer_upcoming_slots|length > 1 %}
+    <div class="small opacity-75 mt-1">
+      {{ loop.index }} / {{ trainer_upcoming_slots|length }}
+    </div>
+    {% endif %}
+
+  </div>
+  {% endfor %}
+
+</div>
+
                       {% else %}
                         <div class="small">No Upcoming Sessions</div>
                       {% endif %}
@@ -1507,20 +1517,27 @@
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  const slides = document.querySelectorAll('#nextSessionCarousel .next-session-slide');
 
-  if (slides.length <= 1) {
-    return;
+  function startCarousel(selector) {
+    const slides = document.querySelectorAll(selector);
+
+    if (slides.length <= 1) {
+      return;
+    }
+
+    let currentIndex = 0;
+
+    setInterval(function() {
+      slides[currentIndex].style.display = 'none';
+
+      currentIndex = (currentIndex + 1) % slides.length;
+
+      slides[currentIndex].style.display = 'block';
+    }, 3000);
   }
 
-  let currentIndex = 0;
+  startCarousel('#nextSessionCarousel .next-session-slide');
+  startCarousel('#trainerSessionCarousel .trainer-session-slide');
 
-  setInterval(function() {
-    slides[currentIndex].style.display = 'none';
-
-    currentIndex = (currentIndex + 1) % slides.length;
-
-    slides[currentIndex].style.display = 'block';
-  }, 3000);
 });
 </script>
