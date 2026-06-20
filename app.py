@@ -349,7 +349,7 @@ def index():
     current_phone = session.get('phone')
     current_role = session.get('role', 'guest')
 
-    welcome_text = f"Welcome Back {current_user.title()}"
+    welcome_text = f"Welcome Back, {current_user.title()}"
 
     try:
         conn = get_pg_connection()
