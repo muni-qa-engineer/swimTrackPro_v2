@@ -349,6 +349,31 @@ def index():
     current_phone = session.get('phone')
     current_role = session.get('role', 'guest')
 
+    welcome_text = f"Welcome Back {current_user.title()}"
+
+    try:
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            '''
+            SELECT COUNT(*)
+            FROM user_activity
+            WHERE user_name = %s
+              AND role = %s
+            ''',
+            (current_user, current_role)
+        )
+
+        login_count = cursor.fetchone()[0]
+        conn.close()
+
+        if login_count <= 1:
+            welcome_text = f"Hi {current_user.title()}, Welcome"
+
+    except Exception:
+        pass
+
     # TRAINER => view everything
     if current_role == 'trainer':
         user_bookings = data['bookings']
@@ -769,6 +794,7 @@ def index():
         'dashboard.html',
         user_name=session['user_name'],
         role=session.get('role', 'guest'),
+        welcome_text=welcome_text,
         bookings=user_bookings,
         students=user_students,
         total_swimmers=total_swimmers,
@@ -895,11 +921,14 @@ def my_bookings_page():
         ]
 
     return render_template(
-        'my_bookings.html',
-        bookings=user_bookings,
-        role=current_role,
-        user_name=current_user
-    )
+    'my_bookings.html',
+    bookings=user_bookings,
+    role=current_role,
+    user_name=current_user,
+    account_holder_name=get_setting('account_holder_name', ''),
+    trainer_phone=get_setting('trainer_phone', ''),
+    upi_id=get_setting('upi_id', '')
+)
 
 
 @app.route('/calendar')
@@ -1570,9 +1599,17 @@ def update_booking(booking_id):
 
     # Default fee based on package and group discount.
     session_count = None
-    if package == 'Custom':
-        selected_days = request.form.getlist('selected_days')
-        selected_days_str = ', '.join(selected_days)
+    selected_days = request.form.getlist('selected_days')
+    selected_days_str = ', '.join(selected_days)
+
+    if package == 'Monthly':
+        session_count = len([
+            day.strip()
+            for day in selected_days
+            if day.strip()
+        ])
+
+    elif package == 'Custom':
         session_count = len(
             generate_recurring_dates(
                 date_str,
