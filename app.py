@@ -3,11 +3,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from services.email_service import (
-    send_booking_notification,
     send_booking_confirmation_email,
-    send_booking_updated_email,
-    send_booking_deleted_email,
-    send_booking_deleted_alert,
     send_payment_reminder_email,
     send_package_completion_email
 )
@@ -125,7 +121,7 @@ def load_data():
 
     # All requests grouped by booking_id
     cursor.execute("""
-        SELECT id, booking_id, requested_date, status
+        SELECT id, credit_id, booking_id, original_date, requested_date, status
         FROM makeup_requests
         ORDER BY requested_date
     """)
@@ -133,7 +129,7 @@ def load_data():
 
     requests_by_booking = {}
     for row in all_requests:
-        bid = str(row[1])
+        bid = str(row[2])
         requests_by_booking.setdefault(bid, []).append(row)
 
     # -------------------------------------------------------
@@ -225,6 +221,9 @@ def load_data():
         booking_credits = credits_by_booking.get(bid, [])
         booking_requests = requests_by_booking.get(bid, [])
 
+        pending_request = next((r for r in booking_requests if r[5] == 'pending'), None)
+        approved_request = next((r for r in booking_requests if r[5] == 'approved'), None)
+
         # Total credits created for this booking
         booking['makeup_credits_used'] = len(booking_credits)
 
@@ -249,12 +248,22 @@ def load_data():
             str(r[2]) for r in booking_credits if r[3] == 'used'
         ]
 
-        # Makeup requests
+        # Add new fields for Calendar UI make-up workflow state
+        booking['pending_request_id'] = pending_request[0] if pending_request else None
+        booking['approved_request_id'] = approved_request[0] if approved_request else None
+        booking['skip_remaining'] = len(available_credits)
+        booking['skip_eligible'] = True
+        booking['valid_until'] = booking['end_date']
+        booking['makeup_used'] = approved_request is not None
+
+        # Makeup requests (expanded for Calendar UI)
         booking['makeup_requests'] = [
             {
                 'id': r[0],
-                'requested_date': str(r[2]),
-                'status': r[3]
+                'credit_id': r[1],
+                'original_date': str(r[3]),
+                'requested_date': str(r[4]),
+                'status': r[5]
             }
             for r in booking_requests
         ]
@@ -1533,9 +1542,6 @@ def book():
     conn.commit()
     conn.close()
 
-    # Send admin notification.
-    send_booking_notification(new_booking)
-
     # Send swimmer confirmation email.
     send_booking_confirmation_email(new_booking)
 
@@ -1825,15 +1831,7 @@ def update_booking(booking_id):
     conn.close()
 
     if changes:
-        print('BOOKING UPDATED EMAIL:', changes)
-
-        # Send updated-booking email to swimmer/owner.
-        send_booking_updated_email(booking, changes)
-
-        # Send trainer/admin notification as well.
-        trainer_booking = dict(booking)
-        trainer_booking['update_changes'] = changes
-        send_booking_notification(trainer_booking)
+        print('BOOKING UPDATED:', changes)
 
     # flash("Booking updated successfully")
     return redirect('/my-bookings')
@@ -2049,8 +2047,6 @@ def delete_booking(booking_id):
             conn.commit()
             conn.close()
 
-            send_booking_deleted_email(booking_info)
-            send_booking_deleted_alert(booking_info)
 
             flash(f'Booking deleted for {deleted_student}')
             return redirect(url_for('my_bookings_page'))
@@ -2112,8 +2108,6 @@ def delete_booking(booking_id):
     conn.commit()
     conn.close()
 
-    send_booking_deleted_email(booking_info)
-    send_booking_deleted_alert(booking_info)
 
     flash(f'Booking deleted for {deleted_student}')
     return redirect(url_for('my_bookings_page'))
@@ -2266,7 +2260,7 @@ def skip_session(booking_id, session_date):
 
     if not booking:
         flash('Booking not found')
-        return redirect(url_for('index'))
+        return redirect(url_for('calendar_page'))
 
     # Guests may skip only their own bookings.
     if session.get('role') != 'trainer':
@@ -2275,13 +2269,13 @@ def skip_session(booking_id, session_date):
             or booking.get('owner_phone') != session.get('phone')
         ):
             flash('Unauthorized action')
-            return redirect(url_for('index'))
+            return redirect(url_for('calendar_page'))
 
     # Validate that the selected date belongs to this booking schedule.
     calendar_dates = booking.get('calendar_dates', [])
     if session_date not in calendar_dates:
         flash('Invalid session date')
-        return redirect(url_for('index'))
+        return redirect(url_for('calendar_page'))
 
     # Create one make-up credit for this skipped session.
     created = create_makeup_credit(
@@ -2298,7 +2292,13 @@ def skip_session(booking_id, session_date):
     else:
         flash('A make-up credit already exists for this session.')
 
-    return redirect(url_for('index'))
+    return redirect(
+        url_for(
+            'calendar_page',
+            booking=booking_id,
+            date=session_date
+        )
+    )
 
 
 # --- Undo Skip Session Route ---
@@ -2330,7 +2330,7 @@ def undo_skip_session(booking_id, session_date):
     if not booking_row:
         conn.close()
         flash('Booking not found.')
-        return redirect(url_for('index'))
+        return redirect(url_for('calendar_page'))
 
     # Guests may undo only their own skipped sessions.
     if session.get('role') != 'trainer':
@@ -2340,7 +2340,7 @@ def undo_skip_session(booking_id, session_date):
         ):
             conn.close()
             flash('Unauthorized action')
-            return redirect(url_for('index'))
+            return redirect(url_for('calendar_page'))
 
     # Find an available make-up credit for this skipped date.
     cursor.execute("""
@@ -2360,7 +2360,7 @@ def undo_skip_session(booking_id, session_date):
     if not credit_row:
         conn.close()
         flash('This skipped session cannot be undone.')
-        return redirect(url_for('index'))
+        return redirect(url_for('calendar_page'))
 
     credit_id = credit_row[0]
 
@@ -2375,7 +2375,7 @@ def undo_skip_session(booking_id, session_date):
     if cursor.fetchone():
         conn.close()
         flash('Cannot undo because a make-up request already exists.')
-        return redirect(url_for('index'))
+        return redirect(url_for('calendar_page'))
 
     # Delete the unused make-up credit.
     cursor.execute("""
@@ -2387,7 +2387,13 @@ def undo_skip_session(booking_id, session_date):
     conn.close()
 
     flash('Skipped session has been restored.')
-    return redirect(url_for('index'))
+    return redirect(
+        url_for(
+            'calendar_page',
+            booking=booking_id,
+            date=session_date
+        )
+    )
 
 
 @app.route('/makeup_request/<booking_id>')
@@ -2452,7 +2458,7 @@ def submit_makeup_request():
 
     if not booking_id or not credit_id or not requested_date:
         flash('All fields are required.')
-        return redirect(url_for('index'))
+        return redirect(url_for('calendar_page'))
 
     conn = get_pg_connection()
     cursor = conn.cursor()
@@ -2472,7 +2478,7 @@ def submit_makeup_request():
     if not row:
         conn.close()
         flash('Selected make-up credit is no longer available.')
-        return redirect(url_for('index'))
+        return redirect(url_for('calendar_page'))
 
     original_date = row[0]
 
@@ -2494,12 +2500,12 @@ def submit_makeup_request():
             flash(
                 'Replacement date must be after the skipped session date.'
             )
-            return redirect(url_for('index'))
+            return redirect(url_for('calendar_page'))
 
     except Exception:
         conn.close()
         flash('Invalid replacement date.')
-        return redirect(url_for('index'))
+        return redirect(url_for('calendar_page'))
 
     # Prevent duplicate pending requests for the same credit.
     cursor.execute("""
@@ -2513,7 +2519,7 @@ def submit_makeup_request():
     if cursor.fetchone():
         conn.close()
         flash('A make-up request already exists for this skipped session.')
-        return redirect(url_for('index'))
+        return redirect(url_for('calendar_page'))
 
     # Create pending request.
     cursor.execute("""
@@ -2537,7 +2543,13 @@ def submit_makeup_request():
     conn.close()
 
     flash('Make-up request submitted successfully for admin approval.')
-    return redirect(url_for('index'))
+    return redirect(
+        url_for(
+            'calendar_page',
+            booking=booking_id,
+            date=str(original_date)
+        )
+    )
 
 
 # --- Approve and Reject Make-Up Request Routes ---
@@ -2568,7 +2580,7 @@ def approve_makeup_request(request_id):
     if not row:
         conn.close()
         flash('Pending make-up request not found.')
-        return redirect(url_for('index'))
+        return redirect(url_for('calendar_page'))
 
     credit_id = row[0]
 
@@ -2598,7 +2610,7 @@ def approve_makeup_request(request_id):
     conn.close()
 
     flash('Make-up request approved successfully.')
-    return redirect(url_for('index'))
+    return redirect(url_for('calendar_page'))
 
 
 @app.route('/reject_makeup_request/<int:request_id>', methods=['POST'])
@@ -2631,7 +2643,7 @@ def reject_makeup_request(request_id):
     if not row:
         conn.close()
         flash('Pending make-up request not found.')
-        return redirect(url_for('index'))
+        return redirect(url_for('calendar_page'))
 
     credit_id = row[0]
 
@@ -2654,7 +2666,7 @@ def reject_makeup_request(request_id):
     conn.close()
 
     flash('Pending make-up request has been revoked.')
-    return redirect(url_for('index'))
+    return redirect(url_for('calendar_page'))
 
 @app.route('/about-trainer')
 def about_trainer():

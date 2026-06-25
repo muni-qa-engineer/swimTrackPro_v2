@@ -41,16 +41,35 @@
 
                 {% set group_name = group_items[0].created_by or 'N/A' %}
                 {% set group_phone = group_key.split('|')[1] %}
+                {% set ns = namespace(has_active=false, has_booked=false) %}
+                {% for booking in group_items %}
+                    {% if not booking.is_completed %}
+                        {% if (booking.completed_classes or 0) > 0 %}
+                            {% set ns.has_active = true %}
+                        {% else %}
+                            {% set ns.has_booked = true %}
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
 
                 <div class="col-12 mb-4">
                     <div class="card shadow-sm border-0">
-                        <div class="card-header bg-light d-flex justify-content-between align-items-center trainer-group-header {% if role == 'trainer' %}cursor-pointer{% endif %}">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center trainer-group-header {% if role == 'trainer' %}cursor-pointer{% endif %}" data-group-key="{{ group_key }}">
                             <div>
                                 {% if role == 'trainer' %}
                                 <span class="trainer-group-arrow me-2">{% if loop.first %}▼{% else %}▶{% endif %}</span>
                                 {% endif %}
                                 <strong>👤 {{ group_name|title }}</strong>
                                 <span class="text-muted ms-2">📞 {{ group_phone }}</span>
+                                {% if ns.has_active %}
+                                <span class="ms-2 d-inline-block rounded-circle"
+                                      title="Active Booking"
+                                      style="width:10px;height:10px;background:#28a745;vertical-align:middle;"></span>
+                                {% elif ns.has_booked %}
+                                <span class="ms-2 d-inline-block rounded-circle"
+                                      title="Booked"
+                                      style="width:10px;height:10px;background:#ffffff;border:1px solid #adb5bd;vertical-align:middle;"></span>
+                                {% endif %}
                             </div>
 
                             <span class="badge bg-primary px-3 py-2">
@@ -377,30 +396,41 @@ document.addEventListener('DOMContentLoaded', function() {
 
     });
 
+    const savedGroup = sessionStorage.getItem('trainerOpenGroup');
     // Trainer accordion logic
-    document.querySelectorAll('.trainer-group-header').forEach(header => {
-        header.addEventListener('click', function () {
+    const headers = document.querySelectorAll('.trainer-group-header');
 
+    headers.forEach(header => {
+        header.addEventListener('click', function () {
             const currentBody = this.parentElement.querySelector('.trainer-group-body');
             if (!currentBody) return;
 
             const isOpen = currentBody.style.display !== 'none';
 
-            document.querySelectorAll('.trainer-group-body').forEach(body => {
-                body.style.display = 'none';
-            });
-
-            document.querySelectorAll('.trainer-group-arrow').forEach(arrow => {
-                arrow.textContent = '▶';
-            });
+            document.querySelectorAll('.trainer-group-body').forEach(body => body.style.display = 'none');
+            document.querySelectorAll('.trainer-group-arrow').forEach(arrow => arrow.textContent = '▶');
 
             if (!isOpen) {
                 currentBody.style.display = '';
                 const arrow = this.querySelector('.trainer-group-arrow');
                 if (arrow) arrow.textContent = '▼';
+                sessionStorage.setItem('trainerOpenGroup', this.dataset.groupKey);
             }
         });
     });
+
+    if (savedGroup) {
+        const savedHeader = document.querySelector(`.trainer-group-header[data-group-key="${savedGroup}"]`);
+        if (savedHeader) {
+            document.querySelectorAll('.trainer-group-body').forEach(body => body.style.display = 'none');
+            document.querySelectorAll('.trainer-group-arrow').forEach(arrow => arrow.textContent = '▶');
+
+            const body = savedHeader.parentElement.querySelector('.trainer-group-body');
+            if (body) body.style.display = '';
+            const arrow = savedHeader.querySelector('.trainer-group-arrow');
+            if (arrow) arrow.textContent = '▼';
+        }
+    }
 });
 </script>
 

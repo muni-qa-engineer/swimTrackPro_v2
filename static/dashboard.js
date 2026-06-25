@@ -1434,12 +1434,13 @@ enableFormLoading('updateNoticeForm', 'Updating...');
 // --------------------------------------
 // V0033.5.0 - Auto Logout After Inactivity
 // --------------------------------------
+// V0033.5.0 - Auto Logout After Inactivity
 (function () {
   let inactivityTimer;
   let countdownTimer;
-  let countdown = 30;
+  let countdown = 20;
 
-  const INACTIVITY_MS = 120 * 1000; // 30 seconds
+  const INACTIVITY_MS = 60 * 1000; // 1 minute
 
   const toast = document.getElementById('inactiveLogoutToast');
   const countdownElement = document.getElementById('logoutCountdown');
@@ -1456,7 +1457,7 @@ enableFormLoading('updateNoticeForm', 'Updating...');
   }
 
   function showLogoutWarning() {
-    countdown = 30;
+    countdown = 20;
     countdownElement.textContent = countdown;
     toast.style.display = 'block';
 

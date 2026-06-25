@@ -7,14 +7,6 @@
 {% include 'components/page_header.html' %}
 
 <div class="container-fluid px-4 py-4">
-
-    <div class="d-flex align-items-center mb-4">
-        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary me-3 d-none d-lg-inline-flex">
-            ← Back
-        </a>
-        <!-- <h3 class="mb-0">📅 Monthly Calendar</h3> -->
-    </div>
-
     <div class="container-fluid px-4 mt-4">
     <div class="card shadow-sm border-0">
 
@@ -75,14 +67,143 @@
   text-decoration:line-through;
 }
 </style>
-{% include 'components/session_timeout.html' %}
+
 <script>
     window.bookingsData = {{ bookings|tojson }};
     window.currentUserRole = "{{ role }}";
-</script>
 
+    // Reopen the last edited session after redirect
+    window.reopenBookingId = "{{ request.args.get('booking', '') }}";
+    window.reopenSessionDate = "{{ request.args.get('date', '') }}";
+</script>
 <script src="{{ url_for('static', filename='calendar.js') }}"></script>
-<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+
+<!-- ======================================
+     V0033.0 - Make-Up Class Calendar Modal
+     ====================================== -->
+<div class="modal fade" id="sessionOptionsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title">🔄 Session Options</h5>
+        <button type="button"
+                class="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+                aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="mb-2"><strong>Swimmer:</strong> <span id="modalStudentName">-</span></div>
+        <div class="mb-2"><strong>Date:</strong> <span id="modalSessionDate">-</span></div>
+        <div class="mb-2"><strong>Package:</strong> <span id="modalPackage">-</span></div>
+        <div class="mb-2"><strong>Skip Remaining:</strong> <span id="modalSkipRemaining">Checking...</span></div>
+        <div class="mb-3"><strong>Valid Until:</strong> <span id="modalValidUntil">-</span></div>
+
+        <div class="alert alert-info py-2 mb-3">
+          Use this dialog to skip a scheduled class and create a make-up credit.
+        </div>
+
+        <div class="row g-2 mb-2">
+          <div class="col-6">
+            <form id="skipSessionForm" method="POST">
+              <button type="submit"
+                      id="skipSessionButton"
+                      class="btn btn-warning w-100">
+                <span class="btn-text">⏭️ Skip Session</span>
+              </button>
+            </form>
+          </div>
+          <div class="col-6">
+            <div id="skipUndoContainer" style="display:none;">
+              <form id="undoMakeupForm" method="POST">
+                <button type="submit"
+                        id="undoMakeupButton"
+                        class="btn btn-outline-secondary w-100">
+                  <span class="btn-text">↩ Undo</span>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+        <form id="useMakeupForm"
+              method="POST"
+              action="{{ url_for('submit_makeup_request') }}"
+              style="display:none;"
+              class="mt-2">
+          <input type="hidden" name="booking_id" id="makeupBookingId">
+          <input type="hidden" name="credit_id" id="makeupCreditId">
+          <input type="hidden" name="requested_date" id="makeupRequestedDate">
+
+          <label for="makeupDatePicker" class="form-label fw-bold mt-2">
+            Select Replacement Date
+          </label>
+
+          <input type="date"
+                 id="makeupDatePicker"
+                 class="form-control mb-2"
+                 required>
+
+          <small class="text-muted d-block mb-2">
+            Only valid dates within the allowed make-up period can be selected.
+          </small>
+
+          <div class="row g-2">
+            <div class="col-6">
+              <button type="submit"
+                      id="useMakeupButton"
+                      class="btn btn-success w-100">
+                <span class="btn-text">🔄 Use Available</span>
+              </button>
+            </div>
+            <div class="col-6">
+              <div id="makeupUndoContainer" style="display:none;">
+                <button type="button"
+                        id="makeupUndoProxyButton"
+                        class="btn btn-outline-secondary w-100"
+                        onclick="document.getElementById('undoMakeupForm').requestSubmit();">
+                  ↩ Undo
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <div id="adminApprovalActions"
+             style="display:none;"
+             class="mt-3">
+          <div class="row g-2">
+            <div class="col-6">
+              <form id="approveMakeupForm" method="POST">
+                <button type="submit"
+                        id="approveMakeupButton"
+                        class="btn btn-success w-100">
+                  <span class="btn-text">✅ Approve</span>
+                </button>
+              </form>
+            </div>
+            <div class="col-6">
+              <form id="rejectMakeupForm" method="POST">
+                <button type="submit"
+                        id="rejectMakeupButton"
+                        class="btn btn-danger w-100">
+                  <span class="btn-text">❌ Reject</span>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Mobile Bottom Navigation -->
 <div class="mobile-bottom-nav d-lg-none" role="navigation">
@@ -102,10 +223,45 @@
     <small>Bookings</small>
   </button>
 
-  <button type="button" id="mobileContactBtn" class="mobile-nav-item active" onclick="window.location.href='/help'">
+  <button type="button" id="mobileCalendarBtn" class="mobile-nav-item active" onclick="window.location.href='/calendar'">
+    <div>🗓</div>
+    <small>Calendar</small>
+  </button>
+
+  <button type="button" id="mobileContactBtn" class="mobile-nav-item" onclick="window.location.href='/help'">
     <div>🎧</div>
     <small>Contact</small>
   </button>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    function enableLoading(formId, buttonId, loadingText) {
+        const form = document.getElementById(formId);
+        const button = document.getElementById(buttonId);
+
+        if (!form || !button) return;
+
+        form.addEventListener('submit', () => {
+            button.disabled = true;
+            button.innerHTML = `
+                <span class="spinner-border spinner-border-sm me-2"
+                      role="status"
+                      aria-hidden="true"></span>
+                ${loadingText}
+            `;
+        });
+    }
+
+    enableLoading('skipSessionForm', 'skipSessionButton', 'Processing...');
+    enableLoading('undoMakeupForm', 'undoMakeupButton', 'Undoing...');
+    enableLoading('useMakeupForm', 'useMakeupButton', 'Submitting...');
+    enableLoading('approveMakeupForm', 'approveMakeupButton', 'Approving...');
+    enableLoading('rejectMakeupForm', 'rejectMakeupButton', 'Rejecting...');
+});
+</script>
+
+{% include 'components/session_timeout.html' %}
 {% endblock %}
