@@ -1087,7 +1087,6 @@ const bookingForm = document.querySelector('form[action="/book"]');
 
 function checkLocationConflict() {
   const bookings = window.bookingsData || [];
-
   const dateInput = document.querySelector('input[name="date"]');
   const locationInput = document.querySelector('input[name="location"]');
   const timeSelect = document.getElementById('timeSelect');
@@ -1102,33 +1101,109 @@ function checkLocationConflict() {
   const selectedTime = (timeSelect.value || '').trim();
   const selectedLocation = (locationInput.value || '').trim().toLowerCase();
 
+  // Helper to convert "06:30 AM" to minutes since midnight
+  function parseTimeToMinutes(t) {
+    if (!t) return null;
+    // Expects format "hh:mm AM/PM"
+    const match = t.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!match) return null;
+    let hour = parseInt(match[1], 10);
+    const min = parseInt(match[2], 10);
+    const ampm = match[3].toUpperCase();
+    if (ampm === 'PM' && hour !== 12) hour += 12;
+    if (ampm === 'AM' && hour === 12) hour = 0;
+    return hour * 60 + min;
+  }
+
+  // Hide warning and info if not all required fields
   if (!selectedDate || !selectedTime || !selectedLocation) {
     warning.style.display = 'none';
+    const info = document.getElementById('groupSessionInfo');
+    if (info) info.style.display = 'none';
     updateSwimmerBookingState();
     return;
   }
 
-  const conflictFound = bookings.some(booking => {
-    const bookingDate = String(booking.start_date || '').trim();
+  const selectedTimeMinutes = parseTimeToMinutes(selectedTime);
+  if (selectedTimeMinutes === null) {
+    warning.style.display = 'none';
+    const info = document.getElementById('groupSessionInfo');
+    if (info) info.style.display = 'none';
+    updateSwimmerBookingState();
+    return;
+  }
+
+  let locationConflict = false;
+  let groupSwimmers = new Set();
+
+  for (const booking of bookings) {
+    // Use calendar_dates (array) if present, else skip
+    const calendarDates = Array.isArray(booking.calendar_dates) ? booking.calendar_dates : [];
+    if (!calendarDates.includes(selectedDate)) continue;
     const bookingTime = String(booking.time || '').trim();
+    const bookingTimeMinutes = parseTimeToMinutes(bookingTime);
+    if (bookingTimeMinutes === null) continue;
+    const minuteDiff = Math.abs(bookingTimeMinutes - selectedTimeMinutes);
+    if (minuteDiff >= 60) continue; // Only check if time diff is less than 60
     const bookingLocation = String(booking.location || '').trim().toLowerCase();
+    if (bookingLocation !== selectedLocation) {
+      // Location conflict
+      locationConflict = true;
+      break;
+    } else {
+      // Same location, group session
+      if (booking.student) {
+        groupSwimmers.add(booking.student);
+      }
+    }
+  }
 
-    return (
-      bookingDate === selectedDate &&
-      bookingTime === selectedTime &&
-      bookingLocation &&
-      bookingLocation !== selectedLocation
-    );
-  });
+  // Remove current swimmer (if present) from groupSwimmers (i.e., don't show own name)
+  const studentSelect = document.getElementById('studentSelect');
+  let currentSwimmer = '';
+  if (studentSelect) {
+    if (studentSelect.tagName === 'INPUT') {
+      currentSwimmer = studentSelect.value.trim();
+    } else if (studentSelect.tagName === 'SELECT') {
+      currentSwimmer = studentSelect.value.trim();
+    }
+  }
+  if (currentSwimmer) groupSwimmers.delete(currentSwimmer);
 
-  if (conflictFound) {
+  const info = document.getElementById('groupSessionInfo');
+
+  if (locationConflict) {
     warning.style.display = 'block';
     confirmBookingBtn.disabled = true;
+    // Hide group info if present
+    if (info) info.style.display = 'none';
+    return;
   } else {
     warning.style.display = 'none';
-
-    // Re-enable booking when conflict is cleared.
     confirmBookingBtn.disabled = false;
+
+    // Show info about group swimmers if any
+    if (groupSwimmers.size > 0) {
+      // Create or update info alert
+      let infoAlert = info;
+      if (!infoAlert) {
+        // Insert after warning
+        infoAlert = document.createElement('div');
+        infoAlert.id = 'groupSessionInfo';
+        infoAlert.className = 'alert alert-info mt-2';
+        warning.parentNode.insertBefore(infoAlert, warning.nextSibling);
+      }
+      infoAlert.style.display = 'block';
+      const names = Array.from(groupSwimmers);
+      if (names.length === 1) {
+        infoAlert.textContent = `You are swimming along with ${names[0]}.`;
+      } else if (names.length > 1) {
+        infoAlert.textContent = `You are swimming along with ${names[0]}, ${names[1]} and ${names.length - 2} others.`;
+      }
+    } else {
+      // Hide/remove info alert if present
+      if (info) info.style.display = 'none';
+    }
 
     updateSwimmerBookingState();
   }
