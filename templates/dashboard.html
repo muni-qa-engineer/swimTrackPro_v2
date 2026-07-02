@@ -276,73 +276,52 @@
 
 <div class="row g-4 mb-4">
 
-
-
   <div class="col-lg-4">
     <div class="card border-0 shadow" style="border-radius:18px;min-height:418px;">
-      <div class="card-header border-0 bg-white fw-bold d-flex justify-content-between align-items-center">
-        <span>📅 Mini Calendar</span>
-        <button id="openFullCalendarBtn" class="btn btn-sm btn-outline-primary">
-          Open Full Calendar
-        </button>
+      <div class="card-header border-0 bg-white fw-bold">
+        ⚡ Quick Actions
       </div>
+      <div class="card-body d-flex align-items-center">
+        <div class="row g-3 w-100">
 
-      <div class="card-body">
-
-        <div class="text-center mb-3">
-          <h5 class="fw-bold mb-0">{{ current_month_name }}</h5>
-          <!-- <small class="text-muted">Calendar redesign in progress</small> -->
-        </div>
-
-        <div class="mini-calendar">
-
-          <div class="calendar-header">
-            <span>Mon</span>
-            <span>Tue</span>
-            <span>Wed</span>
-            <span>Thu</span>
-            <span>Fri</span>
-            <span>Sat</span>
-            <span>Sun</span>
+          <div class="col-6">
+            <button id="quickBookBtn"
+                    type="button"
+                    class="btn w-100 h-100 border-0 shadow-sm quick-tile">
+              <div class="quick-icon quick-book">📅</div>
+              <div class="fw-bold mt-2">Book now</div>
+            </button>
           </div>
 
-          <div class="calendar-grid">
-
-            {% for day in range(1, 31) %}
-            <div class="calendar-day
-              {% if day == today_day %}
-                today
-              {% elif day in booked_dates %}
-                booked-day
-              {% endif %}">
-
-              {{ day }}
-
-            </div>
-            {% endfor %}
+          <div class="col-6">
+            <button id="quickBookingsBtn"
+                    type="button"
+                    class="btn w-100 h-100 border-0 shadow-sm quick-tile">
+              <div class="quick-icon quick-bookings">📋</div>
+              <div class="fw-bold mt-2">View Bookings</div>
+            </button>
           </div>
 
-        </div>
-
-        <div class="d-flex justify-content-center gap-4 mt-4 small">
-
-          <div>
-            <span class="legend-dot bg-success"></span>
-            Booked
+          <div class="col-6">
+            <button id="quickPaymentsBtn"
+                    type="button"
+                    class="btn w-100 h-100 border-0 shadow-sm quick-tile">
+              <div class="quick-icon quick-payments">💳</div>
+              <div class="fw-bold mt-2">Payments</div>
+            </button>
           </div>
 
-          <!-- <div>
-            <span class="legend-dot bg-warning"></span>
-            Makeup
-          </div> -->
-
-          <div>
-            <span class="legend-dot bg-primary"></span>
-            Today
+          <div class="col-6">
+            <button id="quickCalendarBtn"
+                    type="button"
+                    onclick="window.location.href='/help'"
+                    class="btn w-100 h-100 border-0 shadow-sm quick-tile">
+              <div class="quick-icon quick-contact">🎧</div>
+              <div class="fw-bold mt-2">Contact Coach</div>
+            </button>
           </div>
 
         </div>
-
       </div>
     </div>
   </div>
@@ -426,50 +405,69 @@
 
   <div class="col-lg-4">
     <div class="card border-0 shadow" style="border-radius:18px;min-height:418px;">
-      <div class="card-header border-0 bg-white fw-bold">
-        ⚡ Quick Actions
+      <div class="card-header border-0 bg-white fw-bold d-flex justify-content-between align-items-center">
+        <span>📅 Mini Calendar</span>
+        <button id="openFullCalendarBtn" class="btn btn-sm btn-outline-primary">
+          Open Full Calendar
+        </button>
       </div>
-      <div class="card-body d-flex align-items-center">
-        <div class="row g-3 w-100">
 
-          <div class="col-6">
-            <button id="quickBookBtn"
-                    type="button"
-                    class="btn w-100 h-100 border-0 shadow-sm quick-tile">
-              <div class="quick-icon quick-book">📅</div>
-              <div class="fw-bold mt-2">Book now</div>
-            </button>
+      <div class="card-body">
+
+        <div class="text-center mb-3">
+          <h5 class="fw-bold mb-0">{{ current_month_name }}</h5>
+          <!-- <small class="text-muted">Calendar redesign in progress</small> -->
+        </div>
+
+        <div class="mini-calendar">
+
+          <div class="calendar-header">
+            <span>Mon</span>
+            <span>Tue</span>
+            <span>Wed</span>
+            <span>Thu</span>
+            <span>Fri</span>
+            <span>Sat</span>
+            <span>Sun</span>
           </div>
 
-          <div class="col-6">
-            <button id="quickBookingsBtn"
-                    type="button"
-                    class="btn w-100 h-100 border-0 shadow-sm quick-tile">
-              <div class="quick-icon quick-bookings">📋</div>
-              <div class="fw-bold mt-2">View Bookings</div>
-            </button>
-          </div>
+          <div class="calendar-grid">
 
-          <div class="col-6">
-            <button id="quickPaymentsBtn"
-                    type="button"
-                    class="btn w-100 h-100 border-0 shadow-sm quick-tile">
-              <div class="quick-icon quick-payments">💳</div>
-              <div class="fw-bold mt-2">Payments</div>
-            </button>
-          </div>
+            {% for day in range(1, 31) %}
+            <div class="calendar-day
+              {% if day == today_day %}
+                today
+              {% elif day in booked_dates %}
+                booked-day
+              {% endif %}">
 
-          <div class="col-6">
-            <button id="quickCalendarBtn"
-                    type="button"
-                    onclick="window.location.href='/help'"
-                    class="btn w-100 h-100 border-0 shadow-sm quick-tile">
-              <div class="quick-icon quick-contact">🎧</div>
-              <div class="fw-bold mt-2">Contact Coach</div>
-            </button>
+              {{ day }}
+
+            </div>
+            {% endfor %}
           </div>
 
         </div>
+
+        <div class="d-flex justify-content-center gap-4 mt-4 small">
+
+          <div>
+            <span class="legend-dot bg-success"></span>
+            Booked
+          </div>
+
+          <!-- <div>
+            <span class="legend-dot bg-warning"></span>
+            Makeup
+          </div> -->
+
+          <div>
+            <span class="legend-dot bg-primary"></span>
+            Today
+          </div>
+
+        </div>
+
       </div>
     </div>
   </div>
