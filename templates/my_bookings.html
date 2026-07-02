@@ -97,11 +97,21 @@
                                 <div class="row g-3 mb-2">
                                     <div class="col-6">
                                         <div class="fw-semibold">
-                                          <span class="text-muted">📅 Start Date: </span>
+                                          <span class="text-muted">📅 StartDate: </span>
                                           {{ b.start_date[8:10] }}/{{ b.start_date[5:7] }}/{{ b.start_date[0:4] }}
                                         </div>
                                     </div>
 
+                                    <div class="col-6">
+                                        <div class="fw-semibold">
+                                          <span class="text-muted">⏰ Time: </span>
+                                          {{ b.time }}
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="row g-3 mb-2">
+                                    
                                     {% if b.end_date %}
                                     <div class="col-6">
                                         <div class="fw-semibold">
@@ -110,18 +120,10 @@
                                         </div>
                                     </div>
                                     {% endif %}
-                                </div>
-                                <div class="row g-3 mb-2">
-                                    <div class="col-6">
-                                        <div class="fw-semibold">
-                                          <span class="text-muted">⏰ Time: </span>
-                                          {{ b.time }}
-                                        </div>
-                                    </div>
 
                                     <div class="col-6">
                                         <div class="fw-semibold">
-                                          <span class="text-muted">👥 Persons: </span>
+                                          <span class="text-muted">👥 No. of Persons: </span>
                                           {{ b.persons or 1 }}
                                         </div>
                                     </div>

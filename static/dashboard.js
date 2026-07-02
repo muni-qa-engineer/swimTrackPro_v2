@@ -1322,7 +1322,7 @@ window.addEventListener('load', () => {
   const urlParams = new URLSearchParams(window.location.search);
   const swimmerExists = urlParams.get('swimmer_exists');
   const bookingConflict = window.location.search.includes('booking_conflict');
-  const locationConflict = window.location.search.includes('location_conflict');
+  // const locationConflict = window.location.search.includes('location_conflict');
   const bookingSuccess = window.location.search.includes('booking_success');
 
   if (bookingSuccess) {
@@ -1350,15 +1350,15 @@ window.addEventListener('load', () => {
     window.history.replaceState({}, document.title, window.location.pathname);
   }
 
-  if (locationConflict) {
-    createToast(
-      '⚠️ Selected time slot is already booked at another location.',
-      'danger',
-      4000
-    );
+  // if (locationConflict) {
+  //   createToast(
+  //     '⚠️ Selected time slot is already booked at another location.',
+  //     'danger',
+  //     4000
+  //   );
 
-    window.history.replaceState({}, document.title, window.location.pathname);
-  }
+  //   window.history.replaceState({}, document.title, window.location.pathname);
+  // }
 
   if (swimmerExists === 'true') {
     createToast('⚠️ Swimmer already exists', 'danger', 2000);
