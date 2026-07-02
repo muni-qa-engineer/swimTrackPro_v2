@@ -905,6 +905,7 @@ def booking_page():
         user_name=current_user,
         students=user_students,
         bookings=user_bookings,
+        all_bookings=data.get('bookings', []),
         location_suggestions=location_suggestions
     )
 

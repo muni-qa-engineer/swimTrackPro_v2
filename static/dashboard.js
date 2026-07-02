@@ -1086,7 +1086,11 @@ const swimmerNameInput = document.getElementById('swimmerNameInput');
 const bookingForm = document.querySelector('form[action="/book"]');
 
 function checkLocationConflict() {
-  const bookings = window.bookingsData || [];
+  // Trainer availability is global. Check every booking regardless of owner.
+  const bookings = window.allBookingsData || window.bookingsData || [];
+  if (!Array.isArray(bookings) || bookings.length === 0) {
+    return;
+  }
   const dateInput = document.querySelector('input[name="date"]');
   const locationInput = document.querySelector('input[name="location"]');
   const timeSelect = document.getElementById('timeSelect');
@@ -1159,6 +1163,7 @@ function checkLocationConflict() {
   }
 
   // Remove current swimmer (if present) from groupSwimmers (i.e., don't show own name)
+  // Only used for group session info, not for location conflict detection.
   const studentSelect = document.getElementById('studentSelect');
   let currentSwimmer = '';
   if (studentSelect) {

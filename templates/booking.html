@@ -387,11 +387,13 @@
 
 {% include 'components/session_timeout.html' %}
 <script>
-  window.bookingsData = {{ bookings|tojson|safe }};
+    window.bookingsData = {{ bookings|tojson|safe }};
+    window.allBookingsData = {{ all_bookings|tojson|safe }};
 
   console.log(
-    'V0044.0 Live Conflict Validation Loaded:',
-    window.bookingsData
+    'V0045.0 Advanced Booking Conflict Engine Loaded:',
+    // window.bookingsData
+    window.allBookingsData
   );
 </script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
