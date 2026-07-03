@@ -1,3 +1,8 @@
+{% extends 'base.html' %}
+
+{% block title %}Book Session - SwimTrackPro{% endblock %}
+
+{% block content %}
 <style>
 #locationPickerBtn {
     transition: all 0.2s ease;
@@ -12,11 +17,6 @@
     color: #0d6efd !important;
 }
 </style>
-{% extends 'base.html' %}
-
-{% block title %}Book Session - SwimTrackPro{% endblock %}
-
-{% block content %}
 
 {% include 'components/page_header.html' %}
 <div class="container-fluid py-3 px-2 px-md-4">
@@ -40,11 +40,11 @@
         <div class="card shadow-sm mb-4 border-0 h-100">
             <div class="card-header bg-primary text-white">📝 Book a Slot</div>
             <div class="card-body">
-                <form action="/book" method="POST" id="bookingForm">
+                <form action="{{ url_for('book') }}" method="POST" id="bookingForm">
                     <input type="hidden" name="active_tab" value="book_slot">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Swimmer Name <span class="text-danger">*</span></label>
+                            <label for="studentSelect" class="form-label fw-semibold">Swimmer Name <span class="text-danger">*</span></label>
                             <input
                                 type="text"
                                 id="studentSelect"
@@ -52,6 +52,7 @@
                                 class="form-control form-control-lg"
                                 list="swimmersList"
                                 placeholder="Enter name or select from existing list"
+                                autocomplete="name"
                                 required>
 
                             <datalist id="swimmersList">
@@ -63,11 +64,13 @@
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Email Address</label>
+                            <label for="emailInput" class="form-label fw-semibold">Email Address</label>
                             <input
                                 type="email"
+                                id="emailInput"
                                 name="email"
                                 class="form-control form-control-lg"
+                                autocomplete="email"
                                 placeholder="parent@example.com – used for Communication"
                             >
                         </div>
@@ -75,8 +78,8 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Package <span class="text-danger">*</span></label>
-                            <select name="package" class="form-select" id="packageSelect">
+                            <label for="packageSelect" class="form-label fw-semibold">Package <span class="text-danger">*</span></label>
+                            <select name="package" class="form-select" id="packageSelect" required>
                                 <option value="Demo">Demo Class</option>
                                 <option value="Single">Single Session</option>
                                 <option value="Monthly">Monthly</option>
@@ -90,20 +93,20 @@
                             </div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Start Date <span class="text-danger">*</span></label>
-                            <input type="date" name="date" class="form-control" required>
+                            <label for="startDateInput" class="form-label fw-semibold">Start Date <span class="text-danger">*</span></label>
+                            <input type="date" id="startDateInput" name="date" class="form-control" required>
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Time <span class="text-danger">*</span></label>
-                            <select name="time" id="timeSelect" class="form-select">
+                            <label for="timeSelect" class="form-label fw-semibold">Time <span class="text-danger">*</span></label>
+                            <select name="time" id="timeSelect" class="form-select" required>
                             </select>
                         </div>
                         <div class="col-md-6 mb-3" id="endDateContainer" style="display:none;">
-                            <label class="form-label fw-semibold">End Date</label>
-                            <input type="date" name="end_date" class="form-control">
+                            <label for="endDateInput" class="form-label fw-semibold">End Date</label>
+                            <input type="date" id="endDateInput" name="end_date" class="form-control">
                         </div>
                     </div>
 
@@ -179,18 +182,20 @@
 </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Location <span class="text-danger">*</span></label>
+                        <label for="locationInput" class="form-label fw-semibold">Location <span class="text-danger">*</span></label>
                         <div class="input-group input-group-lg">
                             <button
                                 type="button"
                                 id="locationPickerBtn"
                                 class="btn btn-outline-primary"
-                                title="Location Tools">
+                                title="Location tools"
+                                aria-label="Open location tools">
                                 <i class="fa-solid fa-location-dot text-primary"></i>
                             </button>
 
                             <input
                                 type="text"
+                                id="locationInput"
                                 name="location"
                                 list="locationSuggestions"
                                 class="form-control"
@@ -219,7 +224,7 @@
                     <div class="row">
 
                         <div class="col-md-4 mb-3">
-                            <label class="form-label fw-semibold">No of Persons</label>
+                            <label for="personsInput" class="form-label fw-semibold">Number of Persons</label>
                             <input
                                 type="number"
                                 id="personsInput"
@@ -232,15 +237,15 @@
                         </div>
 
                         <div class="col-md-4 mb-3">
-                            <label class="form-label fw-semibold">Payment Status <span class="text-danger">*</span></label>
-                            <select name="payment_status" class="form-select form-control-lg">
+                            <label for="paymentStatusSelect" class="form-label fw-semibold">Payment Status <span class="text-danger">*</span></label>
+                            <select name="payment_status" id="paymentStatusSelect" class="form-select form-control-lg" required>
                                 <option value="Not Paid">Not Paid</option>
                                 <option value="Paid">Paid</option>
                             </select>
                         </div>
 
                         <div class="col-md-4 mb-3">
-                            <label class="form-label fw-semibold">Fee (₹)</label>
+                            <label for="feeInput" class="form-label fw-semibold">Fee (₹)</label>
                             <input
                                 type="number"
                                 id="feeInput"
@@ -288,13 +293,20 @@
 </div>
 
 <!-- Map Picker Modal -->
-<div class="modal fade" id="mapPickerModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade"
+     id="mapPickerModal"
+     tabindex="-1"
+     aria-labelledby="mapPickerModalLabel"
+     aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
 
       <div class="modal-header">
-        <h5 class="modal-title">🗺️ Choose Location</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <h5 class="modal-title" id="mapPickerModalLabel">🗺️ Choose Location</h5>
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"></button>
       </div>
 
       <div class="modal-body">
@@ -436,12 +448,19 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateDateRestrictions() {
         if (!startDateInput || !packageSelect) return;
 
+        function toLocalDateString(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
         const today = new Date();
-        const todayStr = today.toISOString().split('T')[0];
+        const todayStr = toLocalDateString(today);
 
         const maxDate = new Date();
         maxDate.setDate(maxDate.getDate() + 10);
-        const maxDateStr = maxDate.toISOString().split('T')[0];
+        const maxDateStr = toLocalDateString(maxDate);
 
         if (packageSelect.value === 'Demo' || packageSelect.value === 'Single') {
             startDateInput.min = todayStr;
@@ -609,4 +628,16 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+<script>
+document.getElementById('bookingForm')?.addEventListener('reset', function() {
+    window.setTimeout(function() {
+        document.getElementById('packageSelect')
+            ?.dispatchEvent(new Event('change', { bubbles: true }));
+        document.getElementById('startDateInput')
+            ?.dispatchEvent(new Event('change', { bubbles: true }));
+        document.getElementById('studentSelect')
+            ?.dispatchEvent(new Event('input', { bubbles: true }));
+    }, 0);
+});
+</script>
 {% endblock %}

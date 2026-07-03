@@ -1,64 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Edit Booking</title>
-</head>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: #f4f7fb;
-        }
+{% extends 'base.html' %}
 
-        .edit-card {
-            border: none;
-            border-radius: 18px;
-            overflow: hidden;
-            max-width: 760px;
-            margin: 0 auto;
-        }
+{% block title %}Edit Booking - SwimTrackPro{% endblock %}
 
-        .edit-header {
-            background: linear-gradient(135deg, #0d6efd, #0b5ed7);
-            padding: 14px 20px;
-        }
+{% block content %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-        .form-control,
-        .form-select {
-            border-radius: 10px;
-            padding: 10px 12px;
-        }
+{% include 'components/page_header.html' %}
 
-        .form-label {
-            font-weight: 600;
-            margin-bottom: 6px;
-            color: #374151;
-            font-size: 0.95rem;
-        }
-
-        .btn {
-            border-radius: 10px;
-            padding: 9px 16px;
-            font-weight: 600;
-        }
-        @media (max-width: 576px) {
-            .edit-header h4 {
-                font-size: 1.15rem;
-            }
-
-            .edit-header .btn {
-                padding: 6px 12px;
-            }
-        }
-    </style>
-</head>
-<body class="bg-light">
-
-<div class="container py-4">
-    <div class="card shadow-lg edit-card">
-        <div class="card-header edit-header text-white d-flex justify-content-between align-items-center">
-            <!-- <a href="/my-bookings" class="btn btn-light btn-sm px-3">← Back</a> -->
-            <h4 class="mb-0">Edit Booking</h4>
+<div class="container-fluid py-4 px-2 px-md-4">
+    <div class="card shadow edit-card mx-auto" style="max-width: 760px; border-radius: 18px; border: none; overflow: hidden; background: #ffffff;">
+        <div class="card-header bg-primary text-white py-3">
+            <h4 class="mb-0 fw-bold">📝 Edit Booking</h4>
         </div>
 
         <div class="card-body p-3 p-md-4">
@@ -72,42 +25,42 @@
                 {% endfor %}
               {% endif %}
             {% endwith %}
-            <form action="/update/{{ booking.id }}" method="POST">
+            
+            <form action="/update/{{ booking.id }}" method="POST" id="editBookingForm">
 
                 <div class="mb-3">
-                    <label class="form-label">Swimmer Name</label>
+                    <label class="form-label fw-semibold">Swimmer Name</label>
                     <input type="text" name="student" class="form-control" value="{{ booking.student }}" required>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Date</label>
+                    <label class="form-label fw-semibold">Start Date</label>
                     <input type="date" name="date" class="form-control" value="{{ booking.start_date }}" required>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Package</label>
-
-                    <select name="package" id="packageSelect" class="form-select">
-                        <option value="Demo" {% if booking.package == 'Demo' %}selected{% endif %}>Demo</option>
-                        <option value="Single" {% if booking.package == 'Single' %}selected{% endif %}>Single</option>
-                        <!-- <option value="Demo" {% if booking.package == 'Demo' %}selected{% endif %}>Demo</option> -->
+                    <label class="form-label fw-semibold">Package</label>
+                    <select name="package" id="packageSelect" class="form-select" required>
+                        <option value="Demo" {% if booking.package == 'Demo' %}selected{% endif %}>Demo Class</option>
+                        <option value="Single" {% if booking.package == 'Single' %}selected{% endif %}>Single Session</option>
                         <option value="Monthly" {% if booking.package == 'Monthly' %}selected{% endif %}>Monthly</option>
                         <option value="Custom" {% if booking.package == 'Custom' %}selected{% endif %}>Custom</option>
                     </select>
+                    <div id="customPackageHint" class="form-text text-muted" style="display:none;">
+                        ℹ️ Custom package supports a maximum duration of 60 days.
+                    </div>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Time</label>
-                    <select name="time" class="form-select">
+                    <label class="form-label fw-semibold">Time</label>
+                    <select name="time" class="form-select" required>
                         {% for hour in range(6, 22) %}
                             {% for minute in [0, 30] %}
                                 {% if not (hour == 21 and minute == 30) %}
                                     {% set display_hour = hour % 12 if hour % 12 != 0 else 12 %}
                                     {% set ampm = 'PM' if hour >= 12 else 'AM' %}
                                     {% set formatted = '%02d:%02d %s' % (display_hour, minute, ampm) %}
-
-                                    <option value="{{ formatted }}"
-                                        {% if booking.time == formatted %}selected{% endif %}>
+                                    <option value="{{ formatted }}" {% if booking.time == formatted %}selected{% endif %}>
                                         {{ formatted }}
                                     </option>
                                 {% endif %}
@@ -116,79 +69,93 @@
                     </select>
                 </div>
 
-                <div class="mb-4">
-                    <label class="form-label">Select Class Days</label>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        Select Class Days
+                        <span id="monthlyPackageHint" class="text-muted small ms-2" style="display:none;">
+                            -> Monthly: Choose 2 or 3 days/week
+                        </span>
+                        <span id="singleDemoHint" class="text-muted small ms-2" style="display:none;">
+                            (Day picked automatically.)
+                        </span>
+                        <span id="customDaysHint" class="text-muted small ms-2" style="display:none;">
+                            -> Max 5 class days per week are allowed
+                        </span>
+                    </label>
 
                     {% set selected_days_text = booking.selected_days or '' %}
-
                     <div class="d-flex flex-wrap gap-3 mt-2">
-
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="selected_days" value="Mon"
-                                {% if 'Mon' in selected_days_text %}checked{% endif %}>
-                            <label class="form-check-label">Mon</label>
+                            <input class="form-check-input class-day" type="checkbox" name="selected_days" value="Monday" id="monday"
+                                {% if 'Monday' in selected_days_text or 'Mon' in selected_days_text %}checked{% endif %}>
+                            <label class="form-check-label" for="monday">Mon</label>
                         </div>
-
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="selected_days" value="Tue"
-                                {% if 'Tue' in selected_days_text %}checked{% endif %}>
-                            <label class="form-check-label">Tue</label>
+                            <input class="form-check-input class-day" type="checkbox" name="selected_days" value="Tuesday" id="tuesday"
+                                {% if 'Tuesday' in selected_days_text or 'Tue' in selected_days_text %}checked{% endif %}>
+                            <label class="form-check-label" for="tuesday">Tue</label>
                         </div>
-
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="selected_days" value="Wed"
-                                {% if 'Wed' in selected_days_text %}checked{% endif %}>
-                            <label class="form-check-label">Wed</label>
+                            <input class="form-check-input class-day" type="checkbox" name="selected_days" value="Wednesday" id="wednesday"
+                                {% if 'Wednesday' in selected_days_text or 'Wed' in selected_days_text %}checked{% endif %}>
+                            <label class="form-check-label" for="wednesday">Wed</label>
                         </div>
-
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="selected_days" value="Thu"
-                                {% if 'Thu' in selected_days_text %}checked{% endif %}>
-                            <label class="form-check-label">Thu</label>
+                            <input class="form-check-input class-day" type="checkbox" name="selected_days" value="Thursday" id="thursday"
+                                {% if 'Thursday' in selected_days_text or 'Thu' in selected_days_text %}checked{% endif %}>
+                            <label class="form-check-label" for="thursday">Thu</label>
                         </div>
-
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="selected_days" value="Fri"
-                                {% if 'Fri' in selected_days_text %}checked{% endif %}>
-                            <label class="form-check-label">Fri</label>
+                            <input class="form-check-input class-day" type="checkbox" name="selected_days" value="Friday" id="friday"
+                                {% if 'Friday' in selected_days_text or 'Fri' in selected_days_text %}checked{% endif %}>
+                            <label class="form-check-label" for="friday">Fri</label>
                         </div>
-
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="selected_days" value="Sat"
-                                {% if 'Sat' in selected_days_text %}checked{% endif %}>
-                            <label class="form-check-label">Sat</label>
+                            <input class="form-check-input class-day" type="checkbox" name="selected_days" value="Saturday" id="saturday"
+                                {% if 'Saturday' in selected_days_text or 'Sat' in selected_days_text %}checked{% endif %}>
+                            <label class="form-check-label" for="saturday">Sat</label>
                         </div>
-
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="selected_days" value="Sun"
-                                {% if 'Sun' in selected_days_text %}checked{% endif %}>
-                            <label class="form-check-label">Sun</label>
+                            <input class="form-check-input class-day" type="checkbox" name="selected_days" value="Sunday" id="sunday"
+                                {% if 'Sunday' in selected_days_text or 'Sun' in selected_days_text %}checked{% endif %}>
+                            <label class="form-check-label" for="sunday">Sun</label>
                         </div>
-
                     </div>
                 </div>
 
                 <div class="mb-3" id="endDateContainer">
-                    <label class="form-label">End Date</label>
-                    <input type="date" name="end_date" class="form-control" value="{{ booking.end_date or '' }}">
+                    <label class="form-label fw-semibold">End Date</label>
+                    <input type="date" name="end_date" id="endDateInput" class="form-control" value="{{ booking.end_date or '' }}">
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Location</label>
-                    <input
-                        type="text"
-                        name="location"
-                        class="form-control"
-                        value="{{ booking.location or '' }}"
-                        placeholder="Enter swimming pool location"
-                    >
+                    <label class="form-label fw-semibold">Location</label>
+                    <div class="input-group">
+                        <button
+                            type="button"
+                            id="locationPickerBtn"
+                            class="btn btn-outline-primary"
+                            title="Location tools"
+                            aria-label="Open location tools">
+                            <i class="fa-solid fa-location-dot"></i>
+                        </button>
+                        <input
+                            type="text"
+                            id="locationInput"
+                            name="location"
+                            class="form-control"
+                            value="{{ booking.location or '' }}"
+                            placeholder="Enter swimming pool location"
+                            required
+                        >
+                    </div>
+                    <input type="hidden" name="latitude" id="latitudeInput" value="{{ booking.latitude or '' }}">
+                    <input type="hidden" name="longitude" id="longitudeInput" value="{{ booking.longitude or '' }}">
                 </div>
 
                 <div class="row">
-
                     <div class="col-md-4 mb-3">
-                        <label class="form-label">No of Persons</label>
-
+                        <label class="form-label fw-semibold">No of Persons</label>
                         <input
                             type="number"
                             name="persons"
@@ -197,28 +164,21 @@
                             min="1"
                             max="5"
                             value="{{ booking.persons or 1 }}"
+                            required
                         >
                     </div>
 
                     <div class="col-md-4 mb-3">
-                        <label class="form-label">Payment Status</label>
-
-                        <select name="payment_status" class="form-select">
+                        <label class="form-label fw-semibold">Payment Status</label>
+                        <select name="payment_status" class="form-select" required>
                             {% set current_payment_status = ((booking.payment_status or booking.status or 'Not Paid') | trim | lower) %}
-                            <option value="Not Paid"
-                                {% if current_payment_status == 'not paid' %}selected{% endif %}>
-                                Not Paid
-                            </option>
-                            <option value="Paid"
-                                {% if current_payment_status == 'paid' %}selected{% endif %}>
-                                Paid
-                            </option>
+                            <option value="Not Paid" {% if current_payment_status == 'not paid' %}selected{% endif %}>Not Paid</option>
+                            <option value="Paid" {% if current_payment_status == 'paid' %}selected{% endif %}>Paid</option>
                         </select>
                     </div>
 
                     <div class="col-md-4 mb-3">
-                        <label class="form-label">Fee</label>
-
+                        <label class="form-label fw-semibold">Fee (₹)</label>
                         <input
                             type="number"
                             name="fee"
@@ -226,30 +186,18 @@
                             class="form-control"
                             value="{{ booking.fee }}"
                             {% if role != 'trainer' %}readonly{% endif %}
+                            required
                         >
-
                         <div class="form-text">
-                            Fee is calculated automatically based on package and number of persons.
+                            Fee is calculated automatically.
                         </div>
                     </div>
-
                 </div>
 
-                <div class="d-flex flex-column flex-sm-row justify-content-between gap-2">
-                    <!-- <div class="card-header edit-header text-white d-flex justify-content-between align-items-center">
-                        <a href="/my-bookings" class="btn btn-light btn-sm px-3">← Back</a>
-                        <h4 class="mb-0">Edit Booking</h4>
-                    </div> -->
-                    <a href="/my-bookings" class="btn btn-outline-secondary px-4 w-100 w-sm-auto">Back</a>
-                    <button
-                        type="submit"
-                        id="updateBookingBtn"
-                        class="btn btn-success px-4 w-100 w-sm-auto">
-                        <span
-                            id="updateBookingSpinner"
-                            class="spinner-border spinner-border-sm me-2 d-none"
-                            role="status"
-                            aria-hidden="true"></span>
+                <div class="d-flex gap-3 mt-4">
+                    <a href="/my-bookings" class="btn btn-outline-secondary w-50">Back</a>
+                    <button type="submit" id="updateBookingBtn" class="btn btn-success w-50">
+                        <span id="updateBookingSpinner" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
                         <span id="updateBookingText">Update Booking</span>
                     </button>
                 </div>
@@ -257,358 +205,374 @@
             </form>
         </div>
     </div>
-{% include 'components/session_timeout.html' %}
+</div>
+
+<!-- Map Picker Modal -->
+<div class="modal fade" id="mapPickerModal" tabindex="-1" aria-labelledby="mapPickerModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="mapPickerModalLabel">🗺️ Choose Location</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-grid gap-3 mb-3">
+            <button type="button" id="modalCurrentLocationBtn" class="btn btn-outline-success btn-lg">
+                <i class="fa-solid fa-location-crosshairs me-2"></i>Use Current Location
+            </button>
+            <hr class="my-1">
+            <button type="button" id="modalChooseOnMapBtn" class="btn btn-outline-primary btn-lg">
+                <i class="fa-solid fa-map-location-dot me-2"></i>Choose on Map
+            </button>
+        </div>
+        <div id="mapPickerContainer" style="display:none;">
+            <div id="mapPicker" style="height:400px; width: 100%;"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" id="useSelectedLocationBtn" class="btn btn-primary">Use Selected Location</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
-const pkg = document.getElementById('packageSelect');
-const endDateContainer = document.getElementById('endDateContainer');
-const startDateInput = document.querySelector('input[name="date"]');
-const endDateInput = document.querySelector('input[name="end_date"]');
-const dayCheckboxes = document.querySelectorAll('input[name="selected_days"]');
-const personsInput = document.getElementById('personsInput');
-const feeInput = document.getElementById('feeInput');
+document.addEventListener('DOMContentLoaded', function() {
+    const pkg = document.getElementById('packageSelect');
+    const endDateContainer = document.getElementById('endDateContainer');
+    const startDateInput = document.querySelector('input[name="date"]');
+    const endDateInput = document.getElementById('endDateInput');
+    const dayCheckboxes = document.querySelectorAll('.class-day');
+    const personsInput = document.getElementById('personsInput');
+    const feeInput = document.getElementById('feeInput');
 
-function updateEditBookingRules() {
+    const monthlyPackageHint = document.getElementById('monthlyPackageHint');
+    const singleDemoHint = document.getElementById('singleDemoHint');
+    const customDaysHint = document.getElementById('customDaysHint');
+    const customPackageHint = document.getElementById('customPackageHint');
 
-    if (!pkg || !startDateInput) return;
+    function updateEditBookingRules() {
+        if (!pkg || !startDateInput) return;
 
-    const selectedDate = new Date(startDateInput.value);
+        // Toggle hints
+        monthlyPackageHint.style.display = pkg.value === 'Monthly' ? 'inline' : 'none';
+        singleDemoHint.style.display = (pkg.value === 'Demo' || pkg.value === 'Single') ? 'inline' : 'none';
+        if (customDaysHint) customDaysHint.style.display = pkg.value === 'Custom' ? 'inline' : 'none';
+        if (customPackageHint) customPackageHint.style.display = pkg.value === 'Custom' ? 'block' : 'none';
 
-    const days = [
-        'Sunday',
-        'Monday',
-        'Tuesday',
-        'Wednesday',
-        'Thursday',
-        'Friday',
-        'Saturday'
-    ];
+        const selectedDate = new Date(startDateInput.value + 'T00:00:00');
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const allowedDay = days[selectedDate.getDay()];
 
-    const allowedDay = days[selectedDate.getDay()];
+        if (pkg.value === 'Single' || pkg.value === 'Demo') {
+            dayCheckboxes.forEach(cb => {
+                cb.checked = false;
+                if (cb.value === allowedDay) {
+                    cb.disabled = false;
+                    cb.checked = true;
+                } else {
+                    cb.disabled = true;
+                }
+            });
 
-    // SINGLE + DEMO PACKAGE
-    if (pkg.value === 'Single' || pkg.value === 'Demo') {
-
-        // Automatically select the weekday that matches the chosen start date.
-        const weekdayMap = {
-            'Sunday': 'Sun',
-            'Monday': 'Mon',
-            'Tuesday': 'Tue',
-            'Wednesday': 'Wed',
-            'Thursday': 'Thu',
-            'Friday': 'Fri',
-            'Saturday': 'Sat'
-        };
-
-        const selectedDayValue = weekdayMap[allowedDay];
-
-        dayCheckboxes.forEach(cb => {
-            cb.checked = false;
-
-            if (cb.value === selectedDayValue) {
-                cb.disabled = false;
-                cb.checked = true;
-            } else {
-                cb.disabled = true;
-            }
-        });
-
-        if (endDateContainer) {
-            endDateContainer.style.display = 'none';
-        }
-        if (endDateInput) {
-            endDateInput.value = startDateInput.value;
-        }
-        if (endDateInput) {
-            endDateInput.readOnly = true;
-        }
-    }
-
-    // MONTHLY + CUSTOM
-    else {
-
-        dayCheckboxes.forEach(cb => {
-            cb.disabled = false;
-        });
-
-        if (endDateContainer) {
-            endDateContainer.style.display = 'block';
-        }
-        if (endDateInput) {
-            endDateInput.readOnly = (pkg.value === 'Monthly');
-        }
-
-        // MONTHLY AUTO END DATE
-        if (pkg.value === 'Monthly') {
-
-            const autoEndDate = new Date(selectedDate);
-
-            autoEndDate.setMonth(autoEndDate.getMonth() + 1);
-            autoEndDate.setDate(autoEndDate.getDate() - 1);
-
-            const yyyy = autoEndDate.getFullYear();
-            const mm = String(autoEndDate.getMonth() + 1).padStart(2, '0');
-            const dd = String(autoEndDate.getDate()).padStart(2, '0');
-
+            if (endDateContainer) endDateContainer.style.display = 'none';
             if (endDateInput) {
-                endDateInput.value = `${yyyy}-${mm}-${dd}`;
+                endDateInput.value = startDateInput.value;
                 endDateInput.readOnly = true;
             }
-        }
-        if (pkg.value === 'Custom' && endDateInput) {
-            endDateInput.readOnly = false;
+        } else {
+            dayCheckboxes.forEach(cb => {
+                cb.disabled = false;
+            });
 
-            const maxEndDate = new Date(selectedDate);
-            maxEndDate.setDate(maxEndDate.getDate() + 59);
+            if (endDateContainer) endDateContainer.style.display = 'block';
+            if (endDateInput) {
+                endDateInput.readOnly = (pkg.value === 'Monthly');
+            }
 
-            const yyyy = maxEndDate.getFullYear();
-            const mm = String(maxEndDate.getMonth() + 1).padStart(2, '0');
-            const dd = String(maxEndDate.getDate()).padStart(2, '0');
+            if (pkg.value === 'Monthly') {
+                const autoEndDate = new Date(selectedDate);
+                autoEndDate.setMonth(autoEndDate.getMonth() + 1);
+                autoEndDate.setDate(autoEndDate.getDate() - 1);
 
-            endDateInput.max = `${yyyy}-${mm}-${dd}`;
+                const yyyy = autoEndDate.getFullYear();
+                const mm = String(autoEndDate.getMonth() + 1).padStart(2, '0');
+                const dd = String(autoEndDate.getDate()).padStart(2, '0');
 
-            if (endDateInput.value && endDateInput.value > endDateInput.max) {
-                endDateInput.value = endDateInput.max;
+                if (endDateInput) {
+                    endDateInput.value = `${yyyy}-${mm}-${dd}`;
+                }
+            } else if (pkg.value === 'Custom' && endDateInput) {
+                const maxEndDate = new Date(selectedDate);
+                maxEndDate.setDate(maxEndDate.getDate() + 59);
+
+                const yyyy = maxEndDate.getFullYear();
+                const mm = String(maxEndDate.getMonth() + 1).padStart(2, '0');
+                const dd = String(maxEndDate.getDate()).padStart(2, '0');
+
+                endDateInput.max = `${yyyy}-${mm}-${dd}`;
+                if (endDateInput.value && endDateInput.value > endDateInput.max) {
+                    endDateInput.value = endDateInput.max;
+                }
             }
         }
-    }
-    updateEditBookingFee();
-}
-
-function updateEditBookingFee() {
-    if (!feeInput) {
-        return;
+        updateEditBookingFee();
     }
 
-    const persons = Math.max(parseInt(personsInput?.value || '1', 10), 1);
+    function updateEditBookingFee() {
+        if (!feeInput) return;
 
-    // Maximum 5 persons allowed.
-    if (persons > 5) {
-        alert('Maximum 5 persons allowed.');
+        const selected = [...dayCheckboxes].filter(cb => cb.checked).map(cb => cb.value);
+        const persons = Math.max(parseInt(personsInput?.value || '1', 10), 1);
 
-        if (personsInput) {
-            personsInput.value = 5;
+        if (persons > 5) {
+            alert('Maximum 5 persons allowed.');
+            if (personsInput) personsInput.value = 5;
+            return updateEditBookingFee();
         }
 
-        return updateEditBookingFee();
-    }
+        const discountMap = { 1: 0, 2: 6, 3: 11, 4: 16, 5: 21 };
+        const discount = discountMap[persons] || 0;
+        let actualAmount = 0;
 
-    // Discount rules for all package types.
-    const discountMap = {
-        1: 0,
-        2: 6,
-        3: 11,
-        4: 16,
-        5: 21
-    };
-
-    const discount = discountMap[persons] || 0;
-    let actualAmount = 0;
-    // Demo package
-    if (pkg.value === 'Demo') {
-        actualAmount = 500 * persons;
-    }
-    
-    // Single package
-    else if (pkg.value === 'Single') {
-        actualAmount = 750 * persons;
-    }
-
-    // Demo package
-    // else if (pkg.value === 'Demo') {
-    //     actualAmount = 500 * persons;
-    // }
-
-    // Monthly package
-    else if (pkg.value === 'Monthly') {
-        const checkedDays = [...dayCheckboxes].filter(cb => cb.checked);
-        const daysCount = checkedDays.length;
-
-        // Monthly pricing:
-        // 1 day = 3000
-        // 2 days = 6000
-        // 3 days = 9000
-        actualAmount = (daysCount * 3000) * persons;
-    }
-
-    // Custom package
-    else if (pkg.value === 'Custom') {
-        const startValue = startDateInput?.value;
-        const endValue = endDateInput?.value;
-        const checkedDays = [...dayCheckboxes].filter(cb => cb.checked);
-
-        if (!startValue || !endValue || checkedDays.length === 0) {
-            feeInput.value = 0;
-            feeInput.placeholder = '';
-            return;
-        }
-
-        const startDate = new Date(startValue + 'T00:00:00');
-        const endDate = new Date(endValue + 'T00:00:00');
-
-        const weekdayMap = {
-            'Sun': 0,
-            'Mon': 1,
-            'Tue': 2,
-            'Wed': 3,
-            'Thu': 4,
-            'Fri': 5,
-            'Sat': 6,
-            'Sunday': 0,
-            'Monday': 1,
-            'Tuesday': 2,
-            'Wednesday': 3,
-            'Thursday': 4,
-            'Friday': 5,
-            'Saturday': 6
-        };
-
-        const selectedWeekdays = checkedDays.map(
-            cb => weekdayMap[cb.value]
-        );
-
-        let sessionCount = 0;
-        const current = new Date(startDate);
-
-        while (current <= endDate) {
-            if (selectedWeekdays.includes(current.getDay())) {
-                sessionCount++;
+        if (pkg.value === 'Demo') {
+            actualAmount = 500 * persons;
+        } else if (pkg.value === 'Single') {
+            actualAmount = 750 * persons;
+        } else if (pkg.value === 'Monthly') {
+            if (selected.length < 2 || selected.length > 3) {
+                feeInput.value = '';
+                feeInput.placeholder = 'Select 2 or 3 class days';
+                return;
             }
-            current.setDate(current.getDate() + 1);
+            actualAmount = (selected.length === 2 ? 6000 : 9000) * persons;
+        } else if (pkg.value === 'Custom') {
+            const startValue = startDateInput?.value;
+            const endValue = endDateInput?.value;
+
+            if (!startValue || !endValue || selected.length === 0) {
+                feeInput.value = 0;
+                feeInput.placeholder = '';
+                return;
+            }
+
+            const start = new Date(startValue + 'T00:00:00');
+            const end = new Date(endValue + 'T00:00:00');
+            const durationDays = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+            const dayMap = {
+                'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6
+            };
+            const selectedWeekdays = selected.map(day => dayMap[day]);
+
+            let sessionCount = 0;
+            const current = new Date(start);
+
+            while (current <= end) {
+                if (selectedWeekdays.includes(current.getDay())) {
+                    sessionCount++;
+                }
+                current.setDate(current.getDate() + 1);
+            }
+
+            const monthlyCustomFees = { 1: 3000, 2: 6000, 3: 9000, 4: 11000, 5: 12000 };
+            const twoMonthCustomFees = { 1: 6000, 2: 12000, 3: 18000, 4: 22000, 5: 24000 };
+            const selectedDaysPerWeek = selected.length;
+
+            if (durationDays >= 1 && durationDays <= 23) {
+                actualAmount = sessionCount * 750 * persons;
+            } else if (durationDays >= 24 && durationDays <= 30) {
+                actualAmount = (monthlyCustomFees[selectedDaysPerWeek] || 0) * persons;
+            } else if (durationDays >= 31 && durationDays <= 53) {
+                actualAmount = sessionCount * 650 * persons;
+            } else if (durationDays >= 54 && durationDays <= 60) {
+                actualAmount = (twoMonthCustomFees[selectedDaysPerWeek] || 0) * persons;
+            } else {
+                feeInput.value = '';
+                feeInput.placeholder = 'Maximum 60 days allowed';
+                return;
+            }
         }
 
-        const durationDays =
-            Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-
-        const monthlyCustomFees = {
-            1: 3000,
-            2: 6000,
-            3: 9000,
-            4: 11000,
-            5: 12000
-        };
-
-        const twoMonthCustomFees = {
-            1: 6000,
-            2: 12000,
-            3: 18000,
-            4: 22000,
-            5: 24000
-        };
-
-        const selectedDaysPerWeek = checkedDays.length;
-
-        if (durationDays >= 1 && durationDays <= 23) {
-            actualAmount = sessionCount * 750 * persons;
-        }
-        else if (durationDays >= 24 && durationDays <= 30) {
-            actualAmount =
-                (monthlyCustomFees[selectedDaysPerWeek] || 0) * persons;
-        }
-        else if (durationDays >= 31 && durationDays <= 53) {
-            actualAmount = sessionCount * 650 * persons;
-        }
-        else if (durationDays >= 54 && durationDays <= 60) {
-            actualAmount =
-                (twoMonthCustomFees[selectedDaysPerWeek] || 0) * persons;
-        }
-        else {
-            feeInput.value = '';
-            feeInput.placeholder = 'Maximum 60 days allowed';
-            return;
-        }
+        const finalFee = Math.round(actualAmount * (100 - discount) / 100);
+        feeInput.placeholder = '';
+        feeInput.value = finalFee;
     }
 
-    const finalFee = Math.round(
-        actualAmount * (100 - discount) / 100
-    );
+    function validateSelectedDaysLimit() {
+        const checked = [...dayCheckboxes].filter(cb => cb.checked);
 
-    feeInput.placeholder = '';
-    feeInput.value = finalFee;
-}
-
-function validateSelectedDaysLimit() {
-
-    const checked = [...dayCheckboxes].filter(cb => cb.checked);
-
-    // MONTHLY => max 3 days
-    if (pkg.value === 'Monthly' && checked.length > 3) {
-
-        alert('Monthly package allows maximum 3 class days');
-
-        checked[checked.length - 1].checked = false;
+        if (pkg.value === 'Monthly' && checked.length > 3) {
+            alert('Monthly package allows maximum 3 class days');
+            checked[checked.length - 1].checked = false;
+        }
+        if (pkg.value === 'Custom' && checked.length > 5) {
+            alert('Maximum 5 class days allowed for Custom package');
+            checked[checked.length - 1].checked = false;
+        }
+        updateEditBookingFee();
     }
-    if (pkg.value === 'Custom' && checked.length > 5) {
 
-    alert('Maximum 5 class days allowed for Custom package');
-
-    checked[checked.length - 1].checked = false;
-    }
-}
-
-if (pkg) {
-    pkg.addEventListener('change', updateEditBookingRules);
-}
-
-if (startDateInput) {
-    startDateInput.addEventListener('change', updateEditBookingRules);
-}
-if (endDateInput) {
-    endDateInput.addEventListener('change', updateEditBookingFee);
-}
-
-if (personsInput) {
-    personsInput.addEventListener('input', updateEditBookingFee);
-}
-
-if (dayCheckboxes.length > 0) {
-    dayCheckboxes.forEach(cb => {
-        cb.addEventListener('change', validateSelectedDaysLimit);
-        cb.addEventListener('change', updateEditBookingFee);
+    // Attach listeners
+    if (pkg) pkg.addEventListener('change', function() {
+        dayCheckboxes.forEach(cb => cb.checked = false);
+        updateEditBookingRules();
     });
-}
+    if (startDateInput) startDateInput.addEventListener('change', updateEditBookingRules);
+    if (endDateInput) endDateInput.addEventListener('change', updateEditBookingFee);
+    if (personsInput) personsInput.addEventListener('input', updateEditBookingFee);
 
-updateEditBookingRules();
-updateEditBookingFee();
-
-// ======================================
-// V0033.2.3 Step 2 - Update Button Loading
-// ======================================
-document.addEventListener('DOMContentLoaded', function() {
-    const editForm =
-        document.querySelector('form[action^="/update/"]');
-
-    const updateButton =
-        document.getElementById('updateBookingBtn');
-    const updateSpinner =
-        document.getElementById('updateBookingSpinner');
-    const updateText =
-        document.getElementById('updateBookingText');
-
-    if (!editForm || !updateButton) {
-        return;
+    if (dayCheckboxes.length > 0) {
+        dayCheckboxes.forEach(cb => {
+            cb.addEventListener('change', validateSelectedDaysLimit);
+        });
     }
 
-    editForm.addEventListener('submit', function(event) {
-        // Prevent duplicate submissions.
-        if (updateButton.disabled) {
-            event.preventDefault();
-            return;
-        }
+    updateEditBookingRules();
 
-        updateButton.disabled = true;
+    // Map Location Picker logic
+    const locationPickerBtn = document.getElementById('locationPickerBtn');
+    const modalCurrentLocationBtn = document.getElementById('modalCurrentLocationBtn');
+    const modalChooseOnMapBtn = document.getElementById('modalChooseOnMapBtn');
+    const mapPickerContainer = document.getElementById('mapPickerContainer');
+    const locationInput = document.getElementById('locationInput');
+    const latitudeInput = document.getElementById('latitudeInput');
+    const longitudeInput = document.getElementById('longitudeInput');
 
-        if (updateSpinner) {
-            updateSpinner.classList.remove('d-none');
+    async function reverseGeocode(lat, lng) {
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+            const data = await response.json();
+            return data.display_name || `${lat}, ${lng}`;
+        } catch (error) {
+            console.error('Reverse geocoding failed:', error);
+            return `${lat}, ${lng}`;
         }
+    }
 
-        if (updateText) {
-            updateText.textContent = 'Updating...';
-        }
-    });
+    let map;
+    let selectedLat = latitudeInput?.value || null;
+    let selectedLng = longitudeInput?.value || null;
+    let selectedMarker = null;
+    let currentLat = null;
+    let currentLng = null;
+
+    if (locationPickerBtn) {
+        locationPickerBtn.addEventListener('click', function() {
+            const modal = new bootstrap.Modal(document.getElementById('mapPickerModal'));
+            mapPickerContainer.style.display = 'none';
+            modal.show();
+        });
+    }
+
+    if (modalChooseOnMapBtn) {
+        modalChooseOnMapBtn.addEventListener('click', function() {
+            mapPickerContainer.style.display = 'block';
+            setTimeout(() => {
+                const defaultLat = parseFloat(selectedLat) || currentLat || 17.4435;
+                const defaultLng = parseFloat(selectedLng) || currentLng || 78.3772;
+                if (!map) {
+                    map = L.map('mapPicker').setView([defaultLat, defaultLng], 15);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(map);
+                    if (selectedLat && selectedLng) {
+                        selectedMarker = L.marker([selectedLat, selectedLng]).addTo(map);
+                    }
+                    map.on('click', function(e) {
+                        selectedLat = e.latlng.lat.toFixed(6);
+                        selectedLng = e.latlng.lng.toFixed(6);
+                        if (selectedMarker) {
+                            map.removeLayer(selectedMarker);
+                        }
+                        selectedMarker = L.marker(e.latlng).addTo(map);
+                    });
+                } else {
+                    map.invalidateSize();
+                    map.setView([defaultLat, defaultLng], 15);
+                }
+            }, 300);
+        });
+    }
+
+    if (modalCurrentLocationBtn) {
+        modalCurrentLocationBtn.addEventListener('click', function() {
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by this browser.');
+                return;
+            }
+            modalCurrentLocationBtn.disabled = true;
+            modalCurrentLocationBtn.innerHTML = '⏳ Getting Location...';
+            navigator.geolocation.getCurrentPosition(
+                async function(position) {
+                    const latitude = position.coords.latitude.toFixed(6);
+                    const longitude = position.coords.longitude.toFixed(6);
+                    currentLat = latitude;
+                    currentLng = longitude;
+                    selectedLat = latitude;
+                    selectedLng = longitude;
+                    const fullAddress = await reverseGeocode(latitude, longitude);
+                    if (locationInput) locationInput.value = fullAddress;
+                    if (latitudeInput) latitudeInput.value = latitude;
+                    if (longitudeInput) longitudeInput.value = longitude;
+                    modalCurrentLocationBtn.disabled = false;
+                    modalCurrentLocationBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs me-2"></i>Use Current Location';
+                    const modalInstance = bootstrap.Modal.getInstance(document.getElementById('mapPickerModal'));
+                    if (modalInstance) modalInstance.hide();
+                },
+                function(error) {
+                    alert('Unable to fetch location.');
+                    modalCurrentLocationBtn.disabled = false;
+                    modalCurrentLocationBtn.innerHTML = '📍 Use Current Location';
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        });
+    }
+
+    const useSelectedLocationBtn = document.getElementById('useSelectedLocationBtn');
+    if (useSelectedLocationBtn) {
+        useSelectedLocationBtn.addEventListener('click', function() {
+            if (!selectedLat || !selectedLng) {
+                alert('Please select a location.');
+                return;
+            }
+            reverseGeocode(selectedLat, selectedLng).then(fullAddress => {
+                if (locationInput) locationInput.value = fullAddress;
+                if (latitudeInput) latitudeInput.value = selectedLat;
+                if (longitudeInput) longitudeInput.value = selectedLng;
+                const modalInstance = bootstrap.Modal.getInstance(document.getElementById('mapPickerModal'));
+                if (modalInstance) modalInstance.hide();
+            });
+        });
+    }
+
+    // Submit Loading indicator
+    const editForm = document.getElementById('editBookingForm');
+    const updateButton = document.getElementById('updateBookingBtn');
+    const updateSpinner = document.getElementById('updateBookingSpinner');
+    const updateText = document.getElementById('updateBookingText');
+
+    if (editForm && updateButton) {
+        editForm.addEventListener('submit', function(event) {
+            // Verify monthly day count rules
+            const checkedCount = [...dayCheckboxes].filter(cb => cb.checked).length;
+            if (pkg.value === 'Monthly' && (checkedCount < 2 || checkedCount > 3)) {
+                event.preventDefault();
+                alert('Please select 2 or 3 class days for the Monthly package.');
+                return;
+            }
+
+            if (updateButton.disabled) {
+                event.preventDefault();
+                return;
+            }
+            updateButton.disabled = true;
+            if (updateSpinner) updateSpinner.classList.remove('d-none');
+            if (updateText) updateText.textContent = 'Updating...';
+        });
+    }
 });
 </script>
-
-</body>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</html>
+{% endblock %}
