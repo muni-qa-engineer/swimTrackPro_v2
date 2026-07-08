@@ -1433,37 +1433,33 @@ function updateSwimmerBookingState() {
 window.addEventListener('load', updateSwimmerBookingState);
 
 // V0040.5 - Quick Action Navigation
-// Helper: switch a desktop sidebar tab by section name.
-// Finds the matching sidebar nav-link automatically so the active
-// state is always kept in sync, then delegates to switchDesktopTab().
-function switchTab(sectionId) {
-  const link = document.querySelector(
-    `#sidebarMenu .nav-link[onclick*="'${sectionId}'"]`
-  );
-  if (typeof switchDesktopTab === 'function') {
-    switchDesktopTab(sectionId, link || null);
-  }
-}
-
 const quickBookBtn = document.getElementById('quickBookBtn');
 if (quickBookBtn) {
-  quickBookBtn.addEventListener('click', () => switchTab('booking'));
+  quickBookBtn.addEventListener('click', () => {
+    window.location.href = '/booking';
+  });
 }
 
 const quickBookingsBtn = document.getElementById('quickBookingsBtn');
 if (quickBookingsBtn) {
-  quickBookingsBtn.addEventListener('click', () => switchTab('my-bookings'));
+  quickBookingsBtn.addEventListener('click', () => {
+    window.location.href = '/my-bookings';
+  });
 }
 
 const quickPaymentsBtn = document.getElementById('quickPaymentsBtn');
 if (quickPaymentsBtn) {
-  quickPaymentsBtn.addEventListener('click', () => switchTab('payments'));
+  quickPaymentsBtn.addEventListener('click', () => {
+    window.location.href = '/payments';
+  });
 }
 
 // V0042.0.2 - Open Full Calendar Navigation
 const openFullCalendarBtn = document.getElementById('openFullCalendarBtn');
 if (openFullCalendarBtn) {
-  openFullCalendarBtn.addEventListener('click', () => switchTab('calendar'));
+  openFullCalendarBtn.addEventListener('click', () => {
+    window.location.href = '/calendar';
+  });
 }
 
 

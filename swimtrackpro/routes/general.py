@@ -71,7 +71,7 @@ def about_trainer():
 
 @login_required
 def help_page():
-    return render_template("help.html")
+    return render_template("help.html", role=session.get("role", "guest"))
 
 
 @trainer_required("Only trainer can update the Notice Board.")

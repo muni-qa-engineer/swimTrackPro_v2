@@ -388,7 +388,6 @@
       <div class="card-body d-flex align-items-center">
         <div class="row g-3 w-100">
 
-          {% if role != 'trainer' %}
           <div class="col-6">
             <button id="quickBookBtn"
                     type="button"
@@ -397,16 +396,6 @@
               <div class="fw-bold mt-2">Book now</div>
             </button>
           </div>
-          {% else %}
-          <div class="col-6">
-            <button type="button"
-                    onclick="switchTab('calendar')"
-                    class="btn w-100 h-100 border-0 shadow-sm quick-tile">
-              <div class="quick-icon quick-book text-primary">📅</div>
-              <div class="fw-bold mt-2">Calendar</div>
-            </button>
-          </div>
-          {% endif %}
 
           <div class="col-6">
             <button id="quickBookingsBtn"
@@ -426,27 +415,15 @@
             </button>
           </div>
 
-          {% if role == 'trainer' %}
-          <div class="col-6">
-            <button id="quickProfileBtn"
-                    type="button"
-                    onclick="switchTab('profile')"
-                    class="btn w-100 h-100 border-0 shadow-sm quick-tile">
-              <div class="quick-icon quick-contact text-warning">👤</div>
-              <div class="fw-bold mt-2">My Profile</div>
-            </button>
-          </div>
-          {% else %}
           <div class="col-6">
             <button id="quickCalendarBtn"
                     type="button"
-                    onclick="switchTab('help')"
+                    onclick="window.location.href='/help'"
                     class="btn w-100 h-100 border-0 shadow-sm quick-tile">
               <div class="quick-icon quick-contact text-warning">🎧</div>
               <div class="fw-bold mt-2">Contact Coach</div>
             </button>
           </div>
-          {% endif %}
 
         </div>
       </div>
@@ -665,9 +642,8 @@
       </div>
 
       <div class="text-center">
-        <a href="#"
+        <a href="/payments"
            id="viewPaymentHistoryBtn"
-           onclick="switchTab('payments'); return false;"
            class="btn btn-link text-decoration-none fw-bold">
           View Payment History →
         </a>
@@ -1334,41 +1310,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     </div> <!-- Close section-dashboard -->
 
-    <!-- Calendar Tab (Desktop only) -->
-    <div id="section-calendar" class="content-section d-none" style="height: 100vh;">
-      <iframe data-src="/calendar" src="about:blank" style="width: 100%; height: 100vh; border: none;"></iframe>
-    </div>
-
-    <!-- Booking Tab (Desktop only) -->
-    {% if role != 'trainer' %}
-    <div id="section-booking" class="content-section d-none" style="height: 100vh;">
-      <iframe data-src="/booking" src="about:blank" style="width: 100%; height: 100vh; border: none;"></iframe>
-    </div>
-    {% endif %}
-
-    <!-- My Bookings Tab (Desktop only) -->
-    <div id="section-my-bookings" class="content-section d-none" style="height: 100vh;">
-      <iframe data-src="/my-bookings" src="about:blank" style="width: 100%; height: 100vh; border: none;"></iframe>
-    </div>
-
-    <!-- Payments Tab (Desktop only) -->
-    <div id="section-payments" class="content-section d-none" style="height: 100vh;">
-      <iframe data-src="/payments" src="about:blank" style="width: 100%; height: 100vh; border: none;"></iframe>
-    </div>
-
-    <!-- Profile Tab (Desktop only, Trainer) -->
-    {% if role == 'trainer' %}
-    <div id="section-profile" class="content-section d-none" style="height: 100vh;">
-      <iframe data-src="/profile" src="about:blank" style="width: 100%; height: 100vh; border: none;"></iframe>
-    </div>
-    {% endif %}
-
-    <!-- Help & Support Tab (Desktop only, Swimmer/Guest) -->
-    {% if role != 'trainer' %}
-    <div id="section-help" class="content-section d-none" style="height: 100vh;">
-      <iframe data-src="/help" src="about:blank" style="width: 100%; height: 100vh; border: none;"></iframe>
-    </div>
-    {% endif %}
 
 <!-- Notifications Modal -->
 <div class="modal fade" id="notificationsModal" tabindex="-1" aria-labelledby="notificationsModalLabel" aria-hidden="true">
@@ -1487,47 +1428,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script>
 function switchDesktopTab(sectionId, el) {
-    console.log("Switching to section:", sectionId);
-    // Hide all sections
-    const sections = document.querySelectorAll('.content-section');
-    sections.forEach(sec => sec.classList.add('d-none'));
+    // Map section names to their routes
+    const routes = {
+        'dashboard': '/',
+        'calendar': '/calendar',
+        'booking': '/booking',
+        'my-bookings': '/my-bookings',
+        'payments': '/payments',
+        'profile': '/profile',
+        'help': '/help'
+    };
 
-    // Show the selected section
-    const targetSection = document.getElementById('section-' + sectionId);
-    if (targetSection) {
-        targetSection.classList.remove('d-none');
-        console.log("Removed d-none from target section:", 'section-' + sectionId);
-
-        // Lazy load iframe on first tab click
-        const iframe = targetSection.querySelector('iframe');
-        if (iframe) {
-            console.log("Found iframe inside section. Loaded class present:", iframe.classList.contains('loaded'));
-            if (!iframe.classList.contains('loaded')) {
-                const dataSrc = iframe.getAttribute('data-src');
-                console.log("Setting iframe src from data-src:", dataSrc);
-                if (dataSrc) {
-                    iframe.src = dataSrc;
-                    iframe.classList.add('loaded');
-                    console.log("Set iframe src successfully.");
-                }
-            }
-        } else {
-            console.log("No iframe found in target section.");
-        }
-    } else {
-        console.log("Target section not found:", 'section-' + sectionId);
+    // Dashboard tab: just scroll to top, no navigation needed
+    if (sectionId === 'dashboard') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
     }
 
-    // Update active class in sidebar menu
-    const links = document.querySelectorAll('#sidebarMenu .nav-link');
-    links.forEach(link => {
-        link.classList.remove('active', 'bg-primary', 'text-white');
-        link.classList.add('text-white-50');
-    });
-
-    if (el) {
-        el.classList.add('active', 'bg-primary', 'text-white');
-        el.classList.remove('text-white-50');
+    const route = routes[sectionId];
+    if (route) {
+        window.location.href = route;
     }
 }
 </script>

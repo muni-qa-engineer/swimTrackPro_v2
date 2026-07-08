@@ -1,58 +1,140 @@
 <style>
-.app-page-header {
-    background: rgba(33, 37, 41, 0.85) !important;
-    backdrop-filter: blur(16px) saturate(120%);
-    -webkit-backdrop-filter: blur(16px) saturate(120%);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+/* =============================================
+   Sidebar for sub-pages (desktop only)
+   Fixed position — no wrapper div needed.
+   ============================================= */
+.sidebar-fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    height: 100vh;
+    background: #0b192c;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    overflow-y: auto;
+    z-index: 100;
+}
+
+/* Push page content right on desktop */
+@media (min-width: 992px) {
+    body {
+        padding-left: 260px !important;
+    }
+}
+
+/* Mobile top bar */
+.subpage-mobile-nav {
+    background: #0b192c;
     color: white;
-    padding: 16px 24px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.07);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     position: sticky;
     top: 0;
-    z-index: 1050;
-    width: 100%;
+    z-index: 200;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
 }
-
-.app-title {
-    font-size: 2rem;
+.subpage-mobile-nav .brand {
+    font-size: 1.1rem;
     font-weight: 700;
     color: white;
-    letter-spacing: -0.5px;
+    text-decoration: none;
 }
-
-.app-page-header .btn-outline-light {
-    border-width: 1.5px;
-    border-radius: 12px;
-    font-weight: 600;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+.subpage-mobile-nav .back-btn {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.75);
+    text-decoration: none;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 6px 14px;
+    transition: background 0.2s;
 }
-
-.app-page-header .btn-outline-light:hover {
-    transform: translateY(-1px) scale(1.02);
-    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15);
-}
-
-@media (max-width: 768px) {
-    .app-page-header {
-        padding: 12px 16px;
-    }
-
-    .app-title {
-        font-size: 1.4rem;
-    }
+.subpage-mobile-nav .back-btn:hover {
+    background: rgba(255,255,255,0.2);
+    color: white;
 }
 </style>
 
-<div class="app-page-header">
-    <div class="d-flex justify-content-between align-items-center">
-        <a href="{{ url_for('index') }}" class="text-decoration-none text-white app-title">
-            🏊 SwimTrackPro
-        </a>
+<!-- ── Mobile top nav (shown only on small screens) ── -->
+<nav class="subpage-mobile-nav d-lg-none">
+    <a href="/" class="brand">🏊 SwimTrackPro</a>
+    <a href="/" class="back-btn">← Dashboard</a>
+</nav>
 
-        <a href="{{ url_for('index') }}"
-           class="btn btn-outline-light btn-sm">
-            ← Back
-        </a>
-    </div>
+<!-- ── Fixed sidebar (shown only on desktop) ── -->
+<div class="sidebar-fixed d-none d-lg-flex flex-column">
+    <a href="/" class="d-flex align-items-center mb-4 me-md-auto text-white text-decoration-none px-2 mt-2">
+        <span class="fs-4 fw-bold d-flex align-items-center gap-2">
+            🏊 <span style="font-family: 'Inter', sans-serif; letter-spacing: -0.5px;">SwimTrackPro</span>
+        </span>
+    </a>
+    <hr style="opacity: 0.1; margin: 0 0 0.5rem;">
+
+    <ul class="nav nav-pills flex-column mb-auto gap-2">
+        <li class="nav-item">
+            <a href="/"
+               class="nav-link d-flex align-items-center gap-3 px-3 py-2 rounded-3 fw-semibold
+                      {% if request.path == '/' %}active bg-primary text-white{% else %}text-white-50{% endif %}">
+                <i class="fa-solid fa-chart-line fs-5"></i> Dashboard
+            </a>
+        </li>
+        <li>
+            <a href="/calendar"
+               class="nav-link d-flex align-items-center gap-3 px-3 py-2 rounded-3 fw-semibold
+                      {% if '/calendar' in request.path %}active bg-primary text-white{% else %}text-white-50{% endif %}">
+                <i class="fa-regular fa-calendar-days fs-5"></i> Calendar
+            </a>
+        </li>
+        {% if role != 'trainer' %}
+        <li>
+            <a href="/booking"
+               class="nav-link d-flex align-items-center gap-3 px-3 py-2 rounded-3 fw-semibold
+                      {% if '/booking' in request.path %}active bg-primary text-white{% else %}text-white-50{% endif %}">
+                <i class="fa-regular fa-calendar-plus fs-5"></i> Book now
+            </a>
+        </li>
+        {% endif %}
+        <li>
+            <a href="/my-bookings"
+               class="nav-link d-flex align-items-center gap-3 px-3 py-2 rounded-3 fw-semibold
+                      {% if '/my-bookings' in request.path %}active bg-primary text-white{% else %}text-white-50{% endif %}">
+                <i class="fa-solid fa-clipboard-list fs-5"></i> Bookings
+            </a>
+        </li>
+        <li>
+            <a href="/payments"
+               class="nav-link d-flex align-items-center gap-3 px-3 py-2 rounded-3 fw-semibold
+                      {% if '/payments' in request.path %}active bg-primary text-white{% else %}text-white-50{% endif %}">
+                <i class="fa-solid fa-credit-card fs-5"></i> Payments
+            </a>
+        </li>
+        {% if role == 'trainer' %}
+        <li>
+            <a href="/profile"
+               class="nav-link d-flex align-items-center gap-3 px-3 py-2 rounded-3 fw-semibold
+                      {% if '/profile' in request.path %}active bg-primary text-white{% else %}text-white-50{% endif %}">
+                <i class="fa-solid fa-user fs-5"></i> Profile
+            </a>
+        </li>
+        {% else %}
+        <li>
+            <a href="/help"
+               class="nav-link d-flex align-items-center gap-3 px-3 py-2 rounded-3 fw-semibold
+                      {% if '/help' in request.path %}active bg-primary text-white{% else %}text-white-50{% endif %}">
+                <i class="fa-solid fa-headset fs-5"></i> Help &amp; Contact
+            </a>
+        </li>
+        {% endif %}
+        <li class="mt-4"><hr style="opacity: 0.1;"></li>
+        <li>
+            <a href="/logout"
+               class="nav-link d-flex align-items-center gap-3 px-3 py-2 rounded-3 fw-semibold text-danger">
+                <i class="fa-solid fa-right-from-bracket fs-5"></i> Sign Out
+            </a>
+        </li>
+    </ul>
 </div>
+<!-- ── End sidebar ── -->
