@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - SwimTrackPro{% endblock %}
+
+{% block content %}
+
+{% include 'components/page_header.html' %}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10">
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show mb-4 shadow-sm" role="alert" style="border-radius: 12px; font-weight: 500;">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Premium Colorful PDF Style Layout Card -->
+            <div class="card shadow-lg border-0 pdf-profile-card">
+                <div class="row g-0">
+                    
+                    <!-- LEFT COLUMN: PDF Color Block / Accents & Photos Uploader -->
+                    <div class="col-md-4 text-white p-4 d-flex flex-column justify-content-between pdf-sidebar">
+                        <div>
+                            <div class="text-center mb-4">
+                                <div class="profile-avatar-circle mx-auto mb-3">
+                                    <span>🏊</span>
+                                </div>
+                                <h4 class="fw-bold mb-1">{{ trainer.name|title }}</h4>
+                                <span class="badge bg-white-50 text-white small px-3 py-1.5" style="border-radius: 20px; font-size: 0.72rem; letter-spacing: 0.5px;">
+                                    ★ {{ trainer.rating }} Rating
+                                </span>
+                            </div>
+
+                            <hr class="border-white opacity-20 my-4">
+
+                            <!-- Read-only Registration Fields -->
+                            <div class="mb-4">
+                                <h6 class="text-white-50 small fw-bold text-uppercase mb-3">Account Details</h6>
+                                
+                                <div class="mb-3">
+                                    <span class="d-block text-white-50 small">Username</span>
+                                    <span class="fw-bold text-white">{{ trainer.username }}</span>
+                                </div>
+                                <div class="mb-3">
+                                    <span class="d-block text-white-50 small">Verified ID Proof</span>
+                                    <span class="fw-bold text-white">{{ trainer.id_proof }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Picture Uploader Inside Album Card -->
+                        <div class="mt-auto p-3 bg-white bg-opacity-10 rounded text-center upload-album-box" style="border: 1px dashed rgba(255,255,255,0.25);">
+                            <h6 class="fw-bold text-white mb-2"><i class="fa-solid fa-camera me-1"></i> Upload Training Pics</h6>
+                            <form action="/profile/upload-photo" method="POST" enctype="multipart/form-data">
+                                <input type="file" name="training_pic" accept="image/*" class="form-control form-control-sm mb-2 text-white bg-transparent border-white border-opacity-25" style="font-size: 0.76rem;" required>
+                                <button type="submit" class="btn btn-light btn-sm w-100 fw-bold text-primary">Upload to Album</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT COLUMN: Colorful Resume/PDF details Sheet -->
+                    <div class="col-md-8 p-4 p-md-5 bg-white text-dark position-relative pdf-sheet">
+                        <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center align-items-start gap-2 mb-4 border-bottom pb-3">
+                            <div>
+                                <h3 class="fw-bold mb-1 text-primary">Coach Profile Sheet</h3>
+                                <p class="text-muted small mb-0">Official Registered Credentials</p>
+                            </div>
+                            <span class="small text-muted fw-bold">SwimTrackPro Certified</span>
+                        </div>
+
+                        <form action="/profile" method="POST" id="profileForm">
+                            
+                            <!-- Profile Details Grid -->
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <div class="pdf-field-box">
+                                        <label for="profileName" class="pdf-label">Full Name <i class="fa-solid fa-pencil text-primary ms-1" title="Editable field"></i></label>
+                                        <input type="text" id="profileName" name="name" class="pdf-input form-control" value="{{ trainer.name }}" required>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="pdf-field-box">
+                                        <label for="profilePhone" class="pdf-label">Contact Number <i class="fa-solid fa-pencil text-primary ms-1" title="Editable field"></i></label>
+                                        <input type="tel" id="profilePhone" name="phone" class="pdf-input form-control" value="{{ trainer.phone }}" required>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="pdf-field-box">
+                                        <label for="profileEmail" class="pdf-label">Email Address <i class="fa-solid fa-pencil text-primary ms-1" title="Editable field"></i></label>
+                                        <input type="email" id="profileEmail" name="email" class="pdf-input form-control" value="{{ trainer.email }}" placeholder="coach@example.com">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="pdf-field-box">
+                                        <label for="profileExperience" class="pdf-label">Coaching Experience <i class="fa-solid fa-pencil text-primary ms-1" title="Editable field"></i></label>
+                                        <input type="text" id="profileExperience" name="experience" class="pdf-input form-control" value="{{ trainer.experience }}" required>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="pdf-field-box">
+                                        <label for="profileQualification" class="pdf-label">Specialist Qualification <i class="fa-solid fa-pencil text-primary ms-1" title="Editable field"></i></label>
+                                        <input type="text" id="profileQualification" name="qualification" class="pdf-input form-control" value="{{ trainer.qualification }}" required>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="pdf-field-box">
+                                        <label for="profileWorking" class="pdf-label">Currently Working At <i class="fa-solid fa-pencil text-primary ms-1" title="Editable field"></i></label>
+                                        <input type="text" id="profileWorking" name="currently_working" class="pdf-input form-control" value="{{ trainer.currently_working }}" required>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="pdf-field-box">
+                                        <label for="profileResidence" class="pdf-label">Location of Residence <i class="fa-solid fa-pencil text-primary ms-1" title="Editable field"></i></label>
+                                        <input type="text" id="profileResidence" name="residence_location" class="pdf-input form-control" value="{{ trainer.residence_location }}" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-5 pt-3 border-top text-end">
+                                <button type="submit" id="saveChangesBtn" class="btn btn-primary px-5 py-2.5 fw-bold btn-save-changes" style="display: none !important;">
+                                    <i class="fa-solid fa-circle-check me-2"></i> Save Changes
+                                </button>
+                            </div>
+
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Mobile Bottom Navigation -->
+<div class="mobile-bottom-nav d-lg-none">
+  <button type="button" class="mobile-nav-item" onclick="window.location.href='/'">
+    <div>🏠</div>
+    <small>Home</small>
+  </button>
+
+  <button type="button" class="mobile-nav-item" onclick="window.location.href='/my-bookings'">
+    <div>📋</div>
+    <small>Bookings</small>
+  </button>
+
+  <button type="button" class="mobile-nav-item" onclick="window.location.href='/payments'">
+    <div>💳</div>
+    <small>Payments</small>
+  </button>
+
+  <button type="button" class="mobile-nav-item active" onclick="window.location.href='/profile'">
+    <div>👤</div>
+    <small>Profile</small>
+  </button>
+</div>
+
+<style>
+/* PDF Layout styling */
+.pdf-profile-card {
+    border-radius: 24px !important;
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.08) !important;
+}
+
+.pdf-sidebar {
+    background: linear-gradient(180deg, #1e3a8a, #0f172a) !important;
+}
+
+.profile-avatar-circle {
+    width: 80px;
+    height: 80px;
+    background: rgba(255,255,255,0.1);
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+}
+
+.bg-white-50 {
+    background-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.opacity-20 {
+    opacity: 0.15 !important;
+}
+
+.pdf-sheet {
+    background-color: #ffffff !important;
+    background-image: radial-gradient(rgba(37, 99, 235, 0.03) 1px, transparent 1px) !important;
+    background-size: 20px 20px !important;
+}
+
+/* PDF Fields & Inputs formatting */
+.pdf-field-box {
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 8px;
+    transition: border-color 0.25s;
+}
+.pdf-field-box:focus-within {
+    border-bottom-color: #2563eb;
+}
+
+.pdf-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    letter-spacing: 0.2px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+}
+
+.pdf-label i {
+    font-size: 0.68rem;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+.pdf-field-box:hover .pdf-label i {
+    opacity: 1;
+}
+
+.pdf-input {
+    border: none !important;
+    background: transparent !important;
+    padding: 2px 0 !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    height: auto !important;
+}
+.pdf-input::placeholder {
+    color: #cbd5e1 !important;
+    font-weight: 500;
+}
+.pdf-input:focus {
+    color: #0f172a !important;
+}
+
+.btn-save-changes {
+    border-radius: 12px !important;
+    padding: 10px 28px !important;
+    font-size: 0.9rem !important;
+}
+
+/* Upload input override styles */
+.upload-album-box input::file-selector-button {
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 4px !important;
+    padding: 2px 8px !important;
+    margin-right: 8px !important;
+    font-weight: 600 !important;
+}
+.upload-album-box input::file-selector-button:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const saveChangesBtn = document.getElementById('saveChangesBtn');
+    const inputs = document.querySelectorAll('.pdf-input');
+    
+    // Store original values
+    const initialValues = {};
+    inputs.forEach(input => {
+        initialValues[input.id] = input.value;
+    });
+    
+    // Listen to input events
+    inputs.forEach(input => {
+        input.addEventListener('input', () => {
+            let modified = false;
+            inputs.forEach(inp => {
+                if (inp.value !== initialValues[inp.id]) {
+                    modified = true;
+                }
+            });
+            
+            if (modified) {
+                saveChangesBtn.style.setProperty('display', 'inline-block', 'important');
+            } else {
+                saveChangesBtn.style.setProperty('display', 'none', 'important');
+            }
+        });
+    });
+});
+</script>
+
+{% endblock %}

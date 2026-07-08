@@ -3,6 +3,139 @@
 {% block title %}My Bookings - SwimTrackPro{% endblock %}
 
 {% block content %}
+<style>
+/* Premium Booking Card Container */
+.booking-card {
+    background: #ffffff !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05) !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    overflow: hidden;
+    position: relative;
+}
+.booking-card:hover {
+    transform: translateY(-5px) !important;
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.12) !important;
+    border-color: rgba(37, 99, 235, 0.15) !important;
+}
+
+/* Card Body & Title */
+.booking-card .card-body {
+    padding: 1.5rem !important;
+}
+.booking-card .card-title {
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+}
+
+/* Package and Status Badges */
+.booking-card .badge {
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+    padding: 6px 12px !important;
+    border-radius: 30px !important;
+    text-transform: uppercase !important;
+}
+.booking-card .bg-primary-subtle {
+    background-color: rgba(37, 99, 235, 0.08) !important;
+    color: #2563eb !important;
+    border: 1px solid rgba(37, 99, 235, 0.15) !important;
+}
+.booking-card .bg-success {
+    background-color: rgba(22, 163, 74, 0.08) !important;
+    color: #16a34a !important;
+    border: 1px solid rgba(22, 163, 74, 0.15) !important;
+}
+.booking-card .bg-warning {
+    background-color: rgba(234, 179, 8, 0.08) !important;
+    color: #ca8a04 !important;
+    border: 1px solid rgba(234, 179, 8, 0.15) !important;
+}
+.booking-card .bg-danger {
+    background-color: rgba(220, 38, 38, 0.08) !important;
+    color: #dc2626 !important;
+    border: 1px solid rgba(220, 38, 38, 0.15) !important;
+}
+
+/* Date/Time Details Grid styling */
+.booking-card .mb-3.small .text-muted {
+    font-weight: 500 !important;
+    color: #64748b !important;
+    display: inline-block;
+    margin-bottom: 2px;
+}
+.booking-card .mb-3.small .fw-semibold {
+    color: #1e293b !important;
+    font-size: 0.85rem !important;
+}
+
+/* Selected Days Badges */
+.booking-card .badge.bg-light {
+    background-color: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    text-transform: none !important;
+    font-weight: 600 !important;
+}
+
+/* Progress bar styling */
+.booking-card .progress {
+    height: 6px !important;
+    background-color: #f1f5f9 !important;
+    border-radius: 10px !important;
+    overflow: hidden;
+}
+.booking-card .progress-bar {
+    border-radius: 10px !important;
+}
+
+/* Location description style */
+.booking-card .text-muted.small {
+    background: #f8fafc;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.03);
+    margin-top: 10px;
+    font-size: 0.8rem !important;
+    color: #475569 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Action buttons */
+.booking-card .btn {
+    border-radius: 10px !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    padding: 6px 16px !important;
+    transition: all 0.2s ease !important;
+}
+
+/* Expired/Renew Card styling */
+.border-dashed {
+    border: 2px dashed rgba(37, 99, 235, 0.25) !important;
+    border-radius: 20px !important;
+    background: rgba(37, 99, 235, 0.01) !important;
+    transition: all 0.25s ease !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem !important;
+    text-decoration: none;
+    min-height: 250px;
+}
+.border-dashed:hover {
+    background: rgba(37, 99, 235, 0.04) !important;
+    border-color: rgba(37, 99, 235, 0.45) !important;
+    transform: translateY(-5px) !important;
+}
+</style>
 
 {% include 'components/page_header.html' %}
 
@@ -92,7 +225,12 @@
                     <div class="card border-primary h-100 shadow-sm booking-card{% if b.is_completed %} past-session{% endif %}">
                         <div class="card-body d-flex flex-column">
                             <div class="d-flex justify-content-between align-items-start mb-3">
-                                <h5 class="card-title text-primary mb-0">🏊 {{ b.student|title }}</h5>
+                                <div>
+                                    <h5 class="card-title text-primary mb-0">🏊 {{ b.student|title }}</h5>
+                                    <div class="small text-secondary mt-1" style="font-size: 0.78rem;">
+                                        Coach: <span class="fw-bold text-primary">{{ (trainer_map.get(b.trainer_username.lower().strip(), b.trainer_username) or 'Unassigned')|title }}</span>
+                                    </div>
+                                </div>
                                 <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2">
                                     📦 {{ b.package or 'Single' }}
                                 </span>
@@ -102,18 +240,17 @@
                                 <div class="row g-3 mb-2">
                                     <div class="col-6">
                                         <div class="fw-semibold">
-                                          <span class="text-muted">📅 StartDate: </span>
-                                          {{ b.start_date[8:10] }}/{{ b.start_date[5:7] }}/{{ b.start_date[0:4] }}
+                                           <span class="text-muted">📅 StartDate: </span>
+                                           {{ b.start_date[8:10] }}/{{ b.start_date[5:7] }}/{{ b.start_date[0:4] }}
                                         </div>
                                     </div>
 
                                     <div class="col-6">
                                         <div class="fw-semibold">
-                                          <span class="text-muted">⏰ Time: </span>
-                                          {{ b.time }}
+                                           <span class="text-muted">⏰ Time: </span>
+                                           {{ b.time }}
                                         </div>
                                     </div>
-
                                 </div>
                                 <div class="row g-3 mb-2">
                                     
@@ -247,11 +384,11 @@
                                       <form action="/reject_delete/{{ b.id }}" method="POST" class="inline-form ml-6" onsubmit="saveScrollPosition()">
                                           <button type="submit" class="btn btn-outline-secondary btn-sm">✕ Reject</button>
                                       </form>
-                                  {% else %}
-                                      <span class="badge bg-warning text-dark px-3 py-2">
-                                          🗑 Delete Requested
-                                      </span>
-                                  {% endif %}
+                                   {% else %}
+                                       <span class="badge bg-warning text-dark px-3 py-2">
+                                           🗑 Delete Requested
+                                       </span>
+                                   {% endif %}
                               {% else %}
                                   {% if role == 'trainer' or (b.completed_classes or 0) == 0 %}
                                   <form action="/edit/{{ b.id }}" method="GET" class="inline-form" onsubmit="saveScrollPosition()">
@@ -326,6 +463,11 @@
   <button type="button" class="mobile-nav-item" onclick="window.location.href='/payments'">
     <div>💳</div>
     <small>Payments</small>
+  </button>
+
+  <button type="button" class="mobile-nav-item" onclick="window.location.href='/profile'">
+    <div>👤</div>
+    <small>Profile</small>
   </button>
 
 {% else %}

@@ -138,8 +138,7 @@ class GeneralRouteAccessTests(unittest.TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers["Location"], "/")
 
-    @patch("swimtrackpro.routes.general.set_setting")
-    def test_trainer_can_update_notice(self, set_setting_mock):
+    def test_trainer_can_update_notice(self):
         self.login("trainer")
         response = self.client.post(
             "/update_notice",
@@ -148,10 +147,16 @@ class GeneralRouteAccessTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers["Location"], "/")
-        set_setting_mock.assert_called_once_with(
-            "notice_message",
-            "Training starts at 6 AM",
-        )
+        
+        from swimtrackpro.runtime import get_pg_connection
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT notice FROM trainers WHERE username = 'asdf'")
+        row = cursor.fetchone()
+        conn.close()
+        
+        self.assertIsNotNone(row)
+        self.assertEqual(row[0], "Training starts at 6 AM")
 
     def test_logout_clears_existing_session(self):
         self.login("guest")
@@ -163,11 +168,47 @@ class GeneralRouteAccessTests(unittest.TestCase):
             self.assertNotIn("user_name", flask_session)
             self.assertNotIn("role", flask_session)
 
-    def test_anonymous_index_still_renders_login(self):
-        response = self.client.get("/")
+    def test_admin_login_success(self):
+        response = self.client.post(
+            "/login",
+            data={
+                "role": "admin",
+                "name": "M1400",
+                "password": "51400",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], "/")
+        with self.client.session_transaction() as flask_session:
+            self.assertEqual(flask_session.get("role"), "admin")
+            self.assertEqual(flask_session.get("user_name"), "Super Admin")
 
+    def test_admin_login_failure(self):
+        response = self.client.post(
+            "/login",
+            data={
+                "role": "admin",
+                "name": "M1400",
+                "password": "wrongpassword",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], "/")
+        with self.client.session_transaction() as flask_session:
+            self.assertNotIn("role", flask_session)
+
+    def test_admin_dashboard_rendering(self):
+        self.login("admin")
+        response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"login", response.data.lower())
+        self.assertIn(b"super admin", response.data.lower())
+        self.assertIn(b"coaches", response.data.lower())
+
+    def test_admin_required_decorator_protection(self):
+        self.login("guest")
+        response = self.client.post("/admin/approve_trainer/test_coach")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], "/")
 
 
 if __name__ == "__main__":

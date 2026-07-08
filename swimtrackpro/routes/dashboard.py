@@ -21,24 +21,96 @@ def index():
 
     welcome_text = f"Welcome Back, {current_user.title()}"
 
+    if current_role == 'admin':
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+        
+        # Fetch trainers
+        cursor.execute("SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, rating, is_approved FROM trainers ORDER BY name")
+        trainers_list = []
+        for row in cursor.fetchall():
+            trainers_list.append({
+                'username': row[0],
+                'name': row[1],
+                'phone': row[2],
+                'email': row[3],
+                'experience': row[4],
+                'qualification': row[5],
+                'currently_working': row[6],
+                'residence_location': row[7],
+                'rating': float(row[8]) if row[8] else 5.0,
+                'is_approved': row[9]
+            })
+            
+        # Fetch user activities
+        cursor.execute("SELECT user_name, phone, role, current_login, previous_login FROM user_activity ORDER BY current_login DESC")
+        activities_list = []
+        for row in cursor.fetchall():
+            activities_list.append({
+                'user_name': row[0],
+                'phone': row[1],
+                'role': row[2],
+                'current_login': row[3].strftime('%Y-%m-%d %H:%M:%S') if row[3] else '--',
+                'previous_login': row[4].strftime('%Y-%m-%d %H:%M:%S') if row[4] else '--'
+            })
+            
+        conn.close()
+
+        # Calculate today's sessions and weekly distribution from full bookings data
+        today_str = datetime.now(ZoneInfo('Asia/Kolkata')).strftime('%Y-%m-%d')
+        today_sessions = []
+        
+        days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        day_counts = {d: 0 for d in days_of_week}
+        
+        for b in data.get('bookings', []):
+            # Check for today's sessions
+            if today_str in b.get('calendar_dates', []):
+                today_sessions.append({
+                    'time': b.get('time', '06:00 AM'),
+                    'student': b.get('student', '--'),
+                    'package': b.get('package', '--'),
+                    'trainer_username': b.get('trainer_username', 'asdf'),
+                    'booking_id': b.get('id')
+                })
+            # Count selected days distribution
+            sel_days = b.get('selected_days', '')
+            if sel_days:
+                for day in days_of_week:
+                    if day.lower() in sel_days.lower():
+                        day_counts[day] += 1
+                        
+        chart_data = [day_counts[d] for d in days_of_week]
+        
+        return render_template(
+            'admin_dashboard.html',
+            welcome_text=welcome_text,
+            trainers=trainers_list,
+            bookings=data.get('bookings', []),
+            students=data.get('students', []),
+            today_sessions=today_sessions,
+            activities=activities_list,
+            chart_data=chart_data
+        )
+
     try:
         conn = get_pg_connection()
         cursor = conn.cursor()
 
         cursor.execute(
             '''
-            SELECT COUNT(*)
+            SELECT previous_login
             FROM user_activity
-            WHERE user_name = %s
+            WHERE LOWER(user_name) = LOWER(%s)
               AND role = %s
             ''',
             (current_user, current_role)
         )
 
-        login_count = cursor.fetchone()[0]
+        row = cursor.fetchone()
         conn.close()
 
-        if login_count <= 1:
+        if not row or row[0] is None:
             welcome_text = f"Hi {current_user.title()}, Welcome"
 
     except Exception:
@@ -458,12 +530,69 @@ def index():
         if row[0]
     ]
 
+    # Fetch trainer-specific notices
+    if current_role == 'trainer':
+        trainer_user = session.get("trainer_username") or "asdf"
+        cursor.execute("SELECT notice FROM trainers WHERE username = %s", (trainer_user,))
+        row_notice = cursor.fetchone()
+        notice_message = row_notice[0] if (row_notice and row_notice[0]) else ""
+        if not notice_message:
+            notice_message = "Welcome to SwimTrackPro! Use • to separate multiple announcements."
+    else:
+        assigned_usernames = list(set([b.get("trainer_username", "asdf") for b in user_bookings if b.get("trainer_username")]))
+        if not assigned_usernames:
+            assigned_usernames = ["asdf"]
+
+        placeholders = ", ".join(["%s"] * len(assigned_usernames))
+        cursor.execute(f"SELECT name, notice FROM trainers WHERE username IN ({placeholders})", tuple(assigned_usernames))
+        rows_notice = cursor.fetchall()
+        
+        announcements_list = []
+        for name, notice in rows_notice:
+            if notice:
+                for ann in notice.split("•"):
+                    ann_text = ann.strip()
+                    if ann_text:
+                        announcements_list.append(f"Coach {name.title()}: {ann_text}")
+        if announcements_list:
+            notice_message = " • ".join(announcements_list)
+        else:
+            notice_message = ""
+
+    # Build list of notifications
+    notification_list = []
+    
+    if current_role == 'trainer':
+        for b in user_bookings:
+            if str(b.get('status', '')).lower() == 'pending verification':
+                notification_list.append(f"💰 Payment verification needed for {b.get('student', 'Swimmer')}'s {b.get('package')} package.")
+        for b in user_bookings:
+            if b.get('delete_requested'):
+                notification_list.append(f"🗑️ Deletion requested by {b.get('student', 'Swimmer')} for booking #{b.get('id')}.")
+        for b in user_bookings:
+            for req in b.get('makeup_requests', []):
+                if req.get('status') == 'pending':
+                    notification_list.append(f"⏳ Pending Make-up request for {b.get('student', 'Swimmer')} on {req.get('requested_date')}.")
+    else:
+        for b in user_bookings:
+            if str(b.get('status', '')).lower() != 'paid':
+                notification_list.append(f"💰 Payment due: Please complete payment of ₹{b.get('fee')} for {b.get('student')}'s {b.get('package')} package.")
+        for b in user_bookings:
+            if b.get('has_available_makeup_credit'):
+                notification_list.append(f"🔄 Make-up credit available for {b.get('student')} (Valid until {b.get('valid_until')}).")
+        if announcements_list:
+            for ann in announcements_list:
+                notification_list.append(f"📢 Notice: {ann}")
+                
+    notification_count = len(notification_list)
+
     conn.close()
 
     return render_template(
         'dashboard.html',
         user_name=session['user_name'],
         role=session.get('role', 'guest'),
+        notification_list=notification_list,
         welcome_text=welcome_text,
         bookings=user_bookings,
         students=user_students,
@@ -499,12 +628,7 @@ def index():
         completed_packages=completed_packages,
         received_amount=received_amount,
         pending_amount=pending_amount,
-        notice_message=get_setting(
-            'notice_message',
-            '💰 Monthly fees are due before 5 days of the package end date • '
-            '🏆 Special coaching sessions available • '
-            '📞 Contact the trainer for any schedule changes'
-        ),
+        notice_message=notice_message,
         account_holder_name=get_setting("account_holder_name", ""),
         trainer_phone=get_setting("trainer_phone", ""),
         upi_id=get_setting("upi_id", "")

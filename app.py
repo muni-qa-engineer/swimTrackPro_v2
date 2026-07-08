@@ -30,13 +30,7 @@ def get_pg_connection():
 def ensure_makeup_tables():
     """
     V0033.0 - Make-Up Class Management
-
-    Creates the PostgreSQL tables required for:
-    1. makeup_credits  - Stores skipped classes as reusable credits.
-    2. makeup_requests - Stores replacement date requests and approvals.
-
-    This function is safe to call multiple times because it uses
-    CREATE TABLE IF NOT EXISTS.
+    Creates and alters PostgreSQL tables required for makeup, multi-trainer support, and system defaults.
     """
     conn = get_pg_connection()
     cursor = conn.cursor()
@@ -68,6 +62,65 @@ def ensure_makeup_tables():
         decided_at TIMESTAMP
     )
     """)
+
+    # Multi-trainer tables
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS trainers (
+        username TEXT PRIMARY KEY,
+        password TEXT NOT NULL,
+        name TEXT NOT NULL,
+        phone TEXT,
+        email TEXT,
+        experience TEXT,
+        qualification TEXT,
+        currently_working TEXT,
+        residence_location TEXT,
+        id_proof TEXT,
+        consent_accepted BOOLEAN DEFAULT FALSE,
+        rating NUMERIC(3,2) DEFAULT 5.00
+    )
+    """)
+
+    # Ensure columns exist if the table was created earlier without them
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS experience TEXT")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS qualification TEXT")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS currently_working TEXT")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS residence_location TEXT")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS id_proof TEXT")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS consent_accepted BOOLEAN DEFAULT FALSE")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS rating NUMERIC(3,2) DEFAULT 5.00")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS photos TEXT DEFAULT ''")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS notice TEXT DEFAULT ''")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT FALSE")
+
+    # Pre-populate default admin trainer if not exists
+    cursor.execute("SELECT username FROM trainers WHERE LOWER(username) = LOWER(%s)", (ADMIN_USERNAME,))
+    if not cursor.fetchone():
+        cursor.execute("""
+        INSERT INTO trainers (username, password, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, consent_accepted, rating, notice, is_approved)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (ADMIN_USERNAME, ADMIN_PASSWORD, 'Trainer', '', '', '5+ Years', 'Certified Swim Coach', 'SwimTrackPro Academy', 'Local Camp', 'UID-12345', True, 5.00, '💰 Monthly fees are due before 5 days of the package end date • 🏆 Special coaching sessions available • 📞 Contact the trainer for any schedule changes', True))
+    else:
+        # Update existing admin trainer with default values if they are null
+        cursor.execute("""
+        UPDATE trainers 
+        SET experience = COALESCE(experience, '5+ Years'),
+            qualification = COALESCE(qualification, 'Certified Swim Coach'),
+            currently_working = COALESCE(currently_working, 'SwimTrackPro Academy'),
+            residence_location = COALESCE(residence_location, 'Local Camp'),
+            id_proof = COALESCE(id_proof, 'UID-12345'),
+            consent_accepted = TRUE,
+            rating = COALESCE(rating, 5.00),
+            notice = COALESCE(notice, '💰 Monthly fees are due before 5 days of the package end date • 🏆 Special coaching sessions available • 📞 Contact the trainer for any schedule changes'),
+            is_approved = TRUE
+        WHERE LOWER(username) = LOWER(%s)
+        """, (ADMIN_USERNAME,))
+
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS trainer_username TEXT")
+    cursor.execute("UPDATE bookings SET trainer_username = %s WHERE trainer_username IS NULL", (ADMIN_USERNAME,))
+
+    cursor.execute("ALTER TABLE user_activity ADD COLUMN IF NOT EXISTS current_login TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP")
+    cursor.execute("ALTER TABLE user_activity ADD COLUMN IF NOT EXISTS previous_login TIMESTAMP WITHOUT TIME ZONE")
 
     conn.commit()
     conn.close()
@@ -203,7 +256,8 @@ def load_data():
             'is_completed': is_completed,
             'total_classes': total_classes,
             'completed_classes': completed_classes,
-            'remaining_classes': remaining_classes
+            'remaining_classes': remaining_classes,
+            'trainer_username': b[28] if len(b) > 28 else 'asdf'
         }
 
         # -------------------------------------------------------
@@ -310,8 +364,9 @@ def save_data(students, bookings):
             owner_name,
             owner_phone,
             persons,
-            email
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            email,
+            trainer_username
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''', (
             booking.get('id', ''),
             booking.get('student', ''),
@@ -328,7 +383,8 @@ def save_data(students, bookings):
             booking.get('owner_name', ''),
             booking.get('owner_phone', ''),
             int(booking.get('persons', 1)),
-            booking.get('email', '')
+            booking.get('email', ''),
+            booking.get('trainer_username', 'asdf')
         ))
 
     conn.commit()
@@ -343,6 +399,10 @@ runtime.configure(
     get_pg_connection=get_pg_connection,
     load_data=load_data,
 )
+try:
+    ensure_makeup_tables()
+except Exception as e:
+    print(f"Warning: Could not run ensure_makeup_tables on startup: {e}")
 
 register_dashboard_routes(app)
 register_page_routes(
@@ -366,6 +426,60 @@ register_payments_routes(app)
 register_deletions_routes(app)
 register_makeup_routes(app)
 register_general_routes(app)
+
+@app.errorhandler(psycopg2.OperationalError)
+def handle_db_error(e):
+    return """
+    <!doctype html>
+    <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Database Offline - SwimTrackPro</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+        <style>
+            body {
+                font-family: 'Poppins', sans-serif;
+                background-color: #f8fafc;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                margin: 0;
+            }
+            .error-card {
+                background: white;
+                border-radius: 24px;
+                padding: 40px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+                max-width: 500px;
+                text-align: center;
+            }
+            .error-icon {
+                font-size: 64px;
+                margin-bottom: 20px;
+            }
+        </style>
+</head>
+<body>
+    <div class="error-card">
+        <div class="error-icon">🔌</div>
+        <h3 class="fw-bold text-dark mb-3">Database Connection Offline</h3>
+        <p class="text-muted mb-4">
+            SwimTrackPro is currently unable to connect to the database. This could be due to a temporary internet connection interruption or server maintenance.
+        </p>
+        <button class="btn btn-primary px-4 py-2.5 rounded-pill fw-bold" onclick="window.location.reload();">
+            🔄 Retry Connection
+        </button>
+        <div class="mt-4 text-start bg-light p-3 rounded-3 small text-secondary" style="font-family: monospace; overflow-x: auto;">
+            <strong>Diagnostic Error:</strong><br>
+            Unable to resolve the database server host.
+        </div>
+    </div>
+</body>
+</html>
+""", 503
 
 if __name__ == '__main__':
     app.run(debug=True)

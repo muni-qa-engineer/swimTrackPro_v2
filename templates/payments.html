@@ -3,6 +3,172 @@
 {% block title %}Payments - SwimTrackPro{% endblock %}
 
 {% block content %}
+<style>
+/* Premium Main Card */
+#paymentsSection > .card {
+    border-radius: 20px !important;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05) !important;
+    background: #ffffff !important;
+}
+
+#paymentsSection > .card > .card-header {
+    background: linear-gradient(135deg, #16a34a, #15803d) !important;
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    padding: 1.2rem 1.5rem !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* Premium Summary Cards */
+.col-md-4 .card {
+    border-radius: 16px !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.04) !important;
+    transition: all 0.25s ease !important;
+}
+.col-md-4 .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 25px -10px rgba(0, 0, 0, 0.08) !important;
+}
+.col-md-4 .card.border-success {
+    border-left: 4px solid #16a34a !important;
+    background: linear-gradient(to right, rgba(22, 163, 74, 0.02), #ffffff) !important;
+}
+.col-md-4 .card.border-warning {
+    border-left: 4px solid #eab308 !important;
+    background: linear-gradient(to right, rgba(234, 179, 8, 0.02), #ffffff) !important;
+}
+.col-md-4 .card.border-danger {
+    border-left: 4px solid #dc2626 !important;
+    background: linear-gradient(to right, rgba(220, 38, 38, 0.02), #ffffff) !important;
+}
+
+.col-md-4 .card .fs-3 {
+    font-size: 1.8rem !important;
+    margin-bottom: 0.5rem;
+}
+.col-md-4 .card h5 {
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    color: #64748b !important;
+    letter-spacing: 0.5px;
+}
+.col-md-4 .card h3 {
+    font-size: 1.6rem !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+}
+
+/* Info & Record Cards */
+.col-lg-4 .card, .col-lg-8 .card {
+    border-radius: 16px !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    overflow: hidden;
+}
+.col-lg-4 .card .card-header, .col-lg-8 .card .card-header {
+    background: #f8fafc !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+    font-weight: 700 !important;
+    color: #334155 !important;
+    padding: 1rem 1.25rem !important;
+}
+
+/* QR Code & Open UPI button */
+.border.rounded.p-2.bg-light {
+    border-radius: 14px !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02) !important;
+    padding: 12px !important;
+}
+#upiPaymentBtn {
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    padding: 8px 16px !important;
+    background-color: #16a34a !important;
+    border-color: #16a34a !important;
+}
+
+/* Payments Table styling */
+.table {
+    margin-bottom: 0 !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+}
+.table th {
+    background-color: #f8fafc !important;
+    font-size: 0.76rem !important;
+    font-weight: 700 !important;
+    color: #475569 !important;
+    letter-spacing: 0.5px !important;
+    padding: 12px 16px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+.table td {
+    padding: 14px 16px !important;
+    font-size: 0.88rem !important;
+    color: #334155 !important;
+    vertical-align: middle !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+}
+.table tbody tr {
+    transition: background-color 0.15s ease;
+}
+.table tbody tr:hover {
+    background-color: #f8fafc !important;
+}
+
+/* Action select dropdown inside payment table */
+.table select {
+    border-radius: 8px !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    padding: 6px 12px !important;
+    border-color: #cbd5e1 !important;
+    color: #334155 !important;
+    outline: none !important;
+    box-shadow: none !important;
+    transition: border-color 0.2s;
+}
+.table select:focus {
+    border-color: #3b82f6 !important;
+}
+
+/* Action update button inside payment table */
+.table button {
+    border-radius: 8px !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    padding: 6px 12px !important;
+    transition: all 0.2s !important;
+}
+
+/* Payments Badges (Paid, Pending, Not Paid) */
+.table .badge, #paymentsSection .badge {
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.3px !important;
+    padding: 5px 10px !important;
+    border-radius: 30px !important;
+    text-transform: uppercase !important;
+}
+.badge-success, .bg-success-subtle, .table .badge.bg-success {
+    background-color: rgba(22, 163, 74, 0.08) !important;
+    color: #16a34a !important;
+    border: 1px solid rgba(22, 163, 74, 0.15) !important;
+}
+.badge-warning, .bg-warning-subtle, .table .badge.bg-warning {
+    background-color: rgba(234, 179, 8, 0.08) !important;
+    color: #ca8a04 !important;
+    border: 1px solid rgba(234, 179, 8, 0.15) !important;
+}
+.badge-danger, .bg-danger-subtle, .table .badge.bg-danger {
+    background-color: rgba(220, 38, 38, 0.08) !important;
+    color: #dc2626 !important;
+    border: 1px solid rgba(220, 38, 38, 0.15) !important;
+}
+</style>
 
 {% include 'components/page_header.html' %}
 
@@ -213,6 +379,11 @@ document.addEventListener('DOMContentLoaded', function () {
   <button type="button" class="mobile-nav-item active" onclick="window.location.href='/payments'">
     <div>💳</div>
     <small>Payments</small>
+  </button>
+
+  <button type="button" class="mobile-nav-item" onclick="window.location.href='/profile'">
+    <div>👤</div>
+    <small>Profile</small>
   </button>
 
 {% else %}

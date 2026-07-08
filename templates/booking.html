@@ -24,7 +24,7 @@
   <div class="card shadow-sm border-0 mb-3">
     <div class="card-body d-flex align-items-center justify-content-between py-3">
 
-      <h4 class="mb-0 fw-bold text-dark">📝 Book a Session</h4>
+      <h4 class="mb-0 fw-bold text-dark">Book a Session</h4>
 
       <!-- <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
         ← Back
@@ -33,15 +33,34 @@
     </div>
   </div>
 
+<style>
+.trainer-card {
+    transition: all 0.2s ease;
+    border: 2px solid rgba(0,0,0,0.05);
+}
+.trainer-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+.trainer-card.selected-trainer {
+    border-color: #0d6efd !important;
+    background-color: #f0f7ff !important;
+}
+.trainer-card.selected-trainer h6 {
+    color: #0d6efd !important;
+}
+</style>
+
 <div class="mt-3">
-  <div class="row g-3">
-    <div class="col-12 col-lg-12">
-        <!-- Booking Form -->
-        <div class="card shadow-sm mb-4 border-0 h-100">
-            <div class="card-header bg-primary text-white">📝 Book a Slot</div>
-            <div class="card-body">
-                <form action="{{ url_for('book') }}" method="POST" id="bookingForm">
-                    <input type="hidden" name="active_tab" value="book_slot">
+  <form action="{{ url_for('book') }}" method="POST" id="bookingForm">
+      <input type="hidden" name="active_tab" value="book_slot">
+      <input type="hidden" name="trainer_username" id="hiddenTrainerInput" required>
+      <div class="row g-3">
+        <div class="col-12 col-lg-8 order-1">
+            <!-- Booking Form -->
+            <div class="card shadow-sm mb-4 border-0 h-100">
+                <div class="card-header text-dark fw-bold">Book a Slot</div>
+                <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="studentSelect" class="form-label fw-semibold">Swimmer Name <span class="text-danger">*</span></label>
@@ -181,28 +200,69 @@
     </div>
 </div>
 
-                    <div class="mb-3">
-                        <label for="locationInput" class="form-label fw-semibold">Location <span class="text-danger">*</span></label>
-                        <div class="input-group input-group-lg">
-                            <button
-                                type="button"
-                                id="locationPickerBtn"
-                                class="btn btn-outline-primary"
-                                title="Location tools"
-                                aria-label="Open location tools">
-                                <i class="fa-solid fa-location-dot text-primary"></i>
-                            </button>
-
-                            <input
-                                type="text"
-                                id="locationInput"
-                                name="location"
-                                list="locationSuggestions"
-                                class="form-control"
-                                placeholder="Enter swimming pool location"
-                                required
-                            >
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark mb-2">Swimming Pool Location <span class="text-danger">*</span></label>
+                        <div class="row g-2 mb-2">
+                            <!-- Area/Locality Input -->
+                            <div class="col-12 col-md-6">
+                                <div class="input-group">
+                                    <button
+                                        type="button"
+                                        id="locationPickerBtn"
+                                        class="btn btn-outline-primary"
+                                        title="Use Map / Current Location"
+                                        aria-label="Open location tools">
+                                        <i class="fa-solid fa-map-location-dot"></i>
+                                    </button>
+                                    <input
+                                        type="text"
+                                        id="areaInput"
+                                        list="locationSuggestions"
+                                        class="form-control"
+                                        placeholder="Area / Locality Name"
+                                        required
+                                    >
+                                </div>
+                            </div>
+                            
+                            <!-- State Dropdown -->
+                            <div class="col-6 col-md-3">
+                                <select id="stateSelect" class="form-select" required>
+                                    <option value="" disabled selected>State</option>
+                                    <option value="Andhra Pradesh">Andhra Pradesh</option>
+                                    <option value="Telangana">Telangana</option>
+                                    <option value="Karnataka">Karnataka</option>
+                                    <option value="Tamil Nadu">Tamil Nadu</option>
+                                    <option value="Maharashtra">Maharashtra</option>
+                                    <option value="Kerala">Kerala</option>
+                                    <option value="Delhi">Delhi</option>
+                                    <option value="Goa">Goa</option>
+                                    <option value="Gujarat">Gujarat</option>
+                                    <option value="Haryana">Haryana</option>
+                                    <option value="Madhya Pradesh">Madhya Pradesh</option>
+                                    <option value="Punjab">Punjab</option>
+                                    <option value="Rajasthan">Rajasthan</option>
+                                    <option value="Uttar Pradesh">Uttar Pradesh</option>
+                                    <option value="West Bengal">West Bengal</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Pincode Input -->
+                            <div class="col-6 col-md-3">
+                                <input
+                                    type="text"
+                                    id="pincodeInput"
+                                    class="form-control"
+                                    placeholder="Pincode (6 digits)"
+                                    pattern="^[1-9][0-9]{5}$"
+                                    maxlength="6"
+                                    required
+                                >
+                            </div>
                         </div>
+
+                        <!-- Hidden legacy inputs -->
+                        <input type="hidden" name="location" id="locationInput" required>
                         <input type="hidden" name="latitude" id="latitudeInput">
                         <input type="hidden" name="longitude" id="longitudeInput">
                         <datalist id="locationSuggestions">
@@ -262,32 +322,140 @@
                     </div>
 
 
-                    <div class="d-flex gap-3 mt-3">
-                        <button
-                            type="reset"
-                            id="cancelBookingBtn"
-                            class="btn btn-outline-secondary btn-lg w-50">
-                            Cancel
-                        </button>
-
-                        <button
-                            id="confirmBookingBtn"
-                            type="submit"
-                            class="btn btn-success btn-lg w-50">
-                            <span
-                                id="confirmBookingSpinner"
-                                class="spinner-border spinner-border-sm me-2 d-none"
-                                role="status"
-                                aria-hidden="true">
-                            </span>
-                            <span id="confirmBookingText">Confirm Booking</span>
-                        </button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
+
+    <div class="col-12 col-lg-4 order-lg-2 order-2">
+        <!-- Trainer List & Filters -->
+        <div class="card shadow-sm border-0 mb-4 h-100">
+            <div class="card-header d-flex align-items-center justify-content-between text-dark fw-bold">
+                <span>🏊 Active Coaches</span>
+                <span class="badge bg-primary text-white fw-bold" id="coachesCount">{{ trainers|length }}</span>
+            </div>
+            <div class="card-body d-flex flex-column" style="min-height: 550px;">
+                <!-- Filters -->
+                <div class="mb-3 p-3 bg-light rounded-3 border" id="trainerFilterBox">
+                    <label class="form-label fw-bold text-dark small mb-2"><i class="fa-solid fa-filter text-primary me-1"></i> Filter & Sort</label>
+                    <div class="d-flex flex-column gap-2">
+                        <div class="form-check">
+                            <input class="form-check-input filter-checkbox" type="checkbox" id="sortAZCheckbox">
+                            <label class="form-check-label small fw-semibold text-secondary" for="sortAZCheckbox">
+                                Sort Alphabetically (A-Z)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input filter-checkbox" type="checkbox" id="sortRatingCheckbox" checked>
+                            <label class="form-check-label small fw-semibold text-secondary" for="sortRatingCheckbox">
+                                Sort by Rating (High to Low)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input filter-checkbox" type="checkbox" id="nearMeCheckbox">
+                            <label class="form-check-label small fw-semibold text-secondary" for="nearMeCheckbox">
+                                Near my location
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trainer List Container -->
+                <div id="trainerListContainer" class="d-flex flex-column gap-3" style="max-height: 520px; overflow-y: auto; padding-right: 4px;">
+                    {% for t in trainers %}
+                    <div class="card trainer-card border-2 cursor-pointer position-relative transition-all"
+                         id="trainer-card-{{ t.username }}"
+                         data-username="{{ t.username }}"
+                         data-name="{{ t.name|lower }}"
+                         data-rating="{{ t.rating }}"
+                         data-location="{{ t.residence_location|lower }}"
+                         style="cursor: pointer; border-radius: 12px; transition: 0.2s ease;">
+                        <div class="card-body p-3">
+                            <div class="profile-header-notice text-primary small fw-bold mb-2 d-none" id="profile-notice-{{ t.username }}">
+                                👤 Coach Profile Details
+                            </div>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div class="d-flex align-items-center">
+                                    <input type="checkbox" 
+                                           class="form-check-input trainer-select-checkbox me-2 cursor-pointer"
+                                           data-username="{{ t.username }}"
+                                           id="checkbox-{{ t.username }}"
+                                           style="width: 18px; height: 18px; border: 2px solid #2563eb;"
+                                           onclick="event.stopPropagation(); toggleTrainerSelection('{{ t.username }}');">
+                                    <h6 class="mb-0 fw-bold text-dark">{{ t.name|title }}</h6>
+                                </div>
+                                <span class="badge bg-warning text-dark fw-bold" style="font-size: 0.85rem;">
+                                    ⭐ {{ t.rating }}
+                                </span>
+                            </div>
+                            <div class="mb-2 text-muted small" style="line-height: 1.4;">
+                                <div><strong>Experience:</strong> {{ t.experience }}</div>
+                                <div><strong>Certifications:</strong> {{ t.qualification }}</div>
+                                <div><strong>Currently Work:</strong> {{ t.currently_working }}</div>
+                            </div>
+                            <div class="text-secondary small d-flex align-items-center mt-2 pt-2 border-top">
+                                📍 <span>Resides: <strong>{{ t.residence_location }}</strong></span>
+                            </div>
+
+                            <div class="d-flex justify-content-end mt-2 pt-2 border-top-0" id="view-profile-btn-container-{{ t.username }}">
+                                <button type="button" class="btn btn-xs btn-outline-primary fw-semibold px-3 py-1" style="font-size: 0.78rem; border-radius: 8px;"
+                                        onclick="event.stopPropagation(); viewTrainerProfile('{{ t.username }}');">
+                                    View Profile
+                                </button>
+                            </div>
+
+                            <div class="profile-actions d-none mt-3 d-flex gap-2" id="profile-actions-{{ t.username }}">
+                                <button type="button" class="btn btn-sm btn-secondary w-50 fw-bold" style="border-radius: 10px;"
+                                        onclick="event.stopPropagation(); cancelTrainerProfile();">
+                                    Cancel
+                                </button>
+                                <button type="button" class="btn btn-sm btn-primary w-50 fw-bold" style="border-radius: 10px;"
+                                        onclick="event.stopPropagation(); selectTrainerProfile('{{ t.username }}');">
+                                    Select Coach
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="text-danger small mt-3 d-none text-center" id="trainerSelectionError">
+                    ⚠️ Please select a coach from the list above.
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Bottom / Column 3: Cancel & Confirm Buttons -->
+    <div class="col-12 col-lg-8 order-lg-3 order-3 mt-2">
+        <div class="card shadow-sm border-0 p-4 mb-4">
+            <div class="d-flex gap-3">
+                <button
+                    type="reset"
+                    id="cancelBookingBtn"
+                    class="btn btn-outline-secondary btn-lg w-50"
+                    style="border-radius: 12px; font-weight: bold;">
+                    Cancel
+                </button>
+
+                <button
+                    id="confirmBookingBtn"
+                    type="submit"
+                    class="btn btn-success btn-lg w-50"
+                    style="border-radius: 12px; font-weight: bold;"
+                    disabled>
+                    <span
+                        id="confirmBookingSpinner"
+                        class="spinner-border spinner-border-sm me-2 d-none"
+                        role="status"
+                        aria-hidden="true">
+                    </span>
+                    <span id="confirmBookingText">Confirm Booking</span>
+                </button>
+            </div>
+        </div>
+    </div>
+  </form>
+  </div>
 </div>
 
 </div>
@@ -369,6 +537,11 @@
   <button type="button" class="mobile-nav-item" onclick="window.location.href='/payments'">
     <div>💳</div>
     <small>Payments</small>
+  </button>
+
+  <button type="button" class="mobile-nav-item" onclick="window.location.href='/profile'">
+    <div>👤</div>
+    <small>Profile</small>
   </button>
 
 {% else %}
@@ -497,12 +670,119 @@ document.addEventListener('DOMContentLoaded', function() {
                 `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
             );
             const data = await response.json();
-            return data.display_name || `${lat}, ${lng}`;
+            const displayName = data.display_name || '';
+            const addressParts = displayName.split(',').map(part => part.trim());
+            
+            let pincode = '';
+            let pincodeIndex = -1;
+            
+            // Find 6-digit pincode
+            for (let i = addressParts.length - 1; i >= 0; i--) {
+                if (/^[1-9][0-9]{5}$/.test(addressParts[i])) {
+                    pincode = addressParts[i];
+                    pincodeIndex = i;
+                    break;
+                }
+            }
+            
+            let stateName = '';
+            let stateIndex = -1;
+            if (pincodeIndex !== -1) {
+                stateName = addressParts[pincodeIndex - 1] || '';
+                stateIndex = pincodeIndex - 1;
+            } else {
+                if (addressParts.length >= 3) {
+                    stateName = addressParts[addressParts.length - 2] || '';
+                    stateIndex = addressParts.length - 2;
+                }
+            }
+            
+            let areaParts = [];
+            let limit = (stateIndex !== -1) ? stateIndex : addressParts.length;
+            for (let i = 0; i < limit; i++) {
+                areaParts.push(addressParts[i]);
+            }
+            const area = areaParts.join(', ');
+            
+            return {
+                area: area || displayName,
+                state: stateName,
+                pincode: pincode,
+                display_name: displayName || `${lat}, ${lng}`
+            };
         } catch (error) {
             console.error('Reverse geocoding failed:', error);
-            return `${lat}, ${lng}`;
+            return {
+                area: `${lat}, ${lng}`,
+                state: '',
+                pincode: '',
+                display_name: `${lat}, ${lng}`
+            };
         }
     }
+
+    const areaInput = document.getElementById('areaInput');
+    const stateSelect = document.getElementById('stateSelect');
+    const pincodeInput = document.getElementById('pincodeInput');
+
+    function updateFullLocation() {
+        const area = (areaInput.value || '').trim();
+        const state = (stateSelect.value || '').trim();
+        const pincode = (pincodeInput.value || '').trim();
+        
+        let full = '';
+        if (area) full += area;
+        if (state) full += (full ? ', ' : '') + state;
+        if (pincode) full += (full ? ' - ' : '') + pincode;
+        
+        if (locationInput) {
+            locationInput.value = full;
+            const event = new Event('input', { bubbles: true });
+            locationInput.dispatchEvent(event);
+        }
+    }
+
+    function setSelectedState(stateName) {
+        if (!stateSelect || !stateName) return;
+        let normalized = stateName.toLowerCase().trim();
+
+        // Map common regional script/language state names to English
+        const stateMappings = {
+            'ఆంధ్ర': 'andhra pradesh',
+            'ప్రదేశ్': 'andhra pradesh',
+            'తెలంగాణ': 'telangana',
+            'తెలంగాణా': 'telangana',
+            'telangāṇa': 'telangana',
+            'కర్ణాటక': 'karnataka',
+            'మహారాష్ట్ర': 'maharashtra',
+            'తమిళ': 'tamil nadu',
+            'నాడు': 'tamil nadu',
+            'కేరళ': 'kerala',
+            'దిల్లీ': 'delhi',
+            'ఢిల్లీ': 'delhi',
+            'గోవా': 'goa',
+            'గుజరాత్': 'gujarat'
+        };
+
+        for (const [key, val] of Object.entries(stateMappings)) {
+            if (normalized.includes(key)) {
+                normalized = val;
+                break;
+            }
+        }
+
+        for (let i = 0; i < stateSelect.options.length; i++) {
+            const optionVal = stateSelect.options[i].value.toLowerCase().trim();
+            if (optionVal && (normalized.includes(optionVal) || optionVal.includes(normalized))) {
+                stateSelect.selectedIndex = i;
+                break;
+            }
+        }
+    }
+
+    if (areaInput) areaInput.addEventListener('input', updateFullLocation);
+    if (stateSelect) stateSelect.addEventListener('change', updateFullLocation);
+    if (pincodeInput) pincodeInput.addEventListener('input', updateFullLocation);
 
     let map;
     let selectedLat = null;
@@ -521,22 +801,26 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    let userLocationMarker = null;
+
     if (modalChooseOnMapBtn) {
         modalChooseOnMapBtn.addEventListener('click', function() {
             mapPickerContainer.style.display = 'block';
-            setTimeout(() => {
-                const defaultLat = currentLat || 17.4435;
-                const defaultLng = currentLng || 78.3772;
+            const mapPickerEl = document.getElementById('mapPicker');
+            if (mapPickerEl) {
+                mapPickerEl.style.opacity = '0.6';
+            }
+
+            function initMapWithCoords(lat, lng, isCurrentLocation = false) {
+                if (mapPickerEl) {
+                    mapPickerEl.style.opacity = '1';
+                }
                 if (!map) {
-                    map = L.map('mapPicker').setView([defaultLat, defaultLng], 15);
+                    map = L.map('mapPicker').setView([lat, lng], 15);
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                         attribution: '&copy; OpenStreetMap contributors'
                     }).addTo(map);
-                    if (currentLat && currentLng) {
-                        L.circleMarker([currentLat, currentLng], {
-                            radius: 8
-                        }).addTo(map);
-                    }
+
                     map.on('click', function(e) {
                         selectedLat = e.latlng.lat.toFixed(6);
                         selectedLng = e.latlng.lng.toFixed(6);
@@ -547,11 +831,61 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 } else {
                     map.invalidateSize();
-                    if (currentLat && currentLng) {
-                        map.setView([currentLat, currentLng], 15);
-                    }
+                    map.setView([lat, lng], 15);
                 }
-            }, 300);
+
+                if (isCurrentLocation) {
+                    if (userLocationMarker) {
+                        map.removeLayer(userLocationMarker);
+                    }
+                    userLocationMarker = L.circleMarker([lat, lng], {
+                        radius: 9,
+                        fillColor: '#2b82c9',
+                        color: '#fff',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    }).addTo(map);
+
+                    selectedLat = parseFloat(lat).toFixed(6);
+                    selectedLng = parseFloat(lng).toFixed(6);
+                    if (selectedMarker) {
+                        map.removeLayer(selectedMarker);
+                    }
+                    selectedMarker = L.marker([lat, lng]).addTo(map);
+                }
+            }
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        currentLat = position.coords.latitude;
+                        currentLng = position.coords.longitude;
+                        setTimeout(() => {
+                            initMapWithCoords(currentLat, currentLng, true);
+                        }, 300);
+                    },
+                    function(error) {
+                        console.warn("Geolocation failed on map open, falling back.", error);
+                        const defaultLat = currentLat || 17.4435;
+                        const defaultLng = currentLng || 78.3772;
+                        setTimeout(() => {
+                            initMapWithCoords(defaultLat, defaultLng, false);
+                        }, 300);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 5000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                const defaultLat = currentLat || 17.4435;
+                const defaultLng = currentLng || 78.3772;
+                setTimeout(() => {
+                    initMapWithCoords(defaultLat, defaultLng, false);
+                }, 300);
+            }
         });
     }
 
@@ -562,17 +896,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             modalCurrentLocationBtn.disabled = true;
-            modalCurrentLocationBtn.innerHTML = '⏳ Getting Location...';
+            modalCurrentLocationBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Getting Location...';
             navigator.geolocation.getCurrentPosition(
                 async function(position) {
                     const latitude = position.coords.latitude.toFixed(6);
                     const longitude = position.coords.longitude.toFixed(6);
                     currentLat = latitude;
                     currentLng = longitude;
-                    const fullAddress = await reverseGeocode(latitude, longitude);
-                    if (locationInput) {
-                        locationInput.value = fullAddress;
-                    }
+                    const geoData = await reverseGeocode(latitude, longitude);
+                    if (areaInput) areaInput.value = geoData.area;
+                    setSelectedState(geoData.state);
+                    if (pincodeInput) pincodeInput.value = geoData.pincode;
+                    updateFullLocation();
                     if (latitudeInput) latitudeInput.value = latitude;
                     if (longitudeInput) longitudeInput.value = longitude;
                     modalCurrentLocationBtn.disabled = false;
@@ -594,7 +929,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     alert(message);
                     modalCurrentLocationBtn.disabled = false;
-                    modalCurrentLocationBtn.innerHTML = '📍 Use Current Location';
+                    modalCurrentLocationBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs me-2"></i>Use Current Location';
                 },
                 {
                     enableHighAccuracy: true,
@@ -612,10 +947,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('Please select a location on the map.');
                 return;
             }
-            reverseGeocode(selectedLat, selectedLng).then(fullAddress => {
-                if (locationInput) {
-                    locationInput.value = fullAddress;
-                }
+            reverseGeocode(selectedLat, selectedLng).then(geoData => {
+                if (areaInput) areaInput.value = geoData.area;
+                setSelectedState(geoData.state);
+                if (pincodeInput) pincodeInput.value = geoData.pincode;
+                updateFullLocation();
                 if (latitudeInput) latitudeInput.value = selectedLat;
                 if (longitudeInput) longitudeInput.value = selectedLng;
                 const modalInstance = bootstrap.Modal.getInstance(
@@ -623,6 +959,217 @@ document.addEventListener('DOMContentLoaded', function() {
                 );
                 if (modalInstance) modalInstance.hide();
             });
+        });
+    }
+
+    // --- Trainer Selection, Sorting, and Location Filtering ---
+    const hiddenTrainerInput = document.getElementById('hiddenTrainerInput');
+    const trainerSelectionError = document.getElementById('trainerSelectionError');
+    const trainerListContainer = document.getElementById('trainerListContainer');
+    const trainerCards = document.querySelectorAll('.trainer-card');
+    const sortAZCheckbox = document.getElementById('sortAZCheckbox');
+    const sortRatingCheckbox = document.getElementById('sortRatingCheckbox');
+    const nearMeCheckbox = document.getElementById('nearMeCheckbox');
+
+    window.toggleTrainerSelection = function(username) {
+        const card = document.getElementById('trainer-card-' + username);
+        const checkbox = document.getElementById('checkbox-' + username);
+        if (!card || !checkbox) return;
+        
+        const isCurrentlySelected = card.classList.contains('selected-trainer');
+        
+        // Clear all selections
+        trainerCards.forEach(c => {
+            c.classList.remove('selected-trainer');
+            const cb = c.querySelector('.trainer-select-checkbox');
+            if (cb) cb.checked = false;
+        });
+
+        if (!isCurrentlySelected) {
+            card.classList.add('selected-trainer');
+            checkbox.checked = true;
+            if (hiddenTrainerInput) {
+                hiddenTrainerInput.value = username;
+            }
+            if (trainerSelectionError) {
+                trainerSelectionError.classList.add('d-none');
+            }
+            const confirmBtn = document.getElementById('confirmBookingBtn');
+            if (confirmBtn) confirmBtn.disabled = false;
+        } else {
+            if (hiddenTrainerInput) {
+                hiddenTrainerInput.value = '';
+            }
+            const confirmBtn = document.getElementById('confirmBookingBtn');
+            if (confirmBtn) confirmBtn.disabled = true;
+        }
+    };
+
+    window.viewTrainerProfile = function(username) {
+        // Hide filter box
+        const filterBox = document.getElementById('trainerFilterBox');
+        if (filterBox) filterBox.classList.add('d-none');
+
+        // Hide other trainer cards
+        trainerCards.forEach(card => {
+            if (card.getAttribute('data-username') !== username) {
+                card.classList.add('d-none');
+            } else {
+                card.classList.remove('d-none');
+                // Show profile actions & notice
+                const actions = document.getElementById('profile-actions-' + username);
+                if (actions) actions.classList.remove('d-none');
+                const notice = document.getElementById('profile-notice-' + username);
+                if (notice) notice.classList.remove('d-none');
+                const viewBtn = document.getElementById('view-profile-btn-container-' + username);
+                if (viewBtn) viewBtn.classList.add('d-none');
+            }
+        });
+    };
+
+    window.cancelTrainerProfile = function() {
+        // Show filter box
+        const filterBox = document.getElementById('trainerFilterBox');
+        if (filterBox) filterBox.classList.remove('d-none');
+
+        // Restore all action containers
+        trainerCards.forEach(card => {
+            const username = card.getAttribute('data-username');
+            const actions = document.getElementById('profile-actions-' + username);
+            if (actions) actions.classList.add('d-none');
+            const notice = document.getElementById('profile-notice-' + username);
+            if (notice) notice.classList.add('d-none');
+            const viewBtn = document.getElementById('view-profile-btn-container-' + username);
+            if (viewBtn) viewBtn.classList.remove('d-none');
+        });
+
+        // Re-run filter lists to restore correct visible cards
+        filterAndSortTrainers();
+    };
+
+    window.selectTrainerProfile = function(username) {
+        // Ensure this coach is selected
+        const checkbox = document.getElementById('checkbox-' + username);
+        const card = document.getElementById('trainer-card-' + username);
+        if (card && !card.classList.contains('selected-trainer')) {
+            toggleTrainerSelection(username);
+        }
+        // Return to normal list view
+        cancelTrainerProfile();
+    };
+
+    trainerCards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            // Prevent click toggle if they clicked on standard form controls or buttons
+            if (e.target.closest('.trainer-select-checkbox') || e.target.closest('button')) {
+                return;
+            }
+            const username = card.getAttribute('data-username');
+            toggleTrainerSelection(username);
+        });
+    });
+
+    function filterAndSortTrainers() {
+        if (!trainerListContainer) return;
+        
+        // If we are currently viewing profile details, do not override card list with filters
+        const activeProfileActions = document.querySelectorAll('.profile-actions:not(.d-none)');
+        if (activeProfileActions.length > 0) return;
+
+        const cardsArray = Array.from(trainerCards);
+        
+        // Sorting flags
+        const sortByRating = sortRatingCheckbox ? sortRatingCheckbox.checked : true;
+        const sortByAZ = sortAZCheckbox ? sortAZCheckbox.checked : false;
+        
+        const filterNearMe = nearMeCheckbox ? nearMeCheckbox.checked : false;
+        const locationVal = locationInput ? (locationInput.value || '').trim().toLowerCase() : '';
+
+        cardsArray.forEach(card => {
+            let matchesLocation = true;
+            if (filterNearMe && locationVal) {
+                const trainerLoc = card.getAttribute('data-location') || '';
+                const locationWords = locationVal.split(/[\s,]+/);
+                const matchesKeyword = locationWords.some(word => word.length > 2 && trainerLoc.includes(word));
+                matchesLocation = locationVal.includes(trainerLoc) || trainerLoc.includes(locationVal) || matchesKeyword;
+            }
+
+            if (matchesLocation) {
+                card.classList.remove('d-none');
+            } else {
+                card.classList.add('d-none');
+            }
+        });
+
+        // Sort the visible cards array
+        const sortedCards = cardsArray.filter(c => !c.classList.contains('d-none')).sort((a, b) => {
+            if (sortByRating) {
+                const rA = parseFloat(a.getAttribute('data-rating') || 0);
+                const rB = parseFloat(b.getAttribute('data-rating') || 0);
+                return rB - rA;
+            } else if (sortByAZ) {
+                const nA = a.getAttribute('data-name') || '';
+                const nB = b.getAttribute('data-name') || '';
+                return nA.localeCompare(nB);
+            }
+            return 0;
+        });
+
+        // Append sorted cards back to container dynamically
+        sortedCards.forEach(card => trainerListContainer.appendChild(card));
+    }
+
+    if (sortAZCheckbox && sortRatingCheckbox) {
+        sortAZCheckbox.addEventListener('change', function() {
+            if (sortAZCheckbox.checked) {
+                sortRatingCheckbox.checked = false;
+            }
+            filterAndSortTrainers();
+        });
+
+        sortRatingCheckbox.addEventListener('change', function() {
+            if (sortRatingCheckbox.checked) {
+                sortAZCheckbox.checked = false;
+            }
+            filterAndSortTrainers();
+        });
+    }
+
+    if (nearMeCheckbox) {
+        nearMeCheckbox.addEventListener('change', filterAndSortTrainers);
+    }
+    if (locationInput) {
+        locationInput.addEventListener('input', filterAndSortTrainers);
+        locationInput.addEventListener('change', filterAndSortTrainers);
+    }
+
+    // Booking form verification check on submission
+    const bookingForm = document.getElementById('bookingForm');
+    if (bookingForm) {
+        // Use capture phase or early listener with stopImmediatePropagation to intercept dashboard.js
+        bookingForm.addEventListener('submit', function(e) {
+            const selectedTrainer = hiddenTrainerInput ? hiddenTrainerInput.value : '';
+            if (!selectedTrainer) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+
+                // Restore confirmation button state from dashboard.js spinner
+                const confirmBookingBtn = document.getElementById('confirmBookingBtn');
+                const confirmBookingSpinner = document.getElementById('confirmBookingSpinner');
+                const confirmBookingText = document.getElementById('confirmBookingText');
+                if (confirmBookingBtn) confirmBookingBtn.disabled = false;
+                if (confirmBookingSpinner) confirmBookingSpinner.classList.add('d-none');
+                if (confirmBookingText) confirmBookingText.textContent = 'Confirm Booking';
+
+                if (trainerSelectionError) {
+                    trainerSelectionError.classList.remove('d-none');
+                }
+                const sidebar = document.getElementById('trainerListContainer');
+                if (sidebar) {
+                    sidebar.scrollIntoView({ behavior: 'smooth' });
+                }
+                alert('Please select a coach from the Active Coaches sidebar pane to proceed.');
+            }
         });
     }
 });
@@ -637,6 +1184,20 @@ document.getElementById('bookingForm')?.addEventListener('reset', function() {
             ?.dispatchEvent(new Event('change', { bubbles: true }));
         document.getElementById('studentSelect')
             ?.dispatchEvent(new Event('input', { bubbles: true }));
+
+        // Reset coach selections
+        const hiddenTrainerInput = document.getElementById('hiddenTrainerInput');
+        if (hiddenTrainerInput) hiddenTrainerInput.value = '';
+
+        const trainerCards = document.querySelectorAll('.trainer-card');
+        trainerCards.forEach(c => {
+            c.classList.remove('selected-trainer');
+            const cb = c.querySelector('.trainer-select-checkbox');
+            if (cb) cb.checked = false;
+        });
+
+        const confirmBtn = document.getElementById('confirmBookingBtn');
+        if (confirmBtn) confirmBtn.disabled = true;
     }, 0);
 });
 </script>

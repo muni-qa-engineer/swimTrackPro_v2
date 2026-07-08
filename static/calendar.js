@@ -6,6 +6,83 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
+    function renderMobileAgenda(day, dayBookings, dateKey) {
+        const mobileAgendaView = document.getElementById('mobileAgendaView');
+        if (!mobileAgendaView) return;
+
+        const dateObj = new Date(calendarMonthInput.value.split('-')[0], parseInt(calendarMonthInput.value.split('-')[1]) - 1, day);
+        const formattedDate = dateObj.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' });
+
+        let html = `<div class="agenda-title mb-2 d-flex align-items-center justify-content-between">
+            <span class="fw-bold">📅 Agenda for ${formattedDate}</span>
+            <span class="badge bg-info text-white rounded-pill">${dayBookings.length} Session${dayBookings.length !== 1 ? 's' : ''}</span>
+        </div>`;
+
+        if (dayBookings.length === 0) {
+            html += `
+                <div class="empty-state">
+                    <p class="mb-0 fw-semibold text-secondary">No sessions scheduled for this day</p>
+                    <small class="text-muted">Enjoy your day off!</small>
+                </div>
+            `;
+        } else {
+            dayBookings.forEach(b => {
+                const approvedRequest = (b.makeupRequests || []).find(r => r.status === 'approved');
+                const pendingRequest = (b.makeupRequests || []).find(r => r.status === 'pending');
+
+                let borderClass = '';
+                let statusText = '';
+                let completedClass = b.completed ? 'completed' : '';
+
+                if (b.isMakeupSession) {
+                    borderClass = 'makeup';
+                    statusText = '<span class="badge bg-success-subtle text-success border border-success ms-2">🔄 Make-up</span>';
+                } else if (approvedRequest && approvedRequest.original_date === b.sessionDate) {
+                    borderClass = 'skipped';
+                    statusText = '<span class="badge bg-warning-subtle text-warning border border-warning ms-2">⏭️ Skipped</span>';
+                    completedClass = '';
+                } else if (pendingRequest && pendingRequest.original_date === b.sessionDate) {
+                    borderClass = 'pending';
+                    statusText = '<span class="badge bg-warning-subtle text-warning border border-warning ms-2">⏳ Pending Skip</span>';
+                } else if (b.completed) {
+                    statusText = '<span class="badge bg-secondary-subtle text-secondary border border-secondary ms-2">✅ Completed</span>';
+                }
+
+                html += `
+                    <div class="agenda-card ${borderClass} ${completedClass} calendar-session"
+                        data-booking-id="${b.bookingId || ''}"
+                        data-session-date="${b.sessionDate || dateKey}"
+                        data-student="${b.student || ''}"
+                        data-package="${b.package || ''}"
+                        data-skip-remaining="${b.skipRemaining}"
+                        data-valid-until="${b.validUntil}"
+                        data-skip-eligible="${b.skipEligible}"
+                        data-has-available-makeup-credit="${b.hasAvailableMakeupCredit}"
+                        data-available-makeup-credit-id="${b.availableMakeupCreditId}"
+                        data-pending-request-id="${b.pendingRequestId}"
+                        data-makeup-used="${b.makeupUsed}"
+                    >
+                        <div class="d-flex flex-column">
+                            <div class="agenda-swimmer fw-bold text-dark d-flex align-items-center" style="font-size: 15px;">
+                                <span>🏊</span>
+                                <span class="ms-2">${b.student}</span>
+                                ${statusText}
+                            </div>
+                            <div class="text-muted small mt-1" style="font-size: 13px;">
+                                <i class="fa-regular fa-clock me-1"></i>${b.time}
+                            </div>
+                        </div>
+                        <div>
+                            <i class="fa-solid fa-chevron-right text-muted opacity-50"></i>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        mobileAgendaView.innerHTML = html;
+    }
+
     function renderCalendar(year, month) {
         calendarGrid.innerHTML = '';
 
@@ -285,6 +362,59 @@ document.addEventListener('DOMContentLoaded', function () {
 
             calendarGrid.appendChild(cell);
         }
+
+        // Render Mobile Date Strip
+        const mobileDateStrip = document.getElementById('mobileDateStrip');
+        if (mobileDateStrip) {
+            mobileDateStrip.innerHTML = '';
+            
+            let firstActiveDay = 1;
+            const todayObj = new Date();
+            if (month === todayObj.getMonth() && year === todayObj.getFullYear()) {
+                firstActiveDay = todayObj.getDate();
+            }
+
+            for (let day = 1; day <= totalDays; day++) {
+                const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayBookings = sessionMap[dateKey] || [];
+                const dayLabel = new Date(year, month, day).toLocaleDateString('en-US', { weekday: 'short' });
+
+                const card = document.createElement('div');
+                card.className = `date-card ${day === firstActiveDay ? 'active' : ''}`;
+                card.dataset.day = day;
+
+                let indicatorDot = '';
+                if (dayBookings.length > 0) {
+                    indicatorDot = '<div class="dot-indicator"></div>';
+                }
+
+                card.innerHTML = `
+                    <span class="date-label">${dayLabel}</span>
+                    <span class="date-num">${day}</span>
+                    ${indicatorDot}
+                `;
+
+                card.addEventListener('click', function() {
+                    document.querySelectorAll('.date-card').forEach(c => c.classList.remove('active'));
+                    card.classList.add('active');
+                    renderMobileAgenda(day, dayBookings, dateKey);
+                });
+
+                mobileDateStrip.appendChild(card);
+            }
+
+            // Render default agenda
+            const defaultDateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(firstActiveDay).padStart(2, '0')}`;
+            renderMobileAgenda(firstActiveDay, sessionMap[defaultDateKey] || [], defaultDateKey);
+
+            // Auto-scroll date strip to active card
+            setTimeout(() => {
+                const activeCard = mobileDateStrip.querySelector('.date-card.active');
+                if (activeCard) {
+                    mobileDateStrip.scrollLeft = activeCard.offsetLeft - (mobileDateStrip.offsetWidth / 2) + (activeCard.offsetWidth / 2);
+                }
+            }, 100);
+        }
     }
 
     const today = new Date();
@@ -298,6 +428,16 @@ document.addEventListener('DOMContentLoaded', function () {
     setTimeout(() => {
         if (!window.reopenBookingId || !window.reopenSessionDate) {
             return;
+        }
+
+        // On mobile view, select the correct day card first to show its agenda
+        const dateParts = window.reopenSessionDate.split('-');
+        if (dateParts.length === 3) {
+            const reopenDay = parseInt(dateParts[2]);
+            const dateCard = document.querySelector(`.date-card[data-day="${reopenDay}"]`);
+            if (dateCard) {
+                dateCard.click();
+            }
         }
 
         const chip = document.querySelector(

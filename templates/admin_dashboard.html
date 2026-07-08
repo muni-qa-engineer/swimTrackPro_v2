@@ -1,0 +1,718 @@
+{% extends 'base.html' %}
+
+{% block title %}Super Admin Dashboard - SwimTrackPro{% endblock %}
+
+{% block content %}
+<!-- Include Chart.js via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="d-flex" style="min-height: 100vh; background-color: #f8fafc;">
+    
+    <!-- Sidebar Navigation -->
+    <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" style="width: 260px; background: #0b192c !important; z-index: 10;">
+        <a href="/" class="d-flex align-items-center mb-4 me-md-auto text-white text-decoration-none px-2 mt-2">
+            <span class="fs-4 fw-bold d-flex align-items-center gap-2">
+                🏊 <span style="font-family: 'Inter', sans-serif; letter-spacing: -0.5px;">SwimTrackPro</span>
+            </span>
+        </a>
+        <hr style="opacity: 0.1;">
+        <ul class="nav nav-pills flex-column mb-auto gap-2" id="sidebarMenu">
+            <li class="nav-item">
+                <a href="#" class="nav-link active d-flex align-items-center gap-3 px-3 py-2.5 rounded-3 fw-semibold text-white bg-primary" onclick="switchSection('dashboard')">
+                    <i class="fa-solid fa-chart-line fs-5"></i> Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link d-flex align-items-center gap-3 px-3 py-2.5 rounded-3 fw-semibold text-white-50" onclick="switchSection('bookings')">
+                    <i class="fa-solid fa-receipt fs-5"></i> Bookings
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link d-flex align-items-center gap-3 px-3 py-2.5 rounded-3 fw-semibold text-white-50" onclick="switchSection('students')">
+                    <i class="fa-solid fa-user-group fs-5"></i> Students
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link d-flex align-items-center gap-3 px-3 py-2.5 rounded-3 fw-semibold text-white-50" onclick="switchSection('coaches')">
+                    <i class="fa-solid fa-user-tie fs-5"></i> Coaches
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link d-flex align-items-center gap-3 px-3 py-2.5 rounded-3 fw-semibold text-white-50" onclick="switchSection('sessions')">
+                    <i class="fa-regular fa-calendar-check fs-5"></i> Sessions
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link d-flex align-items-center gap-3 px-3 py-2.5 rounded-3 fw-semibold text-white-50" onclick="switchSection('payments')">
+                    <i class="fa-solid fa-credit-card fs-5"></i> Payments
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link d-flex align-items-center gap-3 px-3 py-2.5 rounded-3 fw-semibold text-white-50" onclick="switchSection('reports')">
+                    <i class="fa-solid fa-clock-rotate-left fs-5"></i> Reports & Logs
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link d-flex align-items-center gap-3 px-3 py-2.5 rounded-3 fw-semibold text-white-50" onclick="switchSection('settings')">
+                    <i class="fa-solid fa-sliders fs-5"></i> Settings
+                </a>
+            </li>
+        </ul>
+        <hr style="opacity: 0.1;">
+        <div class="dropdown">
+            <a href="/logout" class="d-flex align-items-center text-white text-decoration-none px-2 py-1.5 rounded-3 fw-semibold hover-bg-light">
+                <i class="fa-solid fa-right-from-bracket me-3 fs-5"></i> Sign Out
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content Panel -->
+    <div class="flex-grow-1 p-4 overflow-y-auto" style="height: 100vh;">
+        
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0 text-dark" id="pageTitle">Dashboard</h2>
+            <div class="d-flex align-items-center gap-3">
+                <div class="text-end d-none d-sm-block">
+                    <div class="fw-bold text-dark">Super Admin</div>
+                    <div class="text-muted small">admin@swimtrackpro.com</div>
+                </div>
+                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center fw-bold" style="width: 44px; height: 44px; font-size: 1.1rem; background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;">
+                    👑
+                </div>
+            </div>
+        </div>
+
+        <!-- Alert Notifications -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show rounded-3 shadow-sm mb-4" role="alert">
+                        <i class="fa-solid fa-circle-info me-2"></i>{{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Content Sections Container -->
+        <div id="contentSections">
+            
+            <!-- SECTION: Dashboard Overview -->
+            <div id="section-dashboard" class="dashboard-section">
+                <!-- Stats Row -->
+                <div class="row g-3 mb-4">
+                    <div class="col-12 col-sm-6 col-xl-3">
+                        <div class="card border-0 rounded-4 shadow-sm p-4 bg-white">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <span class="text-muted small fw-semibold">Total Bookings</span>
+                                    <h2 class="fw-bold mt-1 mb-0">{{ bookings|length }}</h2>
+                                </div>
+                                <div class="rounded-circle bg-success-subtle p-3 text-success fs-3" style="width: 58px; height: 58px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fa-solid fa-user-plus"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-xl-3">
+                        <div class="card border-0 rounded-4 shadow-sm p-4 bg-white">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <span class="text-muted small fw-semibold">Today's Sessions</span>
+                                    <h2 class="fw-bold mt-1 mb-0">{{ today_sessions|length }}</h2>
+                                </div>
+                                <div class="rounded-circle bg-success-subtle p-3 text-success fs-3" style="width: 58px; height: 58px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fa-regular fa-calendar-check"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-xl-3">
+                        <div class="card border-0 rounded-4 shadow-sm p-4 bg-white">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <span class="text-muted small fw-semibold">Total Students</span>
+                                    <h2 class="fw-bold mt-1 mb-0">{{ students|length }}</h2>
+                                </div>
+                                <div class="rounded-circle bg-warning-subtle p-3 text-warning fs-3" style="width: 58px; height: 58px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fa-solid fa-user-group"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-xl-3">
+                        <div class="card border-0 rounded-4 shadow-sm p-4 bg-white">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <span class="text-muted small fw-semibold">Total Coaches</span>
+                                    <h2 class="fw-bold mt-1 mb-0">{{ trainers|length }}</h2>
+                                </div>
+                                <div class="rounded-circle bg-warning-subtle p-3 text-warning fs-3" style="width: 58px; height: 58px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fa-solid fa-user-tie"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mid-Row Grid: Upcoming Sessions & Bookings Overview -->
+                <div class="row g-4 mb-4">
+                    <!-- Left: Upcoming Sessions -->
+                    <div class="col-12 col-lg-7">
+                        <div class="card border-0 rounded-4 shadow-sm p-4 bg-white h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="fw-bold text-dark mb-0">Upcoming Sessions</h5>
+                                <a href="#" class="text-primary fw-semibold small text-decoration-none" onclick="switchSection('sessions')">View All</a>
+                            </div>
+                            <div class="d-flex flex-column gap-3">
+                                {% for session in today_sessions[:4] %}
+                                <div class="d-flex align-items-center justify-content-between p-3 rounded-4 bg-light border border-light">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="px-3 py-2 rounded-3 bg-warning-subtle text-warning fw-bold text-center" style="min-width: 90px; font-size: 0.9rem;">
+                                            {{ session.time }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark">{{ session.package|title }} Training</div>
+                                            <div class="text-muted small">🏊 Swimmer: {{ session.student|title }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-semibold text-secondary">👤 Coach {{ session.trainer_username|title }}</div>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="text-center py-5 text-muted">
+                                    <i class="fa-regular fa-calendar-xmark fa-2x mb-3 opacity-50"></i>
+                                    <p class="mb-0 fw-semibold">No upcoming sessions scheduled for today</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Bookings Overview Chart -->
+                    <div class="col-12 col-lg-5">
+                        <div class="card border-0 rounded-4 shadow-sm p-4 bg-white h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-bold text-dark mb-0">Bookings Overview</h5>
+                                <span class="badge bg-light text-dark border px-2.5 py-1.5 rounded-pill">Weekly Frequency</span>
+                            </div>
+                            <div style="position: relative; height: 260px;">
+                                <canvas id="bookingsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Section: Recent Bookings & Quick Actions -->
+                <div class="row g-4">
+                    <!-- Recent Bookings Table -->
+                    <div class="col-12 col-lg-8">
+                        <div class="card border-0 rounded-4 shadow-sm p-4 bg-white h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="fw-bold text-dark mb-0">Recent Bookings</h5>
+                                <a href="#" class="text-primary fw-semibold small text-decoration-none" onclick="switchSection('bookings')">View All</a>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table align-middle">
+                                    <thead>
+                                        <tr class="table-light">
+                                            <th>Swimmer</th>
+                                            <th>Package</th>
+                                            <th>Assigned Coach</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for booking in bookings[:5] %}
+                                        <tr>
+                                            <td>
+                                                <div class="fw-bold text-dark">{{ booking.student|title }}</div>
+                                                <div class="text-muted small">{{ booking.owner_phone }}</div>
+                                            </td>
+                                            <td>{{ booking.package|title }}</td>
+                                            <td>
+                                                <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2.5 py-1.5">
+                                                    👤 Coach {{ booking.trainer_username|title }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if booking.status|lower == 'paid' %}
+                                                    <span class="badge bg-success-subtle text-success border border-success rounded-pill px-2.5 py-1">Paid</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning-subtle text-warning border border-warning rounded-pill px-2.5 py-1">Pending</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions Panel -->
+                    <div class="col-12 col-lg-4">
+                        <div class="card border-0 rounded-4 shadow-sm p-4 bg-white h-100">
+                            <h5 class="fw-bold text-dark mb-4">Quick Actions</h5>
+                            <div class="d-flex flex-column gap-2">
+                                <button class="btn btn-primary d-flex align-items-center gap-3 p-3 rounded-4 text-start fw-bold w-100" onclick="switchSection('coaches')">
+                                    <i class="fa-solid fa-user-plus fs-4"></i>
+                                    <div>
+                                        <div>Manage Approvals</div>
+                                        <span class="fw-normal small text-white-50">Approve pending coaches</span>
+                                    </div>
+                                </button>
+                                <button class="btn btn-outline-primary d-flex align-items-center gap-3 p-3 rounded-4 text-start fw-bold w-100" onclick="switchSection('bookings')">
+                                    <i class="fa-solid fa-user-tie fs-4"></i>
+                                    <div>
+                                        <div>Coach Assignment</div>
+                                        <span class="fw-normal small text-muted">Change coach mappings</span>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: Bookings Management -->
+            <div id="section-bookings" class="dashboard-section d-none">
+                <div class="card border-0 rounded-4 shadow-sm p-4 bg-white">
+                    <h5 class="fw-bold text-dark mb-4">Manage Bookings</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle border-0">
+                            <thead>
+                                <tr class="table-light">
+                                    <th>Swimmer (Owner)</th>
+                                    <th>Package details</th>
+                                    <th>Assigned Coach</th>
+                                    <th>Payment Status</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in bookings %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold text-dark fs-6">{{ booking.student|title }}</div>
+                                        <div class="text-muted small">📞 {{ booking.owner_phone or '--' }}</div>
+                                    </td>
+                                    <td>
+                                        <div><strong>{{ booking.package }}</strong></div>
+                                        <div class="small text-muted">{{ booking.start_date }} to {{ booking.end_date }}</div>
+                                        <div class="small fw-semibold text-primary mt-1">{{ booking.selected_days }}</div>
+                                    </td>
+                                    <td>
+                                        <!-- Coach reassignment form -->
+                                        <form action="/admin/assign_coach/{{ booking.id }}" method="post" class="d-flex align-items-center gap-2">
+                                            <select name="trainer_username" class="form-select form-select-sm border-secondary rounded-pill" style="min-width: 140px;">
+                                                {% for trainer in trainers %}
+                                                    {% if trainer.is_approved %}
+                                                        <option value="{{ trainer.username }}" {% if booking.trainer_username == trainer.username %}selected{% endif %}>
+                                                            {{ trainer.name|title }}
+                                                        </option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                            <button type="submit" class="btn btn-sm btn-outline-primary px-2.5 rounded-pill" title="Change coach assignment">
+                                                <i class="fa-solid fa-save"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        {% if booking.status|lower == 'paid' %}
+                                            <span class="badge bg-success-subtle text-success border border-success px-2.5 py-1.5 rounded-pill">₹{{ booking.fee }} - Paid</span>
+                                        {% elif booking.status|lower == 'pending verification' %}
+                                            <span class="badge bg-warning-subtle text-warning border border-warning px-2.5 py-1.5 rounded-pill">₹{{ booking.fee }} - Pending</span>
+                                        {% else %}
+                                            <span class="badge bg-danger-subtle text-danger border border-danger px-2.5 py-1.5 rounded-pill">₹{{ booking.fee }} - Unpaid</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <form action="/admin/delete_booking/{{ booking.id }}" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this booking?');">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm px-3 rounded-pill fw-semibold">
+                                                <i class="fa-solid fa-trash me-1"></i>Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: Students Directory -->
+            <div id="section-students" class="dashboard-section d-none">
+                <div class="card border-0 rounded-4 shadow-sm p-4 bg-white">
+                    <h5 class="fw-bold text-dark mb-4">Students Registry</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle border-0">
+                            <thead>
+                                <tr class="table-light">
+                                    <th>Student Name</th>
+                                    <th>Parent/Owner Name</th>
+                                    <th>Parent Contact</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold text-dark fs-6">{{ student.name|title }}</div>
+                                    </td>
+                                    <td>{{ student.owner_name|title }}</td>
+                                    <td>📞 {{ student.owner_phone }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-4 text-muted">No students currently registered.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: Coaches Directory & Approvals -->
+            <div id="section-coaches" class="dashboard-section d-none">
+                <div class="card border-0 rounded-4 shadow-sm p-4 bg-white">
+                    <h5 class="fw-bold text-dark mb-4">Coaches Registry & Approvals</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle border-0">
+                            <thead>
+                                <tr class="table-light">
+                                    <th>Coach Details</th>
+                                    <th>Credentials / Residence</th>
+                                    <th>Rating</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for trainer in trainers %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center fw-bold me-3" style="width: 48px; height: 48px; font-size: 1.2rem; background: linear-gradient(135deg, #0dcaf0, #0288d1) !important;">
+                                                {{ trainer.name[0]|upper }}
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark fs-6">{{ trainer.name|title }}</div>
+                                                <div class="text-muted small">👤 {{ trainer.username }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div><strong>Phone:</strong> {{ trainer.phone or '--' }}</div>
+                                        <div><strong>Email:</strong> {{ trainer.email or '--' }}</div>
+                                        <div class="text-muted small mt-1">📍 {{ trainer.residence_location }}</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-warning text-dark px-2.5 py-1.5 fw-bold rounded-pill">
+                                            ⭐ {{ trainer.rating }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if trainer.is_approved %}
+                                            <span class="badge bg-success-subtle text-success border border-success px-3 py-1.5 rounded-pill">Approved</span>
+                                        {% else %}
+                                            <span class="badge bg-warning-subtle text-warning border border-warning px-3 py-1.5 rounded-pill">Pending Approval</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="d-flex gap-1 justify-content-end">
+                                            {% if not trainer.is_approved %}
+                                                <form action="/admin/approve_trainer/{{ trainer.username }}" method="post" class="d-inline">
+                                                    <button type="submit" class="btn btn-success btn-sm px-3 rounded-pill fw-semibold">
+                                                        <i class="fa-solid fa-check me-1"></i>Approve
+                                                    </button>
+                                                </form>
+                                                <form action="/admin/reject_trainer/{{ trainer.username }}" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to reject this request?');">
+                                                    <button type="submit" class="btn btn-danger btn-sm px-3 rounded-pill fw-semibold">
+                                                        <i class="fa-solid fa-trash me-1"></i>Reject
+                                                    </button>
+                                                </form>
+                                            {% else %}
+                                                {% if trainer.username != 'asdf' %}
+                                                    <form action="/admin/reject_trainer/{{ trainer.username }}" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to remove this coach?');">
+                                                        <button type="submit" class="btn btn-outline-danger btn-sm px-3 rounded-pill fw-semibold">
+                                                            <i class="fa-solid fa-user-minus me-1"></i>Remove
+                                                        </button>
+                                                    </form>
+                                                {% else %}
+                                                    <button class="btn btn-sm btn-outline-secondary px-3 rounded-pill fw-semibold disabled" title="Default System Admin cannot be removed.">
+                                                        System Admin
+                                                    </button>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: Sessions List -->
+            <div id="section-sessions" class="dashboard-section d-none">
+                <div class="card border-0 rounded-4 shadow-sm p-4 bg-white">
+                    <h5 class="fw-bold text-dark mb-4">Scheduled Sessions</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle border-0">
+                            <thead>
+                                <tr class="table-light">
+                                    <th>Session Time</th>
+                                    <th>Student</th>
+                                    <th>Package</th>
+                                    <th>Coach</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for session in today_sessions %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-primary-subtle text-primary border border-primary px-3 py-1.5 rounded-pill fw-bold">
+                                            {{ session.time }}
+                                        </span>
+                                    </td>
+                                    <td><strong class="text-dark">{{ session.student|title }}</strong></td>
+                                    <td>{{ session.package|title }}</td>
+                                     <td>👤 Coach {{ session.trainer_username|title }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">No scheduled sessions for today.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: Payments Status -->
+            <div id="section-payments" class="dashboard-section d-none">
+                <div class="card border-0 rounded-4 shadow-sm p-4 bg-white">
+                    <h5 class="fw-bold text-dark mb-4">Payment Registry</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle border-0">
+                            <thead>
+                                <tr class="table-light">
+                                    <th>Swimmer</th>
+                                    <th>Package Detail</th>
+                                    <th>Verification Code</th>
+                                    <th>Amount</th>
+                                    <th>Payment Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in bookings %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold text-dark">{{ booking.student|title }}</div>
+                                        <div class="text-muted small">📞 {{ booking.owner_phone }}</div>
+                                    </td>
+                                    <td>{{ booking.package|title }} ({{ booking.start_date }} to {{ booking.end_date }})</td>
+                                    <td><code class="text-secondary">{{ booking.payment_request or '--' }}</code></td>
+                                    <td>₹{{ booking.fee }}</td>
+                                    <td>
+                                        {% if booking.status|lower == 'paid' %}
+                                            <span class="badge bg-success-subtle text-success border border-success px-3 py-1.5 rounded-pill">Paid</span>
+                                        {% else %}
+                                            <span class="badge bg-warning-subtle text-warning border border-warning px-3 py-1.5 rounded-pill">Pending Verification</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: Reports & Logs -->
+            <div id="section-reports" class="dashboard-section d-none">
+                <div class="card border-0 rounded-4 shadow-sm p-4 bg-white">
+                    <h5 class="fw-bold text-dark mb-4">System User Activity Audits</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle border-0">
+                            <thead>
+                                <tr class="table-light">
+                                    <th>User</th>
+                                    <th>Role</th>
+                                    <th>Current Login Session</th>
+                                    <th>Previous Login Session</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for activity in activities %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold text-dark">{{ activity.user_name|title }}</div>
+                                        {% if activity.phone %}
+                                            <div class="text-muted small">📞 {{ activity.phone }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if activity.role == 'admin' %}
+                                            <span class="badge bg-dark text-white px-2.5 py-1.5 rounded-pill">Super Admin</span>
+                                        {% elif activity.role == 'trainer' %}
+                                            <span class="badge bg-primary text-white px-2.5 py-1.5 rounded-pill">Coach</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary text-white px-2.5 py-1.5 rounded-pill">Swimmer</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold text-primary">
+                                            <i class="fa-solid fa-clock me-1.5"></i>{{ activity.current_login }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="text-muted small">
+                                            <i class="fa-regular fa-clock me-1.5"></i>{{ activity.previous_login }}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: Settings -->
+            <div id="section-settings" class="dashboard-section d-none">
+                <div class="card border-0 rounded-4 shadow-sm p-4 bg-white">
+                    <h5 class="fw-bold text-dark mb-4">Admin settings</h5>
+                    <p class="text-muted">General configuration settings for SwimTrackPro will be placed here.</p>
+                    <hr class="my-4">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-bold">Academy Name</label>
+                            <input type="text" class="form-control rounded-3" value="SwimTrackPro Academy" disabled>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-bold">System Email</label>
+                            <input type="text" class="form-control rounded-3" value="admin@swimtrackpro.com" disabled>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Tab switching controller
+    function switchSection(sectionId) {
+        // Toggle sections visibility
+        document.querySelectorAll('.dashboard-section').forEach(sec => {
+            sec.classList.add('d-none');
+        });
+        const activeSection = document.getElementById('section-' + sectionId);
+        if (activeSection) {
+            activeSection.classList.remove('d-none');
+        }
+
+        // Toggle sidebar links active state
+        document.querySelectorAll('#sidebarMenu .nav-link').forEach(link => {
+            link.classList.remove('active', 'bg-primary');
+            link.classList.add('text-white-50');
+        });
+
+        // Set clicked item as active
+        const clickedLink = event.currentTarget;
+        if (clickedLink) {
+            clickedLink.classList.add('active', 'bg-primary');
+            clickedLink.classList.remove('text-white-50');
+        }
+
+        // Update page title
+        const titles = {
+            'dashboard': 'Dashboard',
+            'bookings': 'Bookings & Assignment',
+            'students': 'Students Directory',
+            'coaches': 'Coaches & Approvals',
+            'sessions': 'Upcoming Sessions',
+            'payments': 'Payments Status',
+            'reports': 'System Audit Logs',
+            'settings': 'Settings'
+        };
+        document.getElementById('pageTitle').textContent = titles[sectionId] || 'Dashboard';
+    }
+
+    // Chart.js initialization
+    document.addEventListener('DOMContentLoaded', function () {
+        const ctx = document.getElementById('bookingsChart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Bookings',
+                        data: {{ chart_data|tojson }},
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.05)',
+                        borderWidth: 3.5,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#f1f5f9'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+
+<style>
+    /* Styling overrides for premium feel */
+    .hover-bg-light:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #fff !important;
+    }
+    #sidebarMenu .nav-link {
+        transition: all 0.2s ease;
+    }
+    #sidebarMenu .nav-link:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+        color: #fff !important;
+    }
+    .table td, .table th {
+        border-color: #f1f5f9;
+        padding: 16px 12px;
+    }
+</style>
+{% endblock %}

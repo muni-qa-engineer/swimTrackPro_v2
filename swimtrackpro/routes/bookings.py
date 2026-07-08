@@ -206,6 +206,8 @@ def book():
     else:
         status = 'Not Paid'
 
+    trainer_username = request.form.get('trainer_username', 'asdf').strip().lower()
+
     new_booking = {
         "id": booking_id,
         "booking_code": booking_code,
@@ -224,6 +226,7 @@ def book():
         "payment_request": payment_choice,
         "owner_name": session.get('user_name'),
         "owner_phone": session.get('phone'),
+        "trainer_username": trainer_username,
     }
 
     # V0037.1 - Automatically create the swimmer if it does not already exist.
@@ -290,8 +293,9 @@ def book():
         payment_request,
         owner_name,
         owner_phone,
-        email
-    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        email,
+        trainer_username
+    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     ''', (
         new_booking['id'],
         new_booking['booking_code'],
@@ -309,7 +313,8 @@ def book():
         new_booking['payment_request'],
         new_booking['owner_name'],
         new_booking['owner_phone'],
-        new_booking['email']
+        new_booking['email'],
+        new_booking['trainer_username']
     ))
 
     conn.commit()
@@ -330,11 +335,25 @@ def edit_booking(booking_id):
         flash("Booking not found")
         return redirect(url_for('index'))
 
+    # Trainer check
+    if session.get('role') == 'trainer':
+        trainer_user = session.get('trainer_username') or 'asdf'
+        if (booking.get('trainer_username') or 'asdf').strip().lower() != trainer_user.strip().lower():
+            flash("Unauthorized action")
+            return redirect(url_for('index'))
+
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT username, name FROM trainers ORDER BY name")
+    trainers = [{"username": row[0], "name": row[1]} for row in cursor.fetchall()]
+    conn.close()
+
     # Render edit page with booking data and user role
     return render_template(
         'editBooking.html',
         booking=booking,
-        role=session.get('role', 'guest')
+        role=session.get('role', 'guest'),
+        trainers=trainers
     )
 
 def update_booking(booking_id):
@@ -346,6 +365,14 @@ def update_booking(booking_id):
     if not booking:
         flash("Booking not found")
         return redirect(url_for('index'))
+
+    # Trainer check
+    if session.get('role') == 'trainer':
+        trainer_user = session.get('trainer_username') or 'asdf'
+        if (booking.get('trainer_username') or 'asdf').strip().lower() != trainer_user.strip().lower():
+            flash("Unauthorized action")
+            return redirect(url_for('index'))
+
     old_values = {
         'student': booking.get('student', ''),
         'start_date': booking.get('start_date', ''),
@@ -573,6 +600,9 @@ def update_booking(booking_id):
         else:
             booking['status'] = 'Not Paid'
 
+    trainer_username = request.form.get('trainer_username', booking.get('trainer_username', 'asdf')).strip().lower()
+    booking['trainer_username'] = trainer_username
+
     conn = get_pg_connection()
     cursor = conn.cursor()
 
@@ -589,7 +619,8 @@ def update_booking(booking_id):
         fee = %s,
         persons = %s,
         status = %s,
-        payment_request = %s
+        payment_request = %s,
+        trainer_username = %s
     WHERE id = %s
     ''', (
         booking['student'],
@@ -603,6 +634,7 @@ def update_booking(booking_id):
         int(booking['persons']),
         booking['status'],
         booking['payment_request'],
+        booking['trainer_username'],
         booking_id
     ))
 

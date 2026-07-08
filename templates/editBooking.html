@@ -34,6 +34,15 @@
                 </div>
 
                 <div class="mb-3">
+                    <label class="form-label fw-semibold">Assigned Trainer <span class="text-danger">*</span></label>
+                    <select name="trainer_username" class="form-select" required>
+                        {% for t in trainers %}
+                            <option value="{{ t.username }}" {% if booking.trainer_username == t.username %}selected{% endif %}>{{ t.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
                     <label class="form-label fw-semibold">Start Date</label>
                     <input type="date" name="date" class="form-control" value="{{ booking.start_date }}" required>
                 </div>
@@ -503,7 +512,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             modalCurrentLocationBtn.disabled = true;
-            modalCurrentLocationBtn.innerHTML = '⏳ Getting Location...';
+             modalCurrentLocationBtn.innerHTML = '⏳ Getting Location...';
             navigator.geolocation.getCurrentPosition(
                 async function(position) {
                     const latitude = position.coords.latitude.toFixed(6);
@@ -517,14 +526,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (latitudeInput) latitudeInput.value = latitude;
                     if (longitudeInput) longitudeInput.value = longitude;
                     modalCurrentLocationBtn.disabled = false;
-                    modalCurrentLocationBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs me-2"></i>Use Current Location';
+                    modalCurrentLocationBtn.innerHTML = '📍 Use Current Location';
                     const modalInstance = bootstrap.Modal.getInstance(document.getElementById('mapPickerModal'));
                     if (modalInstance) modalInstance.hide();
                 },
                 function(error) {
                     alert('Unable to fetch location.');
                     modalCurrentLocationBtn.disabled = false;
-                    modalCurrentLocationBtn.innerHTML = '📍 Use Current Location';
+                     modalCurrentLocationBtn.innerHTML = '📍 Use Current Location';
                 },
                 { enableHighAccuracy: true, timeout: 10000 }
             );

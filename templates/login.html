@@ -57,6 +57,8 @@
             text-align: center;
             color: #2563eb;
             margin-bottom: 2px;
+            cursor: pointer;
+            user-select: none;
         }
 
         .login-title {
@@ -311,6 +313,10 @@
                     <span>Login as Guest</span>
                 </button>
 
+                <div class="footer-text mt-3">
+                    Are you a Coach? <a href="/register" style="color: #2563eb; font-weight: 600; text-decoration: underline;">Register Here</a>
+                </div>
+
                 <div class="footer-text">
                     © 2026 Swimming Summer Camp. All rights reserved.
                 </div>
@@ -323,6 +329,7 @@
     const loginForm = document.getElementById('loginForm');
     const guestBtn = document.getElementById('guestBtn');
     const trainerBtn = document.getElementById('trainerBtn');
+    const adminBtn = document.getElementById('adminBtn');
     const roleInput = document.getElementById('roleInput');
     const phoneField = document.getElementById('phoneField');
     const passwordField = document.getElementById('passwordField');
@@ -348,9 +355,22 @@
         if (guestBtn) {
             guestBtn.classList.remove('active-mode');
         }
+        if (adminBtn) {
+            adminBtn.classList.remove('active-mode');
+        }
 
         phoneField.classList.add('d-none');
         passwordField.classList.remove('d-none');
+
+        // Clean up password field label and placeholders
+        const passLabel = document.querySelector('#passwordField .form-label');
+        if (passLabel) passLabel.textContent = 'Password';
+        if (passwordInput) {
+            passwordInput.placeholder = 'Enter password';
+            passwordInput.type = 'password';
+        }
+        const passIcon = document.querySelector('#passwordField .input-group-text');
+        if (passIcon) passIcon.textContent = '🔒';
 
         phoneInput.required = false;
         passwordInput.required = true;
@@ -387,6 +407,9 @@
         if (trainerBtn) {
             trainerBtn.classList.remove('active-mode');
         }
+        if (adminBtn) {
+            adminBtn.classList.remove('active-mode');
+        }
 
         phoneField.classList.remove('d-none');
         passwordField.classList.add('d-none');
@@ -404,6 +427,52 @@
         }
     }
 
+    function activateAdminMode() {
+        roleInput.value = 'admin';
+
+        // Reset form when switching modes
+        nameInput.value = '';
+        phoneInput.value = '';
+        passwordInput.value = '';
+
+        nameError.classList.add('d-none');
+        phoneError.classList.add('d-none');
+
+        nameInput.classList.remove('is-invalid');
+        phoneInput.classList.remove('is-invalid');
+
+        if (guestBtn) {
+            guestBtn.classList.remove('active-mode');
+        }
+        if (trainerBtn) {
+            trainerBtn.classList.remove('active-mode');
+        }
+
+        phoneField.classList.add('d-none');
+        passwordField.classList.remove('d-none');
+
+        const passLabel = document.querySelector('#passwordField .form-label');
+        if (passLabel) passLabel.textContent = 'Password';
+        if (passwordInput) {
+            passwordInput.placeholder = 'Enter admin password';
+            passwordInput.type = 'password';
+        }
+        const passIcon = document.querySelector('#passwordField .input-group-text');
+        if (passIcon) passIcon.textContent = '🔒';
+
+        phoneInput.required = false;
+        passwordInput.required = true;
+
+        setTimeout(() => {
+            nameInput.focus();
+        }, 50);
+
+        const loginButtonLabel = document.querySelector('.login-btn span:last-child');
+        if (loginButtonLabel) {
+            loginButtonLabel.textContent = 'Login as Admin';
+        }
+    }
+
     if (trainerBtn) {
         trainerBtn.addEventListener('click', activateTrainerMode);
     }
@@ -412,16 +481,28 @@
         guestBtn.addEventListener('click', activateGuestMode);
     }
 
-    if (phoneInput) {
-    phoneInput.addEventListener('input', () => {
-        phoneInput.value = phoneInput.value.replace(/\D/g, '').slice(0, 10);
+    // Double-click on logo emoji toggles admin mode
+    const logoIcon = document.querySelector('.logo-icon');
+    if (logoIcon) {
+        logoIcon.addEventListener('dblclick', function() {
+            if (roleInput.value === 'admin') {
+                activateGuestMode();
+            } else {
+                activateAdminMode();
+            }
+        });
+    }
 
-        if (phoneInput.value.length === 10) {
-            phoneError.classList.add('d-none');
-            phoneInput.classList.remove('is-invalid');
-        }
-    });
-}
+    if (phoneInput) {
+        phoneInput.addEventListener('input', () => {
+            phoneInput.value = phoneInput.value.replace(/\D/g, '').slice(0, 10);
+
+            if (phoneInput.value.length === 10) {
+                phoneError.classList.add('d-none');
+                phoneInput.classList.remove('is-invalid');
+            }
+        });
+    }
 
 if (loginForm) {
     loginForm.addEventListener('submit', (e) => {

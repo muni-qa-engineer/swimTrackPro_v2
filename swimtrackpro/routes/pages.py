@@ -16,7 +16,12 @@ def _bookings_for_session(data):
     current_role = session.get("role", "guest")
 
     if current_role == "trainer":
-        return data.get("bookings", [])
+        trainer_user = session.get("trainer_username") or "asdf"
+        return [
+            booking
+            for booking in data.get("bookings", [])
+            if (booking.get("trainer_username") or "asdf").strip().lower() == trainer_user.strip().lower()
+        ]
 
     return [
         booking
@@ -58,6 +63,24 @@ def register_page_routes(app, *, get_pg_connection, load_data):
             """
         )
         location_suggestions = [row[0] for row in cursor.fetchall() if row[0]]
+
+        cursor.execute("""
+            SELECT username, name, experience, qualification, currently_working, residence_location, rating 
+            FROM trainers 
+            ORDER BY rating DESC, name
+        """)
+        trainers = [
+            {
+                "username": row[0],
+                "name": row[1],
+                "experience": row[2] or "N/A",
+                "qualification": row[3] or "N/A",
+                "currently_working": row[4] or "N/A",
+                "residence_location": row[5] or "N/A",
+                "rating": float(row[6]) if row[6] is not None else 5.0
+            }
+            for row in cursor.fetchall()
+        ]
         conn.close()
 
         return render_template(
@@ -68,11 +91,18 @@ def register_page_routes(app, *, get_pg_connection, load_data):
             bookings=_bookings_for_session(data),
             all_bookings=data.get("bookings", []),
             location_suggestions=location_suggestions,
+            trainers=trainers,
         )
 
     @login_required
     def my_bookings_page():
         data = load_data()
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT username, name FROM trainers")
+        trainer_map = {row[0].lower().strip(): row[1] for row in cursor.fetchall() if row[0]}
+        conn.close()
+
         return render_template(
             "my_bookings.html",
             bookings=_bookings_for_session(data),
@@ -81,6 +111,7 @@ def register_page_routes(app, *, get_pg_connection, load_data):
             account_holder_name=get_setting("account_holder_name", ""),
             trainer_phone=get_setting("trainer_phone", ""),
             upi_id=get_setting("upi_id", ""),
+            trainer_map=trainer_map,
         )
 
     @login_required

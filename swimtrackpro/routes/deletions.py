@@ -22,7 +22,8 @@ def delete_booking(booking_id):
            start_date,
            time,
            package,
-           email
+           email,
+           trainer_username
     FROM bookings
     WHERE id = %s
     ''', (booking_id,))
@@ -33,6 +34,13 @@ def delete_booking(booking_id):
         conn.close()
         flash('Booking not found')
         return redirect(url_for('index'))
+
+    if role == 'trainer':
+        trainer_user = session.get('trainer_username') or 'asdf'
+        if (row[8] or 'asdf').strip().lower() != trainer_user.strip().lower():
+            conn.close()
+            flash('Unauthorized action')
+            return redirect(url_for('index'))
 
     booking_info = {
         'booking_code': row[0] or '',
@@ -175,7 +183,7 @@ def approve_delete(booking_id):
 
     # Load booking details before deletion
     cursor.execute('''
-    SELECT student_name, owner_name, owner_phone
+    SELECT student_name, owner_name, owner_phone, trainer_username
     FROM bookings
     WHERE id = %s
     ''', (booking_id,))
@@ -185,6 +193,12 @@ def approve_delete(booking_id):
     if not row:
         conn.close()
         flash('Booking not found')
+        return redirect(url_for('index'))
+
+    trainer_user = session.get('trainer_username') or 'asdf'
+    if (row[3] or 'asdf').strip().lower() != trainer_user.strip().lower():
+        conn.close()
+        flash('Unauthorized action')
         return redirect(url_for('index'))
 
     deleted_student = row[0]
@@ -235,6 +249,19 @@ def reject_delete(booking_id):
 
     conn = get_pg_connection()
     cursor = conn.cursor()
+
+    cursor.execute('SELECT trainer_username FROM bookings WHERE id = %s', (booking_id,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        flash('Booking not found')
+        return redirect(url_for('index'))
+
+    trainer_user = session.get('trainer_username') or 'asdf'
+    if (row[0] or 'asdf').strip().lower() != trainer_user.strip().lower():
+        conn.close()
+        flash('Unauthorized action')
+        return redirect(url_for('index'))
 
     cursor.execute('''
     UPDATE bookings

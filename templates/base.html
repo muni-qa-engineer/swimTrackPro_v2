@@ -17,5 +17,14 @@
 {% endblock %}
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+if (window.self !== window.top) {
+    console.log("Embedded inside iframe! Path:", window.location.pathname);
+    // Inject style cleanly without document.write to avoid page wipeout issues
+    const style = document.createElement('style');
+    style.textContent = '.app-page-header, .mobile-bottom-nav { display: none !important; } body { padding-top: 0 !important; margin-top: 0 !important; }';
+    document.documentElement.appendChild(style);
+}
+</script>
 </body>
 </html>
