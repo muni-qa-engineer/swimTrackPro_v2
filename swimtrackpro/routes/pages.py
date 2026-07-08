@@ -67,6 +67,7 @@ def register_page_routes(app, *, get_pg_connection, load_data):
         cursor.execute("""
             SELECT username, name, experience, qualification, currently_working, residence_location, rating 
             FROM trainers 
+            WHERE is_approved = TRUE
             ORDER BY rating DESC, name
         """)
         trainers = [

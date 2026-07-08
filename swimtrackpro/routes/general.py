@@ -17,6 +17,7 @@ def about_trainer():
     cursor = conn.cursor()
 
     if current_role == "trainer":
+        assigned_usernames = []
         trainer_user = session.get("trainer_username") or "asdf"
         cursor.execute("""
             SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, rating, photos 
@@ -45,16 +46,31 @@ def about_trainer():
         if not trainers:
             cursor.execute("""
                 SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, rating, photos 
-                FROM trainers
+                FROM trainers WHERE is_approved = TRUE
             """)
             trainers = cursor.fetchall()
 
-    conn.close()
-
     coaches_list = []
     for r in trainers:
+        username = r[0]
+        cursor.execute("""
+            SELECT guest_name, rating, pros, cons, created_at 
+            FROM coach_feedback 
+            WHERE trainer_username = %s 
+            ORDER BY created_at DESC
+        """, (username,))
+        feedbacks = []
+        for f in cursor.fetchall():
+            feedbacks.append({
+                "guest_name": f[0],
+                "rating": f[1],
+                "pros": f[2] or "",
+                "cons": f[3] or "",
+                "created_at": f[4].strftime('%Y-%m-%d') if f[4] else '--'
+            })
+
         coaches_list.append({
-            "username": r[0],
+            "username": username,
             "name": r[1],
             "phone": r[2] or "",
             "email": r[3] or "",
@@ -63,10 +79,13 @@ def about_trainer():
             "currently_working": r[6] or "SwimTrackPro Academy",
             "residence_location": r[7] or "Local Camp",
             "rating": float(r[8]) if r[8] is not None else 5.0,
-            "photos": [p.strip() for p in (r[9] or "").split(",") if p.strip()]
+            "photos": [p.strip() for p in (r[9] or "").split(",") if p.strip()],
+            "feedbacks": feedbacks
         })
 
-    return render_template("about_trainer.html", coaches=coaches_list, role=current_role)
+    conn.close()
+
+    return render_template("about_trainer.html", coaches=coaches_list, role=current_role, assigned_usernames=assigned_usernames)
 
 
 @login_required
@@ -255,6 +274,92 @@ def assign_coach(booking_id):
     return redirect(url_for("index"))
 
 
+@login_required
+def submit_coach_feedback(trainer_username):
+    current_role = session.get("role", "guest")
+    if current_role != "guest":
+        flash("Only guests/swimmers can leave feedback.", "error")
+        return redirect(url_for("about_trainer"))
+
+    rating = request.form.get("rating")
+    pros = request.form.get("pros", "").strip()
+    cons = request.form.get("cons", "").strip()
+
+    if not rating:
+        flash("Please provide a rating.", "warning")
+        return redirect(url_for("about_trainer"))
+
+    try:
+        rating_val = int(rating)
+        if rating_val < 1 or rating_val > 5:
+            raise ValueError()
+    except ValueError:
+        flash("Rating must be an integer between 1 and 5.", "warning")
+        return redirect(url_for("about_trainer"))
+
+    guest_name = session.get("user_name")
+    guest_phone = session.get("phone")
+
+    # Verify that the coach is assigned to the guest via active bookings
+    data = load_data()
+    bookings = [
+        b for b in data.get("bookings", [])
+        if (b.get("owner_name") or "").strip().lower() == guest_name.lower()
+        and b.get("owner_phone") == guest_phone
+    ]
+    assigned_usernames = [b.get("trainer_username") for b in bookings if b.get("trainer_username")]
+    if trainer_username not in assigned_usernames:
+        flash("You can only submit feedback for a coach assigned to you.", "error")
+        return redirect(url_for("about_trainer"))
+
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+
+    # Check if trainer exists and is approved
+    cursor.execute("SELECT username FROM trainers WHERE username = %s AND is_approved = TRUE", (trainer_username,))
+    if not cursor.fetchone():
+        conn.close()
+        flash("Coach not found or not approved.", "error")
+        return redirect(url_for("about_trainer"))
+
+    # Check if guest already submitted feedback for this trainer
+    cursor.execute("""
+        SELECT id FROM coach_feedback 
+        WHERE trainer_username = %s AND LOWER(guest_name) = LOWER(%s) AND guest_phone = %s
+    """, (trainer_username, guest_name.lower(), guest_phone))
+    existing = cursor.fetchone()
+
+    if existing:
+        cursor.execute("""
+            UPDATE coach_feedback 
+            SET rating = %s, pros = %s, cons = %s, created_at = CURRENT_TIMESTAMP
+            WHERE id = %s
+        """, (rating_val, pros, cons, existing[0]))
+    else:
+        cursor.execute("""
+            INSERT INTO coach_feedback (trainer_username, guest_name, guest_phone, rating, pros, cons)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (trainer_username, guest_name, guest_phone, rating_val, pros, cons))
+
+    conn.commit()
+
+    # Recalculate and update the trainer's overall rating
+    cursor.execute("""
+        SELECT AVG(rating) FROM coach_feedback WHERE trainer_username = %s
+    """, (trainer_username,))
+    avg_rating_row = cursor.fetchone()
+    if avg_rating_row and avg_rating_row[0] is not None:
+        new_rating = round(float(avg_rating_row[0]), 2)
+        cursor.execute("""
+            UPDATE trainers SET rating = %s WHERE username = %s
+        """, (new_rating, trainer_username))
+        conn.commit()
+
+    conn.close()
+    flash("Feedback submitted successfully!", "success")
+    return redirect(url_for("about_trainer"))
+
+
 def register_general_routes(app):
     """Register routes with their legacy endpoint names unchanged."""
 
@@ -313,5 +418,11 @@ def register_general_routes(app):
         "/admin/assign_coach/<booking_id>",
         endpoint="assign_coach",
         view_func=assign_coach,
+        methods=["POST"],
+    )
+    app.add_url_rule(
+        "/coach/feedback/<trainer_username>",
+        endpoint="submit_coach_feedback",
+        view_func=submit_coach_feedback,
         methods=["POST"],
     )

@@ -63,6 +63,19 @@ def ensure_makeup_tables():
     )
     """)
 
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS coach_feedback (
+        id SERIAL PRIMARY KEY,
+        trainer_username TEXT NOT NULL REFERENCES trainers(username) ON DELETE CASCADE,
+        guest_name TEXT NOT NULL,
+        guest_phone TEXT NOT NULL,
+        rating INTEGER NOT NULL,
+        pros TEXT,
+        cons TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
     # Multi-trainer tables
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS trainers (

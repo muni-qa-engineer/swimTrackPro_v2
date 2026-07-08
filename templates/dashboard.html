@@ -71,71 +71,7 @@
   <div class="flex-grow-1 overflow-y-auto" style="height: 100vh;">
 
     <!-- Top Navbar (Mobile only) -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-3 shadow-sm sticky-top d-lg-none">
-  <div class="container-fluid">
-    <a class="navbar-brand d-flex align-items-center gap-2" href="/">
-      🏊 SwimTrack
-    </a>
-
-    <div class="d-flex align-items-center ms-auto gap-2">
-
-      <div class="dropdown">
-        <button
-          class="btn btn-profile-menu d-flex align-items-center gap-2 p-1 pe-3"
-          type="button"
-          data-bs-toggle="dropdown"
-          aria-expanded="false"
-          title="Profile Menu">
-          <div class="profile-avatar-circle">
-            {{ user_name[:1]|upper }}
-          </div>
-          <span class="profile-name d-none d-sm-inline">{{ user_name|title }}</span>
-          <span class="profile-caret">▼</span>
-        </button>
-
-        <ul class="dropdown-menu dropdown-menu-end premium-dropdown-menu">
-          <li class="dropdown-header text-muted small pb-2 border-bottom border-secondary border-opacity-10 mb-2">
-            Logged in as<br>
-            <strong class="text-white">{{ user_name|title }}</strong>
-            <span class="badge bg-secondary text-white small ms-1" style="font-size: 9px; vertical-align: middle;">{{ role|upper }}</span>
-          </li>
-
-          {% if role == 'trainer' %}
-          <li>
-            <a class="dropdown-item d-flex align-items-center gap-2" href="/profile">
-              👤 My Profile
-            </a>
-          </li>
-          <li>
-            <a class="dropdown-item d-flex align-items-center gap-2" href="/about-trainer">
-              👨‍🏫 About Trainers
-            </a>
-          </li>
-          <li><hr class="dropdown-divider"></li>
-          {% else %}
-          <li>
-            <a class="dropdown-item d-flex align-items-center gap-2" href="/about-trainer">
-              👨‍🏫 About Your Trainer
-            </a>
-          </li>
-          <li>
-            <a class="dropdown-item d-flex align-items-center gap-2" href="/help">
-              📞 Help & Contact
-            </a>
-          </li>
-          <li><hr class="dropdown-divider"></li>
-          {% endif %}
-
-          <li>
-            <a class="dropdown-item text-danger d-flex align-items-center gap-2" href="/logout">
-              🚪 Sign Out
-            </a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</nav>
+    {% include 'components/mobile_navbar.html' %}
     <!-- Main Dashboard Section (Desktop Tab) -->
     <div id="section-dashboard" class="content-section">
       <div class="container-fluid px-4 mt-4">
