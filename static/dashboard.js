@@ -674,7 +674,7 @@ function updatePaymentTable() {
     ` : `
       <a
         class="btn btn-sm btn-success"
-        href="upi://pay?pa=${encodeURIComponent(window.upiId || '')}&pn=${encodeURIComponent(window.accountHolderName || '')}&am=${booking.fee || 0}&cu=INR&tn=SwimTrackPro Payment&tr=${booking.id || ''}">
+        href="upi://pay?pa=${encodeURIComponent(window.upiId || '')}&pn=${encodeURIComponent(window.accountHolderName || '')}&am=${booking.fee || 0}&cu=INR&tn=${encodeURIComponent('SwimTrackPro Payment')}">
         💳 Pay Now
       </a>
     `}

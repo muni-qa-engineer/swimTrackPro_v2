@@ -156,41 +156,65 @@
   color: #6c757d;
 }
 
-.calendar-booking-chip{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:6px;
-  padding:4px 8px;
-  margin-top:8px;
-  border:1px solid #0d6efd;
-  border-radius:10px;
-  background:#eef5ff;
-  color:#0d6efd;
-  font-size:13px;
-  font-weight:600;
+.calendar-grid-modern {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  gap: 8px !important;
 }
 
-.calendar-booking-name{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  color:#1f2937;
+.calendar-booking-chip {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  padding: 4px 6px !important;
+  margin-top: 6px !important;
+  border: 1px solid #0d6efd !important;
+  border-radius: 8px !important;
+  background: #eef5ff !important;
+  color: #0d6efd !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  gap: 2px !important;
 }
 
-.calendar-booking-time{
-  white-space:nowrap;
-  font-weight:500;
+.calendar-booking-name {
+  display: flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  color: #1f2937 !important;
+  width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
 }
 
-.completed-session{
-  opacity:0.7;
+.calendar-booking-name span {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.calendar-booking-time {
+  font-size: 10px !important;
+  color: #4b5563 !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  width: 100% !important;
+}
+
+.completed-session {
+  opacity: 0.7 !important;
 }
 
 .completed-text,
 .completed-session .calendar-booking-name,
-.completed-session .calendar-booking-time{
-  text-decoration:line-through;
+.completed-session .calendar-booking-time {
+  text-decoration: line-through !important;
 }
 </style>
 

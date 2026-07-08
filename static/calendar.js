@@ -329,19 +329,17 @@ document.addEventListener('DOMContentLoaded', function () {
                             data-pending-request-id="${b.pendingRequestId}"
                             data-makeup-used="${b.makeupUsed}"
                         >
-                            <div class="calendar-booking-name d-flex align-items-center">
-                                <span>🏊</span>
-                                <span class="${b.completed ? 'completed-text' : ''} ms-1">
-                                    ${b.student}
-                                </span>
-                            </div>
-
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="calendar-booking-time ${b.completed ? 'completed-text' : ''}">
-                                    ${b.time}
+                            <div class="d-flex align-items-center justify-content-between w-100">
+                                <div class="calendar-booking-name d-flex align-items-center">
+                                    <span>🏊</span>
+                                    <span class="${b.completed ? 'completed-text' : ''} ms-1">
+                                        ${b.student}
+                                    </span>
                                 </div>
-
                                 ${statusLabel}
+                            </div>
+                            <div class="calendar-booking-time ${b.completed ? 'completed-text' : ''}">
+                                ${b.time}
                             </div>
                         </div>`;
                 });

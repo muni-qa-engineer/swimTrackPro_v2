@@ -271,7 +271,7 @@
                   <div class="border rounded p-2 bg-light text-center">
 
                     <a id="upiPaymentLink"
-                       href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name }}&am={{ total_pending_amount }}&cu=INR&tn=SwimTrackPro%20Payment&tr={{ user_name }}"
+                       href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name|urlencode }}&am={{ total_pending_amount }}&cu=INR&tn=SwimTrackPro%20Payment"
                        title="Open UPI App">
 
                       <img src="{{ url_for('static', filename='images/QR_Code.jpeg') }}"
@@ -283,7 +283,7 @@
                     <div class="mt-2">
                       <a id="upiPaymentBtn"
                          class="btn btn-success btn-sm"
-                         href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name }}&am={{ total_pending_amount }}&cu=INR&tn=SwimTrackPro%20Payment&tr={{ user_name }}">
+                         href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name|urlencode }}&am={{ total_pending_amount }}&cu=INR&tn=SwimTrackPro%20Payment">
                          Open UPI App
                       </a>
                     </div>
