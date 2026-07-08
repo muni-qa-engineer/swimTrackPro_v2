@@ -119,6 +119,11 @@ def profile_page():
             WHERE username = %s
         """, (name, phone, email, experience, qualification, currently_working, residence_location, trainer_user))
         conn.commit()
+
+        # Update session so the dashboard card reflects the new name immediately
+        if name:
+            session["user_name"] = name
+
         flash("Profile updated successfully!", "success")
 
     cursor.execute("""
