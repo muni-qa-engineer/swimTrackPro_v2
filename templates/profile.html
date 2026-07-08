@@ -32,7 +32,7 @@
                                 <div class="profile-avatar-circle mx-auto mb-3">
                                     <span>🏊</span>
                                 </div>
-                                <h4 class="fw-bold mb-1">{{ trainer.name|title }}</h4>
+                                <h4 class="fw-bold mb-1" style="color: MistyWhite !important;">{{ trainer.name|title }}</h4>
                                 <span class="badge bg-white-50 text-white small px-3 py-1.5" style="border-radius: 20px; font-size: 0.72rem; letter-spacing: 0.5px;">
                                     ★ {{ trainer.rating }} Rating
                                 </span>
@@ -58,9 +58,23 @@
                         <!-- Picture Uploader Inside Album Card -->
                         <div class="mt-auto p-3 bg-white bg-opacity-10 rounded text-center upload-album-box" style="border: 1px dashed rgba(255,255,255,0.25);">
                             <h6 class="fw-bold text-white mb-2"><i class="fa-solid fa-camera me-1"></i> Upload Training Pics</h6>
-                            <form action="/profile/upload-photo" method="POST" enctype="multipart/form-data">
-                                <input type="file" name="training_pic" accept="image/*" class="form-control form-control-sm mb-2 text-white bg-transparent border-white border-opacity-25" style="font-size: 0.76rem;" required>
-                                <button type="submit" class="btn btn-light btn-sm w-100 fw-bold text-primary">Upload to Album</button>
+                            <form id="uploadPhotoForm" action="/profile/upload-photo" method="POST" enctype="multipart/form-data">
+                                <div class="custom-file-upload mb-2">
+                                    <label for="training_pic" class="btn btn-sm btn-outline-light w-100 text-truncate" id="fileLabel">
+                                        <i class="fa-solid fa-cloud-arrow-up me-1"></i> Choose Photo
+                                    </label>
+                                    <input type="file" id="training_pic" name="training_pic" accept="image/*" style="display: none;" required>
+                                </div>
+                                
+                                <!-- Filename display field -->
+                                <div id="filenameDisplay" class="text-white-50 small mb-2 text-truncate d-none" style="font-size: 0.75rem; font-weight: 500;"></div>
+                                
+                                <!-- Progress status bar -->
+                                <div class="progress mb-2 d-none" style="height: 6px; background-color: rgba(255,255,255,0.2); border-radius: 3px;">
+                                    <div id="uploadProgressBar" class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                
+                                <button type="submit" id="uploadSubmitBtn" class="btn btn-light btn-sm w-100 fw-bold text-primary">Upload to Album</button>
                             </form>
                         </div>
                     </div>
@@ -304,6 +318,81 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // V0043.2.0 - Picture Upload Handler with AJAX progress bar and status button
+    const uploadForm = document.getElementById('uploadPhotoForm');
+    const fileInput = document.getElementById('training_pic');
+    const fileLabel = document.getElementById('fileLabel');
+    const filenameDisplay = document.getElementById('filenameDisplay');
+    const progressBarContainer = document.querySelector('.upload-album-box .progress');
+    const progressBar = document.getElementById('uploadProgressBar');
+    const submitBtn = document.getElementById('uploadSubmitBtn');
+
+    if (fileInput && uploadForm) {
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files && fileInput.files.length > 0) {
+                const fileName = fileInput.files[0].name;
+                fileLabel.innerHTML = `<i class="fa-solid fa-image me-1"></i> Change Photo`;
+                filenameDisplay.textContent = fileName;
+                filenameDisplay.classList.remove('d-none');
+            } else {
+                fileLabel.innerHTML = `<i class="fa-solid fa-cloud-arrow-up me-1"></i> Choose Photo`;
+                filenameDisplay.textContent = '';
+                filenameDisplay.classList.add('d-none');
+            }
+        });
+
+        uploadForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (!fileInput.files || fileInput.files.length === 0) return;
+
+            const formData = new FormData(uploadForm);
+            const xhr = new XMLHttpRequest();
+
+            // Track upload progress
+            xhr.upload.addEventListener('progress', (event) => {
+                if (event.lengthComputable) {
+                    const percentComplete = Math.round((event.loaded / event.total) * 100);
+                    progressBarContainer.classList.remove('d-none');
+                    progressBar.style.width = percentComplete + '%';
+                    progressBar.setAttribute('aria-valuenow', percentComplete);
+                    
+                    submitBtn.disabled = true;
+                    submitBtn.className = "btn btn-warning btn-sm w-100 fw-bold text-dark";
+                    submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Uploading... ${percentComplete}%`;
+                }
+            });
+
+            // Handlers on load
+            xhr.addEventListener('load', () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    submitBtn.className = "btn btn-success btn-sm w-100 fw-bold text-white";
+                    submitBtn.innerHTML = `<i class="fa-solid fa-circle-check me-1"></i> Uploaded`;
+                    progressBar.style.width = '100%';
+                    progressBar.classList.remove('progress-bar-striped', 'progress-bar-animated');
+                    
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1200);
+                } else {
+                    submitBtn.disabled = false;
+                    submitBtn.className = "btn btn-light btn-sm w-100 fw-bold text-primary";
+                    submitBtn.innerHTML = "Upload to Album";
+                    alert('Upload failed. Please check the file and try again.');
+                }
+            });
+
+            xhr.addEventListener('error', () => {
+                submitBtn.disabled = false;
+                submitBtn.className = "btn btn-light btn-sm w-100 fw-bold text-primary";
+                submitBtn.innerHTML = "Upload to Album";
+                alert('An error occurred during upload.');
+            });
+
+            xhr.open('POST', uploadForm.getAttribute('action'));
+            xhr.send(formData);
+        });
+    }
 });
 </script>
 
