@@ -503,13 +503,22 @@ input::placeholder {
   transition: transform 0.2s ease;
 }
 
+/* FontAwesome icon support */
+.mobile-nav-item i {
+  font-size: 18px;
+  margin-bottom: 3px;
+  transition: transform 0.2s ease;
+  display: block;
+}
+
 .mobile-nav-item.active {
   color: #2563eb !important;
   font-weight: 700;
   background: rgba(37, 99, 235, 0.08) !important;
 }
 
-.mobile-nav-item.active div {
+.mobile-nav-item.active div,
+.mobile-nav-item.active i {
   transform: translateY(-2px) scale(1.1);
 }
 

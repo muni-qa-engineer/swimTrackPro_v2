@@ -518,56 +518,8 @@
  </div>
 </div>
 
-<!-- Mobile Bottom Navigation -->
-<div class="mobile-bottom-nav d-lg-none">
-
-{% if role == 'trainer' %}
-
-  <button type="button" class="mobile-nav-item" onclick="window.location.href='/'">
-    <div>🏠</div>
-    <small>Home</small>
-  </button>
-
-  <button type="button" class="mobile-nav-item active" onclick="window.location.href='/my-bookings'">
-    <div>📋</div>
-    <small>Bookings</small>
-  </button>
-
-  <button type="button" class="mobile-nav-item" onclick="window.location.href='/payments'">
-    <div>💳</div>
-    <small>Payments</small>
-  </button>
-
-  <button type="button" class="mobile-nav-item" onclick="window.location.href='/profile'">
-    <div>👤</div>
-    <small>Profile</small>
-  </button>
-
-{% else %}
-
-  <button type="button" id="mobileHomeBtn" class="mobile-nav-item" onclick="window.location.href='/'">
-    <div>🏠</div>
-    <small>Home</small>
-  </button>
-
-  <button type="button" id="mobileBookBtn" class="mobile-nav-item" onclick="window.location.href='/booking'">
-    <div>📅</div>
-    <small>Book now</small>
-  </button>
-
-  <button type="button" id="mobileBookingsBtn" class="mobile-nav-item active" onclick="window.location.href='/my-bookings'">
-    <div>📋</div>
-    <small>Bookings</small>
-  </button>
-
-  <button type="button" id="mobileContactBtn" class="mobile-nav-item" onclick="window.location.href='/payments'">
-    <div>💳</div>
-    <small>Payment</small>
-  </button>
-
-{% endif %}
-
-</div>
+{% set active_page = 'bookings' %}
+{% include 'components/mobile_bottom_nav.html' %}
 
 <style>
 .delete-toast {

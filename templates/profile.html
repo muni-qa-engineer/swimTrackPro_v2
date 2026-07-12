@@ -166,28 +166,8 @@
     </div>
 </div>
 
-<!-- Mobile Bottom Navigation -->
-<div class="mobile-bottom-nav d-lg-none">
-  <button type="button" class="mobile-nav-item" onclick="window.location.href='/'">
-    <div>🏠</div>
-    <small>Home</small>
-  </button>
-
-  <button type="button" class="mobile-nav-item" onclick="window.location.href='/my-bookings'">
-    <div>📋</div>
-    <small>Bookings</small>
-  </button>
-
-  <button type="button" class="mobile-nav-item" onclick="window.location.href='/payments'">
-    <div>💳</div>
-    <small>Payments</small>
-  </button>
-
-  <button type="button" class="mobile-nav-item active" onclick="window.location.href='/profile'">
-    <div>👤</div>
-    <small>Profile</small>
-  </button>
-</div>
+{% set active_page = 'profile' %}
+{% include 'components/mobile_bottom_nav.html' %}
 
 <style>
 /* PDF Layout styling */

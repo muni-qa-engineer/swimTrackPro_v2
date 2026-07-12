@@ -420,7 +420,37 @@ document.addEventListener('DOMContentLoaded', function () {
 
     calendarMonthInput.value = currentMonth;
 
+    // --- Responsive view management ---
+    const MOBILE_BREAKPOINT = 768; // Bootstrap md
+
+    function isMobile() {
+        return window.innerWidth < MOBILE_BREAKPOINT;
+    }
+
+    function applyCalendarLayout() {
+        const gridEl = document.getElementById('calendarGrid');
+        const mobileEl = document.getElementById('mobileCalendarView');
+        if (!gridEl || !mobileEl) return;
+        if (isMobile()) {
+            gridEl.style.display = 'none';
+            mobileEl.style.display = 'block';
+        } else {
+            gridEl.style.display = 'grid';
+            mobileEl.style.display = 'none';
+        }
+    }
+
     renderCalendar(today.getFullYear(), today.getMonth());
+    applyCalendarLayout();
+
+    // Re-render on resize so mobile/desktop views stay clean
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            applyCalendarLayout();
+        }, 150);
+    });
 
     // Reopen the last edited session after redirect
     setTimeout(() => {
@@ -454,6 +484,7 @@ document.addEventListener('DOMContentLoaded', function () {
     calendarMonthInput.addEventListener('change', function () {
         const [year, month] = this.value.split('-').map(Number);
         renderCalendar(year, month - 1);
+        applyCalendarLayout();
     });
 
 

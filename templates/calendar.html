@@ -24,11 +24,11 @@
         </div>
 
         <div class="card-body">
-            <!-- Desktop Calendar Grid -->
-            <div id="calendarGrid" class="calendar-grid-modern d-none d-md-grid"></div>
+            <!-- Desktop Calendar Grid (shown on md+ via JS) -->
+            <div id="calendarGrid" class="calendar-grid-modern" style="display:none;"></div>
             
-            <!-- Mobile Calendar View -->
-            <div id="mobileCalendarView" class="d-block d-md-none">
+            <!-- Mobile Calendar View (shown on < md via JS) -->
+            <div id="mobileCalendarView" style="display:none;">
                 <!-- Scrollable Date Strip -->
                 <div class="date-strip-container">
                     <div id="mobileDateStrip" class="date-strip"></div>
@@ -157,7 +157,7 @@
 }
 
 .calendar-grid-modern {
-  display: grid !important;
+  display: grid;
   grid-template-columns: repeat(7, 1fr) !important;
   gap: 8px !important;
 }
@@ -355,61 +355,8 @@
   </div>
 </div>
 
-<!-- Mobile Bottom Navigation -->
-<div class="mobile-bottom-nav d-lg-none" role="navigation">
-
-  {% if role == 'trainer' %}
-
-  <button type="button" id="mobileHomeBtn" class="mobile-nav-item" onclick="window.location.href='/'">
-    <div>🏠</div>
-    <small>Home</small>
-  </button>
-
-  <button type="button" id="mobileBookingsBtn" class="mobile-nav-item" onclick="window.location.href='/my-bookings'">
-    <div>📋</div>
-    <small>Bookings</small>
-  </button>
-
-  <button type="button" class="mobile-nav-item" onclick="window.location.href='/payments'">
-    <div>💳</div>
-    <small>Payments</small>
-  </button>
-
-  <button type="button" class="mobile-nav-item" onclick="window.location.href='/profile'">
-    <div>👤</div>
-    <small>Profile</small>
-  </button>
-
-  {% else %}
-
-  <button type="button" id="mobileHomeBtn" class="mobile-nav-item" onclick="window.location.href='/'">
-    <div>🏠</div>
-    <small>Home</small>
-  </button>
-
-  <button type="button" id="mobileBookBtn" class="mobile-nav-item" onclick="window.location.href='/booking'">
-    <div>📅</div>
-    <small>Book now</small>
-  </button>
-
-  <button type="button" id="mobileBookingsBtn" class="mobile-nav-item" onclick="window.location.href='/my-bookings'">
-    <div>📋</div>
-    <small>Bookings</small>
-  </button>
-
-  <button type="button" id="mobileCalendarBtn" class="mobile-nav-item active" onclick="window.location.href='/calendar'">
-    <div>🗓</div>
-    <small>Calendar</small>
-  </button>
-
-  <button type="button" id="mobileContactBtn" class="mobile-nav-item" onclick="window.location.href='/help'">
-    <div>🎧</div>
-    <small>Contact</small>
-  </button>
-
-  {% endif %}
-
-</div>
+{% set active_page = 'calendar' %}
+{% include 'components/mobile_bottom_nav.html' %}
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
