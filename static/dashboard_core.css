@@ -459,3 +459,83 @@
         transform: translateY(0);
     }
 }
+
+/* Mobile Bottom Navigation Styles */
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 1050;
+
+  background: rgba(255, 255, 255, 0.85) !important;
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.15) !important;
+  border-radius: 20px !important;
+
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+
+  height: 60px;
+  padding: 0 8px;
+  transition: all 0.3s ease;
+}
+
+.mobile-nav-item {
+  background: transparent;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.1;
+  cursor: pointer;
+  padding: 6px 0;
+  border-radius: 14px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mobile-nav-item div {
+  font-size: 18px;
+  margin-bottom: 2px;
+  transition: transform 0.2s ease;
+}
+
+/* FontAwesome icon support */
+.mobile-nav-item i {
+  font-size: 18px;
+  margin-bottom: 3px;
+  transition: transform 0.2s ease;
+  display: block;
+}
+
+.mobile-nav-item.active {
+  color: #2563eb !important;
+  font-weight: 700;
+  background: rgba(37, 99, 235, 0.08) !important;
+}
+
+.mobile-nav-item.active div,
+.mobile-nav-item.active i {
+  transform: translateY(-2px) scale(1.1);
+}
+
+.mobile-nav-item small {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+.mobile-nav-item:focus,
+.mobile-nav-item:active {
+  outline: none;
+}

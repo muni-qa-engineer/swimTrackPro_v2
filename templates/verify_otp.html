@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Verify OTP - SwimTrackPro{% endblock %}
+
+{% block content %}
+<div class="d-flex premium-mesh-bg" style="min-height: 100vh;">
+    <div class="container d-flex justify-content-center align-items-center">
+        <div class="col-12 col-md-8 col-lg-5">
+            <div class="card border-0 premium-glass-card p-4 p-md-5 fade-in-up delay-1">
+                <div class="text-center mb-4">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-sm" style="width:60px; height:60px; font-size:24px;">
+                        <i class="fa-solid fa-key"></i>
+                    </div>
+                    <h3 class="fw-bold mb-2">Reset Password</h3>
+                    <p class="text-muted">Enter the 6-digit OTP sent to <strong>{{ email }}</strong> and set your new password.</p>
+                </div>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form action="{{ url_for('verify_otp') }}" method="POST">
+                    <input type="hidden" name="email" value="{{ email }}">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">6-Digit OTP</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="fa-solid fa-hashtag text-muted"></i></span>
+                            <input type="text" name="otp" class="form-control" placeholder="123456" maxlength="6" pattern="\d{6}" required autofocus autocomplete="off">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">New Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="fa-solid fa-lock text-muted"></i></span>
+                            <input type="password" name="new_password" class="form-control" placeholder="Create new password" required minlength="6">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 fw-bold py-2 mb-3 shadow-sm rounded-3">
+                        Reset Password <i class="fa-solid fa-check ms-1"></i>
+                    </button>
+                    
+                    <div class="text-center">
+                        <a href="{{ url_for('forgot_password') }}" class="text-decoration-none small text-muted hover-primary">
+                            <i class="fa-solid fa-arrow-left me-1"></i> Back or Resend OTP
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-primary:hover {
+    color: #0d6efd !important;
+}
+.input-group-text {
+    border-right: none;
+}
+.form-control {
+    border-left: none;
+}
+.form-control:focus {
+    box-shadow: none;
+    border-color: #dee2e6;
+}
+.input-group:focus-within {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    border-radius: var(--bs-border-radius);
+}
+.input-group:focus-within .input-group-text,
+.input-group:focus-within .form-control {
+    border-color: #86b7fe;
+}
+</style>
+{% endblock %}

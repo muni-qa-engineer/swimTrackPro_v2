@@ -375,11 +375,48 @@ def register_general_routes(app):
         view_func=update_notice,
         methods=["POST"],
     )
+    def profile_update_password():
+        current_role = session.get("role")
+        trainer_user = session.get("trainer_username")
+        if current_role != "trainer" or not trainer_user:
+            return redirect(url_for("index"))
+
+        current_password = request.form.get("current_password")
+        new_password = request.form.get("new_password")
+        confirm_password = request.form.get("confirm_password")
+
+        if new_password != confirm_password:
+            flash("New passwords do not match.", "danger")
+            return redirect(url_for("profile_page"))
+
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT password FROM trainers WHERE username = %s", (trainer_user,))
+        row = cursor.fetchone()
+
+        if not row or row[0] != current_password:
+            conn.close()
+            flash("Current password is incorrect.", "danger")
+            return redirect(url_for("profile_page"))
+
+        cursor.execute("UPDATE trainers SET password = %s WHERE username = %s", (new_password, trainer_user))
+        conn.commit()
+        conn.close()
+
+        flash("Password updated successfully!", "success")
+        return redirect(url_for("profile_page"))
+
     app.add_url_rule(
         "/profile",
         endpoint="profile_page",
         view_func=profile_page,
         methods=["GET", "POST"],
+    )
+    app.add_url_rule(
+        "/profile/update_password",
+        endpoint="profile_update_password",
+        view_func=profile_update_password,
+        methods=["POST"],
     )
     app.add_url_rule(
         "/profile/upload-photo",

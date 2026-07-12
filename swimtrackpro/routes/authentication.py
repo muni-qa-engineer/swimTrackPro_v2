@@ -233,11 +233,108 @@ def register_authentication_routes(
     def terms_agreement_page():
         return render_template("terms_agreement.html")
 
+    def forgot_password():
+        if request.method == "GET":
+            return render_template("forgot_password.html")
+            
+        email = (request.form.get("email") or "").strip()
+        if not email:
+            flash("Please enter an email address.", "danger")
+            return redirect(url_for("forgot_password"))
+            
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT username, name FROM trainers WHERE email = %s", (email,))
+        trainer = cursor.fetchone()
+        
+        if not trainer:
+            conn.close()
+            flash("No trainer found with that email address.", "danger")
+            return redirect(url_for("forgot_password"))
+            
+        import random
+        from datetime import datetime, timedelta
+        from services.email_service import send_email
+        
+        otp = str(random.randint(100000, 999999))
+        expires_at = datetime.now() + timedelta(minutes=10)
+        
+        cursor.execute(
+            "INSERT INTO password_reset_otps (email, otp, expires_at) VALUES (%s, %s, %s)",
+            (email, otp, expires_at)
+        )
+        conn.commit()
+        conn.close()
+        
+        html_content = f"""
+        <h2>SwimTrack Password Reset</h2>
+        <p>Hi {trainer[1]},</p>
+        <p>You requested a password reset. Your OTP is: <strong>{otp}</strong></p>
+        <p>This OTP will expire in 10 minutes.</p>
+        <p>If you did not request this, please ignore this email.</p>
+        """
+        
+        send_email(
+            subject="SwimTrack Password Reset OTP",
+            html_content=html_content,
+            to_email=email,
+            to_name=trainer[1]
+        )
+        
+        flash("An OTP has been sent to your email address.", "success")
+        return render_template("verify_otp.html", email=email)
+
+    def verify_otp():
+        email = (request.form.get("email") or "").strip()
+        otp = (request.form.get("otp") or "").strip()
+        new_password = (request.form.get("new_password") or "").strip()
+        
+        if not email or not otp or not new_password:
+            flash("Missing required fields.", "danger")
+            if email:
+                return render_template("verify_otp.html", email=email)
+            return redirect(url_for("forgot_password"))
+            
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+        
+        from datetime import datetime
+        cursor.execute(
+            "SELECT id FROM password_reset_otps WHERE email = %s AND otp = %s AND expires_at > %s ORDER BY created_at DESC LIMIT 1",
+            (email, otp, datetime.now())
+        )
+        valid_otp = cursor.fetchone()
+        
+        if not valid_otp:
+            conn.close()
+            flash("Invalid or expired OTP. Please request a new one.", "danger")
+            return render_template("verify_otp.html", email=email)
+            
+        cursor.execute("UPDATE trainers SET password = %s WHERE email = %s", (new_password, email))
+        cursor.execute("DELETE FROM password_reset_otps WHERE email = %s", (email,))
+        conn.commit()
+        conn.close()
+        
+        flash("Password reset successfully! You can now login with your new password.", "success")
+        return redirect(url_for("login"))
+
     app.add_url_rule(
         "/login",
         endpoint="login",
         view_func=login,
         methods=["GET", "POST"],
+    )
+    app.add_url_rule(
+        "/forgot-password",
+        endpoint="forgot_password",
+        view_func=forgot_password,
+        methods=["GET", "POST"],
+    )
+    app.add_url_rule(
+        "/verify-otp",
+        endpoint="verify_otp",
+        view_func=verify_otp,
+        methods=["POST"],
     )
     app.add_url_rule(
         "/register",

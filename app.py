@@ -177,6 +177,16 @@ def ensure_makeup_tables():
     cursor.execute("ALTER TABLE user_activity ADD COLUMN IF NOT EXISTS current_login TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP")
     cursor.execute("ALTER TABLE user_activity ADD COLUMN IF NOT EXISTS previous_login TIMESTAMP WITHOUT TIME ZONE")
 
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS password_reset_otps (
+        id SERIAL PRIMARY KEY,
+        email TEXT NOT NULL,
+        otp TEXT NOT NULL,
+        expires_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+        created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
     conn.commit()
     conn.close()
 
