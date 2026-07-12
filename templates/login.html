@@ -236,7 +236,7 @@
                 <div class="mb-4 mt-2">
                     <label class="form-label">Username</label>
                     <div class="input-group">
-                        <span class="input-group-text">👤</span>
+                        <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
                         <input
                             type="text"
                             name="name"
@@ -256,7 +256,7 @@
                     <label class="form-label">Mobile Number</label>
 
                     <div class="input-group">
-                        <span class="input-group-text">📞</span>
+                        <span class="input-group-text"><i class="fa-solid fa-phone"></i></span>
 
                         <input
                             type="tel"
@@ -266,7 +266,7 @@
                             placeholder="Enter mobile number"
                         >
 <!-- 
-                        <span class="input-group-text">👁️</span> -->
+                        <span class="input-group-text"><i class="fa-solid fa-eye"></i></span> -->
                     </div>
                 </div>
 
@@ -274,7 +274,7 @@
                     <label class="form-label">Mobile Number</label>
 
                     <div class="input-group">
-                        <span class="input-group-text">📞</span>
+                        <span class="input-group-text"><i class="fa-solid fa-phone"></i></span>
 
                         <input
                             type="tel"
@@ -288,7 +288,7 @@
                             required
                         >
 
-                        <!-- <span class="input-group-text">👁️</span> -->
+                        <!-- <span class="input-group-text"><i class="fa-solid fa-eye"></i></span> -->
                     </div>
 
                     <small id="phoneError" class="text-danger d-none">
@@ -297,7 +297,7 @@
                     {% with messages = get_flashed_messages() %}
                         {% if messages %}
                             <small class="text-danger d-block mt-1" style="font-size: 0.78rem;">
-                                ⚠️ {{ messages[-1] }}
+                                <i class="fa-solid fa-triangle-exclamation"></i> {{ messages[-1] }}
                             </small>
                         {% endif %}
                     {% endwith %}
@@ -370,7 +370,7 @@
             passwordInput.type = 'password';
         }
         const passIcon = document.querySelector('#passwordField .input-group-text');
-        if (passIcon) passIcon.textContent = '🔒';
+        if (passIcon) passIcon.innerHTML = '<i class="fa-solid fa-lock"></i>';
 
         phoneInput.required = false;
         passwordInput.required = true;
@@ -458,7 +458,7 @@
             passwordInput.type = 'password';
         }
         const passIcon = document.querySelector('#passwordField .input-group-text');
-        if (passIcon) passIcon.textContent = '🔒';
+        if (passIcon) passIcon.innerHTML = '<i class="fa-solid fa-lock"></i>';
 
         phoneInput.required = false;
         passwordInput.required = true;

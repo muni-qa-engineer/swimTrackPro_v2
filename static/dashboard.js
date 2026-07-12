@@ -565,15 +565,15 @@ function updatePaymentSummary() {
   const notPaidCard = document.getElementById('notPaidAmountCard');
 
   if (paidCard) {
-    paidCard.textContent = `₹${paidAmount.toLocaleString()}`;
+    paidCard.textContent = `<i class="fa-solid fa-indian-rupee-sign"></i>${paidAmount.toLocaleString()}`;
   }
 
   if (pendingCard) {
-    pendingCard.textContent = `₹${pendingAmount.toLocaleString()}`;
+    pendingCard.textContent = `<i class="fa-solid fa-indian-rupee-sign"></i>${pendingAmount.toLocaleString()}`;
   }
 
   if (notPaidCard) {
-    notPaidCard.textContent = `₹${notPaidAmount.toLocaleString()}`;
+    notPaidCard.textContent = `<i class="fa-solid fa-indian-rupee-sign"></i>${notPaidAmount.toLocaleString()}`;
   }
 }
 
@@ -623,7 +623,7 @@ function updatePaymentTable() {
           class="btn btn-sm btn-success payment-status-action-btn"
           data-booking-id="${booking.id || ''}"
           data-status="Paid">
-          ✅ Verify
+          <i class="fa-solid fa-circle-check"></i> Verify
         </button>
 
         <button
@@ -631,7 +631,7 @@ function updatePaymentTable() {
           class="btn btn-sm btn-danger payment-status-action-btn"
           data-booking-id="${booking.id || ''}"
           data-status="Not Paid">
-          ❌ Reject
+          <i class="fa-solid fa-circle-xmark"></i> Reject
         </button>
       </div>
     ` : `
@@ -662,21 +662,21 @@ function updatePaymentTable() {
 
   `}
 </td>
-        <td>₹${amount}</td>
+        <td><i class="fa-solid fa-indian-rupee-sign"></i>${amount}</td>
         <td>
     ${isTrainer ? `
     ${isPendingVerification ? 'Awaiting Decision' : 'Verified'}
   ` : `
     ${isPaid ? `
-      <span class="badge bg-success">✅ Paid</span>
+      <span class="badge bg-success"><i class="fa-solid fa-circle-check"></i> Paid</span>
     ` : isPendingVerification ? `
-      <span class="badge bg-warning text-dark">⏳ Pending</span>
+      <span class="badge bg-warning text-dark"><i class="fa-solid fa-hourglass-half"></i> Pending</span>
     ` : `
       <a
         class="btn btn-sm btn-success"
         href="upi://pay?pa=${encodeURIComponent(window.upiId || '')}&pn=${encodeURIComponent(window.accountHolderName || '')}&cu=INR&tn=${encodeURIComponent('SwimTrackPro Payment')}"
-        title="Open UPI App (Please enter amount of ₹${booking.fee || 0} manually if not pre-filled)">
-        💳 Pay Now (₹${booking.fee || 0})
+        title="Open UPI App (Please enter amount of <i class="fa-solid fa-indian-rupee-sign"></i>${booking.fee || 0} manually if not pre-filled)">
+        <i class="fa-solid fa-credit-card"></i> Pay Now (<i class="fa-solid fa-indian-rupee-sign"></i>${booking.fee || 0})
       </a>
     `}
   `}
@@ -965,7 +965,7 @@ function renderCalendar() {
       if (Array.isArray(booking.skipped_dates) &&
           booking.skipped_dates.includes(fullDate)) {
         statusLines.push(
-          '<div class="small text-warning fw-semibold">🔶 Skipped</div>'
+          '<div class="small text-warning fw-semibold"><i class="fa-solid fa-diamond text-warning"></i> Skipped</div>'
         );
       }
 
@@ -978,22 +978,22 @@ function renderCalendar() {
 
           if (request.status === 'pending') {
             statusLines.push(
-              '<div class="small text-warning fw-semibold">🟡 Pending Approval</div>'
+              '<div class="small text-warning fw-semibold"><i class="fa-solid fa-circle text-warning"></i> Pending Approval</div>'
             );
           } else if (request.status === 'approved') {
             statusLines.push(
-              '<div class="small text-success fw-semibold">🟢 Approved</div>'
+              '<div class="small text-success fw-semibold"><i class="fa-solid fa-circle text-success"></i> Approved</div>'
             );
           } else if (request.status === 'rejected') {
             statusLines.push(
-              '<div class="small text-danger fw-semibold">🔴 Rejected</div>'
+              '<div class="small text-danger fw-semibold"><i class="fa-solid fa-circle text-danger"></i> Rejected</div>'
             );
           }
         });
       }
 
       bookingDiv.innerHTML =
-        `🏊 ${booking.student} • ⏰ ${booking.time || 'N/A'}` +
+        `🏊 ${booking.student} • <i class="fa-regular fa-clock"></i> ${booking.time || 'N/A'}` +
         (statusLines.length ? `<br>${statusLines.join('')}` : '');
 
       const existingEvents = eventsContainer.querySelectorAll('.calendar-booking');
@@ -1333,7 +1333,7 @@ window.addEventListener('load', () => {
 
   if (bookingSuccess) {
   createToast(
-    '✅ Booking created successfully.',
+    '<i class="fa-solid fa-circle-check"></i> Booking created successfully.',
     'success',
     3000
   );
@@ -1347,7 +1347,7 @@ window.addEventListener('load', () => {
 
   if (bookingConflict) {
     createToast(
-      '⚠️ Duplicate booking already exists for this swimmer.',
+      '<i class="fa-solid fa-triangle-exclamation"></i> Duplicate booking already exists for this swimmer.',
       'danger',
       4000
     );
@@ -1358,7 +1358,7 @@ window.addEventListener('load', () => {
 
   // if (locationConflict) {
   //   createToast(
-  //     '⚠️ Selected time slot is already booked at another location.',
+  //     '<i class="fa-solid fa-triangle-exclamation"></i> Selected time slot is already booked at another location.',
   //     'danger',
   //     4000
   //   );
@@ -1367,7 +1367,7 @@ window.addEventListener('load', () => {
   // }
 
   if (swimmerExists === 'true') {
-    createToast('⚠️ Swimmer already exists', 'danger', 2000);
+    createToast('<i class="fa-solid fa-triangle-exclamation"></i> Swimmer already exists', 'danger', 2000);
     window.history.replaceState({}, document.title, window.location.pathname);
   }
 });

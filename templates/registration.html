@@ -155,7 +155,7 @@
             {% with messages = get_flashed_messages() %}
                 {% if messages %}
                     <div class="alert alert-danger py-2 px-3 small border-0 mb-4" style="border-radius: 12px;">
-                        ⚠️ {{ messages[-1] }}
+                        <i class="fa-solid fa-triangle-exclamation"></i> {{ messages[-1] }}
                     </div>
                 {% endif %}
             {% endwith %}

@@ -199,9 +199,9 @@
         <div class="col-md-4">
           <div class="card border-success h-100">
             <div class="card-body text-center">
-              <div class="fs-3">✅</div>
+              <div class="fs-3"><i class="fa-solid fa-circle-check"></i></div>
               <h5 class="mt-2">Paid</h5>
-              <h3 id="paidAmountCard">₹0</h3>
+              <h3 id="paidAmountCard"><i class="fa-solid fa-indian-rupee-sign"></i>0</h3>
             </div>
           </div>
         </div>
@@ -209,9 +209,9 @@
         <div class="col-md-4">
           <div class="card border-warning h-100">
             <div class="card-body text-center">
-              <div class="fs-3">⏳</div>
+              <div class="fs-3"><i class="fa-solid fa-hourglass-half"></i></div>
               <h5 class="mt-2">Pending Verification</h5>
-              <h3 id="pendingAmountCard">₹0</h3>
+              <h3 id="pendingAmountCard"><i class="fa-solid fa-indian-rupee-sign"></i>0</h3>
             </div>
           </div>
         </div>
@@ -219,9 +219,9 @@
         <div class="col-md-4">
           <div class="card border-danger h-100">
             <div class="card-body text-center">
-              <div class="fs-3">❌</div>
+              <div class="fs-3"><i class="fa-solid fa-circle-xmark"></i></div>
               <h5 class="mt-2">Not Paid</h5>
-              <h3 id="notPaidAmountCard">₹0</h3>
+              <h3 id="notPaidAmountCard"><i class="fa-solid fa-indian-rupee-sign"></i>0</h3>
             </div>
           </div>
         </div>
@@ -232,7 +232,7 @@
         <div class="col-lg-4">
           <div class="card mt-4 border-0 shadow-sm">
             <div class="card-header bg-light fw-semibold">
-              💳 Payment Information
+              <i class="fa-solid fa-credit-card"></i> Payment Information
             </div>
             <div class="card-body">
               <div class="row align-items-center">
@@ -254,10 +254,10 @@
                   </p>
                   <p class="mb-2 text-success fw-bold">
                     <strong>Total Outstanding:</strong>
-                    ₹{{ total_pending_amount }}
+                    <i class="fa-solid fa-indian-rupee-sign"></i>{{ total_pending_amount }}
                   </p>
                   <div class="alert alert-warning mt-3 mb-0">
-                    ⚠️ After payment, change the status to <strong>Pending Verification</strong> and click <strong>Update Payment Status</strong>.
+                    <i class="fa-solid fa-triangle-exclamation"></i> After payment, change the status to <strong>Pending Verification</strong> and click <strong>Update Payment Status</strong>.
                   </div>
                     <div class="small text-muted mt-2">
                       Click the QR Code or Open UPI App button on mobile devices (please enter amount manually if not pre-filled).
@@ -297,7 +297,7 @@
         <div class="col-lg-8">
           <div class="card mt-4 border-0 shadow-sm">
             <div class="card-header bg-light fw-semibold">
-              📋 Payment Records
+              <i class="fa-solid fa-clipboard-list"></i> Payment Records
             </div>
             <div class="table-responsive">
               <table class="table table-hover mb-0">

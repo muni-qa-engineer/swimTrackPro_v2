@@ -142,7 +142,7 @@
 <div class="container-fluid py-3 px-2 px-md-4">
 
   <div class="bg-white rounded shadow-sm p-3 mb-3 d-flex justify-content-between align-items-center">
-    <h3 class="mb-0 fw-bold">📋 My Bookings</h3>
+    <h3 class="mb-0 fw-bold"><i class="fa-solid fa-clipboard-list"></i> My Bookings</h3>
 
     <!-- <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-sm px-3">
       ← Back
@@ -153,7 +153,7 @@
     <div class="row g-0">
         <div class="col-12 px-0">
             <!-- RIGHT SIDE: Your Bookings (The Gallery) -->
-            <!-- <h4>📋 My Training Schedule</h4> -->
+            <!-- <h4><i class="fa-solid fa-clipboard-list"></i> My Training Schedule</h4> -->
             <div class="row g-0">
                 {% if not bookings %}
                     <p class="text-muted">No bookings found. Start by booking a slot!</p>
@@ -195,10 +195,10 @@
                         <div class="card-header bg-light d-flex justify-content-between align-items-center trainer-group-header {% if role == 'trainer' %}cursor-pointer{% endif %}" data-group-key="{{ group_key }}">
                             <div>
                                 {% if role == 'trainer' %}
-                                <span class="trainer-group-arrow me-2">{% if loop.first %}▼{% else %}▶{% endif %}</span>
+                                <span class="trainer-group-arrow me-2">{% if loop.first %}▼{% else %}<i class="fa-solid fa-play"></i>{% endif %}</span>
                                 {% endif %}
-                                <strong>👤 {{ group_name|title }}</strong>
-                                <span class="text-muted ms-2">📞 {{ group_phone }}</span>
+                                <strong><i class="fa-solid fa-user"></i> {{ group_name|title }}</strong>
+                                <span class="text-muted ms-2"><i class="fa-solid fa-phone"></i> {{ group_phone }}</span>
                                 {% if ns.has_active %}
                                 <span class="ms-2 d-inline-block rounded-circle"
                                       title="Active Booking"
@@ -232,7 +232,7 @@
                                     </div>
                                 </div>
                                 <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2">
-                                    📦 {{ b.package or 'Single' }}
+                                    <i class="fa-solid fa-box"></i> {{ b.package or 'Single' }}
                                 </span>
                             </div>
 
@@ -240,14 +240,14 @@
                                 <div class="row g-3 mb-2">
                                     <div class="col-6">
                                         <div class="fw-semibold">
-                                           <span class="text-muted">📅 Start Date: </span>
+                                           <span class="text-muted"><i class="fa-regular fa-calendar"></i> Start Date: </span>
                                            {{ b.start_date[8:10] }}/{{ b.start_date[5:7] }}/{{ b.start_date[0:4] }}
                                         </div>
                                     </div>
 
                                     <div class="col-6">
                                         <div class="fw-semibold">
-                                           <span class="text-muted">⏰ Time: </span>
+                                           <span class="text-muted"><i class="fa-regular fa-clock"></i> Time: </span>
                                            {{ b.time }}
                                         </div>
                                     </div>
@@ -257,7 +257,7 @@
                                     {% if b.end_date %}
                                     <div class="col-6">
                                         <div class="fw-semibold">
-                                          <span class="text-muted">🗓 End Date: </span>
+                                          <span class="text-muted"><i class="fa-regular fa-calendar-days"></i> End Date: </span>
                                           {{ b.end_date[8:10] }}/{{ b.end_date[5:7] }}/{{ b.end_date[0:4] }}
                                         </div>
                                     </div>
@@ -265,14 +265,14 @@
 
                                     <div class="col-6">
                                         <div class="fw-semibold">
-                                          <span class="text-muted">👥 No. of Persons: </span>
+                                          <span class="text-muted"><i class="fa-solid fa-users"></i> No. of Persons: </span>
                                           {{ b.persons or 1 }}
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="mt-3">
-                                    <div class="text-muted mb-1">📚 Selected Days</div>
+                                    <div class="text-muted mb-1"><i class="fa-solid fa-book"></i> Selected Days</div>
 
                                     <div class="d-flex flex-wrap gap-2">
                                         {% if b.selected_days and b.selected_days|trim != '' %}
@@ -299,7 +299,7 @@
                             {% if not b.is_completed and b.total_classes and b.total_classes > 0 %}
                             <div class="mt-3">
                                 <div class="small fw-semibold text-success mb-2">
-                                    <span style="color: black;">Class Progress 📈:</span>
+                                    <span style="color: black;">Class Progress <i class="fa-solid fa-chart-line"></i>:</span>
                                      {{ b.completed_classes }} / {{ b.total_classes }} Completed
                                     {% if b.remaining_classes > 0 %}
                                         <span class="text-muted">({{ b.remaining_classes }} Left)</span>
@@ -320,7 +320,7 @@
                             {% endif %}
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <div>
-                                    <strong>💵 Fee:</strong> ₹{{ b.fee }}
+                                    <strong><i class="fa-solid fa-money-bill-wave"></i> Fee:</strong> <i class="fa-solid fa-indian-rupee-sign"></i>{{ b.fee }}
                                 </div>
 
                                 <div class="text-end">
@@ -342,37 +342,37 @@
                             </div>
 
                             <div class="mb-2 text-muted small">
-                                📍 {{ b.location or 'Location not added' }}
+                                <i class="fa-solid fa-location-dot"></i> {{ b.location or 'Location not added' }}
                             </div>
 
 
                             <p class="mb-2 text-muted small">
-                                📌 <b>Status:</b>
+                                <i class="fa-solid fa-thumbtack"></i> <b>Status:</b>
 
                                 {% if b.delete_requested %}
-                                    🔴 Delete Requested
+                                    <i class="fa-solid fa-circle text-danger"></i> Delete Requested
                                 {% elif b.pause_status == 'Paused' or b.pause_status == 'PAUSED' %}
                                     <span class="badge bg-warning text-dark px-3 py-2">
-                                        ⏸️ PAUSED
+                                        <i class="fa-solid fa-pause"></i> PAUSED
                                     </span>
                                 {% elif b.pause_status == 'Approval Pending' %}
                                     <span class="badge bg-info text-white px-3 py-2">
-                                        🟡 Approval Pending
+                                        <i class="fa-solid fa-circle text-warning"></i> Approval Pending
                                     </span>
                                 {% elif b.is_completed %}
                                     <span class="badge bg-success px-3 py-2">
-                                        ⚪ Completed
+                                        <i class="fa-regular fa-circle text-secondary"></i> Completed
                                     </span>
                                 {% elif (b.completed_classes or 0) > 0 %}
-                                    🟢 Active
+                                    <i class="fa-solid fa-circle text-success"></i> Active
                                 {% else %}
-                                    🔵 Booked
+                                    <i class="fa-solid fa-circle text-primary"></i> Booked
                                 {% endif %}
                             </p>
 
                             {% if b.pause_status == 'Paused' or b.pause_status == 'PAUSED' %}
                             <div class="alert alert-warning p-3 rounded-3 border-warning border-opacity-25 text-start mt-2" style="font-size: 0.85rem; color: #664d03; background-color: #fff3cd;">
-                                <strong>⏸️ Package Paused</strong><br>
+                                <strong><i class="fa-solid fa-pause"></i> Package Paused</strong><br>
                                 <span class="d-block mt-1"><strong>Paused On:</strong> {{ b.pause_date }}</span>
                                 <span class="d-block"><strong>Auto Resume:</strong> {{ b.auto_resume_date }}</span>
                                 <span class="d-block"><strong>Remaining:</strong> {{ b.remaining_classes }}</span>
@@ -384,7 +384,7 @@
 
                             {% if b.pause_status == 'Approval Pending' %}
                             <div class="alert alert-info p-3 rounded-3 border-info border-opacity-25 text-start mt-2" style="font-size: 0.85rem; color: #055160; background-color: #cff4fc;">
-                                <strong>🟡 Approval Pending</strong><br>
+                                <strong><i class="fa-solid fa-circle text-warning"></i> Approval Pending</strong><br>
                                 <span class="d-block mt-1">Your additional pause request is awaiting approval.</span>
                             </div>
                             {% endif %}
@@ -393,7 +393,7 @@
                             <div class="mt-auto text-end">
                               {% if b.is_completed %}
                                   <!-- <span class="completed-overlay">
-                                      ✅ Completed
+                                      <i class="fa-solid fa-circle-check"></i> Completed
                                   </span> -->
 
                                   {% if role == 'trainer' %}
@@ -414,7 +414,7 @@
                                           
                                           <div class="d-flex gap-2 mb-2">
                                               <button type="button" class="btn btn-success btn-sm px-3 rounded-pill fw-bold flex-grow-1" onclick="approvePause('{{ b.id }}')">
-                                                  ✓ Approve
+                                                  <i class="fa-solid fa-check"></i> Approve
                                               </button>
                                               <button type="button" class="btn btn-outline-danger btn-sm px-3 rounded-pill fw-bold flex-grow-1" onclick="showRejectInput('{{ b.id }}')">
                                                   ✕ Reject
@@ -430,20 +430,20 @@
                                       </div>
                                   {% else %}
                                       <span class="badge bg-info text-white px-3 py-2">
-                                          🟡 Approval Pending
+                                          <i class="fa-solid fa-circle text-warning"></i> Approval Pending
                                       </span>
                                   {% endif %}
                               {% elif b.delete_requested %}
                                   {% if role == 'trainer' %}
                                       <form action="/approve_delete/{{ b.id }}" method="POST" class="inline-form" onsubmit="saveScrollPosition(); return confirm('Permanently delete this booking?');">
-                                          <button type="submit" class="btn btn-success btn-sm">✓ Approve</button>
+                                          <button type="submit" class="btn btn-success btn-sm"><i class="fa-solid fa-check"></i> Approve</button>
                                       </form>
                                       <form action="/reject_delete/{{ b.id }}" method="POST" class="inline-form ml-6" onsubmit="saveScrollPosition()">
                                           <button type="submit" class="btn btn-outline-secondary btn-sm">✕ Reject</button>
                                       </form>
                                    {% else %}
                                        <span class="badge bg-warning text-dark px-3 py-2">
-                                           🗑 Delete Requested
+                                           <i class="fa-solid fa-trash"></i> Delete Requested
                                        </span>
                                    {% endif %}
                               {% else %}
@@ -466,22 +466,22 @@
                                   <a
                                      href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name|urlencode }}&tn=SwimTrackPro%20Payment"
                                      class="btn btn-success btn-sm float-start"
-                                     title="Open UPI App (Please enter amount of ₹{{ b.fee }} manually if not pre-filled)">
-                                     💳 Pay Now (₹{{ b.fee }})
+                                     title="Open UPI App (Please enter amount of <i class="fa-solid fa-indian-rupee-sign"></i>{{ b.fee }} manually if not pre-filled)">
+                                     <i class="fa-solid fa-credit-card"></i> Pay Now (<i class="fa-solid fa-indian-rupee-sign"></i>{{ b.fee }})
                                   </a>
                                   {% endif %}
                                   {% if role != 'trainer' and b.package in ('Monthly', 'Custom') and not b.is_completed and not b.delete_requested and (b.completed_classes or 0) > 0 and (b.remaining_classes or 0) > 0 %}
                                       {% if b.pause_status == 'Paused' or b.pause_status == 'PAUSED' %}
                                           <button type="button" class="btn btn-sm btn-primary mt-2 fw-bold w-100" onclick="showResumeModal('{{ b.id }}')">
-                                              ▶️ Resume Package
+                                              <i class="fa-solid fa-play"></i> Resume Package
                                           </button>
                                       {% elif b.pause_status == 'Approval Pending' %}
                                           <button type="button" class="btn btn-sm btn-outline-info mt-2 fw-bold w-100" disabled>
-                                              🟡 Approval Pending
+                                              <i class="fa-solid fa-circle text-warning"></i> Approval Pending
                                           </button>
                                       {% else %}
                                           <button type="button" class="btn btn-sm btn-outline-warning mt-2 fw-bold w-100" onclick="showPauseModal('{{ b.id }}', '{{ b.remaining_classes }}', {{ b.pause_count or 0 }})">
-                                              ⏸️ Pause Package
+                                              <i class="fa-solid fa-pause"></i> Pause Package
                                           </button>
                                       {% endif %}
                                   {% endif %}
@@ -552,7 +552,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.dataset.confirmed = 'true';
                 this.classList.remove('btn-outline-danger');
                 this.classList.add('btn-danger');
-                this.innerHTML = '⚠ Confirm Delete';
+                this.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Confirm Delete';
 
                 clearTimeout(this.resetTimer);
 
@@ -596,7 +596,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const isOpen = currentBody.style.display !== 'none';
 
             document.querySelectorAll('.trainer-group-body').forEach(body => body.style.display = 'none');
-            document.querySelectorAll('.trainer-group-arrow').forEach(arrow => arrow.textContent = '▶');
+            document.querySelectorAll('.trainer-group-arrow').forEach(arrow => arrow.innerHTML = '<i class="fa-solid fa-play"></i>');
 
             if (!isOpen) {
                 currentBody.style.display = '';
@@ -611,7 +611,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const savedHeader = document.querySelector(`.trainer-group-header[data-group-key="${savedGroup}"]`);
         if (savedHeader) {
             document.querySelectorAll('.trainer-group-body').forEach(body => body.style.display = 'none');
-            document.querySelectorAll('.trainer-group-arrow').forEach(arrow => arrow.textContent = '▶');
+            document.querySelectorAll('.trainer-group-arrow').forEach(arrow => arrow.innerHTML = '<i class="fa-solid fa-play"></i>');
 
             const body = savedHeader.parentElement.querySelector('.trainer-group-body');
             if (body) body.style.display = '';
@@ -700,7 +700,7 @@ window.showPauseModal = function(bookingId, remainingClasses, pauseCount) {
     if (commentsInput) commentsInput.value = '';
 
     if (parseInt(pauseCount) === 0) {
-        titleEl.innerHTML = '⏸️ Pause Package';
+        titleEl.innerHTML = '<i class="fa-solid fa-pause"></i> Pause Package';
         descEl.innerHTML = 'You can pause this package only once. Maximum pause duration is <strong>7 calendar days</strong>.';
         if (commentsEl) commentsEl.classList.add('d-none');
         btnEl.textContent = 'Pause Package';
@@ -799,7 +799,7 @@ window.submitResumeForm = function(e) {
         if (data.success) {
             // Store toast to display AFTER page has fully reloaded — not before
             sessionStorage.setItem('swimtrack_toast', JSON.stringify({
-                message: data.message || '✅ Package resumed successfully. Your remaining sessions have been rescheduled.',
+                message: data.message || '<i class="fa-solid fa-circle-check"></i> Package resumed successfully. Your remaining sessions have been rescheduled.',
                 type: 'success',
                 duration: 5000
             }));
@@ -809,7 +809,7 @@ window.submitResumeForm = function(e) {
         } else {
             if (data.error && data.error.startsWith('reschedule_required:')) {
                 const conflictMsg = data.error.replace('reschedule_required:', '').trim();
-                createToast(`⚠️ Conflict: ${conflictMsg}`, 'danger', 6000);
+                createToast(`<i class="fa-solid fa-triangle-exclamation"></i> Conflict: ${conflictMsg}`, 'danger', 6000);
             } else {
                 createToast(data.error || 'Failed to resume package.', 'danger');
             }
@@ -889,7 +889,7 @@ window.submitRejection = function(bookingId) {
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow-lg text-dark bg-white">
             <div class="modal-header border-bottom-0 pb-0">
-                <h5 class="modal-title fw-bold text-dark" id="pauseModalLabel">⏸️ Pause Package</h5>
+                <h5 class="modal-title fw-bold text-dark" id="pauseModalLabel"><i class="fa-solid fa-pause"></i> Pause Package</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="pauseForm" method="POST" onsubmit="submitPauseForm(event)">
@@ -946,7 +946,7 @@ window.submitRejection = function(bookingId) {
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow-lg text-dark bg-white">
             <div class="modal-header border-bottom-0 pb-0">
-                <h5 class="modal-title fw-bold text-dark" id="resumeModalLabel">▶️ Resume Package</h5>
+                <h5 class="modal-title fw-bold text-dark" id="resumeModalLabel"><i class="fa-solid fa-play"></i> Resume Package</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="resumeForm" method="POST" onsubmit="submitResumeForm(event)">

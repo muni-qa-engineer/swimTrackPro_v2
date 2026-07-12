@@ -234,7 +234,7 @@
                                         </div>
                                     </div>
                                     <div class="text-end">
-                                        <div class="fw-semibold text-secondary">👤 Coach {{ session.trainer_username|title }}</div>
+                                        <div class="fw-semibold text-secondary"><i class="fa-solid fa-user"></i> Coach {{ session.trainer_username|title }}</div>
                                     </div>
                                 </div>
                                 {% else %}
@@ -290,7 +290,7 @@
                                             <td>{{ booking.package|title }}</td>
                                             <td>
                                                 <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2.5 py-1.5">
-                                                    👤 Coach {{ booking.trainer_username|title }}
+                                                    <i class="fa-solid fa-user"></i> Coach {{ booking.trainer_username|title }}
                                                 </span>
                                             </td>
                                             <td>
@@ -353,7 +353,7 @@
                                 <tr>
                                     <td>
                                         <div class="fw-bold text-dark fs-6">{{ booking.student|title }}</div>
-                                        <div class="text-muted small">📞 {{ booking.owner_phone or '--' }}</div>
+                                        <div class="text-muted small"><i class="fa-solid fa-phone"></i> {{ booking.owner_phone or '--' }}</div>
                                     </td>
                                     <td>
                                         <div>
@@ -386,11 +386,11 @@
                                     </td>
                                     <td>
                                         {% if booking.status|lower == 'paid' %}
-                                            <span class="badge bg-success-subtle text-success border border-success px-2.5 py-1.5 rounded-pill">₹{{ booking.fee }} - Paid</span>
+                                            <span class="badge bg-success-subtle text-success border border-success px-2.5 py-1.5 rounded-pill"><i class="fa-solid fa-indian-rupee-sign"></i>{{ booking.fee }} - Paid</span>
                                         {% elif booking.status|lower == 'pending verification' %}
-                                            <span class="badge bg-warning-subtle text-warning border border-warning px-2.5 py-1.5 rounded-pill">₹{{ booking.fee }} - Pending</span>
+                                            <span class="badge bg-warning-subtle text-warning border border-warning px-2.5 py-1.5 rounded-pill"><i class="fa-solid fa-indian-rupee-sign"></i>{{ booking.fee }} - Pending</span>
                                         {% else %}
-                                            <span class="badge bg-danger-subtle text-danger border border-danger px-2.5 py-1.5 rounded-pill">₹{{ booking.fee }} - Unpaid</span>
+                                            <span class="badge bg-danger-subtle text-danger border border-danger px-2.5 py-1.5 rounded-pill"><i class="fa-solid fa-indian-rupee-sign"></i>{{ booking.fee }} - Unpaid</span>
                                         {% endif %}
                                     </td>
                                     <td class="text-end">
@@ -449,7 +449,7 @@
                                         <div class="fw-bold text-dark fs-6">{{ student.name|title }}</div>
                                     </td>
                                     <td>{{ student.owner_name|title }}</td>
-                                    <td>📞 {{ student.owner_phone }}</td>
+                                    <td><i class="fa-solid fa-phone"></i> {{ student.owner_phone }}</td>
                                 </tr>
                                 {% else %}
                                 <tr>
@@ -487,18 +487,18 @@
                                             </div>
                                             <div>
                                                 <div class="fw-bold text-dark fs-6">{{ trainer.name|title }}</div>
-                                                <div class="text-muted small">👤 {{ trainer.username }}</div>
+                                                <div class="text-muted small"><i class="fa-solid fa-user"></i> {{ trainer.username }}</div>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
                                         <div><strong>Phone:</strong> {{ trainer.phone or '--' }}</div>
                                         <div><strong>Email:</strong> {{ trainer.email or '--' }}</div>
-                                        <div class="text-muted small mt-1">📍 {{ trainer.residence_location }}</div>
+                                        <div class="text-muted small mt-1"><i class="fa-solid fa-location-dot"></i> {{ trainer.residence_location }}</div>
                                     </td>
                                     <td>
                                         <span class="badge bg-warning text-dark px-2.5 py-1.5 fw-bold rounded-pill">
-                                            ⭐ {{ trainer.rating }}
+                                            <i class="fa-solid fa-star text-warning"></i> {{ trainer.rating }}
                                         </span>
                                     </td>
                                     <td>
@@ -568,7 +568,7 @@
                                     </td>
                                     <td><strong class="text-dark">{{ session.student|title }}</strong></td>
                                     <td>{{ session.package|title }}</td>
-                                     <td>👤 Coach {{ session.trainer_username|title }}</td>
+                                     <td><i class="fa-solid fa-user"></i> Coach {{ session.trainer_username|title }}</td>
                                 </tr>
                                 {% else %}
                                 <tr>
@@ -601,11 +601,11 @@
                                 <tr>
                                     <td>
                                         <div class="fw-bold text-dark">{{ booking.student|title }}</div>
-                                        <div class="text-muted small">📞 {{ booking.owner_phone }}</div>
+                                        <div class="text-muted small"><i class="fa-solid fa-phone"></i> {{ booking.owner_phone }}</div>
                                     </td>
                                     <td>{{ booking.package|title }} ({{ booking.start_date }} to {{ booking.end_date }})</td>
                                     <td><code class="text-secondary">{{ booking.payment_request or '--' }}</code></td>
-                                    <td>₹{{ booking.fee }}</td>
+                                    <td><i class="fa-solid fa-indian-rupee-sign"></i>{{ booking.fee }}</td>
                                     <td>
                                         {% if booking.status|lower == 'paid' %}
                                             <span class="badge bg-success-subtle text-success border border-success px-3 py-1.5 rounded-pill">Paid</span>
@@ -641,7 +641,7 @@
                                     <td>
                                         <div class="fw-bold text-dark">{{ activity.user_name|title }}</div>
                                         {% if activity.phone %}
-                                            <div class="text-muted small">📞 {{ activity.phone }}</div>
+                                            <div class="text-muted small"><i class="fa-solid fa-phone"></i> {{ activity.phone }}</div>
                                         {% endif %}
                                     </td>
                                     <td>

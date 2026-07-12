@@ -28,7 +28,7 @@
     <div class="row justify-content-center">
         <div class="col-12 col-lg-8 text-center py-5">
             <div class="card border-0 rounded-4 bg-dark bg-opacity-20 p-5 text-white shadow-sm border border-secondary border-opacity-10" style="border-radius:24px;">
-                <div class="fs-1 mb-3">👨‍🏫</div>
+                <div class="fs-1 mb-3"><i class="fa-solid fa-chalkboard-user"></i></div>
                 <h3 class="fw-bold mb-2">No Assigned Coach</h3>
                 <p class="text-secondary mb-4">You do not have any swimming coach assigned to your account at this moment.</p>
                 <div class="d-flex justify-content-center gap-3">
@@ -215,7 +215,7 @@
                                 <div class="card border-0 bg-white text-dark p-3 rounded-3 shadow-sm border border-light">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <h6 class="mb-0 fw-bold text-primary">{{ f.guest_name|title }}</h6>
-                                        <span class="badge bg-warning text-dark fw-bold">⭐ {{ f.rating }} / 5</span>
+                                        <span class="badge bg-warning text-dark fw-bold"><i class="fa-solid fa-star text-warning"></i> {{ f.rating }} / 5</span>
                                     </div>
                                     <div class="small text-muted mb-3"><i class="fa-regular fa-clock me-1"></i> Submitted on {{ f.created_at }}</div>
                                     
@@ -237,7 +237,7 @@
                         </div>
                     {% else %}
                         <div class="text-center py-5 text-muted rounded-3 bg-dark bg-opacity-30">
-                            <div class="fs-1 mb-2">💬</div>
+                            <div class="fs-1 mb-2"><i class="fa-solid fa-comment"></i></div>
                             <p class="mb-0 fw-semibold text-secondary">No feedback submitted yet for this coach.</p>
                             <small class="text-secondary opacity-50">Be the first to share your training experience!</small>
                         </div>
@@ -288,7 +288,7 @@
                 {% elif role == 'guest' %}
                 <div class="col-lg-5">
                     <div class="card border-0 bg-dark bg-opacity-30 p-4 rounded-3 text-secondary border border-secondary border-opacity-15 text-center py-5 h-100 d-flex flex-column align-items-center justify-content-center">
-                        <div class="fs-1 mb-2">🔒</div>
+                        <div class="fs-1 mb-2"><i class="fa-solid fa-lock"></i></div>
                         <h5 class="fw-bold text-secondary mb-2">Feedback Disabled</h5>
                         <p class="small text-secondary mb-0">You can only submit feedback for a coach assigned to you. Once a session is booked with this coach, feedback options will unlock.</p>
                     </div>
@@ -315,11 +315,11 @@
                 const stars = selector.querySelectorAll('.star-item');
 
                 const labels = {
-                    1: '⭐ (1 - Needs Improvement)',
-                    2: '⭐⭐ (2 - Average)',
-                    3: '⭐⭐⭐ (3 - Good)',
-                    4: '⭐⭐⭐⭐ (4 - Very Good)',
-                    5: '⭐⭐⭐⭐• (5 - Excellent)'
+                    1: '<i class="fa-solid fa-star text-warning"></i> (1 - Needs Improvement)',
+                    2: '<i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i> (2 - Average)',
+                    3: '<i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i> (3 - Good)',
+                    4: '<i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i> (4 - Very Good)',
+                    5: '<i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i>• (5 - Excellent)'
                 };
 
                 stars.forEach(star => {

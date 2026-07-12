@@ -33,24 +33,24 @@
           {% if session_role == 'trainer' %}
           <li>
             <a class="dropdown-item d-flex align-items-center gap-2" href="/profile">
-              👤 My Profile
+              <i class="fa-solid fa-user"></i> My Profile
             </a>
           </li>
           <li>
             <a class="dropdown-item d-flex align-items-center gap-2" href="/about-trainer">
-              👨‍🏫 About Trainers
+              <i class="fa-solid fa-chalkboard-user"></i> About Trainers
             </a>
           </li>
           <li><hr class="dropdown-divider"></li>
           {% else %}
           <li>
             <a class="dropdown-item d-flex align-items-center gap-2" href="/about-trainer">
-              👨‍🏫 About Your Trainer
+              <i class="fa-solid fa-chalkboard-user"></i> About Your Trainer
             </a>
           </li>
           <li>
             <a class="dropdown-item d-flex align-items-center gap-2" href="/help">
-              📞 Help & Contact
+              <i class="fa-solid fa-phone"></i> Help & Contact
             </a>
           </li>
           <li><hr class="dropdown-divider"></li>
@@ -58,7 +58,7 @@
 
           <li>
             <a class="dropdown-item text-danger d-flex align-items-center gap-2" href="/logout">
-              🚪 Sign Out
+              <i class="fa-solid fa-right-from-bracket"></i> Sign Out
             </a>
           </li>
         </ul>

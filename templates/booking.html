@@ -108,7 +108,7 @@
                                 id="customPackageHint"
                                 class="form-text text-muted"
                                 style="display:none;">
-                                ℹ️ Custom package supports a maximum duration of 60 days.
+                                <i class="fa-solid fa-circle-info"></i> Custom package supports a maximum duration of 60 days.
                             </div>
                         </div>
                         <div class="col-md-6 mb-3">
@@ -275,7 +275,7 @@
                         id="locationConflictWarning"
                         class="alert alert-warning mt-2 mb-0"
                         style="display:none;">
-                        ⚠ Selected time slot is already booked at another location.
+                        <i class="fa-solid fa-triangle-exclamation"></i> Selected time slot is already booked at another location.
                         Please choose a different time slot or location.
                     </div>
                     </div>
@@ -305,7 +305,7 @@
                         </div>
 
                         <div class="col-md-4 mb-3">
-                            <label for="feeInput" class="form-label fw-semibold">Fee (₹)</label>
+                            <label for="feeInput" class="form-label fw-semibold">Fee (<i class="fa-solid fa-indian-rupee-sign"></i>)</label>
                             <input
                                 type="number"
                                 id="feeInput"
@@ -371,7 +371,7 @@
                          style="cursor: pointer; border-radius: 12px; transition: 0.2s ease;">
                         <div class="card-body p-3">
                             <div class="profile-header-notice text-primary small fw-bold mb-2 d-none" id="profile-notice-{{ t.username }}">
-                                👤 Coach Profile Details
+                                <i class="fa-solid fa-user"></i> Coach Profile Details
                             </div>
                             <div class="d-flex align-items-center justify-content-between mb-2">
                                 <div class="d-flex align-items-center">
@@ -384,7 +384,7 @@
                                     <h6 class="mb-0 fw-bold text-dark">{{ t.name|title }}</h6>
                                 </div>
                                 <span class="badge bg-warning text-dark fw-bold" style="font-size: 0.85rem;">
-                                    ⭐ {{ t.rating }}
+                                    <i class="fa-solid fa-star text-warning"></i> {{ t.rating }}
                                 </span>
                             </div>
                             <div class="mb-2 text-muted small" style="line-height: 1.4;">
@@ -393,7 +393,7 @@
                                 <div><strong>Currently Work:</strong> {{ t.currently_working }}</div>
                             </div>
                             <div class="text-secondary small d-flex align-items-center mt-2 pt-2 border-top">
-                                📍 <span>Resides: <strong>{{ t.residence_location }}</strong></span>
+                                <i class="fa-solid fa-location-dot"></i> <span>Resides: <strong>{{ t.residence_location }}</strong></span>
                             </div>
 
                             <div class="d-flex justify-content-end mt-2 pt-2 border-top-0" id="view-profile-btn-container-{{ t.username }}">
@@ -427,7 +427,7 @@
                 </div>
 
                 <div class="text-danger small mt-3 d-none text-center" id="trainerSelectionError">
-                    ⚠️ Please select a coach from the list above.
+                    <i class="fa-solid fa-triangle-exclamation"></i> Please select a coach from the list above.
                 </div>
             </div>
         </div>
@@ -478,7 +478,7 @@
     <div class="modal-content">
 
       <div class="modal-header">
-        <h5 class="modal-title" id="mapPickerModalLabel">🗺️ Choose Location</h5>
+        <h5 class="modal-title" id="mapPickerModalLabel"><i class="fa-solid fa-map"></i> Choose Location</h5>
         <button type="button"
                 class="btn-close"
                 data-bs-dismiss="modal"

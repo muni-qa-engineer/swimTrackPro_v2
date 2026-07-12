@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const formattedDate = dateObj.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' });
 
         let html = `<div class="agenda-title mb-2 d-flex align-items-center justify-content-between">
-            <span class="fw-bold">📅 Agenda for ${formattedDate}</span>
+            <span class="fw-bold"><i class="fa-regular fa-calendar"></i> Agenda for ${formattedDate}</span>
             <span class="badge bg-info text-white rounded-pill">${dayBookings.length} Session${dayBookings.length !== 1 ? 's' : ''}</span>
         </div>`;
 
@@ -36,16 +36,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 if (b.isMakeupSession) {
                     borderClass = 'makeup';
-                    statusText = '<span class="badge bg-success-subtle text-success border border-success ms-2">🔄 Make-up</span>';
+                    statusText = '<span class="badge bg-success-subtle text-success border border-success ms-2"><i class="fa-solid fa-rotate"></i> Make-up</span>';
                 } else if (approvedRequest && approvedRequest.original_date === b.sessionDate) {
                     borderClass = 'skipped';
-                    statusText = '<span class="badge bg-warning-subtle text-warning border border-warning ms-2">⏭️ Skipped</span>';
+                    statusText = '<span class="badge bg-warning-subtle text-warning border border-warning ms-2"><i class="fa-solid fa-forward-step"></i> Skipped</span>';
                     completedClass = '';
                 } else if (pendingRequest && pendingRequest.original_date === b.sessionDate) {
                     borderClass = 'pending';
-                    statusText = '<span class="badge bg-warning-subtle text-warning border border-warning ms-2">⏳ Pending Skip</span>';
+                    statusText = '<span class="badge bg-warning-subtle text-warning border border-warning ms-2"><i class="fa-solid fa-hourglass-half"></i> Pending Skip</span>';
                 } else if (b.completed) {
-                    statusText = '<span class="badge bg-secondary-subtle text-secondary border border-secondary ms-2">✅ Completed</span>';
+                    statusText = '<span class="badge bg-secondary-subtle text-secondary border border-secondary ms-2"><i class="fa-solid fa-circle-check"></i> Completed</span>';
                 }
 
                 html += `
@@ -293,7 +293,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         chipClass += ' bg-success-subtle border border-success';
                         statusLabel = `
                             <span class="ms-auto" title="Make-up Session"
-                                style="font-size:14px;">🔄</span>
+                                style="font-size:14px;"><i class="fa-solid fa-rotate"></i></span>
                         `;
                     }
                     else if (approvedRequest && approvedRequest.original_date === b.sessionDate) {
@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         statusLabel = `
                             <span class="ms-auto" title="Skipped"
-                                style="font-size:14px;">⏭️</span>
+                                style="font-size:14px;"><i class="fa-solid fa-forward-step"></i></span>
                         `;
                     }
                     else if (pendingRequest && pendingRequest.original_date === b.sessionDate) {
@@ -310,7 +310,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         statusLabel = `
                             <span class="ms-auto" title="Approval Pending"
-                                style="font-size:14px;">⏳</span>
+                                style="font-size:14px;"><i class="fa-solid fa-hourglass-half"></i></span>
                         `;
                     }
 
@@ -563,7 +563,7 @@ document.addEventListener('DOMContentLoaded', function () {
       skipButton.style.opacity = '0.65';
 
     } else if (eligible) {
-      skipButton.textContent = '⏭️ Skip Session';
+      skipButton.innerHTML = '<i class="fa-solid fa-forward-step"></i> Skip Session';
 
     } else {
       skipButton.textContent = 'Skip Limit Reached';
