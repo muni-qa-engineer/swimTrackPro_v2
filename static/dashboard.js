@@ -564,17 +564,17 @@ function updatePaymentSummary() {
   const pendingCard = document.getElementById('pendingAmountCard');
   const notPaidCard = document.getElementById('notPaidAmountCard');
 
-  if (paidCard) {
-    paidCard.textContent = `<i class="fa-solid fa-indian-rupee-sign"></i>${paidAmount.toLocaleString()}`;
-  }
+    if (paidCard) {
+        paidCard.innerHTML = `<i class="fa-solid fa-indian-rupee-sign"></i>${paidAmount.toLocaleString()}`;
+    }
 
-  if (pendingCard) {
-    pendingCard.textContent = `<i class="fa-solid fa-indian-rupee-sign"></i>${pendingAmount.toLocaleString()}`;
-  }
+    if (pendingCard) {
+        pendingCard.innerHTML = `<i class="fa-solid fa-indian-rupee-sign"></i>${pendingAmount.toLocaleString()}`;
+    }
 
-  if (notPaidCard) {
-    notPaidCard.textContent = `<i class="fa-solid fa-indian-rupee-sign"></i>${notPaidAmount.toLocaleString()}`;
-  }
+    if (notPaidCard) {
+        notPaidCard.innerHTML = `<i class="fa-solid fa-indian-rupee-sign"></i>${notPaidAmount.toLocaleString()}`;
+    }
 }
 
 function updatePaymentTable() {
@@ -672,11 +672,10 @@ function updatePaymentTable() {
     ` : isPendingVerification ? `
       <span class="badge bg-warning text-dark"><i class="fa-solid fa-hourglass-half"></i> Pending</span>
     ` : `
-      <a
-        class="btn btn-sm btn-success"
-        href="upi://pay?pa=${encodeURIComponent(window.upiId || '')}&pn=${encodeURIComponent(window.accountHolderName || '')}&cu=INR&tn=${encodeURIComponent('SwimTrackPro Payment')}"
-        title="Open UPI App (Please enter amount of <i class="fa-solid fa-indian-rupee-sign"></i>${booking.fee || 0} manually if not pre-filled)">
-        <i class="fa-solid fa-credit-card"></i> Pay Now (<i class="fa-solid fa-indian-rupee-sign"></i>${booking.fee || 0})
+      <a href="upi://pay?pa=${window.upiId || ''}&pn=${encodeURIComponent(window.accountHolderName || '')}&am=${booking.fee || 0}&cu=INR&tn=SwimTrackPro%20Payment"
+        class="btn btn-sm btn-success w-100"
+        title="Open UPI App (Please enter amount of ₹${booking.fee || 0} manually if not pre-filled)">
+        <i class="fa-solid fa-credit-card"></i> Pay Now (₹${booking.fee || 0})
       </a>
     `}
   `}
