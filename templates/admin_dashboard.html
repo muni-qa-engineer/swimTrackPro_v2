@@ -750,7 +750,7 @@
 <script src="{{ url_for('static', filename='dashboard.js') }}?v=1.1.2"></script>
 <script>
     // Tab switching controller
-    function switchSection(sectionId) {
+    function switchSection(sectionId, clickedElement = null) {
         // Toggle sections visibility
         document.querySelectorAll('.dashboard-section').forEach(sec => {
             sec.classList.add('d-none');
@@ -766,9 +766,13 @@
             link.classList.add('text-white-50');
         });
 
-        // Set clicked item as active
-        const clickedLink = event.currentTarget;
-        if (clickedLink) {
+        // Determine which link to set as active
+        let clickedLink = clickedElement || (window.event ? window.event.currentTarget : null);
+        if (!clickedLink) {
+            clickedLink = document.querySelector(`a[onclick="switchSection('${sectionId}')"]`);
+        }
+        
+        if (clickedLink && clickedLink.classList) {
             clickedLink.classList.add('active', 'bg-primary');
             clickedLink.classList.remove('text-white-50');
         }
@@ -785,10 +789,18 @@
             'settings': 'Settings'
         };
         document.getElementById('pageTitle').textContent = titles[sectionId] || 'Dashboard';
+        
+        // Save state for persistence after admin actions
+        sessionStorage.setItem('activeAdminSection', sectionId);
     }
 
     // Chart.js initialization
     document.addEventListener('DOMContentLoaded', function () {
+        // Restore active tab after reload/action completion
+        const savedSection = sessionStorage.getItem('activeAdminSection');
+        if (savedSection && document.getElementById('section-' + savedSection)) {
+            switchSection(savedSection);
+        }
         const ctx = document.getElementById('bookingsChart');
         if (ctx) {
             new Chart(ctx, {

@@ -362,7 +362,7 @@
                     onclick="window.location.href='/help'"
                     class="btn w-100 h-100 border-0 shadow-sm quick-tile">
               <div class="quick-icon quick-contact text-warning"><i class="fa-solid fa-headset"></i></div>
-              <div class="fw-bold mt-2">Contact Admin</div>
+              <div class="fw-bold mt-2">{% if role == 'trainer' %}Contact Admin{% else %}Contact Coach{% endif %}</div>
             </button>
           </div>
 
