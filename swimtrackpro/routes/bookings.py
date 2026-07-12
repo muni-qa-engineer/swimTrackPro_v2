@@ -2,7 +2,11 @@
 
 from datetime import datetime, timedelta
 
-from flask import flash, redirect, render_template, request, session, url_for
+from flask import flash, redirect, render_template, request, session, url_for, jsonify
+from zoneinfo import ZoneInfo
+from services.settings_service import get_setting
+from services.booking_engine import parse_selected_days
+from swimtrackpro.auth import login_required
 
 from services.booking_engine import (
     generate_booking_code,
@@ -672,7 +676,619 @@ def update_booking(booking_id):
     # flash("Booking updated successfully")
     return redirect('/my-bookings')
 
+def is_date_holiday_or_closed(date_str):
+    holidays = get_setting("public_holidays", ["2026-08-15", "2026-10-02", "2026-12-25"])
+    closures = get_setting("pool_closures", [])
+    return (date_str in holidays) or (date_str in closures)
+
+def check_single_date_conflict(*, booking_id, trainer_username, student, owner_name, time_str, location, date_str, existing_bookings):
+    for b in existing_bookings:
+        if str(b.get("id")) == str(booking_id):
+            continue
+        if str(b.get("status")).strip().lower() == "cancelled":
+            continue
+        
+        # Check trainer conflict (same trainer, same time, different location)
+        if str(b.get("trainer_username", "")).strip().lower() == str(trainer_username).strip().lower():
+            if date_str in b.get("calendar_dates", []):
+                if b.get("time") == time_str:
+                    if b.get("location", "").strip().lower() != location.strip().lower():
+                        conflict_dt = datetime.strptime(date_str, '%Y-%m-%d')
+                        conflict_date_str = conflict_dt.strftime('%d %b %Y')
+                        return f"Trainer already has a session with {b.get('student', 'another swimmer')} at {b.get('location', '')} on {conflict_date_str} at {time_str}."
+        
+        # Check duplicate booking check for same student/owner within 1 hour
+        if b.get("student") == student and b.get("owner_name") == owner_name:
+            if date_str in b.get("calendar_dates", []):
+                try:
+                    t1 = datetime.strptime(time_str, '%I:%M %p')
+                    t2 = datetime.strptime(b.get("time"), '%I:%M %p')
+                    if abs((t1 - t2).total_seconds()) / 60 < 60:
+                        conflict_dt = datetime.strptime(date_str, '%Y-%m-%d')
+                        conflict_date_str = conflict_dt.strftime('%d %b %Y')
+                        return f"Duplicate booking conflict: Student already has a session at {b.get('time')} on {conflict_date_str}."
+                except Exception:
+                    pass
+    return None
+
+@login_required
+def pause_booking():
+    current_role = session.get("role", "guest")
+    if current_role == "trainer":
+        return jsonify({"success": False, "error": "Coaches cannot pause bookings."}), 403
+
+    booking_id = request.form.get("booking_id")
+    reason = (request.form.get("reason") or "").strip()
+    other_reason = (request.form.get("other_reason") or "").strip()
+    comments = (request.form.get("comments") or "").strip()
+    
+    if not booking_id or not reason:
+        return jsonify({"success": False, "error": "Booking ID and reason are required."}), 400
+        
+    if reason == "Other" and not other_reason:
+        return jsonify({"success": False, "error": "Please specify the other reason."}), 400
+        
+    data = load_data()
+    booking = next((b for b in data.get("bookings", []) if str(b["id"]) == str(booking_id)), None)
+    
+    if not booking:
+        return jsonify({"success": False, "error": "Booking not found."}), 404
+        
+    if booking.get("owner_name") != session.get("user_name"):
+        return jsonify({"success": False, "error": "Unauthorized action."}), 403
+        
+    if booking.get("is_completed") or booking.get("delete_requested") or str(booking.get("status")).strip().lower() == "cancelled":
+        return jsonify({"success": False, "error": "Completed, cancelled, or delete-requested bookings cannot be paused."}), 400
+        
+    if booking.get("package") not in ("Monthly", "Custom"):
+        return jsonify({"success": False, "error": "Only Monthly and Custom packages can be paused."}), 400
+        
+    if int(booking.get("remaining_classes", 0)) <= 0:
+        return jsonify({"success": False, "error": "No remaining classes left to pause."}), 400
+        
+    if booking.get("pause_status") == "Paused" or booking.get("pause_status") == "PAUSED":
+        return jsonify({"success": False, "error": "Booking is already paused."}), 400
+
+    if booking.get("pause_request_status") == "Pending" or booking.get("pause_status") == "Approval Pending":
+        return jsonify({"success": False, "error": "A pause approval request is already pending."}), 400
+        
+    today_str = datetime.now(ZoneInfo("Asia/Kolkata")).strftime("%Y-%m-%d")
+    today_date = datetime.now(ZoneInfo("Asia/Kolkata")).date()
+    
+    calendar_dates = booking.get("calendar_dates", [])
+    completed_count = int(booking.get("completed_classes", 0))
+    completed_dates = calendar_dates[:completed_count]
+    
+    if len(completed_dates) >= len(calendar_dates):
+         return jsonify({"success": False, "error": "All classes are already completed."}), 400
+
+    pause_count = int(booking.get("pause_count", 0))
+
+    if pause_count == 0:
+        # First Free Pause: Allowed immediately!
+        auto_resume_date = (today_date + timedelta(days=7)).strftime("%Y-%m-%d")
+        
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+        remaining_classes_val = len(calendar_dates) - completed_count
+        cursor.execute("""
+            UPDATE bookings
+            SET pause_status = 'Paused',
+                pause_used = TRUE,
+                pause_count = 1,
+                pause_date = %s,
+                auto_resume_date = %s,
+                pause_reason = %s,
+                pause_other_reason = %s,
+                package_status = 'Paused',
+                last_status_change = CURRENT_TIMESTAMP,
+                calendar_dates_override = %s,
+                end_date = %s,
+                remaining_classes_at_pause = %s
+            WHERE id = %s
+        """, (
+            today_str,
+            auto_resume_date,
+            reason,
+            other_reason,
+            ",".join(completed_dates) if completed_dates else "",
+            completed_dates[-1] if completed_dates else today_str,
+            remaining_classes_val,
+            booking_id
+        ))
+        
+        ip_address = request.remote_addr or ""
+        cursor.execute("""
+            INSERT INTO package_pause_audit (booking_id, action, performed_by, pause_date, reason, ip_address)
+            VALUES (%s, 'PAUSE', %s, %s, %s, %s)
+        """, (
+            booking_id,
+            session.get("user_name"),
+            today_str,
+            f"{reason}: {other_reason}" if other_reason else reason,
+            ip_address
+        ))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            "success": True, 
+            "message": f"⏸️ Package paused successfully. Your package will automatically resume on {datetime.strptime(auto_resume_date, '%Y-%m-%d').strftime('%d %b %Y')} if no action is taken."
+        })
+    else:
+        # Subsequent pause: Approval Required workflow!
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE bookings
+            SET pause_status = 'Approval Pending',
+                package_status = 'Approval Pending',
+                pause_request_status = 'Pending',
+                pause_requested_on = CURRENT_TIMESTAMP,
+                pause_requested_by = %s,
+                pause_reason = %s,
+                pause_other_reason = %s,
+                rejection_reason = NULL,
+                last_status_change = CURRENT_TIMESTAMP
+            WHERE id = %s
+        """, (
+            session.get("user_name"),
+            reason,
+            f"{other_reason} | Comments: {comments}" if (other_reason and comments) else (other_reason or comments),
+            booking_id
+        ))
+        
+        ip_address = request.remote_addr or ""
+        cursor.execute("""
+            INSERT INTO package_pause_audit (booking_id, action, performed_by, pause_date, reason, ip_address)
+            VALUES (%s, 'PAUSE_REQUESTED', %s, %s, %s, %s)
+        """, (
+            booking_id,
+            session.get("user_name"),
+            today_str,
+            f"Reason: {reason}. Comments: {comments}",
+            ip_address
+        ))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            "success": True,
+            "message": "📩 Your package pause request has been submitted successfully and is awaiting Trainer/Admin approval."
+        })
+
+@login_required
+def resume_booking():
+    current_role = session.get("role", "guest")
+    if current_role == "trainer":
+        return jsonify({"success": False, "error": "Coaches cannot resume bookings."}), 403
+
+    booking_id = request.form.get("booking_id")
+    if not booking_id:
+        return jsonify({"success": False, "error": "Booking ID is required."}), 400
+        
+    data = load_data()
+    booking = next((b for b in data.get("bookings", []) if str(b["id"]) == str(booking_id)), None)
+    
+    if not booking:
+        return jsonify({"success": False, "error": "Booking not found."}), 404
+        
+    if booking.get("owner_name") != session.get("user_name"):
+        return jsonify({"success": False, "error": "Unauthorized action."}), 403
+        
+    if booking.get("pause_status") != "PAUSED":
+        return jsonify({"success": False, "error": "Package is not paused."}), 400
+        
+    today_str = datetime.now(ZoneInfo("Asia/Kolkata")).strftime("%Y-%m-%d")
+    current_date = datetime.now(ZoneInfo("Asia/Kolkata")).date()
+    
+    calendar_dates = booking.get("calendar_dates", [])
+    completed_count = int(booking.get("completed_classes", 0))
+    completed_dates = calendar_dates[:completed_count]
+    
+    total_classes = int(booking.get("total_classes", len(calendar_dates)))
+    remaining_count = max(total_classes - completed_count, 0)
+    
+    if remaining_count <= 0:
+        return jsonify({"success": False, "error": "No remaining sessions to reschedule."}), 400
+        
+    weekday_map = {
+        'mon': 0, 'tue': 1, 'wed': 2, 'thu': 3, 'fri': 4, 'sat': 5, 'sun': 6
+    }
+    selected_days = booking.get("selected_days", "")
+    valid_days = {
+        weekday_map[d]
+        for d in parse_selected_days(selected_days)
+        if d in weekday_map
+    }
+    
+    standard_candidate_dates = []
+    temp_date = current_date
+    while len(standard_candidate_dates) < remaining_count:
+        if (not valid_days) or (temp_date.weekday() in valid_days):
+            date_candidate_str = temp_date.strftime('%Y-%m-%d')
+            if not is_date_holiday_or_closed(date_candidate_str):
+                standard_candidate_dates.append(date_candidate_str)
+        temp_date += timedelta(days=1)
+        
+    conflict_msg = None
+    for date_candidate_str in standard_candidate_dates:
+        conflict_msg = check_single_date_conflict(
+            booking_id=booking_id,
+            trainer_username=booking.get("trainer_username", "asdf"),
+            student=booking.get("student"),
+            owner_name=booking.get("owner_name"),
+            time_str=booking.get("time"),
+            location=booking.get("location"),
+            date_str=date_candidate_str,
+            existing_bookings=data.get("bookings", [])
+        )
+        if conflict_msg:
+            break
+            
+    if conflict_msg:
+        return jsonify({
+            "success": False, 
+            "error": f"reschedule_required: {conflict_msg}"
+        }), 400
+        
+    new_calendar = completed_dates + standard_candidate_dates
+    new_end_date = new_calendar[-1]
+    
+    paused_days_count = 0
+    if booking.get("pause_date"):
+        try:
+            p_dt = datetime.strptime(booking["pause_date"], "%Y-%m-%d").date()
+            paused_days_count = (current_date - p_dt).days
+        except Exception:
+            pass
+            
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE bookings
+        SET pause_status = 'ACTIVE',
+            resume_date = %s,
+            paused_days = %s,
+            package_status = 'ACTIVE',
+            last_status_change = CURRENT_TIMESTAMP,
+            calendar_dates_override = %s,
+            end_date = %s,
+            remaining_classes_at_pause = NULL
+        WHERE id = %s
+    """, (
+        today_str,
+        paused_days_count,
+        ",".join(new_calendar),
+        new_end_date,
+        booking_id
+    ))
+    
+    ip_address = request.remote_addr or ""
+    cursor.execute("""
+        INSERT INTO package_pause_audit (booking_id, action, performed_by, resume_date, is_auto_resume, ip_address)
+        VALUES (%s, 'RESUME', %s, %s, FALSE, %s)
+    """, (
+        booking_id,
+        session.get("user_name"),
+        today_str,
+        ip_address
+    ))
+    
+    conn.commit()
+    conn.close()
+    
+    return jsonify({
+        "success": True, 
+        "message": "Package resumed successfully. Your remaining sessions have been rescheduled."
+    })
+
+def check_and_perform_auto_resumes():
+    try:
+        today_str = datetime.now(ZoneInfo('Asia/Kolkata')).strftime('%Y-%m-%d')
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT id, trainer_username, time, location, student_name, owner_name, selected_days, auto_resume_date, pause_date
+            FROM bookings
+            WHERE pause_status = 'PAUSED' AND auto_resume_date <= %s
+        """, (today_str,))
+        paused_bookings = cursor.fetchall()
+        
+        if not paused_bookings:
+            conn.close()
+            return
+            
+        cursor.execute("SELECT id, student_name, owner_name, start_date, end_date, selected_days, time, location, status, trainer_username, calendar_dates_override FROM bookings")
+        all_booking_rows = cursor.fetchall()
+        
+        existing_bookings_mapped = []
+        for b in all_booking_rows:
+            cal_override = b[10]
+            if cal_override:
+                dates = [d.strip() for d in cal_override.split(',') if d.strip()]
+            else:
+                dates = generate_recurring_dates(str(b[3]), str(b[4]), b[5])
+            existing_bookings_mapped.append({
+                'id': b[0],
+                'student': b[1],
+                'owner_name': b[2],
+                'time': b[6],
+                'location': b[7],
+                'status': b[8],
+                'trainer_username': b[9] or 'asdf',
+                'calendar_dates': dates
+            })
+            
+        for row in paused_bookings:
+            booking_id = row[0]
+            trainer_username = row[1] or 'asdf'
+            time_str = row[2]
+            location = row[3]
+            student = row[4]
+            owner = row[5]
+            selected_days = row[6]
+            auto_resume_date_str = row[7]
+            pause_date_str = row[8]
+            
+            cursor.execute("SELECT calendar_dates_override, start_date, end_date, selected_days, remaining_classes_at_pause FROM bookings WHERE id = %s", (booking_id,))
+            b_info = cursor.fetchone()
+            if not b_info:
+                continue
+                
+            cal_override = b_info[0]
+            if cal_override:
+                calendar_dates = [d.strip() for d in cal_override.split(',') if d.strip()]
+            else:
+                calendar_dates = generate_recurring_dates(str(b_info[1]), str(b_info[2]), b_info[3])
+                
+            completed_dates = calendar_dates
+            completed_count = len(completed_dates)
+            
+            remaining_count = b_info[4]
+            if remaining_count is None:
+                orig_dates = generate_recurring_dates(str(b_info[1]), str(b_info[2]), b_info[3])
+                total_classes = len(orig_dates) if orig_dates else 12
+                remaining_count = max(total_classes - completed_count, 0)
+            
+            if remaining_count <= 0:
+                cursor.execute("""
+                    UPDATE bookings
+                    SET pause_status = 'ACTIVE',
+                        resume_date = %s,
+                        package_status = 'ACTIVE',
+                        last_status_change = CURRENT_TIMESTAMP,
+                        remaining_classes_at_pause = NULL
+                    WHERE id = %s
+                """, (auto_resume_date_str, booking_id))
+                continue
+                
+            rescheduled_dates = []
+            weekday_map = {
+                'mon': 0, 'tue': 1, 'wed': 2, 'thu': 3, 'fri': 4, 'sat': 5, 'sun': 6
+            }
+            valid_days = {
+                weekday_map[d]
+                for d in parse_selected_days(selected_days)
+                if d in weekday_map
+            }
+            
+            temp_date = datetime.strptime(auto_resume_date_str, '%Y-%m-%d').date()
+            while len(rescheduled_dates) < remaining_count:
+                if (not valid_days) or (temp_date.weekday() in valid_days):
+                    date_candidate_str = temp_date.strftime('%Y-%m-%d')
+                    if not is_date_holiday_or_closed(date_candidate_str):
+                        conflict_msg = check_single_date_conflict(
+                            booking_id=booking_id,
+                            trainer_username=trainer_username,
+                            student=student,
+                            owner_name=owner,
+                            time_str=time_str,
+                            location=location,
+                            date_str=date_candidate_str,
+                            existing_bookings=existing_bookings_mapped
+                        )
+                        if not conflict_msg:
+                            rescheduled_dates.append(date_candidate_str)
+                temp_date += timedelta(days=1)
+                if (temp_date - datetime.strptime(auto_resume_date_str, '%Y-%m-%d').date()).days > 365:
+                    break
+                    
+            new_calendar = completed_dates + rescheduled_dates
+            new_end_date = new_calendar[-1] if new_calendar else auto_resume_date_str
+            
+            paused_days_count = 7
+            
+            cursor.execute("""
+                UPDATE bookings
+                SET pause_status = 'ACTIVE',
+                    resume_date = %s,
+                    paused_days = %s,
+                    package_status = 'ACTIVE',
+                    last_status_change = CURRENT_TIMESTAMP,
+                    calendar_dates_override = %s,
+                    end_date = %s,
+                    remaining_classes_at_pause = NULL
+                WHERE id = %s
+            """, (
+                auto_resume_date_str,
+                paused_days_count,
+                ",".join(new_calendar),
+                new_end_date,
+                booking_id
+            ))
+            
+            cursor.execute("""
+                INSERT INTO package_pause_audit (booking_id, action, performed_by, resume_date, is_auto_resume, reason, ip_address)
+                VALUES (%s, 'AUTO_RESUME', 'SYSTEM', %s, TRUE, 'Auto resume after maximum pause period.', '127.0.0.1')
+            """, (
+                booking_id,
+                auto_resume_date_str
+            ))
+            
+        conn.commit()
+        conn.close()
+    except Exception as exc:
+        print("AUTO RESUME BACKGROUND CHECK ERROR:", exc)
+
 def register_bookings_routes(app):
     app.add_url_rule('/book', endpoint='book', view_func=book, methods=['POST'])
     app.add_url_rule('/edit/<booking_id>', endpoint='edit_booking', view_func=edit_booking)
     app.add_url_rule('/update/<booking_id>', endpoint='update_booking', view_func=update_booking, methods=['POST'])
+    app.add_url_rule('/booking/pause', endpoint='pause_booking', view_func=pause_booking, methods=['POST'])
+    app.add_url_rule('/booking/resume', endpoint='resume_booking', view_func=resume_booking, methods=['POST'])
+    app.add_url_rule('/booking/approve_pause', endpoint='approve_pause', view_func=approve_pause, methods=['POST'])
+    app.add_url_rule('/booking/reject_pause', endpoint='reject_pause', view_func=reject_pause, methods=['POST'])
+
+@login_required
+def approve_pause():
+    current_role = session.get("role")
+    if current_role not in ("trainer", "admin"):
+        return jsonify({"success": False, "error": "Unauthorized action."}), 403
+
+    booking_id = request.form.get("booking_id")
+    if not booking_id:
+        return jsonify({"success": False, "error": "Booking ID is required."}), 400
+
+    data = load_data()
+    booking = next((b for b in data.get("bookings", []) if str(b["id"]) == str(booking_id)), None)
+
+    if not booking:
+        return jsonify({"success": False, "error": "Booking not found."}), 404
+
+    if booking.get("pause_request_status") != "Pending":
+        return jsonify({"success": False, "error": "No pending pause request found for this booking."}), 400
+
+    today_str = datetime.now(ZoneInfo("Asia/Kolkata")).strftime("%Y-%m-%d")
+    today_date = datetime.now(ZoneInfo("Asia/Kolkata")).date()
+
+    calendar_dates = booking.get("calendar_dates", [])
+    completed_count = int(booking.get("completed_classes", 0))
+    completed_dates = calendar_dates[:completed_count]
+
+    auto_resume_date = (today_date + timedelta(days=7)).strftime("%Y-%m-%d")
+    new_pause_count = int(booking.get("pause_count", 0)) + 1
+
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+    remaining_classes_val = len(calendar_dates) - completed_count
+    cursor.execute("""
+        UPDATE bookings
+        SET pause_status = 'Paused',
+            pause_used = TRUE,
+            pause_count = %s,
+            pause_date = %s,
+            auto_resume_date = %s,
+            package_status = 'Paused',
+            last_status_change = CURRENT_TIMESTAMP,
+            calendar_dates_override = %s,
+            end_date = %s,
+            pause_request_status = 'Approved',
+            pause_approved_by = %s,
+            pause_approved_on = CURRENT_TIMESTAMP,
+            remaining_classes_at_pause = %s
+        WHERE id = %s
+    """, (
+        new_pause_count,
+        today_str,
+        auto_resume_date,
+        ",".join(completed_dates) if completed_dates else "",
+        completed_dates[-1] if completed_dates else today_str,
+        session.get("user_name"),
+        remaining_classes_val,
+        booking_id
+    ))
+
+    ip_address = request.remote_addr or ""
+    cursor.execute("""
+        INSERT INTO package_pause_audit (booking_id, action, performed_by, pause_date, reason, ip_address)
+        VALUES (%s, 'PAUSE_APPROVED', %s, %s, 'Additional pause approved.', %s)
+    """, (
+        booking_id,
+        session.get("user_name"),
+        today_str,
+        ip_address
+    ))
+
+    cursor.execute("""
+        INSERT INTO package_pause_audit (booking_id, action, performed_by, pause_date, reason, ip_address)
+        VALUES (%s, 'PAUSE', 'SYSTEM', %s, 'Package paused after approval.', %s)
+    """, (
+        booking_id,
+        today_str,
+        ip_address
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "success": True,
+        "message": "✅ Your additional package pause request has been approved."
+    })
+
+@login_required
+def reject_pause():
+    current_role = session.get("role")
+    if current_role not in ("trainer", "admin"):
+        return jsonify({"success": False, "error": "Unauthorized action."}), 403
+
+    booking_id = request.form.get("booking_id")
+    rejection_reason = (request.form.get("rejection_reason") or "").strip()
+
+    if not booking_id:
+        return jsonify({"success": False, "error": "Booking ID is required."}), 400
+    if not rejection_reason:
+        return jsonify({"success": False, "error": "Rejection reason is required."}), 400
+
+    data = load_data()
+    booking = next((b for b in data.get("bookings", []) if str(b["id"]) == str(booking_id)), None)
+
+    if not booking:
+        return jsonify({"success": False, "error": "Booking not found."}), 404
+
+    if booking.get("pause_request_status") != "Pending":
+        return jsonify({"success": False, "error": "No pending pause request found for this booking."}), 400
+
+    today_str = datetime.now(ZoneInfo("Asia/Kolkata")).strftime("%Y-%m-%d")
+
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE bookings
+        SET pause_status = 'Active',
+            package_status = 'ACTIVE',
+            last_status_change = CURRENT_TIMESTAMP,
+            pause_request_status = 'Rejected',
+            pause_rejected_by = %s,
+            pause_rejected_on = CURRENT_TIMESTAMP,
+            rejection_reason = %s
+        WHERE id = %s
+    """, (
+        session.get("user_name"),
+        rejection_reason,
+        booking_id
+    ))
+
+    ip_address = request.remote_addr or ""
+    cursor.execute("""
+        INSERT INTO package_pause_audit (booking_id, action, performed_by, pause_date, reason, ip_address)
+        VALUES (%s, 'PAUSE_REJECTED', %s, %s, %s, %s)
+    """, (
+        booking_id,
+        session.get("user_name"),
+        today_str,
+        f"Rejected: {rejection_reason}",
+        ip_address
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "success": True,
+        "message": "❌ Your package pause request has been declined. Please contact your trainer for further assistance."
+    })

@@ -106,6 +106,9 @@ def ensure_makeup_tables():
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS notice TEXT DEFAULT ''")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT FALSE")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS whatsapp TEXT DEFAULT ''")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS consent_version TEXT DEFAULT 'v1.0'")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS consent_accepted_at TIMESTAMP WITHOUT TIME ZONE")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS consent_ip TEXT")
 
     # Pre-populate default admin trainer if not exists
     cursor.execute("SELECT username FROM trainers WHERE LOWER(username) = LOWER(%s)", (ADMIN_USERNAME,))
@@ -132,6 +135,44 @@ def ensure_makeup_tables():
 
     cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS trainer_username TEXT")
     cursor.execute("UPDATE bookings SET trainer_username = %s WHERE trainer_username IS NULL", (ADMIN_USERNAME,))
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS pause_status TEXT DEFAULT 'ACTIVE'")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS pause_used BOOLEAN DEFAULT FALSE")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS pause_date TEXT")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS resume_date TEXT")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS auto_resume_date TEXT")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS pause_reason TEXT")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS pause_other_reason TEXT")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS paused_days INTEGER DEFAULT 0")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS package_status TEXT DEFAULT 'ACTIVE'")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS last_status_change TIMESTAMP WITHOUT TIME ZONE")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS calendar_dates_override TEXT")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS pause_count INTEGER DEFAULT 0")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS pause_request_status TEXT")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS pause_requested_on TEXT")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS pause_requested_by TEXT")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS pause_approved_by TEXT")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS pause_approved_on TEXT")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS pause_rejected_by TEXT")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS pause_rejected_on TEXT")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS rejection_reason TEXT")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS resume_type TEXT")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS remaining_classes_at_pause INTEGER")
+    cursor.execute("UPDATE bookings SET pause_count = 1 WHERE pause_used = TRUE AND (pause_count IS NULL OR pause_count = 0)")
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS package_pause_audit (
+        id SERIAL PRIMARY KEY,
+        booking_id TEXT NOT NULL,
+        action TEXT NOT NULL,
+        performed_by TEXT NOT NULL,
+        pause_date TEXT,
+        resume_date TEXT,
+        is_auto_resume BOOLEAN DEFAULT FALSE,
+        reason TEXT,
+        ip_address TEXT,
+        created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
 
     cursor.execute("ALTER TABLE user_activity ADD COLUMN IF NOT EXISTS current_login TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP")
     cursor.execute("ALTER TABLE user_activity ADD COLUMN IF NOT EXISTS previous_login TIMESTAMP WITHOUT TIME ZONE")
@@ -158,6 +199,7 @@ def load_data():
 
     # Load bookings
     cursor.execute('SELECT * FROM bookings')
+    booking_colnames = [desc[0].lower() for desc in cursor.description]
     booking_rows = cursor.fetchall()
 
     # -------------------------------------------------------
@@ -195,12 +237,17 @@ def load_data():
 
     bookings = []
 
-    for b in booking_rows:
-        calendar_dates = generate_recurring_dates(
-            str(b[3]),
-            str(b[4]),
-            b[6]
-        )
+    for b_row in booking_rows:
+        b = dict(zip(booking_colnames, b_row))
+        calendar_override = b.get('calendar_dates_override')
+        if calendar_override:
+            calendar_dates = [d.strip() for d in calendar_override.split(',') if d.strip()]
+        else:
+            calendar_dates = generate_recurring_dates(
+                str(b.get('start_date', '')),
+                str(b.get('end_date', '')),
+                b.get('selected_days', '')
+            )
 
         # V0037.3 - Real-Time Class Progress Completion
         # A class is considered completed when the current time is
@@ -215,7 +262,7 @@ def load_data():
                 current_datetime = datetime.now(
                     ZoneInfo('Asia/Kolkata')
                 ).replace(tzinfo=None)
-                booking_time = (b[9] or '06:00 AM').strip()
+                booking_time = (b.get('time') or '06:00 AM').strip()
 
                 for class_date in calendar_dates:
                     class_datetime = datetime.strptime(
@@ -242,36 +289,65 @@ def load_data():
             completed_classes = 0
             remaining_classes = total_classes
 
+        # V0052.0 - Restore correct class counts when package is paused
+        pause_status_val = b.get('pause_status') or 'ACTIVE'
+        if pause_status_val in ('Paused', 'PAUSED'):
+            remaining_classes = b.get('remaining_classes_at_pause') or 0
+            total_classes = completed_classes + remaining_classes
+            is_completed = False
+
         booking = {
-            'id': b[0],
-            'student': b[1],
-            'created_by': b[2],
-            'start_date': b[3],
-            'end_date': b[4],
-            'package': b[5],
-            'selected_days': b[6],
-            'location': b[7],
-            'persons': b[8],
-            'time': b[9],
-            'fee': b[10],
-            'status': b[11],
-            'payment_request': b[12],
-            'payment_status': b[12],
-            'owner_name': b[13],
-            'owner_phone': b[14],
-            'email': b[24] if len(b) > 24 else '',
-            'booking_code': b[25] if len(b) > 25 else '',
-            'payment_reminder_sent': b[26] if len(b) > 26 else False,
-            'payment_reminder_sent_at': b[27] if len(b) > 27 else None,
-            'delete_requested': b[15] if len(b) > 15 else False,
-            'delete_requested_at': b[16] if len(b) > 16 else None,
-            'delete_requested_by': b[17] if len(b) > 17 else None,
+            'id': b.get('id'),
+            'student': b.get('student_name'),
+            'created_by': b.get('created_by'),
+            'start_date': b.get('start_date'),
+            'end_date': b.get('end_date'),
+            'package': b.get('package'),
+            'selected_days': b.get('selected_days'),
+            'location': b.get('location'),
+            'persons': b.get('persons'),
+            'time': b.get('time'),
+            'fee': b.get('fee'),
+            'status': b.get('status'),
+            'payment_request': b.get('payment_request'),
+            'payment_status': b.get('payment_request'),
+            'owner_name': b.get('owner_name'),
+            'owner_phone': b.get('owner_phone'),
+            'email': b.get('email') or '',
+            'booking_code': b.get('booking_code') or '',
+            'payment_reminder_sent': b.get('payment_reminder_sent', False),
+            'payment_reminder_sent_at': b.get('payment_reminder_sent_at'),
+            'delete_requested': b.get('delete_requested', False),
+            'delete_requested_at': b.get('delete_requested_at'),
+            'delete_requested_by': b.get('delete_requested_by'),
             'calendar_dates': calendar_dates,
             'is_completed': is_completed,
             'total_classes': total_classes,
             'completed_classes': completed_classes,
             'remaining_classes': remaining_classes,
-            'trainer_username': b[28] if len(b) > 28 else 'asdf'
+            'trainer_username': b.get('trainer_username') or 'asdf',
+            'pause_status': b.get('pause_status') or 'ACTIVE',
+            'pause_used': b.get('pause_used', False),
+            'pause_date': b.get('pause_date'),
+            'resume_date': b.get('resume_date'),
+            'auto_resume_date': b.get('auto_resume_date'),
+            'pause_reason': b.get('pause_reason'),
+            'pause_other_reason': b.get('pause_other_reason'),
+            'paused_days': b.get('paused_days', 0),
+            'package_status': b.get('package_status') or 'ACTIVE',
+            'last_status_change': b.get('last_status_change'),
+            # V0052.0 - New pause workflow properties
+            'pause_count': b.get('pause_count', 0),
+            'pause_request_status': b.get('pause_request_status'),
+            'pause_requested_on': b.get('pause_requested_on'),
+            'pause_requested_by': b.get('pause_requested_by'),
+            'pause_approved_by': b.get('pause_approved_by'),
+            'pause_approved_on': b.get('pause_approved_on'),
+            'pause_rejected_by': b.get('pause_rejected_by'),
+            'pause_rejected_on': b.get('pause_rejected_on'),
+            'rejection_reason': b.get('rejection_reason'),
+            'resume_type': b.get('resume_type'),
+            'remaining_classes_at_pause': b.get('remaining_classes_at_pause'),
         }
 
         # -------------------------------------------------------

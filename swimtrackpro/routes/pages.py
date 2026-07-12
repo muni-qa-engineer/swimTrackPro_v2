@@ -8,6 +8,7 @@ from services.email_service import (
 )
 from services.settings_service import get_setting
 from swimtrackpro.auth import login_required
+from swimtrackpro.routes.bookings import check_and_perform_auto_resumes
 
 
 def _bookings_for_session(data):
@@ -34,6 +35,7 @@ def _bookings_for_session(data):
 def register_page_routes(app, *, get_pg_connection, load_data):
     @login_required
     def booking_page():
+        check_and_perform_auto_resumes()
         data = load_data()
         current_user = session.get("user_name")
         current_phone = session.get("phone")
@@ -101,6 +103,7 @@ def register_page_routes(app, *, get_pg_connection, load_data):
 
     @login_required
     def my_bookings_page():
+        check_and_perform_auto_resumes()
         data = load_data()
         conn = get_pg_connection()
         cursor = conn.cursor()

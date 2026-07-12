@@ -7,12 +7,14 @@ from flask import render_template, session
 
 from services.settings_service import get_setting
 from swimtrackpro.runtime import get_pg_connection, load_data
+from swimtrackpro.routes.bookings import check_and_perform_auto_resumes
 
 
 def index():
     if 'user_name' not in session:
         return render_template('login.html')
     
+    check_and_perform_auto_resumes()
     data = load_data()  # Loads data from PostgreSQL
     
     current_user = session.get('user_name')
@@ -54,6 +56,24 @@ def index():
                 'previous_login': row[4].strftime('%Y-%m-%d %H:%M:%S') if row[4] else '--'
             })
             
+        # Fetch package pause audit logs
+        cursor.execute("SELECT id, booking_id, action, performed_by, pause_date, resume_date, is_auto_resume, reason, ip_address, created_at FROM package_pause_audit ORDER BY created_at DESC")
+        audit_rows = cursor.fetchall()
+        audit_logs = []
+        for r in audit_rows:
+            audit_logs.append({
+                'id': r[0],
+                'booking_id': r[1],
+                'action': r[2],
+                'performed_by': r[3],
+                'pause_date': r[4],
+                'resume_date': r[5],
+                'is_auto_resume': r[6],
+                'reason': r[7],
+                'ip_address': r[8],
+                'created_at': r[9].strftime('%Y-%m-%d %H:%M:%S') if r[9] else '--'
+            })
+            
         conn.close()
 
         # Calculate today's sessions and weekly distribution from full bookings data
@@ -80,6 +100,28 @@ def index():
                     if day.lower() in sel_days.lower():
                         day_counts[day] += 1
                         
+        # V0051.0 - Package Pause Metrics
+        paused_bookings = [b for b in data.get('bookings', []) if str(b.get('pause_status')).upper() == 'PAUSED']
+        paused_packages_count = len(paused_bookings)
+        
+        today_str = datetime.now(ZoneInfo('Asia/Kolkata')).strftime('%Y-%m-%d')
+        today_date = datetime.now(ZoneInfo('Asia/Kolkata')).date()
+        
+        auto_resume_today_count = sum(1 for b in paused_bookings if b.get('auto_resume_date') == today_str)
+        
+        paused_this_week_count = 0
+        for b in paused_bookings:
+            p_date_str = b.get('pause_date')
+            if p_date_str:
+                try:
+                    p_date = datetime.strptime(p_date_str, '%Y-%m-%d').date()
+                    if 0 <= (today_date - p_date).days <= 7:
+                        paused_this_week_count += 1
+                except ValueError:
+                    pass
+                    
+        resume_pending_count = sum(1 for b in data.get('bookings', []) if b.get('pause_status') == 'Approval Pending')
+
         chart_data = [day_counts[d] for d in days_of_week]
         
         return render_template(
@@ -90,7 +132,12 @@ def index():
             students=data.get('students', []),
             today_sessions=today_sessions,
             activities=activities_list,
-            chart_data=chart_data
+            chart_data=chart_data,
+            paused_packages_count=paused_packages_count,
+            auto_resume_today_count=auto_resume_today_count,
+            paused_this_week_count=paused_this_week_count,
+            resume_pending_count=resume_pending_count,
+            audit_logs=audit_logs
         )
 
     try:

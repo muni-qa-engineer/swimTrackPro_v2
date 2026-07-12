@@ -11,20 +11,29 @@ def register_authentication_routes(
     admin_password,
 ):
     def login():
+        # Handle browser navigating to /login directly — redirect to home
+        if request.method == 'GET':
+            return redirect(url_for('index'))
+
         role = (request.form.get("role") or "").lower()
         name = (request.form.get("name") or "").strip()
         password = (request.form.get("password") or "").strip()
         phone = (request.form.get("phone") or "").strip()
 
         if role == "trainer":
-            conn = get_pg_connection()
-            cursor = conn.cursor()
-            cursor.execute(
-                "SELECT username, password, name, is_approved FROM trainers WHERE LOWER(username) = LOWER(%s)",
-                (name.lower(),)
-            )
-            trainer_row = cursor.fetchone()
-            conn.close()
+            try:
+                conn = get_pg_connection()
+                cursor = conn.cursor()
+                cursor.execute(
+                    "SELECT username, password, name, is_approved FROM trainers WHERE LOWER(username) = LOWER(%s)",
+                    (name.lower(),)
+                )
+                trainer_row = cursor.fetchone()
+                conn.close()
+            except Exception as db_err:
+                print("LOGIN DB ERROR (trainer):", db_err)
+                flash("Unable to connect to the database. Please try again in a moment.", "danger")
+                return redirect(url_for("index"))
 
             if trainer_row and trainer_row[1] == password:
                 if not trainer_row[3]:
@@ -35,25 +44,29 @@ def register_authentication_routes(
                 session["role"] = "trainer"
                 session["trainer_username"] = trainer_row[0]
 
-                conn = get_pg_connection()
-                cursor = conn.cursor()
-                cursor.execute(
-                    "SELECT id, current_login FROM user_activity WHERE LOWER(user_name) = LOWER(%s) AND role = %s",
-                    (trainer_row[2], "trainer")
-                )
-                act_row = cursor.fetchone()
-                if act_row:
+                try:
+                    conn = get_pg_connection()
+                    cursor = conn.cursor()
                     cursor.execute(
-                        "UPDATE user_activity SET previous_login = %s, current_login = CURRENT_TIMESTAMP, phone = %s WHERE id = %s",
-                        (act_row[1], "", act_row[0])
+                        "SELECT id, current_login FROM user_activity WHERE LOWER(user_name) = LOWER(%s) AND role = %s",
+                        (trainer_row[2], "trainer")
                     )
-                else:
-                    cursor.execute(
-                        "INSERT INTO user_activity (user_name, phone, role, current_login, previous_login) VALUES (%s, %s, %s, CURRENT_TIMESTAMP, NULL)",
-                        (trainer_row[2], "", "trainer")
-                    )
-                conn.commit()
-                conn.close()
+                    act_row = cursor.fetchone()
+                    if act_row:
+                        cursor.execute(
+                            "UPDATE user_activity SET previous_login = %s, current_login = CURRENT_TIMESTAMP, phone = %s WHERE id = %s",
+                            (act_row[1], "", act_row[0])
+                        )
+                    else:
+                        cursor.execute(
+                            "INSERT INTO user_activity (user_name, phone, role, current_login, previous_login) VALUES (%s, %s, %s, CURRENT_TIMESTAMP, NULL)",
+                            (trainer_row[2], "", "trainer")
+                        )
+                    conn.commit()
+                    conn.close()
+                except Exception as db_err:
+                    print("LOGIN DB ERROR (trainer activity):", db_err)
+                    # Activity log failure should not block trainer login
                 return redirect(url_for("index"))
 
             flash("Invalid trainer credentials")
@@ -65,24 +78,28 @@ def register_authentication_routes(
                 session["role"] = "admin"
                 session["admin_username"] = "admin"
 
-                conn = get_pg_connection()
-                cursor = conn.cursor()
-                cursor.execute(
-                    "SELECT id, current_login FROM user_activity WHERE LOWER(user_name) = 'super admin' AND role = 'admin'"
-                )
-                act_row = cursor.fetchone()
-                if act_row:
+                try:
+                    conn = get_pg_connection()
+                    cursor = conn.cursor()
                     cursor.execute(
-                        "UPDATE user_activity SET previous_login = %s, current_login = CURRENT_TIMESTAMP, phone = %s WHERE id = %s",
-                        (act_row[1], "", act_row[0])
+                        "SELECT id, current_login FROM user_activity WHERE LOWER(user_name) = 'super admin' AND role = 'admin'"
                     )
-                else:
-                    cursor.execute(
-                        "INSERT INTO user_activity (user_name, phone, role, current_login, previous_login) VALUES (%s, %s, %s, CURRENT_TIMESTAMP, NULL)",
-                        ("Super Admin", "", "admin")
-                    )
-                conn.commit()
-                conn.close()
+                    act_row = cursor.fetchone()
+                    if act_row:
+                        cursor.execute(
+                            "UPDATE user_activity SET previous_login = %s, current_login = CURRENT_TIMESTAMP, phone = %s WHERE id = %s",
+                            (act_row[1], "", act_row[0])
+                        )
+                    else:
+                        cursor.execute(
+                            "INSERT INTO user_activity (user_name, phone, role, current_login, previous_login) VALUES (%s, %s, %s, CURRENT_TIMESTAMP, NULL)",
+                            ("Super Admin", "", "admin")
+                        )
+                    conn.commit()
+                    conn.close()
+                except Exception as db_err:
+                    print("LOGIN DB ERROR (admin activity):", db_err)
+                # Still allow login even if activity log fails
                 return redirect(url_for("index"))
 
             flash("Invalid admin credentials")
@@ -96,26 +113,31 @@ def register_authentication_routes(
                 flash("Please enter a valid 10-digit mobile number.")
                 return redirect(url_for("index"))
 
-            conn = get_pg_connection()
-            cursor = conn.cursor()
-            cursor.execute(
-                """
-                SELECT owner_name
-                FROM students
-                WHERE owner_phone = %s
+            try:
+                conn = get_pg_connection()
+                cursor = conn.cursor()
+                cursor.execute(
+                    """
+                    SELECT owner_name
+                    FROM students
+                    WHERE owner_phone = %s
 
-                UNION
+                    UNION
 
-                SELECT owner_name
-                FROM bookings
-                WHERE owner_phone = %s
+                    SELECT owner_name
+                    FROM bookings
+                    WHERE owner_phone = %s
 
-                LIMIT 1
-                """,
-                (phone, phone),
-            )
-            existing_row = cursor.fetchone()
-            conn.close()
+                    LIMIT 1
+                    """,
+                    (phone, phone),
+                )
+                existing_row = cursor.fetchone()
+                conn.close()
+            except Exception as db_err:
+                print("LOGIN DB ERROR (guest lookup):", db_err)
+                flash("Unable to connect to the database. Please try again in a moment.", "danger")
+                return redirect(url_for("index"))
 
             if existing_row:
                 existing_name = (existing_row[0] or "").strip().lower()
@@ -127,25 +149,29 @@ def register_authentication_routes(
             session["user_name"] = normalized_name
             session["phone"] = phone
 
-            conn = get_pg_connection()
-            cursor = conn.cursor()
-            cursor.execute(
-                "SELECT id, current_login FROM user_activity WHERE LOWER(user_name) = LOWER(%s) AND role = %s",
-                (normalized_name, "guest")
-            )
-            act_row = cursor.fetchone()
-            if act_row:
+            try:
+                conn = get_pg_connection()
+                cursor = conn.cursor()
                 cursor.execute(
-                    "UPDATE user_activity SET previous_login = %s, current_login = CURRENT_TIMESTAMP, phone = %s WHERE id = %s",
-                    (act_row[1], phone, act_row[0])
+                    "SELECT id, current_login FROM user_activity WHERE LOWER(user_name) = LOWER(%s) AND role = %s",
+                    (normalized_name, "guest")
                 )
-            else:
-                cursor.execute(
-                    "INSERT INTO user_activity (user_name, phone, role, current_login, previous_login) VALUES (%s, %s, %s, CURRENT_TIMESTAMP, NULL)",
-                    (normalized_name, phone, "guest")
-                )
-            conn.commit()
-            conn.close()
+                act_row = cursor.fetchone()
+                if act_row:
+                    cursor.execute(
+                        "UPDATE user_activity SET previous_login = %s, current_login = CURRENT_TIMESTAMP, phone = %s WHERE id = %s",
+                        (act_row[1], phone, act_row[0])
+                    )
+                else:
+                    cursor.execute(
+                        "INSERT INTO user_activity (user_name, phone, role, current_login, previous_login) VALUES (%s, %s, %s, CURRENT_TIMESTAMP, NULL)",
+                        (normalized_name, phone, "guest")
+                    )
+                conn.commit()
+                conn.close()
+            except Exception as db_err:
+                print("LOGIN DB ERROR (guest activity):", db_err)
+                # Activity log failure should not block login
             return redirect(url_for("index"))
 
         flash("Please enter all required fields.")
@@ -187,23 +213,31 @@ def register_authentication_routes(
             flash("Trainer username already exists.")
             return redirect(url_for("register_page"))
 
+        from datetime import datetime
+        consent_version = "v1.0"
+        consent_accepted_at = datetime.now()
+        consent_ip = request.remote_addr or ""
+
         cursor.execute(
             """
-            INSERT INTO trainers (username, password, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, consent_accepted, rating, is_approved, whatsapp)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO trainers (username, password, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, consent_accepted, rating, is_approved, whatsapp, consent_version, consent_accepted_at, consent_ip)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
-            (username.lower(), password, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, True, rating, False, whatsapp)
+            (username.lower(), password, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, True, rating, False, whatsapp, consent_version, consent_accepted_at, consent_ip)
         )
         conn.commit()
         conn.close()
         flash("Trainer registered successfully! Your account is pending Super Admin approval before you can log in.")
         return redirect(url_for("index"))
 
+    def terms_agreement_page():
+        return render_template("terms_agreement.html")
+
     app.add_url_rule(
         "/login",
         endpoint="login",
         view_func=login,
-        methods=["POST"],
+        methods=["GET", "POST"],
     )
     app.add_url_rule(
         "/register",
@@ -216,4 +250,10 @@ def register_authentication_routes(
         endpoint="register_trainer",
         view_func=register_trainer,
         methods=["POST"],
+    )
+    app.add_url_rule(
+        "/terms-agreement",
+        endpoint="terms_agreement_page",
+        view_func=terms_agreement_page,
+        methods=["GET"],
     )

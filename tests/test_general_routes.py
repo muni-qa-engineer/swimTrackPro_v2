@@ -210,6 +210,55 @@ class GeneralRouteAccessTests(unittest.TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers["Location"], "/")
 
+    def test_terms_agreement_view(self):
+        response = self.client.get("/terms-agreement")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"SwimTrackPro Coach Terms & Agreement", response.data)
+
+    def test_trainer_cannot_pause_booking(self):
+        self.login("trainer")
+        response = self.client.post("/booking/pause", data={"booking_id": "123", "reason": "Health Issues"})
+        self.assertEqual(response.status_code, 403)
+        self.assertIn(b"Coaches cannot pause bookings", response.data)
+
+    def test_trainer_cannot_resume_booking(self):
+        self.login("trainer")
+        response = self.client.post("/booking/resume", data={"booking_id": "123"})
+        self.assertEqual(response.status_code, 403)
+        self.assertIn(b"Coaches cannot resume bookings", response.data)
+
+    def test_unauthenticated_cannot_pause_booking(self):
+        response = self.client.post("/booking/pause", data={"booking_id": "123", "reason": "Health Issues"})
+        self.assertEqual(response.status_code, 302)
+
+    def test_unauthenticated_cannot_approve_pause(self):
+        response = self.client.post("/booking/approve_pause", data={"booking_id": "123"})
+        self.assertEqual(response.status_code, 302)
+
+    def test_unauthenticated_cannot_reject_pause(self):
+        response = self.client.post("/booking/reject_pause", data={"booking_id": "123", "rejection_reason": "Test"})
+        self.assertEqual(response.status_code, 302)
+
+    def test_guest_cannot_approve_pause(self):
+        self.login("guest")
+        response = self.client.post("/booking/approve_pause", data={"booking_id": "123"})
+        self.assertEqual(response.status_code, 403)
+
+    def test_guest_cannot_reject_pause(self):
+        self.login("guest")
+        response = self.client.post("/booking/reject_pause", data={"booking_id": "123", "rejection_reason": "Test"})
+        self.assertEqual(response.status_code, 403)
+
+    def test_approve_pause_fails_for_missing_booking_id(self):
+        self.login("trainer")
+        response = self.client.post("/booking/approve_pause", data={})
+        self.assertEqual(response.status_code, 400)
+
+    def test_reject_pause_fails_without_rejection_reason(self):
+        self.login("trainer")
+        response = self.client.post("/booking/reject_pause", data={"booking_id": "123"})
+        self.assertEqual(response.status_code, 400)
+
 
 if __name__ == "__main__":
     unittest.main()

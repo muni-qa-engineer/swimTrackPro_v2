@@ -156,6 +156,62 @@
                     </div>
                 </div>
 
+                <!-- Pause/Resume Stats Row -->
+                <div class="row g-3 mb-4">
+                    <div class="col-12 col-sm-6 col-xl-3">
+                        <div class="card border-0 rounded-4 shadow-sm p-4 bg-white border-start border-warning border-4">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <span class="text-muted small fw-semibold">Paused Packages</span>
+                                    <h2 class="fw-bold mt-1 mb-0">{{ paused_packages_count }}</h2>
+                                </div>
+                                <div class="rounded-circle bg-warning-subtle p-3 text-warning fs-3" style="width: 58px; height: 58px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fa-solid fa-circle-pause"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-xl-3">
+                        <div class="card border-0 rounded-4 shadow-sm p-4 bg-white border-start border-info border-4">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <span class="text-muted small fw-semibold">Auto Resume Today</span>
+                                    <h2 class="fw-bold mt-1 mb-0">{{ auto_resume_today_count }}</h2>
+                                </div>
+                                <div class="rounded-circle bg-info-subtle p-3 text-info fs-3" style="width: 58px; height: 58px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fa-solid fa-arrows-spin"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-xl-3">
+                        <div class="card border-0 rounded-4 shadow-sm p-4 bg-white border-start border-primary border-4">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <span class="text-muted small fw-semibold">Paused This Week</span>
+                                    <h2 class="fw-bold mt-1 mb-0">{{ paused_this_week_count }}</h2>
+                                </div>
+                                <div class="rounded-circle bg-primary-subtle p-3 text-primary fs-3" style="width: 58px; height: 58px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fa-solid fa-calendar-minus"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-xl-3">
+                        <div class="card border-0 rounded-4 shadow-sm p-4 bg-white border-start border-danger border-4">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <span class="text-muted small fw-semibold">Resume Pending</span>
+                                    <h2 class="fw-bold mt-1 mb-0">{{ resume_pending_count }}</h2>
+                                </div>
+                                <div class="rounded-circle bg-danger-subtle p-3 text-danger fs-3" style="width: 58px; height: 58px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fa-solid fa-hourglass-half"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Mid-Row Grid: Upcoming Sessions & Bookings Overview -->
                 <div class="row g-4 mb-4">
                     <!-- Left: Upcoming Sessions -->
@@ -300,7 +356,14 @@
                                         <div class="text-muted small">📞 {{ booking.owner_phone or '--' }}</div>
                                     </td>
                                     <td>
-                                        <div><strong>{{ booking.package }}</strong></div>
+                                        <div>
+                                            <strong>{{ booking.package }}</strong>
+                                            {% if booking.pause_status == 'Paused' or booking.pause_status == 'PAUSED' %}
+                                                <span class="badge bg-warning text-dark ms-1">Paused</span>
+                                            {% elif booking.pause_status == 'Approval Pending' %}
+                                                <span class="badge bg-info text-white ms-1">Approval Pending</span>
+                                            {% endif %}
+                                        </div>
                                         <div class="small text-muted">{{ booking.start_date }} to {{ booking.end_date }}</div>
                                         <div class="small fw-semibold text-primary mt-1">{{ booking.selected_days }}</div>
                                     </td>
@@ -331,7 +394,28 @@
                                         {% endif %}
                                     </td>
                                     <td class="text-end">
-                                        <form action="/admin/delete_booking/{{ booking.id }}" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this booking?');">
+                                        {% if booking.pause_status == 'Approval Pending' %}
+                                            <div class="d-inline-block text-start p-3 bg-light border rounded-3 small mb-2 me-2 align-middle" style="max-width: 250px;">
+                                                <div class="fw-bold text-dark mb-1">Pause Requested</div>
+                                                <div class="text-muted text-wrap mb-2">Reason: {{ booking.pause_reason }}</div>
+                                                <div class="d-flex gap-2">
+                                                    <button type="button" class="btn btn-success btn-sm px-2.5 py-1 rounded fw-bold flex-grow-1" onclick="approvePause('{{ booking.id }}')">
+                                                        Approve
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-danger btn-sm px-2.5 py-1 rounded fw-bold flex-grow-1" onclick="showRejectInput('{{ booking.id }}')">
+                                                        Reject
+                                                    </button>
+                                                </div>
+                                                <div class="d-none mt-2" id="rejectContainer-{{ booking.id }}">
+                                                    <input type="text" class="form-control form-control-sm mb-1 text-dark" id="rejectReason-{{ booking.id }}" placeholder="Rejection reason..." style="color: #000 !important; background-color: #fff !important;" required />
+                                                    <button type="button" class="btn btn-danger btn-sm w-100 fw-bold rounded" onclick="submitRejection('{{ booking.id }}')">
+                                                        Confirm
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                        
+                                        <form action="/admin/delete_booking/{{ booking.id }}" method="post" class="d-inline align-middle" onsubmit="return confirm('Are you sure you want to delete this booking?');">
                                             <button type="submit" class="btn btn-outline-danger btn-sm px-3 rounded-pill fw-semibold">
                                                 <i class="fa-solid fa-trash me-1"></i>Delete
                                             </button>
@@ -585,6 +669,58 @@
                         </table>
                     </div>
                 </div>
+
+                <div class="card border-0 rounded-4 shadow-sm p-4 bg-white mt-4">
+                    <h5 class="fw-bold text-dark mb-4"><i class="fa-solid fa-clock-rotate-left text-primary me-2"></i> Package Pause & Resume History</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle border-0">
+                            <thead>
+                                <tr class="table-light">
+                                    <th>Booking ID</th>
+                                    <th>Action</th>
+                                    <th>Performed By</th>
+                                    <th>Pause Date</th>
+                                    <th>Resume/Auto Resume Date</th>
+                                    <th>Reason</th>
+                                    <th>IP Address</th>
+                                    <th>Logged At</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if audit_logs %}
+                                    {% for log in audit_logs %}
+                                    <tr>
+                                        <td><code class="text-dark fw-bold">{{ log.booking_id }}</code></td>
+                                        <td>
+                                            {% if log.action == 'PAUSE' %}
+                                                <span class="badge bg-warning text-dark px-2.5 py-1.5 rounded-pill"><i class="fa-solid fa-circle-pause me-1"></i> PAUSE</span>
+                                            {% elif log.is_auto_resume %}
+                                                <span class="badge bg-info text-white px-2.5 py-1.5 rounded-pill"><i class="fa-solid fa-arrows-spin me-1"></i> AUTO RESUME</span>
+                                            {% else %}
+                                                <span class="badge bg-success text-white px-2.5 py-1.5 rounded-pill"><i class="fa-solid fa-circle-play me-1"></i> RESUME</span>
+                                            {% endif %}
+                                        </td>
+                                        <td><span class="fw-semibold text-dark">{{ log.performed_by|title }}</span></td>
+                                        <td>{{ log.pause_date or '--' }}</td>
+                                        <td>{{ log.resume_date or '--' }}</td>
+                                        <td>
+                                            <span class="text-muted small">
+                                                {{ log.reason }}
+                                            </span>
+                                        </td>
+                                        <td><span class="text-secondary small">{{ log.ip_address or '--' }}</span></td>
+                                        <td><span class="text-muted small">{{ log.created_at }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="8" class="text-center py-4 text-muted">No pause or resume history logs found.</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <!-- SECTION: Settings -->
@@ -611,6 +747,7 @@
     </div>
 </div>
 
+<script src="{{ url_for('static', filename='dashboard.js') }}?v=1.1.2"></script>
 <script>
     // Tab switching controller
     function switchSection(sectionId) {
@@ -695,6 +832,65 @@
             });
         }
     });
+
+    window.approvePause = function(bookingId) {
+        const formData = new FormData();
+        formData.append('booking_id', bookingId);
+        
+        fetch('/booking/approve_pause', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                createToast(data.message || 'Pause request approved.', 'success');
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                createToast(data.error || 'Failed to approve pause.', 'danger');
+            }
+        })
+        .catch(err => {
+            createToast('An error occurred. Please try again.', 'danger');
+        });
+    };
+
+    window.showRejectInput = function(bookingId) {
+        const container = document.getElementById(`rejectContainer-${bookingId}`);
+        if (container) {
+            container.classList.toggle('d-none');
+        }
+    };
+
+    window.submitRejection = function(bookingId) {
+        const textarea = document.getElementById(`rejectReason-${bookingId}`);
+        const reason = textarea ? textarea.value.trim() : '';
+        if (!reason) {
+            createToast('Rejection reason is required.', 'danger');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('booking_id', bookingId);
+        formData.append('rejection_reason', reason);
+        
+        fetch('/booking/reject_pause', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                createToast(data.message || 'Pause request rejected.', 'success');
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                createToast(data.error || 'Failed to reject pause.', 'danger');
+            }
+        })
+        .catch(err => {
+            createToast('An error occurred. Please try again.', 'danger');
+        });
+    };
 </script>
 
 <style>
