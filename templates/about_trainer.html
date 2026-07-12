@@ -359,4 +359,53 @@
             }
         });
     </script>
+
+<div class="mobile-bottom-nav d-lg-none">
+  {% if role == 'trainer' %}
+
+  <button type="button" class="mobile-nav-item" onclick="window.location.href='/'">
+    <div>🏠</div>
+    <small>Home</small>
+  </button>
+
+  <button type="button" class="mobile-nav-item" onclick="window.location.href='/my-bookings'">
+    <div>📋</div>
+    <small>Bookings</small>
+  </button>
+
+  <button type="button" class="mobile-nav-item" onclick="window.location.href='/payments'">
+    <div>💳</div>
+    <small>Payments</small>
+  </button>
+
+  <button type="button" class="mobile-nav-item active" onclick="window.location.href='/about-trainer'">
+    <div>👨‍🏫</div>
+    <small>About</small>
+  </button>
+
+  {% else %}
+
+  <button type="button" class="mobile-nav-item" onclick="window.location.href='/'">
+    <div>🏠</div>
+    <small>Home</small>
+  </button>
+
+  <button type="button" class="mobile-nav-item" onclick="window.location.href='/booking'">
+    <div>📅</div>
+    <small>Book now</small>
+  </button>
+
+  <button type="button" class="mobile-nav-item" onclick="window.location.href='/my-bookings'">
+    <div>📋</div>
+    <small>Bookings</small>
+  </button>
+
+  <button type="button" class="mobile-nav-item active" onclick="window.location.href='/about-trainer'">
+    <div>👨‍🏫</div>
+    <small>About</small>
+  </button>
+
+  {% endif %}
+</div>
 {% endblock %}
+
