@@ -260,7 +260,7 @@
                     ⚠️ After payment, change the status to <strong>Pending Verification</strong> and click <strong>Update Payment Status</strong>.
                   </div>
                     <div class="small text-muted mt-2">
-                      Click the QR Code or Open UPI App button on mobile devices.
+                      Click the QR Code or Open UPI App button on mobile devices (please enter amount manually if not pre-filled).
                     </div>
                     <div class="small text-success mt-1">
                       Payment reference: SwimTrackPro Payment
@@ -271,10 +271,10 @@
                   <div class="border rounded p-2 bg-light text-center">
 
                     <a id="upiPaymentLink"
-                       href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name|urlencode }}&am={{ total_pending_amount }}&cu=INR&tn=SwimTrackPro%20Payment"
+                       href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name|urlencode }}&cu=INR&tn=SwimTrackPro%20Payment"
                        title="Open UPI App">
 
-                      <img src="{{ url_for('static', filename='images/QR_Code.jpeg') }}"
+                      <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data={{ ('upi://pay?pa=' ~ upi_id ~ '&pn=' ~ account_holder_name ~ '&am=' ~ total_pending_amount ~ '&cu=INR&tn=SwimTrackPro Payment')|urlencode }}"
                            alt="Payment QR Code"
                            class="img-fluid"
                            style="max-height:220px; cursor:pointer;">
@@ -283,7 +283,7 @@
                     <div class="mt-2">
                       <a id="upiPaymentBtn"
                          class="btn btn-success btn-sm"
-                         href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name|urlencode }}&am={{ total_pending_amount }}&cu=INR&tn=SwimTrackPro%20Payment">
+                         href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name|urlencode }}&cu=INR&tn=SwimTrackPro%20Payment">
                          Open UPI App
                       </a>
                     </div>

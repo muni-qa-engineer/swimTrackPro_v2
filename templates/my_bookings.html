@@ -407,9 +407,10 @@
 
                                   {% if role != 'trainer' and b.status != 'Paid' and (b.fee or 0)|float > 0 %}
                                   <a
-                                     href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name|urlencode }}&am={{ b.fee }}&tn=SwimTrackPro%20Payment"
-                                     class="btn btn-success btn-sm float-start">
-                                     💳 Pay Now
+                                     href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name|urlencode }}&tn=SwimTrackPro%20Payment"
+                                     class="btn btn-success btn-sm float-start"
+                                     title="Open UPI App (Please enter amount of ₹{{ b.fee }} manually if not pre-filled)">
+                                     💳 Pay Now (₹{{ b.fee }})
                                   </a>
                                   {% endif %}
                               {% endif %}

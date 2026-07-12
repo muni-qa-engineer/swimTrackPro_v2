@@ -32,22 +32,15 @@ def about_trainer():
             if (b.get("owner_name") or "").strip().lower() == current_user
             and b.get("owner_phone") == current_phone
         ]
-        assigned_usernames = list(set([b.get("trainer_username", "asdf") for b in bookings if b.get("trainer_username")]))
-        if not assigned_usernames:
-            assigned_usernames = ["asdf"]
-
-        placeholders = ", ".join(["%s"] * len(assigned_usernames))
-        cursor.execute(f"""
-            SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, rating, photos 
-            FROM trainers WHERE username IN ({placeholders})
-        """, tuple(assigned_usernames))
-        trainers = cursor.fetchall()
-
-        if not trainers:
-            cursor.execute("""
+        assigned_usernames = list(set([b.get("trainer_username") for b in bookings if b.get("trainer_username")]))
+        
+        trainers = []
+        if assigned_usernames:
+            placeholders = ", ".join(["%s"] * len(assigned_usernames))
+            cursor.execute(f"""
                 SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, rating, photos 
-                FROM trainers WHERE is_approved = TRUE
-            """)
+                FROM trainers WHERE username IN ({placeholders}) AND is_approved = TRUE
+            """, tuple(assigned_usernames))
             trainers = cursor.fetchall()
 
     coaches_list = []

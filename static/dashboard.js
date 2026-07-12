@@ -674,8 +674,9 @@ function updatePaymentTable() {
     ` : `
       <a
         class="btn btn-sm btn-success"
-        href="upi://pay?pa=${encodeURIComponent(window.upiId || '')}&pn=${encodeURIComponent(window.accountHolderName || '')}&am=${booking.fee || 0}&cu=INR&tn=${encodeURIComponent('SwimTrackPro Payment')}">
-        💳 Pay Now
+        href="upi://pay?pa=${encodeURIComponent(window.upiId || '')}&pn=${encodeURIComponent(window.accountHolderName || '')}&cu=INR&tn=${encodeURIComponent('SwimTrackPro Payment')}"
+        title="Open UPI App (Please enter amount of ₹${booking.fee || 0} manually if not pre-filled)">
+        💳 Pay Now (₹${booking.fee || 0})
       </a>
     `}
   `}
@@ -1532,6 +1533,12 @@ enableFormLoading('updateNoticeForm', 'Updating...');
   function resetInactivityTimer() {
     clearTimeout(inactivityTimer);
     inactivityTimer = setTimeout(showLogoutWarning, INACTIVITY_MS);
+
+    // Dismiss the warning and clear the countdown if it is showing
+    if (toast.style.display === 'block') {
+      toast.style.display = 'none';
+      clearInterval(countdownTimer);
+    }
   }
 
   function showLogoutWarning() {

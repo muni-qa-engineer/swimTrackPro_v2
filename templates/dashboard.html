@@ -45,6 +45,11 @@
                   <i class="fa-solid fa-credit-card fs-5"></i> Payments
               </a>
           </li>
+          <li>
+              <a href="#" class="nav-link d-flex align-items-center gap-3 px-3 py-2.5 rounded-3 fw-semibold text-white-50" onclick="switchDesktopTab('about-trainer', this); return false;">
+                  <i class="fa-solid fa-user-tie fs-5"></i> {% if role == 'trainer' %}About Coaches{% else %}About Coach{% endif %}
+              </a>
+          </li>
           {% if role == 'trainer' %}
           <li>
               <a href="#" class="nav-link d-flex align-items-center gap-3 px-3 py-2.5 rounded-3 fw-semibold text-white-50" onclick="switchDesktopTab('profile', this); return false;">
@@ -1371,6 +1376,7 @@ function switchDesktopTab(sectionId, el) {
         'booking': '/booking',
         'my-bookings': '/my-bookings',
         'payments': '/payments',
+        'about-trainer': '/about-trainer',
         'profile': '/profile',
         'help': '/help'
     };

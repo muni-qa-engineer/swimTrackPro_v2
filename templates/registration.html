@@ -279,8 +279,25 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-12 mb-3">
-                        <label class="form-label" for="workingInput">Currently Working At</label>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Currently Working? <span class="text-danger">*</span></label>
+                        <div class="d-flex align-items-center gap-4 mt-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="is_working" id="workingYes" value="Yes" required>
+                                <label class="form-check-label" for="workingYes">
+                                    Yes
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="is_working" id="workingNo" value="No" required>
+                                <label class="form-check-label" for="workingNo">
+                                    No
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3" id="workingInputContainer" style="display: none;">
+                        <label class="form-label" for="workingInput">Currently Working At <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fa-solid fa-building"></i></span>
                             <input
@@ -371,6 +388,30 @@
                     alert("You must accept the Coach Terms & Agreement to register.");
                 }
             });
+        }
+
+        // Toggle Currently Working At input field conditionally
+        const workingYes = document.getElementById('workingYes');
+        const workingNo = document.getElementById('workingNo');
+        const workingInputContainer = document.getElementById('workingInputContainer');
+        const workingInput = document.getElementById('workingInput');
+
+        function toggleWorkingInput() {
+            if (workingYes && workingYes.checked) {
+                if (workingInputContainer) workingInputContainer.style.display = 'block';
+                if (workingInput) workingInput.required = true;
+            } else {
+                if (workingInputContainer) workingInputContainer.style.display = 'none';
+                if (workingInput) {
+                    workingInput.required = false;
+                    workingInput.value = '';
+                }
+            }
+        }
+
+        if (workingYes && workingNo) {
+            workingYes.addEventListener('change', toggleWorkingInput);
+            workingNo.addEventListener('change', toggleWorkingInput);
         }
     </script>
 </body>
