@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
 
-{% block title %}My Bookings - SwimTrackPro{% endblock %}
+{% block title %}My Bookings | SwimTrack Pro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='dashboard_core.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='misc.css') }}">
+{% endblock %}
 
 {% block content %}
 <style>
@@ -466,7 +471,7 @@
                                   <a
                                      href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name|urlencode }}&tn=SwimTrackPro%20Payment"
                                      class="btn btn-success btn-sm float-start"
-                                     title="Open UPI App (Please enter amount of <i class="fa-solid fa-indian-rupee-sign"></i>{{ b.fee }} manually if not pre-filled)">
+                                     title="Open UPI App (Please enter amount of ₹{{ b.fee }} manually if not pre-filled)">
                                      <i class="fa-solid fa-credit-card"></i> Pay Now (<i class="fa-solid fa-indian-rupee-sign"></i>{{ b.fee }})
                                   </a>
                                   {% endif %}
@@ -965,5 +970,5 @@ window.submitRejection = function(bookingId) {
     </div>
 </div>
 
-<script src="{{ url_for('static', filename='dashboard.js') }}?v=1.1.2"></script>
+<script src="{{ url_for('static', filename='common.js') }}?v=1.1.3"></script>
 {% endblock %}
