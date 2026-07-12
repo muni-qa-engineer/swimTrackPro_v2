@@ -32,7 +32,7 @@
                                 <div class="profile-avatar-circle mx-auto mb-3">
                                     <span>🏊</span>
                                 </div>
-                                <h4 class="fw-bold mb-1" style="color: MistyWhite !important;">{{ trainer.name|title }}</h4>
+                                <h4 class="fw-bold mb-1" style="color: white !important;">{{ trainer.name|title }}</h4>
                                 <span class="badge bg-white-50 text-white small px-3 py-1.5" style="border-radius: 20px; font-size: 0.72rem; letter-spacing: 0.5px;">
                                     ★ {{ trainer.rating }} Rating
                                 </span>
@@ -107,10 +107,17 @@
                                     </div>
                                 </div>
 
-                                <div class="col-12">
+                                <div class="col-md-6">
                                     <div class="pdf-field-box">
                                         <label for="profileEmail" class="pdf-label">Email Address <i class="fa-solid fa-pencil text-primary ms-1" title="Editable field"></i></label>
-                                        <input type="email" id="profileEmail" name="email" class="pdf-input form-control" value="{{ trainer.email }}" placeholder="coach@example.com">
+                                        <input type="email" id="profileEmail" name="email" class="pdf-input form-control" value="{{ trainer.email }}" placeholder="coach@example.com" required>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="pdf-field-box">
+                                        <label for="profileWhatsapp" class="pdf-label">WhatsApp Number <i class="fa-solid fa-pencil text-primary ms-1" title="Editable field"></i></label>
+                                        <input type="tel" id="profileWhatsapp" name="whatsapp" class="pdf-input form-control" value="{{ trainer.whatsapp }}" maxlength="10" pattern="[0-9]{10}" inputmode="numeric" required>
                                     </div>
                                 </div>
 
@@ -300,6 +307,20 @@ document.addEventListener('DOMContentLoaded', () => {
     inputs.forEach(input => {
         initialValues[input.id] = input.value;
     });
+
+    const profilePhone = document.getElementById('profilePhone');
+    if (profilePhone) {
+        profilePhone.addEventListener('input', () => {
+            profilePhone.value = profilePhone.value.replace(/\D/g, '').slice(0, 10);
+        });
+    }
+
+    const profileWhatsapp = document.getElementById('profileWhatsapp');
+    if (profileWhatsapp) {
+        profileWhatsapp.addEventListener('input', () => {
+            profileWhatsapp.value = profileWhatsapp.value.replace(/\D/g, '').slice(0, 10);
+        });
+    }
     
     // Listen to input events
     inputs.forEach(input => {

@@ -112,7 +112,7 @@
             <a href="/about-trainer"
                class="nav-link d-flex align-items-center gap-3 px-3 py-2 rounded-3 fw-semibold
                       {% if '/about-trainer' in request.path %}active bg-primary text-white{% else %}text-white-50{% endif %}">
-                <i class="fa-solid fa-user-tie fs-5"></i> {% if role == 'trainer' %}About Coaches{% else %}About Coach{% endif %}
+                <i class="fa-solid fa-user-tie fs-5"></i> {% if role == 'trainer' %}About Me{% else %}About Coach{% endif %}
             </a>
         </li>
         {% if role == 'trainer' %}

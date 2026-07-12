@@ -2,7 +2,7 @@
 
 from flask import flash, redirect, render_template, request, session, url_for
 
-from services.settings_service import set_setting
+from services.settings_service import get_setting, set_setting
 from swimtrackpro.auth import login_required, trainer_required, admin_required
 from swimtrackpro.runtime import get_pg_connection, load_data
 
@@ -20,7 +20,7 @@ def about_trainer():
         assigned_usernames = []
         trainer_user = session.get("trainer_username") or "asdf"
         cursor.execute("""
-            SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, rating, photos 
+            SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, rating, photos, whatsapp 
             FROM trainers WHERE username = %s
         """, (trainer_user,))
         trainers = cursor.fetchall()
@@ -38,7 +38,7 @@ def about_trainer():
         if assigned_usernames:
             placeholders = ", ".join(["%s"] * len(assigned_usernames))
             cursor.execute(f"""
-                SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, rating, photos 
+                SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, rating, photos, whatsapp 
                 FROM trainers WHERE username IN ({placeholders}) AND is_approved = TRUE
             """, tuple(assigned_usernames))
             trainers = cursor.fetchall()
@@ -73,12 +73,13 @@ def about_trainer():
             "residence_location": r[7] or "Local Camp",
             "rating": float(r[8]) if r[8] is not None else 5.0,
             "photos": [p.strip() for p in (r[9] or "").split(",") if p.strip()],
+            "whatsapp": r[10] or "",
             "feedbacks": feedbacks
         })
 
     conn.close()
 
-    return render_template("about_trainer.html", coaches=coaches_list, role=current_role, assigned_usernames=assigned_usernames)
+    return render_template("about_trainer.html", coaches=coaches_list, role=current_role, assigned_usernames=assigned_usernames, admin_phone=get_setting("trainer_phone", ""))
 
 
 @login_required
@@ -124,12 +125,13 @@ def profile_page():
         qualification = request.form.get("qualification")
         currently_working = request.form.get("currently_working")
         residence_location = request.form.get("residence_location")
+        whatsapp = request.form.get("whatsapp")
 
         cursor.execute("""
             UPDATE trainers 
-            SET name = %s, phone = %s, email = %s, experience = %s, qualification = %s, currently_working = %s, residence_location = %s
+            SET name = %s, phone = %s, email = %s, experience = %s, qualification = %s, currently_working = %s, residence_location = %s, whatsapp = %s
             WHERE username = %s
-        """, (name, phone, email, experience, qualification, currently_working, residence_location, trainer_user))
+        """, (name, phone, email, experience, qualification, currently_working, residence_location, whatsapp, trainer_user))
         conn.commit()
 
         # Update session so the dashboard card reflects the new name immediately
@@ -139,7 +141,7 @@ def profile_page():
         flash("Profile updated successfully!", "success")
 
     cursor.execute("""
-        SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, rating 
+        SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, rating, whatsapp 
         FROM trainers WHERE username = %s
     """, (trainer_user,))
     row = cursor.fetchone()
@@ -159,7 +161,8 @@ def profile_page():
         "currently_working": row[6] or "",
         "residence_location": row[7] or "",
         "id_proof": row[8] or "",
-        "rating": float(row[9]) if row[9] is not None else 5.0
+        "rating": float(row[9]) if row[9] is not None else 5.0,
+        "whatsapp": row[10] or ""
     }
 
     return render_template("profile.html", trainer=trainer_data, role=current_role)

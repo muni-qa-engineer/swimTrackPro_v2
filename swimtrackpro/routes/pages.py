@@ -65,7 +65,7 @@ def register_page_routes(app, *, get_pg_connection, load_data):
         location_suggestions = [row[0] for row in cursor.fetchall() if row[0]]
 
         cursor.execute("""
-            SELECT username, name, experience, qualification, currently_working, residence_location, rating 
+            SELECT username, name, experience, qualification, currently_working, residence_location, rating, phone, email, whatsapp 
             FROM trainers 
             WHERE is_approved = TRUE
             ORDER BY rating DESC, name
@@ -78,7 +78,10 @@ def register_page_routes(app, *, get_pg_connection, load_data):
                 "qualification": row[3] or "N/A",
                 "currently_working": row[4] or "N/A",
                 "residence_location": row[5] or "N/A",
-                "rating": float(row[6]) if row[6] is not None else 5.0
+                "rating": float(row[6]) if row[6] is not None else 5.0,
+                "phone": row[7] or "N/A",
+                "email": row[8] or "N/A",
+                "whatsapp": row[9] or "N/A"
             }
             for row in cursor.fetchall()
         ]
@@ -93,6 +96,7 @@ def register_page_routes(app, *, get_pg_connection, load_data):
             all_bookings=data.get("bookings", []),
             location_suggestions=location_suggestions,
             trainers=trainers,
+            admin_phone=get_setting("trainer_phone", "")
         )
 
     @login_required

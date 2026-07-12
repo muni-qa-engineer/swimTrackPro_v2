@@ -165,10 +165,11 @@ def register_authentication_routes(
         currently_working = (request.form.get("currently_working") or "").strip()
         residence_location = (request.form.get("residence_location") or "").strip()
         id_proof = (request.form.get("id_proof") or "").strip()
+        whatsapp = (request.form.get("whatsapp") or "").strip()
         consent_accepted = request.form.get("consent_accepted") == "on"
 
-        if not username or not password or not name:
-            flash("Please fill in Username, Password, and Full Name.")
+        if not username or not password or not name or not phone or not email or not whatsapp:
+            flash("Please fill in all mandatory fields (marked with *).")
             return redirect(url_for("register_page"))
 
         if not consent_accepted:
@@ -188,10 +189,10 @@ def register_authentication_routes(
 
         cursor.execute(
             """
-            INSERT INTO trainers (username, password, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, consent_accepted, rating, is_approved)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO trainers (username, password, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, consent_accepted, rating, is_approved, whatsapp)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
-            (username.lower(), password, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, True, rating, False)
+            (username.lower(), password, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, True, rating, False, whatsapp)
         )
         conn.commit()
         conn.close()

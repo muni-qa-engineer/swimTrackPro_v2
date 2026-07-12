@@ -105,6 +105,7 @@ def ensure_makeup_tables():
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS photos TEXT DEFAULT ''")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS notice TEXT DEFAULT ''")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT FALSE")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS whatsapp TEXT DEFAULT ''")
 
     # Pre-populate default admin trainer if not exists
     cursor.execute("SELECT username FROM trainers WHERE LOWER(username) = LOWER(%s)", (ADMIN_USERNAME,))

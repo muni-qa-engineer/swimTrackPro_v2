@@ -208,34 +208,28 @@
                 
                 <!-- Past feedbacks -->
                 <div class="col-lg-7">
-                    <h4 class="fw-bold mb-4"><i class="fa-regular fa-comments text-info me-2"></i> Swimmer Reviews</h4>
+                    <h4 class="fw-bold mb-4 text-white"><i class="fa-regular fa-comments text-info me-2"></i> Swimmer Reviews</h4>
                     {% if c.feedbacks %}
                         <div class="d-flex flex-column gap-3">
                             {% for f in c.feedbacks %}
-                                <div class="card border-0 bg-dark bg-opacity-40 p-3 rounded-3 text-white">
+                                <div class="card border-0 bg-white text-dark p-3 rounded-3 shadow-sm border border-light">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <h6 class="mb-0 fw-bold text-info">{{ f.guest_name|title }}</h6>
+                                        <h6 class="mb-0 fw-bold text-primary">{{ f.guest_name|title }}</h6>
                                         <span class="badge bg-warning text-dark fw-bold">⭐ {{ f.rating }} / 5</span>
                                     </div>
                                     <div class="small text-muted mb-3"><i class="fa-regular fa-clock me-1"></i> Submitted on {{ f.created_at }}</div>
                                     
-                                    <div class="row g-3 text-start">
+                                    <div class="text-start">
                                         {% if f.pros %}
-                                        <div class="col-md-6">
-                                            <div class="p-2.5 rounded bg-success bg-opacity-10 text-success border border-success border-opacity-20" style="font-size: 0.85rem;">
-                                                <strong class="d-block mb-1 text-success-emphasis"><i class="fa-solid fa-circle-plus me-1"></i> PROs:</strong>
-                                                {{ f.pros }}
-                                            </div>
-                                        </div>
+                                        <p class="mb-2 text-dark" style="font-size: 0.92rem; line-height: 1.5;">
+                                            <strong class="text-success"><i class="fa-solid fa-circle-plus me-1"></i> PROs:</strong> {{ f.pros }}
+                                        </p>
                                         {% endif %}
                                         
                                         {% if f.cons %}
-                                        <div class="col-md-6">
-                                            <div class="p-2.5 rounded bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20" style="font-size: 0.85rem;">
-                                                <strong class="d-block mb-1 text-danger-emphasis"><i class="fa-solid fa-circle-minus me-1"></i> CONs:</strong>
-                                                {{ f.cons }}
-                                            </div>
-                                        </div>
+                                        <p class="mb-0 text-dark" style="font-size: 0.92rem; line-height: 1.5;">
+                                            <strong class="text-danger"><i class="fa-solid fa-circle-minus me-1"></i> CONs:</strong> {{ f.cons }}
+                                        </p>
                                         {% endif %}
                                     </div>
                                 </div>
@@ -261,26 +255,30 @@
                             
                             <!-- Star Rating -->
                             <div class="mb-3">
-                                <label for="rating-{{ c.username }}" class="form-label small fw-bold text-white-50">Overall Rating</label>
-                                <select class="form-select bg-dark text-white border-secondary border-opacity-50" id="rating-{{ c.username }}" name="rating" required>
-                                    <option value="5">⭐⭐⭐⭐⭐ (5 - Excellent)</option>
-                                    <option value="4">⭐⭐⭐⭐ (4 - Very Good)</option>
-                                    <option value="3">⭐⭐⭐ (3 - Good)</option>
-                                    <option value="2">⭐⭐ (2 - Average)</option>
-                                    <option value="1">⭐ (1 - Needs Improvement)</option>
-                                </select>
+                                <label class="form-label small fw-bold text-white-50 d-block">Overall Rating</label>
+                                <div class="star-rating-container d-flex gap-2 align-items-center mb-2">
+                                    <div class="stars d-flex gap-1" id="star-selector-{{ c.username }}" style="cursor: pointer; font-size: 1.5rem;">
+                                        <i class="fa-regular fa-star star-item text-warning" data-value="1"></i>
+                                        <i class="fa-regular fa-star star-item text-warning" data-value="2"></i>
+                                        <i class="fa-regular fa-star star-item text-warning" data-value="3"></i>
+                                        <i class="fa-regular fa-star star-item text-warning" data-value="4"></i>
+                                        <i class="fa-regular fa-star star-item text-warning" data-value="5"></i>
+                                    </div>
+                                    <span class="small text-white-50 fw-semibold ms-2" id="star-label-{{ c.username }}">Select Rating</span>
+                                </div>
+                                <input type="hidden" id="rating-{{ c.username }}" name="rating" value="" required>
                             </div>
                             
                             <!-- PROs -->
                             <div class="mb-3">
                                 <label for="pros-{{ c.username }}" class="form-label small fw-bold text-success"><i class="fa-solid fa-circle-plus me-1"></i> PROs</label>
-                                <textarea class="form-control bg-dark text-white border-success border-opacity-20" id="pros-{{ c.username }}" name="pros" rows="3" placeholder="What does this coach do best?" required></textarea>
+                                <textarea class="form-control bg-white text-dark border-success border-opacity-20" id="pros-{{ c.username }}" name="pros" rows="3" placeholder="What does this coach do best?" style="color: #000000 !important;" required></textarea>
                             </div>
 
                             <!-- CONs -->
                             <div class="mb-3">
                                 <label for="cons-{{ c.username }}" class="form-label small fw-bold text-danger"><i class="fa-solid fa-circle-minus me-1"></i> CONs</label>
-                                <textarea class="form-control bg-dark text-white border-danger border-opacity-20" id="cons-{{ c.username }}" name="cons" rows="3" placeholder="What could be improved?" required></textarea>
+                                <textarea class="form-control bg-white text-dark border-danger border-opacity-20" id="cons-{{ c.username }}" name="cons" rows="3" placeholder="What could be improved?" style="color: #000000 !important;" required></textarea>
                             </div>
 
                             <button type="submit" class="btn btn-info text-white w-100 fw-bold mt-2">Submit Feedback</button>
@@ -308,4 +306,57 @@
 <!-- Content wrapper close from page_header -->
 </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('[id^="star-selector-"]').forEach(selector => {
+                const username = selector.id.replace('star-selector-', '');
+                const hiddenInput = document.getElementById(`rating-${username}`);
+                const starLabel = document.getElementById(`star-label-${username}`);
+                const stars = selector.querySelectorAll('.star-item');
+
+                const labels = {
+                    1: '⭐ (1 - Needs Improvement)',
+                    2: '⭐⭐ (2 - Average)',
+                    3: '⭐⭐⭐ (3 - Good)',
+                    4: '⭐⭐⭐⭐ (4 - Very Good)',
+                    5: '⭐⭐⭐⭐• (5 - Excellent)'
+                };
+
+                stars.forEach(star => {
+                    // Highlight stars on hover
+                    star.addEventListener('mouseover', () => {
+                        const val = parseInt(star.getAttribute('data-value'));
+                        highlightStars(stars, val);
+                    });
+
+                    // Reset stars to selected value on mouse out
+                    star.addEventListener('mouseout', () => {
+                        const currentVal = parseInt(hiddenInput.value || 0);
+                        highlightStars(stars, currentVal);
+                    });
+
+                    // Set value on click
+                    star.addEventListener('click', () => {
+                        const val = parseInt(star.getAttribute('data-value'));
+                        hiddenInput.value = val;
+                        starLabel.textContent = labels[val] || 'Select Rating';
+                        highlightStars(stars, val);
+                    });
+                });
+            });
+
+            function highlightStars(stars, value) {
+                stars.forEach(star => {
+                    const val = parseInt(star.getAttribute('data-value'));
+                    if (val <= value) {
+                        star.classList.remove('fa-regular');
+                        star.classList.add('fa-solid');
+                    } else {
+                        star.classList.remove('fa-solid');
+                        star.classList.add('fa-regular');
+                    }
+                });
+            }
+        });
+    </script>
 {% endblock %}

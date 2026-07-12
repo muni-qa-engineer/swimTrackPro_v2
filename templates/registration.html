@@ -212,7 +212,7 @@
                         </div>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label" for="emailInput">Email Address</label>
+                        <label class="form-label" for="emailInput">Email Address <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fa-solid fa-envelope"></i></span>
                             <input
@@ -221,6 +221,7 @@
                                 id="emailInput"
                                 class="form-control"
                                 placeholder="e.g. coach@example.com"
+                                required
                             >
                         </div>
                     </div>
@@ -228,7 +229,7 @@
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label" for="phoneInput">Mobile Number</label>
+                        <label class="form-label" for="phoneInput">Mobile Number <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fa-solid fa-phone"></i></span>
                             <input
@@ -240,6 +241,24 @@
                                 maxlength="10"
                                 pattern="[0-9]{10}"
                                 inputmode="numeric"
+                                required
+                            >
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="whatsappInput">WhatsApp Number <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa-brands fa-whatsapp text-success"></i></span>
+                            <input
+                                type="tel"
+                                name="whatsapp"
+                                id="whatsappInput"
+                                class="form-control"
+                                placeholder="Enter 10-digit WhatsApp number"
+                                maxlength="10"
+                                pattern="[0-9]{10}"
+                                inputmode="numeric"
+                                required
                             >
                         </div>
                     </div>
@@ -376,6 +395,13 @@
         if (phoneInput) {
             phoneInput.addEventListener('input', () => {
                 phoneInput.value = phoneInput.value.replace(/\D/g, '').slice(0, 10);
+            });
+        }
+
+        const whatsappInput = document.getElementById('whatsappInput');
+        if (whatsappInput) {
+            whatsappInput.addEventListener('input', () => {
+                whatsappInput.value = whatsappInput.value.replace(/\D/g, '').slice(0, 10);
             });
         }
 

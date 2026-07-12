@@ -403,6 +403,14 @@
                                 </button>
                             </div>
 
+                            <!-- Detailed coach profile information visible when 'View Profile' is clicked -->
+                            <div class="profile-details-more d-none mt-3 pt-2 border-top text-muted small" id="profile-details-more-{{ t.username }}" style="line-height: 1.5;">
+                                <div><strong>Mobile Contact:</strong> {{ t.phone }}</div>
+                                <div><strong>Email:</strong> {{ t.email }}</div>
+                                <div><strong>WhatsApp:</strong> {{ t.whatsapp }}</div>
+                                <div><strong>Admin Support Contact:</strong> {{ admin_phone }}</div>
+                            </div>
+
                             <div class="profile-actions d-none mt-3 d-flex gap-2" id="profile-actions-{{ t.username }}">
                                 <button type="button" class="btn btn-sm btn-secondary w-50 fw-bold" style="border-radius: 10px;"
                                         onclick="event.stopPropagation(); cancelTrainerProfile();">
@@ -1016,11 +1024,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 card.classList.add('d-none');
             } else {
                 card.classList.remove('d-none');
-                // Show profile actions & notice
+                // Show profile actions, notice, and details
                 const actions = document.getElementById('profile-actions-' + username);
                 if (actions) actions.classList.remove('d-none');
                 const notice = document.getElementById('profile-notice-' + username);
                 if (notice) notice.classList.remove('d-none');
+                const details = document.getElementById('profile-details-more-' + username);
+                if (details) details.classList.remove('d-none');
                 const viewBtn = document.getElementById('view-profile-btn-container-' + username);
                 if (viewBtn) viewBtn.classList.add('d-none');
             }
@@ -1039,6 +1049,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (actions) actions.classList.add('d-none');
             const notice = document.getElementById('profile-notice-' + username);
             if (notice) notice.classList.add('d-none');
+            const details = document.getElementById('profile-details-more-' + username);
+            if (details) details.classList.add('d-none');
             const viewBtn = document.getElementById('view-profile-btn-container-' + username);
             if (viewBtn) viewBtn.classList.remove('d-none');
         });
@@ -1174,7 +1186,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='dashboard.js') }}?v=1.1.2"></script>
 <script>
 document.getElementById('bookingForm')?.addEventListener('reset', function() {
     window.setTimeout(function() {
