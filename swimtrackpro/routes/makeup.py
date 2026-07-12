@@ -35,7 +35,8 @@ def skip_session(booking_id, session_date):
         email,
         start_date,
         end_date,
-        selected_days
+        selected_days,
+        time
     FROM bookings
     WHERE id = %s
     LIMIT 1
@@ -51,6 +52,7 @@ def skip_session(booking_id, session_date):
             'owner_name': row[2],
             'owner_phone': row[3],
             'email': row[4] or '',
+            'time': row[8] or '06:00 AM',
             'calendar_dates': generate_recurring_dates(
                 str(row[5]),
                 str(row[6]),
@@ -78,6 +80,29 @@ def skip_session(booking_id, session_date):
     if session_date not in calendar_dates:
         flash('Invalid session date')
         return redirect(url_for('calendar_page'))
+        
+    try:
+        from zoneinfo import ZoneInfo
+    except ImportError:
+        from backports.zoneinfo import ZoneInfo
+    from datetime import timedelta
+        
+    # Enforce 6-hour rule
+    try:
+        session_datetime = datetime.strptime(f"{session_date} {booking['time']}", '%Y-%m-%d %I:%M %p')
+        session_datetime = session_datetime.replace(tzinfo=ZoneInfo('Asia/Kolkata'))
+        now_ist = datetime.now(ZoneInfo('Asia/Kolkata'))
+        
+        if session_datetime <= now_ist:
+            flash('You cannot skip a class that has already started or ended.')
+            return redirect(url_for('calendar_page', booking=booking_id))
+            
+        time_diff = (session_datetime - now_ist).total_seconds()
+        if time_diff < 6 * 3600:
+            flash('You can only skip a session at least 6 hours before it starts.')
+            return redirect(url_for('calendar_page', booking=booking_id))
+    except Exception as e:
+        print("Error validating 6 hour rule:", e)
 
     # Create one make-up credit for this skipped session.
     created = create_makeup_credit(

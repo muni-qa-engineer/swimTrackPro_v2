@@ -387,8 +387,14 @@ def load_data():
         # Add new fields for Calendar UI make-up workflow state
         booking['pending_request_id'] = pending_request[0] if pending_request else None
         booking['approved_request_id'] = approved_request[0] if approved_request else None
-        booking['skip_remaining'] = len(available_credits)
-        booking['skip_eligible'] = True
+        
+        # New Rule: 1 skip allowed for every 6 sessions booked
+        total_skips_allowed = booking.get('total_classes', 0) // 6
+        skips_used = len(booking_credits)
+        skip_remaining = max(0, total_skips_allowed - skips_used)
+        
+        booking['skip_remaining'] = skip_remaining
+        booking['skip_eligible'] = skip_remaining > 0
         booking['valid_until'] = booking['end_date']
         booking['makeup_used'] = approved_request is not None
 

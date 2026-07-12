@@ -61,6 +61,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         data-available-makeup-credit-id="${b.availableMakeupCreditId}"
                         data-pending-request-id="${b.pendingRequestId}"
                         data-makeup-used="${b.makeupUsed}"
+                        data-session-time="${b.time}"
                     >
                         <div class="d-flex flex-column">
                             <div class="agenda-swimmer fw-bold text-dark d-flex align-items-center" style="font-size: 15px;">
@@ -550,12 +551,11 @@ document.addEventListener('DOMContentLoaded', function () {
     skipButton.style.opacity = '';
 
     // Completely disable the button when:
-    // 1. Skip limit reached, or
-    // 2. The make-up credit has already been used.
-    skipButton.disabled = !eligible || makeupUsed;
+    // 1. Skip limit reached
+    skipButton.disabled = !eligible;
 
-    if (makeupUsed) {
-      skipButton.textContent = 'Make-Up Already Used';
+    if (!eligible) {
+      skipButton.textContent = 'Skip Limit Reached';
 
       // Prevent any click action at the UI level
       skipButton.classList.add('disabled');
@@ -563,15 +563,40 @@ document.addEventListener('DOMContentLoaded', function () {
       skipButton.style.opacity = '0.65';
 
     } else if (eligible) {
-      skipButton.innerHTML = '<i class="fa-solid fa-forward-step"></i> Skip Session';
+      
+      // Enforce 6 hour rule locally for UX
+      // Parse session date and time
+      let sessionDateObj = new Date(sessionData.session_date);
+      let sessionTimeStr = sessionData.session_time || "06:00 AM";
+      let timeMatch = sessionTimeStr.match(/(\d+):(\d+)\s+(AM|PM)/i);
+      
+      let isTooLate = false;
+      if (timeMatch) {
+          let hours = parseInt(timeMatch[1], 10);
+          let minutes = parseInt(timeMatch[2], 10);
+          let period = timeMatch[3].toUpperCase();
+          if (period === 'PM' && hours < 12) hours += 12;
+          if (period === 'AM' && hours === 12) hours = 0;
+          
+          sessionDateObj.setHours(hours, minutes, 0, 0);
+          
+          let now = new Date();
+          let diffHours = (sessionDateObj - now) / (1000 * 60 * 60);
+          
+          if (diffHours < 6) {
+              isTooLate = true;
+          }
+      }
+      
+      if (isTooLate) {
+          skipButton.textContent = 'Too Late to Skip';
+          skipButton.classList.add('disabled');
+          skipButton.style.pointerEvents = 'none';
+          skipButton.style.opacity = '0.65';
+      } else {
+          skipButton.innerHTML = '<i class="fa-solid fa-forward-step"></i> Skip Session';
+      }
 
-    } else {
-      skipButton.textContent = 'Skip Limit Reached';
-
-      // Prevent any click action at the UI level
-      skipButton.classList.add('disabled');
-      skipButton.style.pointerEvents = 'none';
-      skipButton.style.opacity = '0.65';
     }
 
     // Reset undo UI state each time the modal opens.
@@ -777,6 +802,7 @@ document.addEventListener('DOMContentLoaded', function () {
       student: sessionEl.dataset.student,
       package: sessionEl.dataset.package,
       session_date: sessionEl.dataset.sessionDate,
+      session_time: sessionEl.dataset.sessionTime,
       skip_remaining: sessionEl.dataset.skipRemaining,
       valid_until: sessionEl.dataset.validUntil,
       skip_eligible: sessionEl.dataset.skipEligible,
