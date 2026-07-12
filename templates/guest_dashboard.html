@@ -47,22 +47,14 @@
           </li>
           <li>
               <a href="#" class="nav-link d-flex align-items-center gap-3 px-3 py-2.5 rounded-3 fw-semibold text-white-50" onclick="switchDesktopTab('about-trainer', this); return false;">
-                  <i class="fa-solid fa-user-tie fs-5"></i> {% if role == 'trainer' %}About Me{% else %}About Coach{% endif %}
+                  <i class="fa-solid fa-user-tie fs-5"></i> About Coach
               </a>
           </li>
-          {% if role == 'trainer' %}
-          <li>
-              <a href="#" class="nav-link d-flex align-items-center gap-3 px-3 py-2.5 rounded-3 fw-semibold text-white-50" onclick="switchDesktopTab('profile', this); return false;">
-                  <i class="fa-solid fa-user fs-5"></i> Profile
-              </a>
-          </li>
-          {% else %}
           <li>
               <a href="#" class="nav-link d-flex align-items-center gap-3 px-3 py-2.5 rounded-3 fw-semibold text-white-50" onclick="switchDesktopTab('help', this); return false;">
                   <i class="fa-solid fa-headset fs-5"></i> Help & Contact
               </a>
           </li>
-          {% endif %}
           <li class="mt-4"><hr style="opacity: 0.1;"></li>
           <li>
               <a href="/logout" class="nav-link d-flex align-items-center gap-3 px-3 py-2.5 rounded-3 fw-semibold text-danger">
@@ -161,43 +153,6 @@
 
                   <div class="ms-3 text-start w-100">
 
-                    {% if role == 'trainer' %}
-
-                      <div class="small opacity-75 mb-2">Upcoming Sessions</div>
-
-                      {% if trainer_upcoming_slots %}
-
-<div id="trainerSessionCarousel">
-
-  {% for slot in trainer_upcoming_slots %}
-  <div class="trainer-session-slide"
-       {% if not loop.first %}style="display:none;"{% endif %}>
-
-    <div class="small opacity-90 mt-1">
-      {{ slot.date if slot.date is defined else '--' }} • {{ slot.slot }}
-    </div>
-
-    <div class="fw-bold mt-1 d-flex align-items-center gap-1.5">
-      🏊 {{ slot.swimmer_names if slot.swimmer_names is defined else (slot.count ~ ' Swimmers') }}
-    </div>
-
-    {% if trainer_upcoming_slots|length > 1 %}
-    <div class="small opacity-75 mt-1">
-      {{ loop.index }} / {{ trainer_upcoming_slots|length }}
-    </div>
-    {% endif %}
-
-  </div>
-  {% endfor %}
-
-</div>
-
-                      {% else %}
-                        <div class="small">No Upcoming Sessions</div>
-                      {% endif %}
-
-                    {% else %}
-
                       {% if guest_upcoming_sessions is defined and guest_upcoming_sessions|length > 0 %}
 
                         <div class="small opacity-75">Next Session</div>
@@ -251,8 +206,6 @@
                         </div>
 
                       {% endif %}
-
-                    {% endif %}
 
                   </div>
                 </div>
@@ -362,7 +315,7 @@
                     onclick="window.location.href='/help'"
                     class="btn w-100 h-100 border-0 shadow-sm quick-tile">
               <div class="quick-icon quick-contact text-warning"><i class="fa-solid fa-headset"></i></div>
-              <div class="fw-bold mt-2">{% if role == 'trainer' %}Contact Admin{% else %}Contact Coach{% endif %}</div>
+              <div class="fw-bold mt-2">Contact Coach</div>
             </button>
           </div>
 
