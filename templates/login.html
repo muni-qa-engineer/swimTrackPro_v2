@@ -265,8 +265,9 @@
                             class="form-control"
                             placeholder="Enter mobile number"
                         >
-<!-- 
-                        <span class="input-group-text"><i class="fa-solid fa-eye"></i></span> -->
+                        <button class="input-group-text" type="button" id="togglePasswordBtn" style="cursor: pointer; background: transparent; border: none;">
+                            <i class="fa-solid fa-eye" id="togglePasswordIcon" style="color: #6b7280;"></i>
+                        </button>
                     </div>
                     <div id="forgotPasswordContainer" class="d-none text-end mt-1">
                         <a href="/forgot-password" class="text-decoration-none small fw-bold" style="color: #2563eb;">Forgot Password?</a>
@@ -372,6 +373,11 @@
             passwordInput.placeholder = 'Enter password';
             passwordInput.type = 'password';
         }
+        const togglePasswordIcon = document.getElementById('togglePasswordIcon');
+        if (togglePasswordIcon) {
+            togglePasswordIcon.classList.remove('fa-eye-slash');
+            togglePasswordIcon.classList.add('fa-eye');
+        }
         const passIcon = document.querySelector('#passwordField .input-group-text');
         if (passIcon) {
             passIcon.innerHTML = '<i class="fa-solid fa-lock"></i>';
@@ -467,6 +473,11 @@
         if (passwordInput) {
             passwordInput.placeholder = 'Enter admin password';
             passwordInput.type = 'password';
+        }
+        const togglePasswordIcon = document.getElementById('togglePasswordIcon');
+        if (togglePasswordIcon) {
+            togglePasswordIcon.classList.remove('fa-eye-slash');
+            togglePasswordIcon.classList.add('fa-eye');
         }
         const passIcon = document.querySelector('#passwordField .input-group-text');
         if (passIcon) passIcon.innerHTML = '<i class="fa-solid fa-lock"></i>';
@@ -610,6 +621,26 @@ window.addEventListener('touchend', () => {
     pullStartY = 0;
     pullCurrentY = 0;
 });
+
+// Password Visibility Toggle
+const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+const togglePasswordIcon = document.getElementById('togglePasswordIcon');
+
+if (togglePasswordBtn && passwordInput) {
+    togglePasswordBtn.addEventListener('click', function() {
+        const type = passwordInput.type === 'password' ? 'text' : 'password';
+        passwordInput.type = type;
+        
+        // Toggle icon classes
+        if (type === 'text') {
+            togglePasswordIcon.classList.remove('fa-eye');
+            togglePasswordIcon.classList.add('fa-eye-slash');
+        } else {
+            togglePasswordIcon.classList.remove('fa-eye-slash');
+            togglePasswordIcon.classList.add('fa-eye');
+        }
+    });
+}
 </script>
 </body>
 <script src="{{ url_for('static', filename='login.js') }}"></script>

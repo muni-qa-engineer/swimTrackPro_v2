@@ -73,7 +73,7 @@ def register_authentication_routes(
             return redirect(url_for("index"))
 
         if role == "admin":
-            if name.upper() == "M1400" and password == "51400":
+            if name == admin_username and password == admin_password:
                 session["user_name"] = "Super Admin"
                 session["role"] = "admin"
                 session["admin_username"] = "admin"
