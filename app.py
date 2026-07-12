@@ -23,6 +23,10 @@ from config import (
 )
 app.secret_key = SECRET_KEY
 
+@app.route('/service-worker.js')
+def service_worker():
+    return app.send_static_file('service-worker.js')
+
 def get_pg_connection():
     return psycopg2.connect(DATABASE_URL)
 
