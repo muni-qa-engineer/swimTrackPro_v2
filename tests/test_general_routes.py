@@ -169,12 +169,13 @@ class GeneralRouteAccessTests(unittest.TestCase):
             self.assertNotIn("role", flask_session)
 
     def test_admin_login_success(self):
+        from config import ADMIN_USERNAME, ADMIN_PASSWORD
         response = self.client.post(
             "/login",
             data={
                 "role": "admin",
-                "name": "M1400",
-                "password": "51400",
+                "name": ADMIN_USERNAME,
+                "password": ADMIN_PASSWORD,
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -184,11 +185,12 @@ class GeneralRouteAccessTests(unittest.TestCase):
             self.assertEqual(flask_session.get("user_name"), "Super Admin")
 
     def test_admin_login_failure(self):
+        from config import ADMIN_USERNAME
         response = self.client.post(
             "/login",
             data={
                 "role": "admin",
-                "name": "M1400",
+                "name": ADMIN_USERNAME,
                 "password": "wrongpassword",
             },
         )
