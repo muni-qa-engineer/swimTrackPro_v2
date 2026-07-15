@@ -1,7 +1,7 @@
 {% set session_role = session.get('role', 'guest') %}
 {# active_page should be one of: home, bookings, calendar, payments, book, contact, about, profile #}
 
-<div class="mobile-bottom-nav-spacer d-lg-none" style="height: 80px; width: 100%; flex-shrink: 0;"></div>
+<div class="mobile-bottom-nav-spacer d-lg-none" style="height: 120px; width: 100%; flex-shrink: 0;"></div>
 <div class="mobile-bottom-nav d-lg-none" role="navigation" aria-label="Mobile navigation">
 
   {% if session_role == 'trainer' %}

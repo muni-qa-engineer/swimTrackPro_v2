@@ -22,6 +22,7 @@ from config import (
     DATABASE_URL
 )
 app.secret_key = SECRET_KEY
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 @app.route('/service-worker.js')
 def service_worker():

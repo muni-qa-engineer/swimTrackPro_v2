@@ -639,14 +639,13 @@
 </div>
 
 
-{% set active_page = 'home' %}
-{% include 'components/mobile_bottom_nav.html' %}
+
 
 
 {% if role == 'trainer' %}
-<div class="container-fluid px-4 mt-4 mb-4">
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-warning-subtle">
+<div class="container-fluid px-4 mb-4">
+    <div class="card border-0 shadow" style="border-radius: 18px;">
+        <div class="card-header bg-warning-subtle border-0" style="border-top-left-radius: 18px; border-top-right-radius: 18px;">
             <strong><i class="fa-solid fa-pencil"></i> Edit Notice Board</strong>
         </div>
         <div class="card-body">
@@ -681,6 +680,9 @@
     </div>
 </div>
 {% endif %}
+
+{% set active_page = 'home' %}
+{% include 'components/mobile_bottom_nav.html' %}
 
 <script>
   window.bookingsData = {{ bookings|tojson }};
