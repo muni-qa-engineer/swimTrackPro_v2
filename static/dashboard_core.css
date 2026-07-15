@@ -636,3 +636,11 @@
   border-color: rgba(255, 255, 255, 0.1) !important;
   margin: 8px 0 !important;
 }
+
+/* Fix mobile bottom nav overlap */
+@media (max-width: 991.98px) {
+  .main-content-panel {
+    padding-bottom: 96px !important;
+  }
+}
+
