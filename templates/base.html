@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='common.css') }}">
     {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
 
 {% block content %}
 {% endblock %}

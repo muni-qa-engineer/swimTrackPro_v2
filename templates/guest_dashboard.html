@@ -6,6 +6,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
+<body class="dashboard-body">
 <div class="d-flex premium-mesh-bg" style="min-height: 100vh;">
 
   <!-- Sidebar Navigation (Desktop only) -->
@@ -65,7 +66,7 @@
   </div>
 
   <!-- Main Content Wrapper -->
-  <div class="flex-grow-1 overflow-y-auto" style="height: 100vh;">
+  <div class="flex-grow-1 overflow-y-auto main-content-panel" style="height: 100vh;">
 
     <!-- Top Navbar (Mobile only) -->
     {% include 'components/mobile_navbar.html' %}
@@ -285,6 +286,7 @@
           <div class="col-6">
             <button id="quickBookBtn"
                     type="button"
+                    onclick="window.location.href='/booking'"
                     class="btn w-100 h-100 border-0 shadow-sm quick-tile">
               <div class="quick-icon quick-book text-primary"><i class="fa-regular fa-calendar"></i></div>
               <div class="fw-bold mt-2">Book now</div>
@@ -294,6 +296,7 @@
           <div class="col-6">
             <button id="quickBookingsBtn"
                     type="button"
+                    onclick="window.location.href='/my-bookings'"
                     class="btn w-100 h-100 border-0 shadow-sm quick-tile">
               <div class="quick-icon quick-bookings text-success"><i class="fa-solid fa-clipboard-list"></i></div>
               <div class="fw-bold mt-2">View Bookings</div>
@@ -303,6 +306,7 @@
           <div class="col-6">
             <button id="quickPaymentsBtn"
                     type="button"
+                    onclick="window.location.href='/payments'"
                     class="btn w-100 h-100 border-0 shadow-sm quick-tile">
               <div class="quick-icon quick-payments text-info"><i class="fa-solid fa-credit-card"></i></div>
               <div class="fw-bold mt-2">Payments</div>
@@ -1302,3 +1306,4 @@ function switchDesktopTab(sectionId, el) {
 
   </div>
 </div>
+</body>
