@@ -50,7 +50,8 @@ def index():
         pass
 
     if current_role == 'trainer':
-        context = get_trainer_dashboard_data(current_user, data)
+        trainer_username = session.get('trainer_username') or 'asdf'
+        context = get_trainer_dashboard_data(trainer_username, data)
         context['welcome_text'] = welcome_text
         context['user_name'] = session['user_name']
         context['role'] = current_role

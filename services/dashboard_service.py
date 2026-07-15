@@ -115,11 +115,25 @@ def get_admin_dashboard_data(current_user, data):
         'audit_logs': audit_logs
     }
 
-def get_trainer_dashboard_data(current_user, data):
+def get_trainer_dashboard_data(trainer_username, data):
     """Fetch and process data specifically for the Trainer dashboard."""
-    user_bookings = data.get('bookings', [])
-    user_students = data.get('students', [])
-    return _process_common_dashboard_data(user_bookings, user_students, 'trainer', current_user)
+    trainer_user_lower = (trainer_username or 'asdf').strip().lower()
+    
+    user_bookings = [
+        b for b in data.get('bookings', [])
+        if (b.get('trainer_username') or 'asdf').strip().lower() == trainer_user_lower
+    ]
+    
+    assigned_student_keys = set(
+        ((b.get('owner_name') or '').strip().lower(), b.get('owner_phone'))
+        for b in user_bookings
+    )
+    user_students = [
+        s for s in data.get('students', [])
+        if isinstance(s, dict)
+        and ((s.get('owner_name') or '').strip().lower(), s.get('owner_phone')) in assigned_student_keys
+    ]
+    return _process_common_dashboard_data(user_bookings, user_students, 'trainer', trainer_username)
 
 def get_guest_dashboard_data(current_user, current_phone, data):
     """Fetch and process data specifically for the Guest dashboard."""
