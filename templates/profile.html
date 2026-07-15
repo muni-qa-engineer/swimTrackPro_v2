@@ -168,19 +168,34 @@
                                     <div class="col-md-12">
                                         <div class="pdf-field-box">
                                             <label class="pdf-label">Current Password</label>
-                                            <input type="password" name="current_password" class="pdf-input form-control" required placeholder="Enter current password">
+                                            <div class="input-group">
+                                                <input type="password" id="currentPassword" name="current_password" class="pdf-input form-control border-end-0" required placeholder="Enter current password">
+                                                <button class="input-group-text bg-white border-start-0" type="button" onclick="togglePasswordVisibility('currentPassword', this)">
+                                                    <i class="fa-solid fa-eye text-muted"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="pdf-field-box">
                                             <label class="pdf-label">New Password</label>
-                                            <input type="password" name="new_password" class="pdf-input form-control" required minlength="6" placeholder="Enter new password">
+                                            <div class="input-group">
+                                                <input type="password" id="newPassword" name="new_password" class="pdf-input form-control border-end-0" required minlength="6" placeholder="Enter new password">
+                                                <button class="input-group-text bg-white border-start-0" type="button" onclick="togglePasswordVisibility('newPassword', this)">
+                                                    <i class="fa-solid fa-eye text-muted"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="pdf-field-box">
                                             <label class="pdf-label">Confirm New Password</label>
-                                            <input type="password" name="confirm_password" class="pdf-input form-control" required minlength="6" placeholder="Confirm new password">
+                                            <div class="input-group">
+                                                <input type="password" id="confirmPassword" name="confirm_password" class="pdf-input form-control border-end-0" required minlength="6" placeholder="Confirm new password">
+                                                <button class="input-group-text bg-white border-start-0" type="button" onclick="togglePasswordVisibility('confirmPassword', this)">
+                                                    <i class="fa-solid fa-eye text-muted"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

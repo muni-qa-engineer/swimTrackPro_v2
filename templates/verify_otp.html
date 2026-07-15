@@ -41,7 +41,10 @@
                         <label class="form-label fw-bold">New Password</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white"><i class="fa-solid fa-lock text-muted"></i></span>
-                            <input type="password" name="new_password" class="form-control" placeholder="Create new password" required minlength="6">
+                            <input type="password" id="newPassword" name="new_password" class="form-control border-end-0" placeholder="Create new password" required minlength="6">
+                            <button class="input-group-text bg-white border-start-0" type="button" onclick="togglePasswordVisibility('newPassword', this)">
+                                <i class="fa-solid fa-eye text-muted"></i>
+                            </button>
                         </div>
                     </div>
 

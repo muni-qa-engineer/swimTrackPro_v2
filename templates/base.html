@@ -27,6 +27,26 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+// Global Password Visibility Toggle
+function togglePasswordVisibility(inputId, buttonElement) {
+  const input = document.getElementById(inputId);
+  const icon = buttonElement.querySelector('i');
+  
+  if (input && input.type === 'password') {
+    input.type = 'text';
+    if (icon) {
+      icon.classList.remove('fa-eye');
+      icon.classList.add('fa-eye-slash');
+    }
+  } else if (input) {
+    input.type = 'password';
+    if (icon) {
+      icon.classList.remove('fa-eye-slash');
+      icon.classList.add('fa-eye');
+    }
+  }
+}
+
 if (window.self !== window.top) {
     console.log("Embedded inside iframe! Path:", window.location.pathname);
     // Inject style cleanly without document.write to avoid page wipeout issues

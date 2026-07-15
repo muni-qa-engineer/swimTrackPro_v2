@@ -205,10 +205,13 @@
                                 type="password"
                                 name="password"
                                 id="passwordInput"
-                                class="form-control"
+                                class="form-control border-end-0"
                                 placeholder="Create password"
                                 required
                             >
+                            <button class="input-group-text bg-white border-start-0" type="button" onclick="togglePasswordVisibility('passwordInput', this)">
+                                <i class="fa-solid fa-eye text-muted"></i>
+                            </button>
                         </div>
                     </div>
                     <div class="col-md-6 mb-3">
