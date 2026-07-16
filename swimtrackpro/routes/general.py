@@ -1,6 +1,6 @@
 """General authenticated pages and session routes."""
 
-from flask import flash, redirect, render_template, request, session, url_for
+from flask import flash, redirect, render_template, request, session, url_for, jsonify
 
 from services.settings_service import get_setting, set_setting
 from swimtrackpro.auth import login_required, trainer_required, admin_required
@@ -405,6 +405,64 @@ def register_general_routes(app):
 
         flash("Password updated successfully!", "success")
         return redirect(url_for("profile_page"))
+
+    @app.route('/api/my_id_card')
+    def api_my_id_card():
+        if 'user_name' not in session:
+            return jsonify({'error': 'Not logged in'}), 401
+            
+        role = session.get('role', 'guest')
+        user_name = session.get('user_name', '')
+        id_number = session.get('id_number', '')
+        
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+        
+        photo = None
+        title = "SwimTrackPro Guest"
+        phone = session.get('phone', '')
+        email = ""
+        address = ""
+        
+        if role == 'admin':
+            title = "SwimTrackPro Admin"
+            cursor.execute("SELECT phone, email, photos, residence_location FROM trainers WHERE LOWER(username) = LOWER(%s)", (session.get('admin_username', 'admin'),))
+            row = cursor.fetchone()
+            if row:
+                phone, email, photo, address = row[0], row[1], row[2], row[3]
+        elif role == 'trainer':
+            title = "SwimTrackPro Coach"
+            cursor.execute("SELECT phone, email, photos, residence_location FROM trainers WHERE username = %s", (session.get('trainer_username'),))
+            row = cursor.fetchone()
+            if row:
+                phone, email, photo, address = row[0], row[1], row[2], row[3]
+        else:
+            title = "SwimTrackPro Student"
+            
+        conn.close()
+        
+        # Determine fallback photo
+        if not photo:
+            photo = url_for('static', filename='images/Album/IMG20220514170101_01.jpg')
+        else:
+            # If photo is just a filename, prepend path if needed.
+            # Usually trainers.photos is a comma separated list. We take the first one.
+            photo_list = photo.split(',')
+            first_photo = photo_list[0].strip()
+            if first_photo:
+                photo = url_for('static', filename='uploads/' + first_photo)
+            else:
+                photo = url_for('static', filename='images/Album/IMG20220514170101_01.jpg')
+
+        return jsonify({
+            'name': user_name.title(),
+            'title': title,
+            'id_number': id_number,
+            'phone': phone,
+            'email': email,
+            'address': address,
+            'photo': photo
+        })
 
     app.add_url_rule(
         "/profile",

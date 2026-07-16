@@ -47,6 +47,19 @@ def register_authentication_routes(
                 try:
                     conn = get_pg_connection()
                     cursor = conn.cursor()
+                    cursor.execute("SELECT id_number FROM trainers WHERE username = %s", (trainer_row[0],))
+                    id_row = cursor.fetchone()
+                    if id_row and id_row[0]:
+                        session["id_number"] = id_row[0]
+                    else:
+                        session["id_number"] = "STPC0000"
+                    conn.close()
+                except Exception as e:
+                    pass
+
+                try:
+                    conn = get_pg_connection()
+                    cursor = conn.cursor()
                     cursor.execute(
                         "SELECT id, current_login FROM user_activity WHERE LOWER(user_name) = LOWER(%s) AND role = %s",
                         (trainer_row[2], "trainer")
@@ -77,6 +90,18 @@ def register_authentication_routes(
                 session["user_name"] = "Super Admin"
                 session["role"] = "admin"
                 session["admin_username"] = "admin"
+
+                try:
+                    conn = get_pg_connection()
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT id_number FROM trainers WHERE LOWER(username) = LOWER(%s)", (admin_username,))
+                    id_row = cursor.fetchone()
+                    if id_row and id_row[0]:
+                        session["id_number"] = id_row[0]
+                    else:
+                        session["id_number"] = "STPA0001"
+                except Exception as e:
+                    pass
 
                 try:
                     conn = get_pg_connection()
@@ -153,19 +178,25 @@ def register_authentication_routes(
                 conn = get_pg_connection()
                 cursor = conn.cursor()
                 cursor.execute(
-                    "SELECT id, current_login FROM user_activity WHERE LOWER(user_name) = LOWER(%s) AND role = %s",
+                    "SELECT id, current_login, id_number FROM user_activity WHERE LOWER(user_name) = LOWER(%s) AND role = %s",
                     (normalized_name, "guest")
                 )
                 act_row = cursor.fetchone()
                 if act_row:
+                    session["id_number"] = act_row[2] or "STPS0000"
                     cursor.execute(
                         "UPDATE user_activity SET previous_login = %s, current_login = CURRENT_TIMESTAMP, phone = %s WHERE id = %s",
                         (act_row[1], phone, act_row[0])
                     )
                 else:
+                    cursor.execute("SELECT MAX(CAST(SUBSTRING(id_number FROM 5) AS INTEGER)) FROM user_activity WHERE id_number LIKE 'STPS%'")
+                    max_guest_val = cursor.fetchone()[0] or 0
+                    new_id_number = f"STPS{max_guest_val + 1:04d}"
+                    session["id_number"] = new_id_number
+
                     cursor.execute(
-                        "INSERT INTO user_activity (user_name, phone, role, current_login, previous_login) VALUES (%s, %s, %s, CURRENT_TIMESTAMP, NULL)",
-                        (normalized_name, phone, "guest")
+                        "INSERT INTO user_activity (user_name, phone, role, current_login, previous_login, id_number) VALUES (%s, %s, %s, CURRENT_TIMESTAMP, NULL, %s)",
+                        (normalized_name, phone, "guest", new_id_number)
                     )
                 conn.commit()
                 conn.close()
@@ -218,12 +249,16 @@ def register_authentication_routes(
         consent_accepted_at = datetime.now()
         consent_ip = request.remote_addr or ""
 
+        cursor.execute("SELECT MAX(CAST(SUBSTRING(id_number FROM 5) AS INTEGER)) FROM trainers WHERE id_number LIKE 'STPC%'")
+        max_coach_val = cursor.fetchone()[0] or 0
+        new_id_number = f"STPC{max_coach_val + 1:04d}"
+
         cursor.execute(
             """
-            INSERT INTO trainers (username, password, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, consent_accepted, rating, is_approved, whatsapp, consent_version, consent_accepted_at, consent_ip)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO trainers (username, password, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, consent_accepted, rating, is_approved, whatsapp, consent_version, consent_accepted_at, consent_ip, id_number)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
-            (username.lower(), password, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, True, rating, False, whatsapp, consent_version, consent_accepted_at, consent_ip)
+            (username.lower(), password, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, True, rating, False, whatsapp, consent_version, consent_accepted_at, consent_ip, new_id_number)
         )
         conn.commit()
         conn.close()

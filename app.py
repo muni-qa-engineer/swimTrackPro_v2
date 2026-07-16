@@ -114,6 +114,7 @@ def ensure_makeup_tables():
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS consent_version TEXT DEFAULT 'v1.0'")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS consent_accepted_at TIMESTAMP WITHOUT TIME ZONE")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS consent_ip TEXT")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS id_number TEXT")
 
     # Pre-populate default admin trainer if not exists
     cursor.execute("SELECT username FROM trainers WHERE LOWER(username) = LOWER(%s)", (ADMIN_USERNAME,))
@@ -137,6 +138,28 @@ def ensure_makeup_tables():
             is_approved = TRUE
         WHERE LOWER(username) = LOWER(%s)
         """, (ADMIN_USERNAME,))
+
+    # ID Number Assignment Logic
+    cursor.execute("""
+    UPDATE trainers 
+    SET id_number = 'STPA0001' 
+    WHERE LOWER(username) = LOWER(%s) AND id_number IS NULL
+    """, (ADMIN_USERNAME,))
+
+    cursor.execute("SELECT MAX(CAST(SUBSTRING(id_number FROM 5) AS INTEGER)) FROM trainers WHERE id_number LIKE 'STPC%'")
+    max_coach_val = cursor.fetchone()[0] or 0
+
+    cursor.execute("""
+    WITH numbered AS (
+        SELECT username, ROW_NUMBER() OVER (ORDER BY username) as rn
+        FROM trainers
+        WHERE LOWER(username) != LOWER(%s) AND id_number IS NULL
+    )
+    UPDATE trainers t
+    SET id_number = 'STPC' || LPAD((nt.rn + %s)::TEXT, 4, '0')
+    FROM numbered nt
+    WHERE t.username = nt.username
+    """, (ADMIN_USERNAME, max_coach_val))
 
     cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS trainer_username TEXT")
     cursor.execute("UPDATE bookings SET trainer_username = %s WHERE trainer_username IS NULL", (ADMIN_USERNAME,))
@@ -181,6 +204,22 @@ def ensure_makeup_tables():
 
     cursor.execute("ALTER TABLE user_activity ADD COLUMN IF NOT EXISTS current_login TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP")
     cursor.execute("ALTER TABLE user_activity ADD COLUMN IF NOT EXISTS previous_login TIMESTAMP WITHOUT TIME ZONE")
+    cursor.execute("ALTER TABLE user_activity ADD COLUMN IF NOT EXISTS id_number TEXT")
+
+    cursor.execute("SELECT MAX(CAST(SUBSTRING(id_number FROM 5) AS INTEGER)) FROM user_activity WHERE id_number LIKE 'STPS%'")
+    max_guest_val = cursor.fetchone()[0] or 0
+
+    cursor.execute("""
+    WITH numbered AS (
+        SELECT id, ROW_NUMBER() OVER (ORDER BY id) as rn
+        FROM user_activity
+        WHERE role = 'guest' AND id_number IS NULL
+    )
+    UPDATE user_activity u
+    SET id_number = 'STPS' || LPAD((nt.rn + %s)::TEXT, 4, '0')
+    FROM numbered nt
+    WHERE u.id = nt.id
+    """, (max_guest_val,))
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS password_reset_otps (

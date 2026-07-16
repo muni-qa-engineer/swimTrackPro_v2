@@ -37,12 +37,22 @@
             </a>
           </li>
           <li>
+            <a class="dropdown-item d-flex align-items-center gap-2" href="#" onclick="showMyIdCard(); return false;">
+              <i class="fa-solid fa-id-card"></i> My ID Card
+            </a>
+          </li>
+          <li>
             <a class="dropdown-item d-flex align-items-center gap-2" href="/about-trainer">
               <i class="fa-solid fa-chalkboard-user"></i> About Me
             </a>
           </li>
           <li><hr class="dropdown-divider"></li>
           {% else %}
+          <li>
+            <a class="dropdown-item d-flex align-items-center gap-2" href="#" onclick="showMyIdCard(); return false;">
+              <i class="fa-solid fa-id-card"></i> My ID Card
+            </a>
+          </li>
           <li>
             <a class="dropdown-item d-flex align-items-center gap-2" href="/about-trainer">
               <i class="fa-solid fa-chalkboard-user"></i> About Your Trainer
