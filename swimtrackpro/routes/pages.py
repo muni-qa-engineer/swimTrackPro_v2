@@ -193,6 +193,26 @@ def register_page_routes(app, *, get_pg_connection, load_data):
             upi_id=get_setting("upi_id", ""),
         )
 
+    @login_required
+    def payment_options_page(booking_id):
+        current_role = session.get("role")
+        data = load_data()
+        booking = next((b for b in data.get("bookings", []) if str(b["id"]) == str(booking_id)), None)
+        
+        if not booking:
+            flash("Booking not found.")
+            return redirect(url_for("booking_page"))
+            
+        return render_template(
+            "payment_options.html",
+            role=current_role,
+            user_name=session.get("user_name"),
+            booking=booking,
+            upi_id=get_setting("upi_id", ""),
+            account_holder_name=get_setting("account_holder_name", "")
+        )
+
+    app.add_url_rule("/payment_options/<booking_id>", endpoint="payment_options_page", view_func=payment_options_page)
     app.add_url_rule("/booking", endpoint="booking_page", view_func=booking_page)
     app.add_url_rule(
         "/my-bookings",

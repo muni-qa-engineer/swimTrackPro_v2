@@ -324,10 +324,8 @@ def book():
     conn.commit()
     conn.close()
 
-    # Send swimmer confirmation email.
-    send_booking_confirmation_email(new_booking)
-
-    return redirect('/my-bookings?booking_success=true')
+    # The confirmation email will be sent after payment options are confirmed.
+    return redirect(f'/payment_options/{booking_id}')
 
 def edit_booking(booking_id):
     data = load_data()
@@ -1142,6 +1140,37 @@ def register_bookings_routes(app):
     app.add_url_rule('/booking/resume', endpoint='resume_booking', view_func=resume_booking, methods=['POST'])
     app.add_url_rule('/booking/approve_pause', endpoint='approve_pause', view_func=approve_pause, methods=['POST'])
     app.add_url_rule('/booking/reject_pause', endpoint='reject_pause', view_func=reject_pause, methods=['POST'])
+    app.add_url_rule('/booking/confirm_paylater/<booking_id>', endpoint='confirm_paylater', view_func=confirm_paylater, methods=['POST'])
+
+def confirm_paylater(booking_id):
+    if not session.get('user_name'):
+        flash("Unauthorized action", "danger")
+        return redirect('/booking')
+        
+    data = load_data()
+    booking = next((b for b in data.get('bookings', []) if str(b['id']) == str(booking_id)), None)
+    
+    if not booking:
+        flash("Booking not found", "danger")
+        return redirect('/booking')
+        
+    if booking.get('owner_name') != session.get('user_name') and session.get('role') != 'admin':
+        flash("Unauthorized action", "danger")
+        return redirect('/booking')
+        
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE bookings SET payment_request = 'Not Paid', status = 'Not Paid' WHERE id = %s", (booking_id,))
+    conn.commit()
+    conn.close()
+    
+    # Update dict so email has correct status
+    booking['payment_request'] = 'Not Paid'
+    booking['status'] = 'Not Paid'
+    
+    send_booking_confirmation_email(booking)
+    
+    return redirect('/my-bookings?booking_success=true')
 
 @login_required
 def approve_pause():

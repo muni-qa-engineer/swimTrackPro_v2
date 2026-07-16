@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Options - SwimTrackPro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='dashboard_core.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='payment_core.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='misc.css') }}">
+<style>
+    .payment-card {
+        border-radius: 16px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .payment-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    }
+    .qr-container {
+        width: 220px;
+        height: 220px;
+        background-color: white;
+        border-radius: 12px;
+        padding: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .qr-img {
+        max-width: 100%;
+        max-height: 100%;
+    }
+    .btn-pay-now {
+        border-radius: 12px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    .btn-pay-later {
+        border-radius: 12px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    .booking-summary-box {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 12px;
+        border-left: 4px solid #0d6efd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% include 'components/page_header.html' %}
+<div class="container py-5 px-3">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            
+            <!-- Header Section -->
+            <div class="text-center mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle mb-3" style="width: 64px; height: 64px;">
+                    <i class="fa-solid fa-wallet fs-3"></i>
+                </div>
+                <h3 class="fw-bold text-dark">Complete Your Booking</h3>
+                <p class="text-muted">Choose how you'd like to pay for your session.</p>
+            </div>
+
+            <!-- Booking Summary -->
+            <div class="booking-summary-box p-3 mb-4 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-secondary fw-semibold small">Swimmer Name</span>
+                    <span class="text-dark fw-bold">{{ booking.student }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-secondary fw-semibold small">Package</span>
+                    <span class="text-dark fw-bold">{{ booking.package }}</span>
+                </div>
+                <hr class="my-2 border-secondary opacity-25">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-secondary fw-semibold">Total Amount</span>
+                    <span class="text-primary fw-bold fs-5"><i class="fa-solid fa-indian-rupee-sign"></i> {{ booking.fee }}</span>
+                </div>
+            </div>
+
+            <!-- QR Code Section -->
+            <div class="card payment-card border-0 shadow-sm mb-4">
+                <div class="card-body p-4 text-center">
+                    <h5 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-qrcode text-primary me-2"></i> Scan to Pay</h5>
+                    
+                    <div class="d-flex justify-content-center mb-3">
+                        <div class="qr-container border border-2 border-light">
+                            {% if upi_id %}
+                                <!-- Generate Google Charts QR code if UPI ID exists -->
+                                <img src="https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=upi://pay?pa={{ upi_id }}&pn={{ account_holder_name | urlencode }}&am={{ booking.fee }}&cu=INR" alt="UPI QR Code" class="qr-img">
+                            {% else %}
+                                <div class="text-muted small text-center px-3">
+                                    <i class="fa-solid fa-image fs-1 text-light mb-2"></i><br>
+                                    QR Code<br>Not Available
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if upi_id %}
+                    <div class="bg-light rounded p-3 text-start">
+                        <div class="mb-2">
+                            <span class="text-secondary small fw-semibold d-block">UPI ID</span>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <span class="text-dark fw-bold" id="upiIdText">{{ upi_id }}</span>
+                                <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="navigator.clipboard.writeText('{{ upi_id }}'); createToast('UPI ID copied to clipboard!', 'success');" title="Copy UPI ID"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                        </div>
+                        {% if account_holder_name %}
+                        <div>
+                            <span class="text-secondary small fw-semibold d-block">Account Name</span>
+                            <span class="text-dark fw-bold">{{ account_holder_name }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex flex-column gap-3">
+                <button type="button" class="btn btn-primary btn-lg btn-pay-now shadow-sm" disabled>
+                    <i class="fa-solid fa-shield-halved me-2"></i> Pay Now (Coming Soon)
+                </button>
+                
+                <form action="/booking/confirm_paylater/{{ booking.id }}" method="POST" class="w-100">
+                    <button type="submit" class="btn btn-outline-dark btn-lg btn-pay-later w-100">
+                        Confirm & Pay Later
+                    </button>
+                </form>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='common.js') }}"></script>
+{% set active_page = 'book' %}
+{% include 'components/mobile_bottom_nav.html' %}
+{% endblock %}
