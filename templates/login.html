@@ -299,14 +299,18 @@
                     <small id="phoneError" class="text-danger d-none">
                         Please enter valid 10-digit mobile number
                     </small>
-                    {% with messages = get_flashed_messages() %}
-                        {% if messages %}
-                            <small class="text-danger d-block mt-1" style="font-size: 0.78rem;">
+
+                </div>
+
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <div class="text-center mb-3">
+                            <small class="text-danger d-block" style="font-size: 0.85rem; font-weight: 500;">
                                 <i class="fa-solid fa-triangle-exclamation"></i> {{ messages[-1] }}
                             </small>
-                        {% endif %}
-                    {% endwith %}
-                </div>
+                        </div>
+                    {% endif %}
+                {% endwith %}
 
                 <button type="submit" class="login-btn">
                     <span
@@ -590,6 +594,17 @@ if (loginForm) {
 }
 // Auto-focus username on initial page load
 window.addEventListener('load', () => {
+    const params = new URLSearchParams(window.location.search);
+    const activeRole = params.get('role');
+    
+    if (activeRole === 'trainer') {
+        activateTrainerMode();
+    } else if (activeRole === 'admin') {
+        activateAdminMode();
+    } else {
+        activateGuestMode();
+    }
+    
     setTimeout(() => {
         nameInput.focus();
     }, 100);

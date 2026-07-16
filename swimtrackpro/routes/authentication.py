@@ -83,7 +83,7 @@ def register_authentication_routes(
                 return redirect(url_for("index"))
 
             flash("Invalid trainer credentials")
-            return redirect(url_for("index"))
+            return redirect(url_for("index", role="trainer"))
 
         if role == "admin":
             if name == admin_username and password == admin_password:
@@ -128,7 +128,7 @@ def register_authentication_routes(
                 return redirect(url_for("index"))
 
             flash("Invalid admin credentials")
-            return redirect(url_for("index"))
+            return redirect(url_for("index", role="admin"))
 
         if role == "guest" and name:
             normalized_name = name.lower()
@@ -206,7 +206,7 @@ def register_authentication_routes(
             return redirect(url_for("index"))
 
         flash("Please enter all required fields.")
-        return redirect(url_for("index"))
+        return redirect(url_for("index", role=role))
 
     def register_page():
         return render_template("registration.html")
