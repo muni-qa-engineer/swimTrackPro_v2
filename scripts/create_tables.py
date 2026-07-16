@@ -34,6 +34,16 @@ CREATE TABLE IF NOT EXISTS bookings (
 )
 """)
 
+# PROFILE PICTURES TABLE
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS profile_pictures (
+    id SERIAL PRIMARY KEY,
+    id_number VARCHAR(50) UNIQUE NOT NULL,
+    filename TEXT NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+""")
+
 conn.commit()
 cursor.close()
 conn.close()

@@ -426,33 +426,26 @@ def register_general_routes(app):
         
         if role == 'admin':
             title = "SwimTrackPro Admin"
-            cursor.execute("SELECT phone, email, photos, residence_location FROM trainers WHERE LOWER(username) = LOWER(%s)", (session.get('admin_username', 'admin'),))
+            cursor.execute("SELECT phone, email, residence_location FROM trainers WHERE LOWER(username) = LOWER(%s)", (session.get('admin_username', 'admin'),))
             row = cursor.fetchone()
             if row:
-                phone, email, photo, address = row[0], row[1], row[2], row[3]
+                phone, email, address = row[0], row[1], row[2]
         elif role == 'trainer':
             title = "SwimTrackPro Coach"
-            cursor.execute("SELECT phone, email, photos, residence_location FROM trainers WHERE username = %s", (session.get('trainer_username'),))
+            cursor.execute("SELECT phone, email, residence_location FROM trainers WHERE username = %s", (session.get('trainer_username'),))
             row = cursor.fetchone()
             if row:
-                phone, email, photo, address = row[0], row[1], row[2], row[3]
+                phone, email, address = row[0], row[1], row[2]
         else:
             title = "SwimTrackPro Student"
             
+        # Fetch from profile_pictures table
+        cursor.execute("SELECT filename FROM profile_pictures WHERE id_number = %s", (id_number,))
+        pic_row = cursor.fetchone()
+        if pic_row and pic_row[0]:
+            photo = url_for('static', filename='profile_pictures/' + pic_row[0])
+            
         conn.close()
-        
-        # Determine fallback photo
-        if not photo:
-            photo = url_for('static', filename='images/Album/IMG20220514170101_01.jpg')
-        else:
-            # If photo is just a filename, prepend path if needed.
-            # Usually trainers.photos is a comma separated list. We take the first one.
-            photo_list = photo.split(',')
-            first_photo = photo_list[0].strip()
-            if first_photo:
-                photo = url_for('static', filename='uploads/' + first_photo)
-            else:
-                photo = url_for('static', filename='images/Album/IMG20220514170101_01.jpg')
 
         return jsonify({
             'name': user_name.title(),
@@ -463,6 +456,79 @@ def register_general_routes(app):
             'address': address,
             'photo': photo
         })
+
+    @app.route('/api/upload_id_card_photo', methods=['POST'])
+    def api_upload_id_card_photo():
+        if 'user_name' not in session or 'id_number' not in session:
+            return jsonify({'error': 'Not logged in'}), 401
+
+        if 'profile_pic' not in request.files:
+            return jsonify({'error': 'No file part in the request.'}), 400
+
+        file = request.files['profile_pic']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected.'}), 400
+
+        if file:
+            import os
+            from werkzeug.utils import secure_filename
+            id_number = session.get('id_number', 'UNKNOWN')
+            original_ext = os.path.splitext(file.filename)[1]
+            original_base = os.path.splitext(file.filename)[0]
+            # Use original name with ID appended as requested
+            new_filename = secure_filename(f"{original_base}_{id_number}{original_ext}")
+
+            profile_dir = os.path.join("static", "profile_pictures")
+            os.makedirs(profile_dir, exist_ok=True)
+            filepath = os.path.join(profile_dir, new_filename)
+            file.save(filepath)
+
+            conn = get_pg_connection()
+            cursor = conn.cursor()
+            
+            # Upsert into profile_pictures
+            cursor.execute("""
+                INSERT INTO profile_pictures (id_number, filename, updated_at) 
+                VALUES (%s, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (id_number) 
+                DO UPDATE SET filename = EXCLUDED.filename, updated_at = EXCLUDED.updated_at
+            """, (id_number, new_filename))
+            conn.commit()
+            conn.close()
+
+            return jsonify({'success': True, 'photo': url_for('static', filename='profile_pictures/' + new_filename)})
+            
+        return jsonify({'error': 'Upload failed'}), 500
+
+    @app.route('/api/remove_id_card_photo', methods=['POST'])
+    def api_remove_id_card_photo():
+        if 'user_name' not in session or 'id_number' not in session:
+            return jsonify({'error': 'Not logged in'}), 401
+            
+        id_number = session.get('id_number')
+        
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT filename FROM profile_pictures WHERE id_number = %s", (id_number,))
+        row = cursor.fetchone()
+        
+        if row:
+            import os
+            filename = row[0]
+            filepath = os.path.join("static", "profile_pictures", filename)
+            if os.path.exists(filepath):
+                try:
+                    os.remove(filepath)
+                except Exception:
+                    pass
+            
+            cursor.execute("DELETE FROM profile_pictures WHERE id_number = %s", (id_number,))
+            conn.commit()
+        
+        conn.close()
+        
+        return jsonify({'success': True})
 
     app.add_url_rule(
         "/profile",
