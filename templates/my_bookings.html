@@ -485,9 +485,15 @@
                                               <i class="fa-solid fa-circle text-warning"></i> Approval Pending
                                           </button>
                                       {% else %}
-                                          <button type="button" class="btn btn-sm btn-outline-warning mt-2 fw-bold w-100" onclick="showPauseModal('{{ b.id }}', '{{ b.remaining_classes }}', {{ b.pause_count or 0 }})">
-                                              <i class="fa-solid fa-pause"></i> Pause Package
-                                          </button>
+                                          {% if (b.pause_count or 0) > 0 %}
+                                              <button type="button" class="btn btn-sm btn-outline-secondary mt-2 fw-bold w-100" title="You have already used your one-time pause for this package." disabled>
+                                                  <i class="fa-solid fa-ban"></i> Pause Used
+                                              </button>
+                                          {% else %}
+                                              <button type="button" class="btn btn-sm btn-outline-warning mt-2 fw-bold w-100" onclick="showPauseModal('{{ b.id }}', '{{ b.remaining_classes }}', 0)">
+                                                  <i class="fa-solid fa-pause"></i> Pause Package
+                                              </button>
+                                          {% endif %}
                                       {% endif %}
                                   {% endif %}
                               {% endif %}

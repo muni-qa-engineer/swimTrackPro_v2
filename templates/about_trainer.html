@@ -339,7 +339,7 @@
                     star.addEventListener('click', () => {
                         const val = parseInt(star.getAttribute('data-value'));
                         hiddenInput.value = val;
-                        starLabel.textContent = labels[val] || 'Select Rating';
+                        starLabel.innerHTML = labels[val] || 'Select Rating';
                         highlightStars(stars, val);
                     });
                 });
