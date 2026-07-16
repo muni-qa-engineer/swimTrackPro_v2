@@ -248,7 +248,10 @@ function showMyIdCard() {
     const flipContainer = document.querySelector('.id-card-flip-container');
     if (flipContainer) flipContainer.classList.remove('flipped');
     
-    fetch('/api/my_id_card')
+    // Add timestamp to prevent browser from caching stale API responses
+    const cacheBuster = new Date().getTime();
+    
+    fetch('/api/my_id_card?t=' + cacheBuster)
         .then(response => response.json())
         .then(data => {
             if (data.error) {
@@ -292,7 +295,8 @@ function showMyIdCard() {
             const removeBtn = document.getElementById('removePhotoBtn');
             
             if (data.photo) {
-                photoEl.src = data.photo;
+                // Add timestamp to image src to bust image cache
+                photoEl.src = data.photo + '?t=' + cacheBuster;
                 photoEl.style.display = 'block';
                 placeholderEl.style.display = 'none';
                 removeBtn.style.display = 'block';
@@ -379,7 +383,8 @@ function saveCroppedPhoto() {
                 const cropModal = bootstrap.Modal.getInstance(cropModalEl);
                 cropModal.hide();
                 
-                document.getElementById('idCardPhoto').src = data.photo;
+                const uploadCacheBuster = new Date().getTime();
+                document.getElementById('idCardPhoto').src = data.photo + '?t=' + uploadCacheBuster;
                 document.getElementById('idCardPhoto').style.display = 'block';
                 document.getElementById('noPhotoPlaceholder').style.display = 'none';
                 document.getElementById('removePhotoBtn').style.display = 'block';
