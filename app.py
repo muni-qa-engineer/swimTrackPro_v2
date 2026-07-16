@@ -577,6 +577,17 @@ register_deletions_routes(app)
 register_makeup_routes(app)
 register_general_routes(app)
 
+@app.after_request
+def add_header(response):
+    """
+    Prevent caching of pages to ensure back button doesn't reveal logged-in state after logout
+    """
+    if 'text/html' in response.headers.get('Content-Type', ''):
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '-1'
+    return response
+
 @app.errorhandler(psycopg2.OperationalError)
 def handle_db_error(e):
     return """
