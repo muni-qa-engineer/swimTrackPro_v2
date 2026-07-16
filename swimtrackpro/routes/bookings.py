@@ -878,7 +878,7 @@ def resume_booking():
     if booking.get("owner_name") != session.get("user_name"):
         return jsonify({"success": False, "error": "Unauthorized action."}), 403
         
-    if booking.get("pause_status") != "PAUSED":
+    if booking.get("pause_status") not in ("PAUSED", "Paused"):
         return jsonify({"success": False, "error": "Package is not paused."}), 400
         
     today_str = datetime.now(ZoneInfo("Asia/Kolkata")).strftime("%Y-%m-%d")
