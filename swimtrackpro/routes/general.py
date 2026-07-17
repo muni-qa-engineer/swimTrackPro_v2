@@ -381,7 +381,6 @@ def register_general_routes(app):
         if current_role != "trainer" or not trainer_user:
             return redirect(url_for("index"))
 
-        current_password = request.form.get("current_password")
         new_password = request.form.get("new_password")
         confirm_password = request.form.get("confirm_password")
 
@@ -391,12 +390,12 @@ def register_general_routes(app):
 
         conn = get_pg_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT password FROM trainers WHERE username = %s", (trainer_user,))
+        cursor.execute("SELECT 1 FROM trainers WHERE username = %s", (trainer_user,))
         row = cursor.fetchone()
 
-        if not row or row[0] != current_password:
+        if not row:
             conn.close()
-            flash("Current password is incorrect.", "danger")
+            flash("Trainer account not found.", "danger")
             return redirect(url_for("profile_page"))
 
         cursor.execute("UPDATE trainers SET password = %s WHERE username = %s", (new_password, trainer_user))

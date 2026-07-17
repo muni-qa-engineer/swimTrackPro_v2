@@ -786,15 +786,36 @@
             link.classList.add('text-white-50');
         });
 
-        // Determine which link to set as active
+        // Determine which link to set as active (desktop)
         let clickedLink = clickedElement || (window.event ? window.event.currentTarget : null);
-        if (!clickedLink) {
-            clickedLink = document.querySelector(`a[onclick="switchSection('${sectionId}')"]`);
-        }
         
-        if (clickedLink && clickedLink.classList) {
-            clickedLink.classList.add('active', 'bg-primary');
-            clickedLink.classList.remove('text-white-50');
+        // Mobile bottom nav handling
+        document.querySelectorAll('.mobile-nav-item').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        if (clickedLink && clickedLink.classList.contains('mobile-nav-item')) {
+            clickedLink.classList.add('active');
+            // Find corresponding desktop link to also highlight it
+            let desktopLink = document.querySelector(`#sidebarMenu a[onclick="switchSection('${sectionId}')"]`);
+            if (desktopLink) {
+                desktopLink.classList.add('active', 'bg-primary');
+                desktopLink.classList.remove('text-white-50');
+            }
+        } else {
+            // Desktop link clicked or programmatically called
+            if (!clickedLink || !clickedLink.classList.contains('nav-link')) {
+                clickedLink = document.querySelector(`#sidebarMenu a[onclick*="switchSection('${sectionId}')"]`);
+            }
+            if (clickedLink && clickedLink.classList) {
+                clickedLink.classList.add('active', 'bg-primary');
+                clickedLink.classList.remove('text-white-50');
+            }
+            // Find corresponding mobile link to also highlight it
+            let mobileLink = document.querySelector(`.mobile-nav-item[onclick*="switchSection('${sectionId}'"]`);
+            if (mobileLink) {
+                mobileLink.classList.add('active');
+            }
         }
 
         // Update page title

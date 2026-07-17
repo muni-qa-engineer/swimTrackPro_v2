@@ -150,7 +150,7 @@
                                 </div>
                             </div>
 
-                            <div class="mt-5 pt-3 border-top text-end">
+                            <div class="mt-5 text-end">
                                 <button type="submit" id="saveChangesBtn" class="btn btn-primary px-5 py-2.5 fw-bold btn-save-changes" style="display: none !important;">
                                     <i class="fa-solid fa-circle-check me-2"></i> Save Changes
                                 </button>
@@ -159,23 +159,12 @@
                         </form>
 
                         <!-- Change Password Section -->
-                        <div class="mt-5 pt-4 border-top">
+                        <div class="mt-5 pt-4">
                             <h4 class="fw-bold mb-1 text-primary"><i class="fa-solid fa-shield-halved me-2"></i>Security Settings</h4>
                             <p class="text-muted small mb-4">Update your account password</p>
                             
                             <form action="/profile/update_password" method="POST" id="passwordForm">
                                 <div class="row g-4">
-                                    <div class="col-md-12">
-                                        <div class="pdf-field-box">
-                                            <label class="pdf-label">Current Password</label>
-                                            <div class="input-group">
-                                                <input type="password" id="currentPassword" name="current_password" class="pdf-input form-control border-end-0" required placeholder="Enter current password">
-                                                <button class="input-group-text bg-white border-start-0" type="button" onclick="togglePasswordVisibility('currentPassword', this)">
-                                                    <i class="fa-solid fa-eye text-muted"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
                                     <div class="col-md-6">
                                         <div class="pdf-field-box">
                                             <label class="pdf-label">New Password</label>

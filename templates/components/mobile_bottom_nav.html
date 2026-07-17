@@ -31,6 +31,33 @@
     <small>Profile</small>
   </button>
 
+  {% elif session_role == 'admin' %}
+
+  <button type="button" class="mobile-nav-item {% if active_page == 'home' %}active{% endif %}" onclick="switchSection('dashboard', this)">
+    <i class="fa-solid fa-house"></i>
+    <small>Home</small>
+  </button>
+
+  <button type="button" class="mobile-nav-item {% if active_page == 'bookings' %}active{% endif %}" onclick="switchSection('bookings', this)">
+    <i class="fa-solid fa-clipboard-list"></i>
+    <small>Bookings</small>
+  </button>
+
+  <button type="button" class="mobile-nav-item {% if active_page == 'students' %}active{% endif %}" onclick="switchSection('students', this)">
+    <i class="fa-solid fa-user-group"></i>
+    <small>Students</small>
+  </button>
+
+  <button type="button" class="mobile-nav-item {% if active_page == 'payments' %}active{% endif %}" onclick="switchSection('payments', this)">
+    <i class="fa-solid fa-credit-card"></i>
+    <small>Payments</small>
+  </button>
+
+  <button type="button" class="mobile-nav-item {% if active_page == 'settings' %}active{% endif %}" onclick="switchSection('settings', this)">
+    <i class="fa-solid fa-sliders"></i>
+    <small>Settings</small>
+  </button>
+
   {% else %}
 
   <button type="button" class="mobile-nav-item {% if active_page == 'home' %}active{% endif %}" onclick="window.location.href='/'">
