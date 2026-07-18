@@ -25,7 +25,7 @@ def register_authentication_routes(
                 conn = get_pg_connection()
                 cursor = conn.cursor()
                 cursor.execute(
-                    "SELECT username, password, name, is_approved FROM trainers WHERE LOWER(username) = LOWER(%s)",
+                    "SELECT username, password, name, is_approved, is_blocked FROM trainers WHERE LOWER(username) = LOWER(%s)",
                     (name.lower(),)
                 )
                 trainer_row = cursor.fetchone()
@@ -36,6 +36,10 @@ def register_authentication_routes(
                 return redirect(url_for("index"))
 
             if trainer_row and trainer_row[1] == password:
+                if trainer_row[4]:
+                    flash("Your account has been suspended by the administrator.", "danger")
+                    return redirect(url_for("index"))
+
                 if not trainer_row[3]:
                     flash("Your trainer registration is pending admin approval.", "warning")
                     return redirect(url_for("index"))
@@ -163,6 +167,18 @@ def register_authentication_routes(
                 print("LOGIN DB ERROR (guest lookup):", db_err)
                 flash("Unable to connect to the database. Please try again in a moment.", "danger")
                 return redirect(url_for("index"))
+
+            try:
+                conn = get_pg_connection()
+                cursor = conn.cursor()
+                cursor.execute("SELECT is_blocked FROM students WHERE owner_phone = %s LIMIT 1", (phone,))
+                block_row = cursor.fetchone()
+                conn.close()
+                if block_row and block_row[0]:
+                    flash("Your account has been suspended by the administrator.", "danger")
+                    return redirect(url_for("index"))
+            except Exception as e:
+                print("LOGIN DB ERROR (guest block check):", e)
 
             if existing_row:
                 existing_name = (existing_row[0] or "").strip().lower()

@@ -356,6 +356,133 @@ def submit_coach_feedback(trainer_username):
     return redirect(url_for("about_trainer"))
 
 
+@admin_required("Only admin can block trainers.")
+def toggle_block_trainer(username):
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT is_blocked FROM trainers WHERE username = %s", (username,))
+    row = cursor.fetchone()
+    if row:
+        new_status = not row[0]
+        cursor.execute("UPDATE trainers SET is_blocked = %s WHERE username = %s", (new_status, username))
+        conn.commit()
+        if new_status:
+            flash(f"Trainer {username} has been blocked and suspended.", "danger")
+        else:
+            flash(f"Trainer {username} has been unblocked.", "success")
+    conn.close()
+    return redirect(url_for("index"))
+
+@admin_required("Only admin can block students.")
+def toggle_block_student(phone):
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT is_blocked FROM students WHERE owner_phone = %s", (phone,))
+    row = cursor.fetchone()
+    if row:
+        new_status = not row[0]
+        cursor.execute("UPDATE students SET is_blocked = %s WHERE owner_phone = %s", (new_status, phone))
+        conn.commit()
+        if new_status:
+            flash(f"Student with phone {phone} has been blocked and suspended.", "danger")
+        else:
+            flash(f"Student with phone {phone} has been unblocked.", "success")
+    else:
+        # Create student record if not found just to block them based on phone
+        cursor.execute("INSERT INTO students (owner_phone, owner_name, is_blocked) VALUES (%s, %s, %s)", (phone, 'Unknown', True))
+        conn.commit()
+        flash(f"Student with phone {phone} has been blocked and suspended.", "danger")
+    conn.close()
+    return redirect(url_for("index"))
+
+
+@admin_required("Only admin can edit students.")
+def edit_student(phone):
+    if request.method == "POST":
+        new_name = request.form.get("name")
+        new_owner = request.form.get("owner_name")
+        new_phone = request.form.get("owner_phone")
+        
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE students SET name = %s, owner_name = %s, owner_phone = %s WHERE owner_phone = %s",
+            (new_name, new_owner, new_phone, phone)
+        )
+        # also update bookings that might use the old phone
+        cursor.execute(
+            "UPDATE bookings SET owner_phone = %s WHERE owner_phone = %s",
+            (new_phone, phone)
+        )
+        conn.commit()
+        conn.close()
+        flash("Student details updated successfully.", "success")
+        return redirect(url_for("index"))
+
+@admin_required("Only admin can edit trainers.")
+def edit_trainer(username):
+    if request.method == "POST":
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            UPDATE trainers 
+            SET name = %s, phone = %s, email = %s, experience = %s, 
+                qualification = %s, currently_working = %s, residence_location = %s, rating = %s
+            WHERE username = %s
+            """,
+            (
+                request.form.get("name"),
+                request.form.get("phone"),
+                request.form.get("email"),
+                request.form.get("experience"),
+                request.form.get("qualification"),
+                request.form.get("currently_working"),
+                request.form.get("residence_location"),
+                request.form.get("rating"),
+                username
+            )
+        )
+        conn.commit()
+        conn.close()
+        flash("Trainer details updated successfully.", "success")
+        return redirect(url_for("index"))
+
+@admin_required("Only admin can delete trainer images.")
+def delete_trainer_image(username, filename):
+    import os
+    if request.method == "POST":
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT photos FROM trainers WHERE username = %s", (username,))
+        row = cursor.fetchone()
+        
+        if row and row[0]:
+            photos = row[0].split(",")
+            if filename in photos:
+                photos.remove(filename)
+                new_photos_str = ",".join(photos)
+                
+                # Delete from database
+                cursor.execute("UPDATE trainers SET photos = %s WHERE username = %s", (new_photos_str, username))
+                
+                # Delete file from disk
+                album_dir = os.path.join("static", "images", "Album")
+                filepath = os.path.join(album_dir, filename)
+                try:
+                    if os.path.exists(filepath):
+                        os.remove(filepath)
+                except Exception as e:
+                    print(f"Error removing file {filepath}: {e}")
+                
+                conn.commit()
+                flash("Image deleted successfully.", "success")
+            else:
+                flash("Image not found in trainer's album.", "warning")
+        
+        conn.close()
+        return redirect(url_for("index"))
+
 def register_general_routes(app):
     """Register routes with their legacy endpoint names unchanged."""
 
@@ -580,5 +707,35 @@ def register_general_routes(app):
         "/coach/feedback/<trainer_username>",
         endpoint="submit_coach_feedback",
         view_func=submit_coach_feedback,
+        methods=["POST"],
+    )
+    app.add_url_rule(
+        "/admin/toggle_block_trainer/<username>",
+        endpoint="toggle_block_trainer",
+        view_func=toggle_block_trainer,
+        methods=["POST"],
+    )
+    app.add_url_rule(
+        "/admin/toggle_block_student/<phone>",
+        endpoint="toggle_block_student",
+        view_func=toggle_block_student,
+        methods=["POST"],
+    )
+    app.add_url_rule(
+        "/admin/edit_student/<phone>",
+        endpoint="edit_student",
+        view_func=edit_student,
+        methods=["POST"],
+    )
+    app.add_url_rule(
+        "/admin/edit_trainer/<username>",
+        endpoint="edit_trainer",
+        view_func=edit_trainer,
+        methods=["POST"],
+    )
+    app.add_url_rule(
+        "/admin/delete_trainer_image/<username>/<filename>",
+        endpoint="delete_trainer_image",
+        view_func=delete_trainer_image,
         methods=["POST"],
     )

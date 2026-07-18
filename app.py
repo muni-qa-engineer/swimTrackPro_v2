@@ -115,6 +115,9 @@ def ensure_makeup_tables():
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS consent_accepted_at TIMESTAMP WITHOUT TIME ZONE")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS consent_ip TEXT")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS id_number TEXT")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS is_blocked BOOLEAN DEFAULT FALSE")
+
+    cursor.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS is_blocked BOOLEAN DEFAULT FALSE")
 
     # Pre-populate default admin trainer if not exists
     cursor.execute("SELECT username FROM trainers WHERE LOWER(username) = LOWER(%s)", (ADMIN_USERNAME,))
@@ -248,7 +251,8 @@ def load_data():
         students.append({
             'name': s[1],
             'owner_name': s[2],
-            'owner_phone': s[3]
+            'owner_phone': s[3],
+            'is_blocked': s[4] if len(s) > 4 else False
         })
 
     # Load bookings
@@ -473,76 +477,7 @@ def load_data():
         'bookings': bookings
     }
 
-def save_data(students, bookings):
-    conn = get_pg_connection()
-    cursor = conn.cursor()
 
-    # Clear existing data
-    cursor.execute('DELETE FROM students')
-    cursor.execute('DELETE FROM bookings')
-
-    # Save students
-    for student in students:
-        cursor.execute('''
-        INSERT INTO students (
-            student_name,
-            owner_name,
-            owner_phone
-        ) VALUES (%s, %s, %s)
-        ''', (
-            student.get('name', ''),
-            student.get('owner_name', ''),
-            student.get('owner_phone', '')
-        ))
-
-    # Save bookings
-    for booking in bookings:
-        cursor.execute('''
-        INSERT INTO bookings (
-            id,
-            student_name,
-            created_by,
-            start_date,
-            end_date,
-            package,
-            selected_days,
-            location,
-            time,
-            fee,
-            status,
-            payment_request,
-            owner_name,
-            owner_phone,
-            persons,
-            email,
-            trainer_username
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ''', (
-            booking.get('id', ''),
-            booking.get('student', ''),
-            booking.get('created_by', ''),
-            booking.get('start_date', ''),
-            booking.get('end_date', ''),
-            booking.get('package', ''),
-            booking.get('selected_days', ''),
-            booking.get('location', ''),
-            booking.get('time', ''),
-            int(booking.get('fee', 0)),
-            booking.get('status', 'NOT_PAID'),
-            booking.get('payment_request', 'NOT_PAID'),
-            booking.get('owner_name', ''),
-            booking.get('owner_phone', ''),
-            int(booking.get('persons', 1)),
-            booking.get('email', ''),
-            booking.get('trainer_username', 'asdf')
-        ))
-
-    conn.commit()
-    conn.close()
-
-
-def save_complete_data(data):
-    save_data(data.get('students', []), data.get('bookings', []))
 
 # --- ROUTES ---
 runtime.configure(

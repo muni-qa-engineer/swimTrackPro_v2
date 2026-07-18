@@ -236,9 +236,21 @@
                                         Coach: <span class="fw-bold text-primary">{{ (trainer_map.get(b.trainer_username.lower().strip(), b.trainer_username) or 'Unassigned')|title }}</span>
                                     </div>
                                 </div>
-                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2">
-                                    <i class="fa-solid fa-box"></i> {{ b.package or 'Single' }}
-                                </span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2">
+                                        <i class="fa-solid fa-box"></i> {{ b.package or 'Single' }}
+                                    </span>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-light border-0 shadow-sm rounded-circle p-2 d-flex align-items-center justify-content-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Download Booking Card" style="width: 32px; height: 32px;">
+                                            <i class="fa-solid fa-download text-secondary"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" style="border-radius: 12px; font-size: 0.9rem;">
+                                            <li><a class="dropdown-item py-2" href="#" onclick="downloadBooking(this, 'png', '{{ b.id }}'); return false;"><i class="fa-regular fa-image text-primary me-2" style="width: 20px;"></i> Save as PNG</a></li>
+                                            <li><a class="dropdown-item py-2" href="#" onclick="downloadBooking(this, 'jpeg', '{{ b.id }}'); return false;"><i class="fa-solid fa-image text-success me-2" style="width: 20px;"></i> Save as JPEG</a></li>
+                                            <li><a class="dropdown-item py-2" href="#" onclick="downloadBooking(this, 'pdf', '{{ b.id }}'); return false;"><i class="fa-solid fa-file-pdf text-danger me-2" style="width: 20px;"></i> Save as PDF</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="mb-3 small">
@@ -376,14 +388,8 @@
                             </p>
 
                             {% if b.pause_status == 'Paused' or b.pause_status == 'PAUSED' %}
-                            <div class="alert alert-warning p-3 rounded-3 border-warning border-opacity-25 text-start mt-2" style="font-size: 0.85rem; color: #664d03; background-color: #fff3cd;">
-                                <strong><i class="fa-solid fa-pause"></i> Package Paused</strong><br>
-                                <span class="d-block mt-1"><strong>Paused On:</strong> {{ b.pause_date }}</span>
-                                <span class="d-block"><strong>Auto Resume:</strong> {{ b.auto_resume_date }}</span>
-                                <span class="d-block"><strong>Remaining:</strong> {{ b.remaining_classes }}</span>
-                                <span class="d-block mt-1 text-danger fw-bold countdown-timer" data-auto-resume="{{ b.auto_resume_date }}">
-                                    Auto resumes...
-                                </span>
+                            <div class="alert alert-warning p-2 rounded-3 border-warning border-opacity-25 text-center mt-2 mb-0" style="font-size: 0.8rem; color: #664d03; background-color: #fff3cd;">
+                                <strong><i class="fa-solid fa-pause"></i> Paused:</strong> <span class="text-danger fw-bold countdown-timer ms-1" data-auto-resume="{{ b.auto_resume_date }}">Auto resumes...</span>
                             </div>
                             {% endif %}
 
@@ -630,6 +636,18 @@ document.addEventListener('DOMContentLoaded', function() {
             if (arrow) arrow.textContent = '▼';
         }
     }
+
+    // Restore scroll position
+    const scrollPos = sessionStorage.getItem('swimtrack_scroll_pos');
+    if (scrollPos) {
+        window.scrollTo(0, parseInt(scrollPos));
+        sessionStorage.removeItem('swimtrack_scroll_pos');
+    }
+
+    // Save scroll position before leaving page
+    window.addEventListener('beforeunload', () => {
+        sessionStorage.setItem('swimtrack_scroll_pos', window.scrollY);
+    });
 });
 
 let pauseModalObj = null;
@@ -976,5 +994,58 @@ window.submitRejection = function(bookingId) {
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+    async function downloadBooking(btn, format, bookingId) {
+        const card = btn.closest('.booking-card');
+        if (!card) return;
+
+        // Briefly hide action buttons and dropdowns inside the card so they don't appear in screenshot
+        const actions = card.querySelector('.mt-3.d-flex');
+        const dropdown = card.querySelector('.dropdown');
+        const originalActionsDisplay = actions ? actions.style.display : '';
+        const originalDropdownDisplay = dropdown ? dropdown.style.display : '';
+        
+        if (actions) actions.style.display = 'none';
+        if (dropdown) dropdown.style.display = 'none';
+
+        try {
+            const canvas = await html2canvas(card, {
+                scale: 2,
+                backgroundColor: '#ffffff',
+                useCORS: true,
+                logging: false
+            });
+
+            if (actions) actions.style.display = originalActionsDisplay;
+            if (dropdown) dropdown.style.display = originalDropdownDisplay;
+
+            const filename = `booking_${bookingId}_swimtrackpro`;
+
+            if (format === 'png' || format === 'jpeg') {
+                const imgData = canvas.toDataURL(`image/${format}`, 1.0);
+                const link = document.createElement('a');
+                link.download = `${filename}.${format}`;
+                link.href = imgData;
+                link.click();
+            } else if (format === 'pdf') {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new window.jspdf.jsPDF({
+                    orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+                    unit: 'px',
+                    format: [canvas.width, canvas.height]
+                });
+                pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+                pdf.save(`${filename}.pdf`);
+            }
+        } catch (e) {
+            console.error("Error generating image:", e);
+            if (actions) actions.style.display = originalActionsDisplay;
+            if (dropdown) dropdown.style.display = originalDropdownDisplay;
+            alert("Could not generate download. Please try again.");
+        }
+    }
+</script>
 <script src="{{ url_for('static', filename='common.js') }}?v=1.1.3"></script>
 {% endblock %}
