@@ -86,6 +86,10 @@ def about_trainer():
 def help_page():
     return render_template("help.html", role=session.get("role", "guest"))
 
+@login_required
+def about_swimming():
+    return render_template("about_swimming.html", role=session.get("role", "guest"))
+
 
 @trainer_required("Only trainer can update the Notice Board.")
 def update_notice():
@@ -495,6 +499,11 @@ def register_general_routes(app):
         "/help",
         endpoint="help_page",
         view_func=help_page,
+    )
+    app.add_url_rule(
+        "/about-swimming",
+        endpoint="about_swimming",
+        view_func=about_swimming,
     )
     app.add_url_rule(
         "/update_notice",

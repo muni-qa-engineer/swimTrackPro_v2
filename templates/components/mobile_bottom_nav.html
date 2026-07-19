@@ -31,6 +31,11 @@
     <small>Profile</small>
   </button>
 
+  <button type="button" class="mobile-nav-item {% if active_page == 'about-swimming' %}active{% endif %}" onclick="window.location.href='/about-swimming'">
+    <i class="fa-solid fa-person-swimming"></i>
+    <small>About</small>
+  </button>
+
   {% elif session_role == 'admin' %}
 
   <button type="button" class="mobile-nav-item {% if active_page == 'home' %}active{% endif %}" onclick="switchSection('dashboard', this)">
@@ -83,6 +88,11 @@
   <button type="button" class="mobile-nav-item {% if active_page == 'contact' %}active{% endif %}" onclick="window.location.href='/help'">
     <i class="fa-solid fa-headset"></i>
     <small>Contact</small>
+  </button>
+
+  <button type="button" class="mobile-nav-item {% if active_page == 'about-swimming' %}active{% endif %}" onclick="window.location.href='/about-swimming'">
+    <i class="fa-solid fa-person-swimming"></i>
+    <small>About</small>
   </button>
 
   {% endif %}
