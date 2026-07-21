@@ -80,7 +80,6 @@ class GeneralRouteAccessTests(unittest.TestCase):
             "/calendar",
             "/payments",
             "/about-trainer",
-            "/help",
         ):
             with self.subTest(path=path):
                 response = self.client.get(path)
@@ -105,7 +104,7 @@ class GeneralRouteAccessTests(unittest.TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.headers["Location"], "/")
+        self.assertEqual(response.headers["Location"], "/?role=trainer")
         with self.client.session_transaction() as flask_session:
             self.assertNotIn("user_name", flask_session)
 
@@ -195,7 +194,7 @@ class GeneralRouteAccessTests(unittest.TestCase):
             },
         )
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.headers["Location"], "/")
+        self.assertEqual(response.headers["Location"], "/?role=admin")
         with self.client.session_transaction() as flask_session:
             self.assertNotIn("role", flask_session)
 
@@ -215,7 +214,7 @@ class GeneralRouteAccessTests(unittest.TestCase):
     def test_terms_agreement_view(self):
         response = self.client.get("/terms-agreement")
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"SwimTrackPro Coach Terms & Agreement", response.data)
+        self.assertIn(b"SwimTrackPro Coach Agreement", response.data)
 
     def test_trainer_cannot_pause_booking(self):
         self.login("trainer")

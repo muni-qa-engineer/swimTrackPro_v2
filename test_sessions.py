@@ -14,7 +14,7 @@ def test():
     bookings = [dict(zip(columns, row)) for row in cur.fetchall()]
     print("Found", len(bookings), "bookings for trainers.")
     for b in bookings:
-        print(f"Booking: {b['student']}, Dates: {b.get('calendar_dates', 'None')}, Time: {b.get('time', 'None')}")
+        print(f"Booking: {b.get('student_name', 'None')}, Dates: {b.get('calendar_dates', 'None')}, Time: {b.get('time', 'None')}")
     conn.close()
 
 if __name__ == '__main__':
