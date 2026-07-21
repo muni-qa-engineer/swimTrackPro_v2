@@ -60,7 +60,11 @@ def book():
     fee = calculate_discounted_fee(package, persons, session_count)
 
     if package == 'Demo':
+<<<<<<< HEAD
         fee = 500 * int(persons)
+=======
+        fee = 0
+>>>>>>> feature/newVersion_3.0
 
     # V0044.0 - Custom package fee is calculated by the frontend fee engine.
     if package == 'Custom':
@@ -131,6 +135,7 @@ def book():
     # -------------------------------------------------
     # Recurring-date Trainer Location Conflict Check & Group Swimmer Handling
     # -------------------------------------------------
+<<<<<<< HEAD
     new_location = (request.form.get('location') or '').strip().lower()
     # group_swimmers = []
     group_swimmers = set()
@@ -202,6 +207,77 @@ def book():
         except Exception:
             # Ignore malformed historical records and continue checking others
             continue
+=======
+    # 1. Duplicate Booking Check (same student, same time)
+    for b in data['bookings']:
+        try:
+            same_student = (b.get('student', '').strip().lower() == student.strip().lower() and 
+                            b.get('owner_name') == session.get('user_name'))
+            if not same_student:
+                continue
+            
+            existing_start = str(b.get('start_date', ''))
+            existing_end = str(b.get('end_date', b.get('start_date', '')))
+            existing_days = b.get('selected_days', '')
+            existing_booking_dates = generate_recurring_dates(existing_start, existing_end, existing_days)
+            
+            overlapping_dates = set(new_booking_dates) & set(existing_booking_dates)
+            if not overlapping_dates:
+                continue
+                
+            existing_time_str = b.get('time')
+            if not existing_time_str: continue
+            
+            existing_time = datetime.strptime(existing_time_str, '%I:%M %p')
+            time_diff = abs((booking_time - existing_time).total_seconds()) / 60
+            
+            if time_diff < 60:
+                flash('Duplicate booking already exists.', 'warning')
+                return redirect('/booking?booking_conflict=true')
+        except Exception:
+            continue
+
+    # 2. Coach Availability & Group Swimming Check
+    group_swimmers = set()
+    for b in data['bookings']:
+        try:
+            if b.get('trainer_username', '').strip().lower() != trainer_username:
+                continue
+                
+            existing_start = str(b.get('start_date', ''))
+            existing_end = str(b.get('end_date', b.get('start_date', '')))
+            existing_days = b.get('selected_days', '')
+            existing_booking_dates = generate_recurring_dates(existing_start, existing_end, existing_days)
+            
+            overlapping_dates = set(new_booking_dates) & set(existing_booking_dates)
+            if not overlapping_dates:
+                continue
+                
+            existing_time_str = b.get('time')
+            if not existing_time_str: continue
+            
+            existing_time = datetime.strptime(existing_time_str, '%I:%M %p')
+            time_diff = abs((booking_time - existing_time).total_seconds()) / 60
+            
+            if time_diff < 60:
+                existing_location = b.get('location', '').strip().lower()
+                if existing_location != new_location:
+                    suggested_time = (existing_time + timedelta(hours=1)).strftime('%I:%M %p')
+                    flash(f'The slot is already booked in other location. Please change timing, coach or location. Suggested time for this coach: {suggested_time}', 'warning')
+                    return redirect('/booking?location_conflict=true')
+                else:
+                    group_swimmer_name = b.get('student')
+                    if group_swimmer_name and group_swimmer_name.strip().lower() != student.strip().lower():
+                        group_swimmers.add(group_swimmer_name)
+        except Exception:
+            continue
+            
+    if group_swimmers:
+        swimmer_names = ", ".join(group_swimmers)
+        flash(f'You will swim along with a swimmer: {swimmer_names}', 'info')
+
+
+>>>>>>> feature/newVersion_3.0
 
     payment_choice = request.form.get('payment_status', 'Not Paid')
 
@@ -253,12 +329,23 @@ def book():
         INSERT INTO students (
             student_name,
             owner_name,
+<<<<<<< HEAD
             owner_phone
         ) VALUES (%s, %s, %s)
         ''', (
             student.strip(),
             session.get('user_name'),
             session.get('phone')
+=======
+            owner_phone,
+            skill_level
+        ) VALUES (%s, %s, %s, %s)
+        ''', (
+            student.strip(),
+            session.get('user_name'),
+            session.get('phone'),
+            request.form.get('skill_level', 'Beginner')
+>>>>>>> feature/newVersion_3.0
         ))
 
         swimmer_conn.commit()
@@ -424,7 +511,11 @@ def update_booking(booking_id):
 
     fee = calculate_discounted_fee(package, persons, session_count)
     if package == 'Demo':
+<<<<<<< HEAD
         fee = 500 * int(persons)
+=======
+        fee = 0
+>>>>>>> feature/newVersion_3.0
 
     # V0044.0 - Custom package fee is calculated by the frontend fee engine.
     if package == 'Custom':
@@ -487,11 +578,17 @@ def update_booking(booking_id):
 
     # --- Recurring-date Trainer Location Conflict Check (same as in book()) ---
     new_location = (request.form.get('location') or '').strip().lower()
+<<<<<<< HEAD
+=======
+    
+    # 1. Duplicate Booking Check (same student, same time)
+>>>>>>> feature/newVersion_3.0
     for b in data['bookings']:
         try:
             # Skip the booking currently being edited
             if str(b.get('id')) == str(booking_id):
                 continue
+<<<<<<< HEAD
             existing_time = (b.get('time') or '').strip()
             existing_location = (b.get('location') or '').strip().lower()
             existing_start = str(b.get('start_date', ''))
@@ -516,15 +613,46 @@ def update_booking(booking_id):
                     f'Trainer already has a session with {b.get("student", "another swimmer")} at {b.get("location", "")} on {conflict_date_str} at {existing_time}. Please choose another time or location.',
                     'warning'
                 )
+=======
+                
+            same_student = (b.get('student', '').strip().lower() == student.strip().lower() and 
+                            b.get('owner_name') == session.get('user_name'))
+            if not same_student:
+                continue
+            
+            existing_start = str(b.get('start_date', ''))
+            existing_end = str(b.get('end_date', b.get('start_date', '')))
+            existing_days = b.get('selected_days', '')
+            existing_booking_dates = generate_recurring_dates(existing_start, existing_end, existing_days)
+            
+            overlapping_dates = set(new_booking_dates) & set(existing_booking_dates)
+            if not overlapping_dates:
+                continue
+                
+            existing_time_str = b.get('time')
+            if not existing_time_str: continue
+            
+            existing_time = datetime.strptime(existing_time_str, '%I:%M %p')
+            time_diff = abs((booking_time - existing_time).total_seconds()) / 60
+            
+            if time_diff < 60:
+                flash('Duplicate booking already exists.', 'warning')
+>>>>>>> feature/newVersion_3.0
                 return redirect(url_for('edit_booking', booking_id=booking_id))
         except Exception:
             continue
 
+<<<<<<< HEAD
+=======
+    # 2. Coach Availability & Group Swimming Check
+    group_swimmers = set()
+>>>>>>> feature/newVersion_3.0
     for b in data['bookings']:
         try:
             # Skip the booking currently being edited
             if str(b.get('id')) == str(booking_id):
                 continue
+<<<<<<< HEAD
 
             existing_start = str(b.get('start_date', ''))
             existing_end = str(b.get('end_date', b.get('start_date', '')))
@@ -567,6 +695,45 @@ def update_booking(booking_id):
         except Exception:
             # Ignore malformed historical records
             continue
+=======
+                
+            trainer_username = booking.get('trainer_username', 'asdf').strip().lower()
+            if b.get('trainer_username', '').strip().lower() != trainer_username:
+                continue
+                
+            existing_start = str(b.get('start_date', ''))
+            existing_end = str(b.get('end_date', b.get('start_date', '')))
+            existing_days = b.get('selected_days', '')
+            existing_booking_dates = generate_recurring_dates(existing_start, existing_end, existing_days)
+            
+            overlapping_dates = set(new_booking_dates) & set(existing_booking_dates)
+            if not overlapping_dates:
+                continue
+                
+            existing_time_str = b.get('time')
+            if not existing_time_str: continue
+            
+            existing_time = datetime.strptime(existing_time_str, '%I:%M %p')
+            time_diff = abs((booking_time - existing_time).total_seconds()) / 60
+            
+            if time_diff < 60:
+                existing_location = b.get('location', '').strip().lower()
+                new_location = request.form.get('location', '').strip().lower()
+                if existing_location != new_location:
+                    suggested_time = (existing_time + timedelta(hours=1)).strftime('%I:%M %p')
+                    flash(f'The slot is already booked in other location. Please change timing, coach or location. Suggested time for this coach: {suggested_time}', 'warning')
+                    return redirect(url_for('edit_booking', booking_id=booking_id))
+                else:
+                    group_swimmer_name = b.get('student')
+                    if group_swimmer_name and group_swimmer_name.strip().lower() != student.strip().lower():
+                        group_swimmers.add(group_swimmer_name)
+        except Exception:
+            continue
+            
+    if group_swimmers:
+        swimmer_names = ", ".join(group_swimmers)
+        flash(f'You will swim along with a swimmer: {swimmer_names}', 'info')
+>>>>>>> feature/newVersion_3.0
 
     # Update values
     booking['student'] = student

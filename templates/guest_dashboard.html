@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='dashboard_core.css') }}">
@@ -1173,20 +1174,328 @@ document.addEventListener('DOMContentLoaded', function() {
 
     </div> <!-- Close section-dashboard -->
 
+=======
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | SwimTrack Pro{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    
+    <!-- Main Content Panel -->
+    <section class="dashboard-main animate-fade-in">
+        
+
+
+        <!-- Floating Welcome Toast -->
+        <div id="welcomeToast" style="display: none; position: fixed; top: 50%; left: 50%; z-index: 9999; background: rgba(16, 185, 129, 0.95); backdrop-filter: blur(10px); padding: 1.5rem 2.5rem; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.6); color: white; border: 1px solid rgba(255,255,255,0.2); transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform: translate(-50%, -40%) scale(0.9); opacity: 0; text-align: center; width: 85%; max-width: 400px;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;"><i class="fa-solid fa-hand-wave"></i>👋</div>
+            <h4 style="font-weight: 700; margin-bottom: 0.25rem;">Welcome, {{ session.get('user_name')|title }}!</h4>
+            <p style="margin-bottom: 0; font-size: 0.95rem; opacity: 0.9;">Ready for your next swim session?</p>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="metrics-grid">
+            <!-- Next Session -->
+            <div class="metric-card primary">
+                <div class="metric-icon"><i class="fa-regular fa-calendar"></i></div>
+                <div style="flex: 1;">
+                    {% if guest_upcoming_sessions is defined and guest_upcoming_sessions|length > 0 %}
+                        <div class="text-muted" style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Next Session</div>
+                        <div id="nextSessionCarousel">
+                            {% for session in guest_upcoming_sessions %}
+                            <div class="next-session-slide" {% if not loop.first %}style="display:none;"{% endif %}>
+                                <div style="font-weight: 700; font-size: 1rem; margin-top: 0.25rem;">🏊 {{ session.name }}</div>
+                                <div class="text-secondary" style="font-size: 0.85rem; margin-top: 0.1rem;">
+                                    {{ session.date }} {% if session.time %}• {{ session.time }}{% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% elif next_session_name and next_session_name != '--' %}
+                        <div class="text-muted" style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Next Session</div>
+                        <div style="font-weight: 700; font-size: 1rem; margin-top: 0.25rem;">🏊 {{ next_session_name }}</div>
+                        <div class="text-secondary" style="font-size: 0.85rem; margin-top: 0.1rem;">
+                            {{ next_session_date }} {% if next_session_time and next_session_time != '--' %}• {{ next_session_time }}{% endif %}
+                        </div>
+                    {% else %}
+                        <div style="font-weight: 700; font-size: 1rem;">No Class Scheduled</div>
+                        <div class="text-muted" style="font-size: 0.8rem;">Ready to dive in?</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Active Packages -->
+            <div class="metric-card success">
+                <div class="metric-icon"><i class="fa-solid fa-circle-check"></i></div>
+                <div>
+                    <div class="text-muted" style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Active Packages</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; line-height: 1;">{{ active_packages if active_packages is defined else 0 }}</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Dashboard Widgets Layout -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            
+            <!-- Session Tracking & Swimmers -->
+            <div class="flex flex-col gap-6">
+                <!-- Track Booked Sessions -->
+                <div class="glass-panel" style="padding: 1.5rem;">
+                    <h3 class="font-display" style="font-size: 1.25rem; margin-bottom: 1rem;"><i class="fa-solid fa-chart-line text-accent"></i> Progress Tracker</h3>
+                    {% set progress_percent = ((completed_sessions * 100) / total_sessions) if total_sessions > 0 else 0 %}
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="progress-circle" style="--progress:{{ progress_percent|round(0,'floor') }};">
+                            <div class="progress-circle-inner">{{ progress_percent|round(0,'floor') }}%</div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 1.4rem; font-weight: 800; line-height: 1;">
+                                {{ completed_sessions }} / {{ total_sessions }}
+                            </div>
+                            <div class="text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">Sessions Completed</div>
+                            <div class="text-secondary" style="font-size: 0.8rem; margin-top: 0.1rem;">{{ remaining_sessions }} sessions remaining</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="d-flex gap-2 mt-4 pt-3" style="border-top: 1px solid rgba(255,255,255,0.05);">
+                        <button type="button" class="btn btn-outline flex-grow-1" style="color: var(--color-warning); border-color: rgba(245, 158, 11, 0.5);" onclick="openSkipModal()">
+                            <i class="fa-solid fa-forward-step"></i> Skip
+                        </button>
+                        <button type="button" class="btn btn-outline flex-grow-1" style="color: var(--color-danger); border-color: rgba(239, 68, 68, 0.5);" onclick="openPauseModal()">
+                            <i class="fa-solid fa-pause"></i> Pause
+                        </button>
+                    </div>
+                </div>
+
+                <!-- My Swimmers -->
+                <div class="glass-panel" style="padding: 1.5rem; flex: 1;">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-display" style="font-size: 1.25rem; margin: 0;"><i class="fa-solid fa-users text-accent"></i> My Swimmers</h3>
+                        <span class="badge badge-success">{{ students|length if students else 0 }}</span>
+                    </div>
+                    <div style="max-height: 180px; overflow-y: auto;">
+                        {% if students and students|length > 0 %}
+                            {% for s in students %}
+                            <div class="swimmer-row">
+                                <div class="swimmer-avatar">{{ s.name[:1]|upper }}</div>
+                                <div>
+                                    <div style="font-weight: 600; font-size: 0.95rem;">{{ s.name }}</div>
+                                    <div class="text-muted" style="font-size: 0.8rem;">
+                                        {% if s.completed_sessions is defined and s.total_sessions is defined and s.total_sessions > 0 %}
+                                            {{ s.completed_sessions }}/{{ s.total_sessions }} completed
+                                        {% else %}
+                                            Active Swimmer
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted" style="font-size: 0.9rem;">No swimmers registered.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mini Calendar -->
+            <div class="glass-panel" style="padding: 1.5rem;">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-display" style="font-size: 1.25rem; margin: 0;"><i class="fa-regular fa-calendar text-accent"></i> Mini Calendar</h3>
+                    <a href="/calendar" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;">Full View</a>
+                </div>
+                
+                <div class="text-center mb-3">
+                    <h4 style="font-size: 1rem; color: var(--color-text-primary);">{{ current_month_name }}</h4>
+                </div>
+                
+                <div class="mini-calendar">
+                    <div class="calendar-header">
+                        <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+                    </div>
+                    <div class="calendar-grid">
+                        {% for d in calendar_days %}
+                            {% if d.day is none %}
+                                <div class="calendar-day empty"></div>
+                            {% else %}
+                                <div class="calendar-day
+                                  {% if d.is_today %}
+                                    today
+                                  {% elif d.is_booked %}
+                                    booked
+                                  {% elif d.is_makeup %}
+                                    makeup
+                                  {% endif %}">
+                                  {{ d.day }}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="flex justify-center gap-4 mt-3" style="font-size: 0.75rem;">
+                    <div class="flex items-center gap-2"><span style="width: 8px; height: 8px; border-radius: 50%; background: #34d399; display: inline-block;"></span> Booked</div>
+                    <div class="flex items-center gap-2"><span style="width: 8px; height: 8px; border-radius: 50%; background: #fbbf24; display: inline-block;"></span> Makeup</div>
+                    <div class="flex items-center gap-2"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--color-primary); display: inline-block;"></span> Today</div>
+                </div>
+            </div>
+            
+        </div>
+
+        <!-- Payments & Announcements -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Payment Summary -->
+            <div class="glass-panel" style="padding: 1.5rem;">
+                <h3 class="font-display" style="font-size: 1.25rem; margin-bottom: 1.25rem;"><i class="fa-solid fa-credit-card text-accent"></i> Payment Overview</h3>
+                
+                <div class="grid grid-cols-3 gap-2 text-center mb-4" style="background: rgba(0, 0, 0, 0.2); padding: 1rem; border-radius: var(--radius-md);">
+                    <div>
+                        <div class="text-muted" style="font-size: 0.75rem;">Total</div>
+                        <div style="font-weight: 700; font-size: 1.2rem;">{{ total_packages if total_packages is defined else 0 }}</div>
+                    </div>
+                    <div>
+                        <div class="text-muted" style="font-size: 0.75rem;">Active</div>
+                        <div class="text-accent" style="font-weight: 700; font-size: 1.2rem;">{{ active_packages if active_packages is defined else 0 }}</div>
+                    </div>
+                    <div>
+                        <div class="text-muted" style="font-size: 0.75rem;">Done</div>
+                        <div class="text-primary" style="font-weight: 700; font-size: 1.2rem;">{{ completed_packages if completed_packages is defined else 0 }}</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div class="flex items-center gap-3" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.15); padding: 1rem; border-radius: var(--radius-md);">
+                        <div class="text-success" style="font-size: 1.5rem;"><i class="fa-solid fa-circle-check"></i></div>
+                        <div>
+                            <div style="font-weight: 800; font-size: 1.2rem;">₹{{ received_amount if received_amount is defined else 0 }}</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">Paid</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3" style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.15); padding: 1rem; border-radius: var(--radius-md);">
+                        <div class="text-warning" style="font-size: 1.5rem;"><i class="fa-solid fa-hourglass-half"></i></div>
+                        <div>
+                            <div style="font-weight: 800; font-size: 1.2rem;">₹{{ pending_amount if pending_amount is defined else 0 }}</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">Pending</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <a href="/payments" style="color: var(--color-primary); font-size: 0.85rem; font-weight: 600;">View Payment History →</a>
+                </div>
+            </div>
+
+            <!-- Announcements -->
+            <div class="glass-panel" style="padding: 1.5rem;">
+                <h3 class="font-display" style="font-size: 1.25rem; margin-bottom: 1.25rem;"><i class="fa-solid fa-bullhorn text-accent"></i> Notice Board</h3>
+                <div class="announcement-list" style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 200px; overflow-y: auto;">
+                    {% if notice_message %}
+                        {% for item in notice_message.split('•') %}
+                            {% set announcement = item.strip() %}
+                            {% if announcement %}
+                            <div class="flex items-start gap-3" style="padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                                <span style="color: var(--color-primary); font-size: 0.6rem; margin-top: 0.5rem;"><i class="fa-solid fa-circle"></i></span>
+                                <div class="text-secondary" style="font-size: 0.9rem; line-height: 1.4;">{{ announcement }}</div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted" style="font-size: 0.9rem; text-align: center; padding: 2rem 0;">No notices posted currently.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+        </div>
+
+    </section>
+    
+    <!-- Pause Package Modal -->
+    <div class="modal fade" id="pausePackageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-panel" style="background: rgba(15, 15, 18, 0.95); border: 1px solid rgba(255,255,255,0.1);">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title font-display fw-bold"><i class="fa-solid fa-pause text-danger"></i> Pause Package</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body pt-0">
+                    <form id="dashboardPauseForm" onsubmit="submitDashboardPause(event)">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Select Package to Pause</label>
+                            <select class="form-select" id="pauseBookingId" name="booking_id" required style="background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.1); color: white;">
+                                <option value="" disabled selected>-- Select an active package --</option>
+                                {% for b in bookings %}
+                                    {% if b.package in ['Monthly', 'Custom'] and not b.is_completed %}
+                                        <option value="{{ b.id }}">
+                                            {{ b.package }} ({{ b.student }}) - {{ b.remaining_classes }} classes left
+                                        </option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                            <div class="form-text text-secondary" style="font-size: 0.75rem;">Only Monthly and Custom packages can be paused.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Reason for Pause <span class="text-danger">*</span></label>
+                            <select class="form-select" id="pauseReason" name="reason" onchange="toggleOtherReason()" required style="background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.1); color: white;">
+                                <option value="" disabled selected>-- Select Reason --</option>
+                                <option value="Medical">Medical / Health Issue</option>
+                                <option value="Travel">Out of Station / Travel</option>
+                                <option value="Exams">Exams / Studies</option>
+                                <option value="Weather">Weather Conditions</option>
+                                <option value="Other">Other (Please specify)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3 d-none" id="otherReasonContainer">
+                            <label class="form-label text-muted small">Specify Reason <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="pauseOtherReason" name="other_reason" rows="2" style="background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.1); color: white;"></textarea>
+                        </div>
+                        
+                        <div class="alert alert-warning py-2 mb-4" style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.15);">
+                            <i class="fa-solid fa-triangle-exclamation"></i> The first pause is instant (7 days). Subsequent pauses require coach approval.
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100" id="submitPauseBtn" style="background: var(--color-danger); border: none;">Confirm Pause</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+>>>>>>> feature/newVersion_3.0
 
 <!-- Notifications Modal -->
 <div class="modal fade" id="notificationsModal" tabindex="-1" aria-labelledby="notificationsModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
+<<<<<<< HEAD
     <div class="modal-content rounded-4 border-0 shadow">
       <div class="modal-header border-bottom-0 pb-0">
         <h5 class="modal-title fw-bold text-dark" id="notificationsModalLabel"><i class="fa-solid fa-bell"></i> Notification Alerts</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+=======
+    <div class="modal-content rounded-4 border-0 shadow" style="background: var(--color-surface); color: white;">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title fw-bold" id="notificationsModalLabel"><i class="fa-solid fa-bell text-primary"></i> Notifications</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+>>>>>>> feature/newVersion_3.0
       </div>
       <div class="modal-body pt-3">
         <div class="d-flex flex-column gap-2">
           {% if notification_list %}
             {% for notification in notification_list %}
+<<<<<<< HEAD
               <div class="p-3 rounded-3 bg-light border border-light text-dark fw-semibold" style="font-size: 0.95rem;">
+=======
+              <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); font-size: 0.95rem;">
+>>>>>>> feature/newVersion_3.0
                 {{ notification }}
               </div>
             {% endfor %}
@@ -1203,6 +1512,7 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 </div>
 
+<<<<<<< HEAD
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const weatherOverlay = document.getElementById('weatherOverlay');
@@ -1322,3 +1632,242 @@ function switchDesktopTab(sectionId, el) {
 {% include 'components/id_card_modal.html' %}
 
 </body>
+=======
+<!-- Pause Package Modal -->
+<div class="modal fade" id="pausePackageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-panel" style="background: rgba(15, 15, 18, 0.95); border: 1px solid rgba(255,255,255,0.1);">
+            <div class="modal-header border-0">
+                <h5 class="modal-title font-display fw-bold"><i class="fa-solid fa-pause text-danger"></i> Pause Package</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-0">
+                <form id="dashboardPauseForm" onsubmit="submitDashboardPause(event)">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Select Package to Pause</label>
+                        <select class="form-select" id="pauseBookingId" name="booking_id" required style="background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.1); color: white;">
+                            <option value="" disabled selected>-- Select an active package --</option>
+                            {% for b in bookings %}
+                                {% if b.package in ['Monthly', 'Custom'] and not b.is_completed %}
+                                    <option value="{{ b.id }}">
+                                        {{ b.package }} ({{ b.student }}) - {{ b.remaining_classes }} classes left
+                                    </option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        <div class="form-text text-secondary" style="font-size: 0.75rem;">Only Monthly and Custom packages can be paused.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Reason for Pause <span class="text-danger">*</span></label>
+                        <select class="form-select" id="pauseReason" name="reason" onchange="toggleOtherReason()" required style="background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.1); color: white;">
+                            <option value="" disabled selected>-- Select Reason --</option>
+                            <option value="Medical">Medical / Health Issue</option>
+                            <option value="Travel">Out of Station / Travel</option>
+                            <option value="Exams">Exams / Studies</option>
+                            <option value="Weather">Weather Conditions</option>
+                            <option value="Other">Other (Please specify)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3 d-none" id="otherReasonContainer">
+                        <label class="form-label text-muted small">Specify Reason <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="pauseOtherReason" name="other_reason" rows="2" style="background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.1); color: white;"></textarea>
+                    </div>
+                    
+                    <div class="alert alert-warning py-2 mb-4" style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.15);">
+                        <i class="fa-solid fa-triangle-exclamation"></i> The first pause is instant (7 days). Subsequent pauses require coach approval.
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100" id="submitPauseBtn" style="background: var(--color-danger); border: none;">Confirm Pause</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Skip Session Modal -->
+<div class="modal fade" id="skipSessionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-panel" style="background: rgba(15, 15, 18, 0.95); border: 1px solid rgba(255,255,255,0.1);">
+            <div class="modal-header border-0">
+                <h5 class="modal-title font-display fw-bold"><i class="fa-solid fa-forward-step text-warning"></i> Skip Session</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-0">
+                <form id="dashboardSkipForm" method="POST">
+                    <div class="mb-4">
+                        <label class="form-label text-muted small">Select Session to Skip</label>
+                        {% if guest_all_future and guest_all_future|length > 0 %}
+                            <select class="form-select" id="skipSessionSelect" required style="background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.1); color: white;" onchange="updateSkipFormAction()">
+                                {% for s in guest_all_future %}
+                                    <option value="{{ s.booking_id }}|{{ s.raw_date }}">
+                                        {{ s.date }} - {{ s.time }} ({{ s.name }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text text-secondary" style="font-size: 0.75rem;">Skipping a session generates a make-up credit. You cannot skip a class less than 6 hours before it starts.</div>
+                        {% else %}
+                            <div class="alert alert-secondary text-center">
+                                No upcoming sessions available to skip.
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if guest_all_future and guest_all_future|length > 0 %}
+                    <button type="submit" class="btn btn-primary w-100" id="submitSkipBtn" style="background: var(--color-warning); color: black; border: none;">Confirm Skip</button>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% set active_page = 'home' %}
+{% include 'components/mobile_bottom_nav.html' %}
+
+{% include 'components/session_timeout.html' %}
+
+<script>
+  window.bookingsData = {{ bookings|tojson }};
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+
+
+    // Upcoming sessions carousel
+    document.addEventListener('DOMContentLoaded', function() {
+        function startCarousel(selector) {
+            const slides = document.querySelectorAll(selector);
+            if (slides.length <= 1) return;
+            
+            let currentIndex = 0;
+            setInterval(function() {
+                slides[currentIndex].style.display = 'none';
+                currentIndex = (currentIndex + 1) % slides.length;
+                slides[currentIndex].style.display = 'block';
+            }, 3000);
+        }
+        startCarousel('#nextSessionCarousel .next-session-slide');
+    });
+
+    // Tab Swapping logic mapping to routes
+    // Highlight active sidebar links based on URL path
+    const currentPath = window.location.pathname;
+    document.querySelectorAll('.sidebar-link').forEach(link => {
+        const href = link.getAttribute('href');
+        if (href === currentPath || (href === '/' && currentPath === '')) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
+        }
+    });
+    // Welcome Toast Logic
+    document.addEventListener("DOMContentLoaded", function() {
+        if(!sessionStorage.getItem('greeted_{{ session.get("user_name") }}')) {
+            const toast = document.getElementById('welcomeToast');
+            if(toast) {
+                toast.style.display = 'block';
+                // Trigger reflow
+                void toast.offsetWidth;
+                toast.style.opacity = '1';
+                toast.style.transform = 'translate(-50%, -50%) scale(1)';
+                sessionStorage.setItem('greeted_{{ session.get("user_name") }}', 'true');
+                
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translate(-50%, -40%) scale(0.9)';
+                    setTimeout(() => toast.remove(), 500);
+                }, 3500);
+            }
+        }
+    });
+
+    // Skip functionality
+    let skipModalObj = null;
+    function openSkipModal() {
+        if (!skipModalObj) {
+            skipModalObj = new bootstrap.Modal(document.getElementById('skipSessionModal'));
+        }
+        updateSkipFormAction();
+        skipModalObj.show();
+    }
+    
+    function updateSkipFormAction() {
+        const select = document.getElementById('skipSessionSelect');
+        const form = document.getElementById('dashboardSkipForm');
+        if (select && form && select.value) {
+            const parts = select.value.split('|');
+            if (parts.length === 2) {
+                const bookingId = encodeURIComponent(parts[0]);
+                const sessionDate = encodeURIComponent(parts[1]);
+                form.action = '/skip_session/' + bookingId + '/' + sessionDate;
+            }
+        }
+    }
+
+    // Pause functionality
+    let pauseModalObj = null;
+    function openPauseModal() {
+        if (!pauseModalObj) {
+            pauseModalObj = new bootstrap.Modal(document.getElementById('pausePackageModal'));
+        }
+        document.getElementById('dashboardPauseForm').reset();
+        document.getElementById('otherReasonContainer').classList.add('d-none');
+        pauseModalObj.show();
+    }
+    
+    function toggleOtherReason() {
+        const select = document.getElementById('pauseReason');
+        const container = document.getElementById('otherReasonContainer');
+        const input = document.getElementById('pauseOtherReason');
+        
+        if (select.value === 'Other') {
+            container.classList.remove('d-none');
+            input.required = true;
+        } else {
+            container.classList.add('d-none');
+            input.required = false;
+        }
+    }
+    
+    function submitDashboardPause(e) {
+        e.preventDefault();
+        const form = e.target;
+        const btn = document.getElementById('submitPauseBtn');
+        const originalText = btn.innerHTML;
+        
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+        btn.disabled = true;
+        
+        fetch('/booking/pause', {
+            method: 'POST',
+            body: new FormData(form)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                pauseModalObj.hide();
+                window.location.reload();
+            } else {
+                alert(data.error || 'An error occurred while pausing.');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('A network error occurred. Please try again.');
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    }
+</script>
+
+<script src="{{ url_for('static', filename='common.js') }}"></script>
+<script src="{{ url_for('static', filename='dashboard_core.js') }}"></script>
+
+{% endblock %}
+>>>>>>> feature/newVersion_3.0

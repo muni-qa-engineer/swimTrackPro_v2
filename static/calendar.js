@@ -163,8 +163,24 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
+<<<<<<< HEAD
             const startDate = new Date(booking.start_date);
             const endDate = new Date(booking.end_date || booking.start_date);
+=======
+            const startDateRaw = booking.start_date || booking.created_at;
+            if (!startDateRaw) {
+                console.warn("Booking missing start_date:", booking);
+                return;
+            }
+
+            const startDate = new Date(startDateRaw);
+            const endDate = new Date(booking.end_date || startDateRaw);
+
+            if (isNaN(startDate.getTime())) {
+                console.warn("Invalid start_date for booking:", booking);
+                return;
+            }
+>>>>>>> feature/newVersion_3.0
 
             const selectedDays = (booking.selected_days || '')
                 .split(',')
@@ -173,7 +189,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const current = new Date(startDate);
 
+<<<<<<< HEAD
             while (current <= endDate) {
+=======
+            while (current <= endDate && !isNaN(current.getTime())) {
+>>>>>>> feature/newVersion_3.0
                 const dayName = current.toLocaleDateString('en-US', {
                     weekday: 'long'
                 }).toLowerCase();
@@ -432,6 +452,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const gridEl = document.getElementById('calendarGrid');
         const mobileEl = document.getElementById('mobileCalendarView');
         if (!gridEl || !mobileEl) return;
+<<<<<<< HEAD
+=======
+        
+>>>>>>> feature/newVersion_3.0
         if (isMobile()) {
             gridEl.style.display = 'none';
             mobileEl.style.display = 'block';

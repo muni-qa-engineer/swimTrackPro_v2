@@ -2,6 +2,7 @@
 
 {% block title %}Edit Booking - SwimTrackPro{% endblock %}
 
+<<<<<<< HEAD
 {% block content %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -36,11 +37,68 @@
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Assigned Trainer <span class="text-danger">*</span></label>
                     <select name="trainer_username" class="form-select" required>
+=======
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    .modal-content {
+        background: rgba(24, 24, 27, 0.95);
+        backdrop-filter: var(--backdrop-blur);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: white;
+    }
+    
+    .modal-header, .modal-footer {
+        border-color: rgba(255, 255, 255, 0.08);
+    }
+    
+    #mapPicker {
+        border-radius: var(--radius-md);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between;">
+        <h2 class="font-display text-primary" style="font-size: 1.8rem; margin: 0;"><i class="fa-solid fa-file-pen"></i> Edit Booking</h2>
+        <a href="/my-bookings" class="btn btn-secondary" style="padding: 0.5rem 1.25rem;">← Cancel</a>
+    </div>
+
+    <div class="glass-panel animate-slide-up" style="max-width: 760px; margin: 0 auto; padding: 2rem;">
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ 'warning' if category == 'warning' else 'info' if category == 'info' else 'success' }} alert-dismissible fade show mb-4" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        
+        <form action="/update/{{ booking.id }}" method="POST" id="editBookingForm">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="form-group">
+                    <label class="form-label">Swimmer Name</label>
+                    <input type="text" name="student" class="form-control" value="{{ booking.student }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Assigned Trainer <span class="text-danger">*</span></label>
+                    <select name="trainer_username" class="form-control" required style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white;">
+>>>>>>> feature/newVersion_3.0
                         {% for t in trainers %}
                             <option value="{{ t.username }}" {% if booking.trainer_username == t.username %}selected{% endif %}>{{ t.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
+<<<<<<< HEAD
 
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Start Date</label>
@@ -50,11 +108,25 @@
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Package</label>
                     <select name="package" id="packageSelect" class="form-select" required>
+=======
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="form-group">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" name="date" class="form-control" value="{{ booking.start_date }}" required style="background-color: rgba(0,0,0,0.4); color-scheme: dark;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Package</label>
+                    <select name="package" id="packageSelect" class="form-control" required style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white;">
+>>>>>>> feature/newVersion_3.0
                         <option value="Demo" {% if booking.package == 'Demo' %}selected{% endif %}>Demo Class</option>
                         <option value="Single" {% if booking.package == 'Single' %}selected{% endif %}>Single Session</option>
                         <option value="Monthly" {% if booking.package == 'Monthly' %}selected{% endif %}>Monthly</option>
                         <option value="Custom" {% if booking.package == 'Custom' %}selected{% endif %}>Custom</option>
                     </select>
+<<<<<<< HEAD
                     <div id="customPackageHint" class="form-text text-muted" style="display:none;">
                         <i class="fa-solid fa-circle-info"></i> Custom package supports a maximum duration of 60 days.
                     </div>
@@ -63,6 +135,18 @@
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Time</label>
                     <select name="time" class="form-select" required>
+=======
+                    <div id="customPackageHint" class="text-muted small mt-1" style="display:none;">
+                        <i class="fa-solid fa-circle-info"></i> Custom package supports a maximum duration of 60 days.
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="form-group">
+                    <label class="form-label">Time</label>
+                    <select name="time" class="form-control" required style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white;">
+>>>>>>> feature/newVersion_3.0
                         {% for hour in range(6, 22) %}
                             {% for minute in [0, 30] %}
                                 {% if not (hour == 21 and minute == 30) %}
@@ -78,6 +162,7 @@
                     </select>
                 </div>
 
+<<<<<<< HEAD
                 <div class="mb-3">
                     <label class="form-label fw-semibold">
                         Select Class Days
@@ -213,6 +298,76 @@
 
             </form>
         </div>
+=======
+                <div class="form-group" id="endDateContainer">
+                    <label class="form-label">End Date</label>
+                    <input type="date" name="end_date" id="endDateInput" class="form-control" value="{{ booking.end_date or '' }}" style="background-color: rgba(0,0,0,0.4); color-scheme: dark;">
+                </div>
+            </div>
+
+            <!-- Class Day Picker -->
+            <div class="form-group">
+                <label class="form-label">
+                    Select Class Days
+                    <span id="monthlyPackageHint" class="text-muted small ms-2" style="display:none;">(Monthly: Choose 2 or 3 days/week)</span>
+                    <span id="singleDemoHint" class="text-muted small ms-2" style="display:none;">(Day picked automatically.)</span>
+                    <span id="customDaysHint" class="text-muted small ms-2" style="display:none;">(Max 5 class days per week allowed)</span>
+                </label>
+
+                {% set selected_days_text = booking.selected_days or '' %}
+                <div class="flex flex-wrap gap-3 mt-2" style="font-size: 0.9rem;">
+                    {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
+                    <div class="flex items-center gap-1.5">
+                        <input class="class-day" type="checkbox" name="selected_days" value="{{ day }}" id="{{ day|lower }}" style="accent-color: var(--color-primary);" {% if day in selected_days_text or day[:3] in selected_days_text %}checked{% endif %}>
+                        <label for="{{ day|lower }}">{{ day[:3] }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Location</label>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button type="button" id="locationPickerBtn" class="btn btn-outline" style="border-radius: var(--radius-sm); border-color: rgba(255,255,255,0.1); color: var(--color-primary);" title="Pick location on map">
+                        <i class="fa-solid fa-location-dot"></i>
+                    </button>
+                    <input type="text" id="locationInput" name="location" class="form-control" value="{{ booking.location or '' }}" placeholder="Enter swimming pool location" required style="flex: 1;">
+                </div>
+                <input type="hidden" name="latitude" id="latitudeInput" value="{{ booking.latitude or '' }}">
+                <input type="hidden" name="longitude" id="longitudeInput" value="{{ booking.longitude or '' }}">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="form-group">
+                    <label class="form-label">No of Persons</label>
+                    <input type="number" name="persons" id="personsInput" class="form-control" min="1" max="5" value="{{ booking.persons or 1 }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Payment Status</label>
+                    <select name="payment_status" class="form-control" required style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white;">
+                        {% set current_payment_status = ((booking.payment_status or booking.status or 'Not Paid') | trim | lower) %}
+                        <option value="Not Paid" {% if current_payment_status == 'not paid' %}selected{% endif %}>Not Paid</option>
+                        <option value="Paid" {% if current_payment_status == 'paid' %}selected{% endif %}>Paid</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Fee (₹)</label>
+                    <input type="number" name="fee" id="feeInput" class="form-control" value="{{ booking.fee }}" {% if role != 'trainer' %}readonly{% endif %} required style="font-weight: 700; color: white !important;">
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-4">
+                <a href="/my-bookings" class="btn btn-secondary w-50 py-3">Back</a>
+                <button type="submit" id="updateBookingBtn" class="btn btn-primary w-50 py-3">
+                    <span id="updateBookingSpinner" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+                    <span id="updateBookingText">Update Booking</span>
+                </button>
+            </div>
+
+        </form>
+>>>>>>> feature/newVersion_3.0
     </div>
 </div>
 
@@ -221,6 +376,7 @@
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
+<<<<<<< HEAD
         <h5 class="modal-title" id="mapPickerModalLabel"><i class="fa-solid fa-map"></i> Choose Location</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
@@ -236,6 +392,22 @@
         </div>
         <div id="mapPickerContainer" style="display:none;">
             <div id="mapPicker" style="height:400px; width: 100%;"></div>
+=======
+        <h5 class="modal-title" id="mapPickerModalLabel"><i class="fa-solid fa-map text-primary"></i> Choose Location</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="grid grid-cols-2 gap-3 mb-3">
+            <button type="button" id="modalCurrentLocationBtn" class="btn btn-secondary py-3 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-location-crosshairs"></i> Use Current Location
+            </button>
+            <button type="button" id="modalChooseOnMapBtn" class="btn btn-primary py-3 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-map-location-dot"></i> Choose on Map
+            </button>
+        </div>
+        <div id="mapPickerContainer" style="display:none;">
+            <div id="mapPicker" style="height:380px; width: 100%;"></div>
+>>>>>>> feature/newVersion_3.0
         </div>
       </div>
       <div class="modal-footer">
@@ -246,6 +418,14 @@
   </div>
 </div>
 
+<<<<<<< HEAD
+=======
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='common.js') }}"></script>
+>>>>>>> feature/newVersion_3.0
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const pkg = document.getElementById('packageSelect');
@@ -264,7 +444,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateEditBookingRules() {
         if (!pkg || !startDateInput) return;
 
+<<<<<<< HEAD
         // Toggle hints
+=======
+>>>>>>> feature/newVersion_3.0
         monthlyPackageHint.style.display = pkg.value === 'Monthly' ? 'inline' : 'none';
         singleDemoHint.style.display = (pkg.value === 'Demo' || pkg.value === 'Single') ? 'inline' : 'none';
         if (customDaysHint) customDaysHint.style.display = pkg.value === 'Custom' ? 'inline' : 'none';
@@ -423,7 +606,10 @@ document.addEventListener('DOMContentLoaded', function() {
         updateEditBookingFee();
     }
 
+<<<<<<< HEAD
     // Attach listeners
+=======
+>>>>>>> feature/newVersion_3.0
     if (pkg) pkg.addEventListener('change', function() {
         dayCheckboxes.forEach(cb => cb.checked = false);
         updateEditBookingRules();
@@ -440,7 +626,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     updateEditBookingRules();
 
+<<<<<<< HEAD
     // Map Location Picker logic
+=======
+    // Map picker
+>>>>>>> feature/newVersion_3.0
     const locationPickerBtn = document.getElementById('locationPickerBtn');
     const modalCurrentLocationBtn = document.getElementById('modalCurrentLocationBtn');
     const modalChooseOnMapBtn = document.getElementById('modalChooseOnMapBtn');
@@ -512,13 +702,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             modalCurrentLocationBtn.disabled = true;
+<<<<<<< HEAD
              modalCurrentLocationBtn.innerHTML = '<i class="fa-solid fa-hourglass-half"></i> Getting Location...';
+=======
+            modalCurrentLocationBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Getting Location...';
+>>>>>>> feature/newVersion_3.0
             navigator.geolocation.getCurrentPosition(
                 async function(position) {
                     const latitude = position.coords.latitude.toFixed(6);
                     const longitude = position.coords.longitude.toFixed(6);
+<<<<<<< HEAD
                     currentLat = latitude;
                     currentLng = longitude;
+=======
+>>>>>>> feature/newVersion_3.0
                     selectedLat = latitude;
                     selectedLng = longitude;
                     const fullAddress = await reverseGeocode(latitude, longitude);
@@ -526,16 +723,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (latitudeInput) latitudeInput.value = latitude;
                     if (longitudeInput) longitudeInput.value = longitude;
                     modalCurrentLocationBtn.disabled = false;
+<<<<<<< HEAD
                     modalCurrentLocationBtn.innerHTML = '<i class="fa-solid fa-location-dot"></i> Use Current Location';
+=======
+                    modalCurrentLocationBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs me-2"></i>Use Current Location';
+>>>>>>> feature/newVersion_3.0
                     const modalInstance = bootstrap.Modal.getInstance(document.getElementById('mapPickerModal'));
                     if (modalInstance) modalInstance.hide();
                 },
                 function(error) {
                     alert('Unable to fetch location.');
                     modalCurrentLocationBtn.disabled = false;
+<<<<<<< HEAD
                      modalCurrentLocationBtn.innerHTML = '<i class="fa-solid fa-location-dot"></i> Use Current Location';
                 },
                 { enableHighAccuracy: true, timeout: 10000 }
+=======
+                    modalCurrentLocationBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs me-2"></i>Use Current Location';
+                }
+>>>>>>> feature/newVersion_3.0
             );
         });
     }
@@ -556,6 +762,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+<<<<<<< HEAD
 
     // Submit Loading indicator
     const editForm = document.getElementById('editBookingForm');
@@ -584,4 +791,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+=======
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+>>>>>>> feature/newVersion_3.0
 {% endblock %}

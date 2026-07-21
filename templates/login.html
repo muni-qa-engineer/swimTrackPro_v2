@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -306,11 +307,897 @@
                     {% if messages %}
                         <div class="text-center mb-3">
                             <small class="text-danger d-block" style="font-size: 0.85rem; font-weight: 500;">
+=======
+{% extends 'base.html' %}
+
+{% block title %}Personal Swimming Coaches for Your Pool | SwimTrackPro{% endblock %}
+
+{% block header %}
+<header class="site-header">
+    <div class="container nav-container">
+        <a href="/" class="logo animate-fade-in">
+            <i class="fa-solid fa-water logo-icon"></i> SwimTrackPro
+        </a>
+        
+        <nav class="nav-links animate-fade-in">
+            <a href="#features" class="nav-link">Our Concept</a>
+            <a href="#plans" class="nav-link">Coaching Plans</a>
+            {% if session.get('user_name') %}
+                <a href="/logout" class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Logout</a>
+            {% else %}
+                <button type="button" class="btn btn-primary" onclick="openLoginModal()" style="padding: 0.4rem 1.25rem; font-size: 0.85rem; border-radius: var(--radius-sm);">Login / Register</button>
+            {% endif %}
+        </nav>
+        
+        {% if session.get('user_name') %}
+            <a href="/logout" class="btn btn-outline-danger btn-sm d-lg-none" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; border-radius: var(--radius-sm);">Logout</a>
+        {% else %}
+            <button class="btn btn-primary btn-sm d-lg-none" onclick="openLoginModal()" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; border-radius: var(--radius-sm);">
+                Login / Register
+            </button>
+        {% endif %}
+    </div>
+</header>
+{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<style>
+    body {
+        background: var(--color-background);
+        color: var(--color-text);
+        overflow-x: hidden;
+    }
+    
+    /* Hero Section */
+    .hero-banner {
+        position: relative;
+        min-height: 85vh;
+        display: flex;
+        align-items: center;
+        background: linear-gradient(180deg, rgba(9, 9, 11, 0.4) 0%, rgba(9, 9, 11, 0.98) 100%), 
+                    url("{{ url_for('static', filename='images/myswimpro-butterfly-login.jpg') }}") center center / cover no-repeat;
+        padding: 4rem 1rem;
+    }
+    
+    .hero-content {
+        max-width: 720px;
+    }
+    
+    /* Features */
+    .features-section {
+        padding: 5rem 1rem;
+        background: rgba(24, 24, 27, 0.3);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    /* Comparison Table / Column Layout */
+    .plans-section {
+        padding: 5rem 1rem;
+    }
+    
+    .comparison-wrapper {
+        background: rgba(24, 24, 27, 0.5);
+        backdrop-filter: var(--backdrop-blur);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+    }
+    
+    .comparison-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .comparison-table th {
+        font-family: var(--font-display);
+        background: rgba(255, 255, 255, 0.02);
+        color: white;
+        font-weight: 700;
+        padding: 1.5rem;
+        text-align: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    
+    .comparison-table td {
+        padding: 1.25rem;
+        text-align: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        color: var(--color-text-secondary);
+        font-size: 0.95rem;
+    }
+    
+    .comparison-table tr:hover td {
+        background: rgba(255, 255, 255, 0.01);
+    }
+    
+    .comparison-table .feature-name {
+        text-align: left;
+        color: white;
+        font-weight: 600;
+        padding-left: 1.5rem;
+    }
+    
+    /* Modal Login Styling */
+    .modal-content {
+        background: rgba(24, 24, 27, 0.95) !important;
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: var(--radius-md);
+        color: white;
+    }
+    
+    .login-container {
+        padding: 1.5rem;
+    }
+    
+    .role-toggle {
+        display: flex;
+        background: rgba(0, 0, 0, 0.4);
+        padding: 0.25rem;
+        border-radius: var(--radius-full);
+        margin-bottom: 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .role-btn {
+        flex: 1;
+        padding: 0.6rem;
+        border-radius: var(--radius-full);
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--color-text-secondary);
+        text-align: center;
+        background: none;
+        border: none;
+        transition: all var(--transition-fast);
+    }
+    
+    .role-btn.active {
+        background: var(--gradient-primary);
+        color: white;
+        box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+    }
+    
+    .input-wrapper {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    
+    .input-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--color-text-secondary);
+        font-size: 1.1rem;
+    }
+    
+    .login-input {
+        padding-left: 2.75rem !important;
+        background: rgba(0, 0, 0, 0.4) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: var(--radius-sm) !important;
+        color: white !important;
+        height: 48px;
+    }
+    
+    .login-input:focus {
+        border-color: var(--color-primary) !important;
+        box-shadow: 0 0 10px var(--color-primary-glow) !important;
+    }
+    
+    .toggle-pass-btn {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--color-text-secondary);
+        background: none;
+        border: none;
+        cursor: pointer;
+    }
+    
+    /* High contrast text overrides to prevent Bootstrap overrides */
+    .text-muted {
+        color: #b5b5ba !important;
+    }
+    .text-secondary {
+        color: #e4e4e7 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-banner">
+    <div class="container">
+        <div class="hero-content animate-slide-up">
+            <span class="badge badge-success mb-3" style="font-size: 0.85rem; padding: 0.4rem 1rem;">DOORSTEP SWIMMING COACHES</span>
+            <h1 class="font-display text-white mb-3" style="font-size: 3.5rem; font-weight: 800; line-height: 1.15;">Your Pool.<br>Our Coaches.</h1>
+            <p class="text-muted mb-5" style="font-size: 1.1rem; line-height: 1.6;">Have access to a swimming pool in your apartment complex, community club, or villa? We match you with verified, elite coaches who travel to your location. Learn swimming in the comfort of your own facility.</p>
+            <div class="d-flex flex-column flex-sm-row gap-3 mt-4">
+                <button type="button" class="btn btn-primary px-5 py-3 w-100" onclick="openLoginModal()">Choose a Coach</button>
+                <button type="button" class="btn btn-secondary px-5 py-3 w-100" onclick="openLoginModal()">Track Progress</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Concept Section -->
+<div class="features-section" id="features">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="font-display text-white" style="font-weight: 800; font-size: 2.2rem; margin-bottom: 0.5rem;">How It Works</h2>
+            <p class="text-muted">High-performance private training, delivered at your personal pool site.</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="feature-card" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-md); padding: 2rem;">
+                <div style="font-size: 2.2rem; color: var(--color-primary); margin-bottom: 1rem;"><i class="fa-solid fa-location-dot"></i></div>
+                <h4 class="font-display text-white mb-2" style="font-weight: 700;">1. Provide Your Location</h4>
+                <p class="text-muted small mb-0">Specify where your pool is located using our Leaflet geographical map picker. Our coaches will travel directly to you.</p>
+            </div>
+            <div class="feature-card" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-md); padding: 2rem;">
+                <div style="font-size: 2.2rem; color: var(--color-primary); margin-bottom: 1rem;"><i class="fa-solid fa-user-check"></i></div>
+                <h4 class="font-display text-white mb-2" style="font-weight: 700;">2. Match with Elite Coaches</h4>
+                <p class="text-muted small mb-0">Browse and select certified coaches. Inspect their specialties, ratings, qualifications, and parents' reviews.</p>
+            </div>
+            <div class="feature-card" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-md); padding: 2rem;">
+                <div style="font-size: 2.2rem; color: var(--color-primary); margin-bottom: 1rem;"><i class="fa-solid fa-check-double"></i></div>
+                <h4 class="font-display text-white mb-2" style="font-weight: 700;">3. Confirm & Track</h4>
+                <p class="text-muted small mb-0">Verify payment, receive your physical-style digital ID card, skip or adjust sessions using an interactive calendar, and monitor progress.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- What You Will Get Section -->
+<div class="what-you-get-section" id="what-you-get">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="font-display text-white" style="font-weight: 800; font-size: 2.2rem; margin-bottom: 0.5rem;">What You Will Get</h2>
+            <p class="text-muted">Explore the outcomes for your specific skill level.</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-5">
+            <!-- Beginner Card -->
+            <div class="level-card" onclick="openLevelModal('beginner')">
+                <div class="level-icon"><i class="fa-solid fa-water"></i></div>
+                <h3 class="font-display">I'm a Beginner</h3>
+                <p>Starting from scratch? Learn the basics of water safety and floating.</p>
+                <button class="btn btn-outline-primary mt-3 btn-sm px-4">View Outcomes</button>
+            </div>
+            
+            <!-- Intermediate Card -->
+            <div class="level-card" onclick="openLevelModal('intermediate')">
+                <div class="level-icon"><i class="fa-solid fa-swimmer"></i></div>
+                <h3 class="font-display">I'm at Intermediate</h3>
+                <p>Know the basics? Master different strokes and underwater swimming.</p>
+                <button class="btn btn-outline-primary mt-3 btn-sm px-4">View Outcomes</button>
+            </div>
+            
+            <!-- Regular Card -->
+            <div class="level-card" onclick="openLevelModal('regular')">
+                <div class="level-icon"><i class="fa-solid fa-stopwatch"></i></div>
+                <h3 class="font-display">I'm Regular</h3>
+                <p>Swimming daily? Refine your strokes, build endurance, and track laps.</p>
+                <button class="btn btn-outline-primary mt-3 btn-sm px-4">View Outcomes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals for Swimmer Levels -->
+<div class="modal fade" id="levelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="background: var(--color-surface); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: var(--backdrop-blur);">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title font-display text-white fw-bold fs-3" id="levelModalTitle">Title</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pb-4">
+                <!-- Carousel -->
+                <div id="levelCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+                    <div class="carousel-inner" id="levelCarouselInner" style="border-radius: var(--radius-md); overflow: hidden; height: 350px;">
+                        <!-- Dynamic images injected here -->
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#levelCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#levelCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+                </div>
+                
+                <!-- Content -->
+                <div class="level-content text-white" id="levelModalContent">
+                    <!-- Dynamic content injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .level-card {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: var(--radius-md);
+        padding: 2.5rem 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    .level-card:hover {
+        transform: translateY(-5px);
+        background: rgba(6, 182, 212, 0.05);
+        border-color: rgba(6, 182, 212, 0.3);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+    .level-icon {
+        font-size: 3rem;
+        color: var(--color-primary);
+        margin-bottom: 1.5rem;
+    }
+    .level-card h3 {
+        color: white;
+        margin-bottom: 1rem;
+        font-weight: 700;
+    }
+    .level-card p {
+        color: var(--color-text-secondary);
+        font-size: 0.95rem;
+        margin-bottom: 0;
+    }
+    .carousel-item img {
+        object-fit: cover;
+        height: 350px;
+        width: 100%;
+    }
+    .level-content ul {
+        list-style: none;
+        padding-left: 0;
+        margin-bottom: 0;
+    }
+    .level-content ul li {
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        color: rgba(255,255,255,0.9);
+    }
+    .level-content ul li i {
+        color: var(--color-primary);
+        margin-top: 0.25rem;
+        font-size: 1.2rem;
+    }
+</style>
+
+<script>
+    const levelData = {
+        beginner: {
+            title: "I'm a Beginner",
+            images: [
+                "/static/images/beginner_bubbling.jpg",
+                "/static/images/beginner_walking.jpg",
+                "/static/images/beginner_floating.jpg",
+                "/static/images/beginner_kicking.jpg"
+            ],
+            content: `
+                <ul>
+                    <li><i class="fa-solid fa-check-circle"></i> You will feel completely comfortable with water.</li>
+                    <li><i class="fa-solid fa-check-circle"></i> You will learn how to float effortlessly.</li>
+                    <li><i class="fa-solid fa-check-circle"></i> Learn to swim at least 1 style during a period of 2 months.</li>
+                    <li><i class="fa-solid fa-check-circle"></i> Master essential floating techniques.</li>
+                    <li><i class="fa-solid fa-check-circle"></i> Acquire basic life-saving skills.</li>
+                </ul>
+            `
+        },
+        intermediate: {
+            title: "I'm at Intermediate",
+            images: [
+                "/static/images/intermediate_underwater.jpg",
+                "/static/images/intermediate_strokes.jpg",
+                "/static/images/intermediate_diving.jpg"
+            ],
+            content: `
+                <ul>
+                    <li><i class="fa-solid fa-check-circle"></i> Master different styles of swimming (Freestyle, Backstroke, etc).</li>
+                    <li><i class="fa-solid fa-check-circle"></i> Undergo professional stroke corrections for better efficiency.</li>
+                    <li><i class="fa-solid fa-check-circle"></i> Learn proper and safe diving techniques.</li>
+                    <li><i class="fa-solid fa-check-circle"></i> Master underwater swimming and breath control.</li>
+                </ul>
+            `
+        },
+        regular: {
+            title: "I'm Regular",
+            images: [
+                "/static/images/regular_correction.jpg",
+                "/static/images/regular_lane.jpg",
+                "/static/images/regular_timing.jpg"
+            ],
+            content: `
+                <ul>
+                    <li><i class="fa-solid fa-check-circle"></i> Advanced stroke corrections and microscopic technique refinements.</li>
+                    <li><i class="fa-solid fa-check-circle"></i> Expert suggestions and drills for building stamina and endurance.</li>
+                    <li><i class="fa-solid fa-check-circle"></i> Dedicated support, coaching, and training for competitions.</li>
+                    <li><i class="fa-solid fa-check-circle"></i> Keep strict track of your progress in terms of timing and lap counts.</li>
+                </ul>
+            `
+        }
+    };
+
+    function openLevelModal(level) {
+        const data = levelData[level];
+        document.getElementById('levelModalTitle').innerText = data.title;
+        
+        let carouselHtml = '';
+        data.images.forEach((img, index) => {
+            const activeClass = index === 0 ? 'active' : '';
+            carouselHtml += `<div class="carousel-item ${activeClass}">
+                                <img src="${img}" class="d-block w-100" alt="Swimmer">
+                             </div>`;
+        });
+        document.getElementById('levelCarouselInner').innerHTML = carouselHtml;
+        document.getElementById('levelModalContent').innerHTML = data.content;
+        
+        const modalEl = document.getElementById('levelModal');
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+    }
+</script>
+
+<!-- Comparison Layout Section -->
+<div class="plans-section" id="plans">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="font-display text-white" style="font-weight: 800; font-size: 2.2rem; margin-bottom: 0.5rem;">Choose Your Training Plan</h2>
+            <p class="text-muted">Private training plans tailored to your personal pool schedule.</p>
+        </div>
+        
+        <!-- Toggle Cards -->
+        <div class="row justify-content-center px-2 mb-4 plans-toggle-row" style="position: sticky; top: 60px; z-index: 50; background: rgba(10, 10, 10, 0.9); backdrop-filter: blur(12px); padding-top: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); margin-left: -15px; margin-right: -15px;">
+            <div class="col-6 col-md-5 mb-2 mb-md-3">
+                <div class="plan-toggle-card active" id="toggle-individual" onclick="togglePlanView('individual')">
+                    <div class="icon-wrap"><i class="fa-solid fa-person-swimming"></i></div>
+                    <h3>Individual Training</h3>
+                    <p>1-on-1 personalized coaching</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-5 mb-2 mb-md-3">
+                <div class="plan-toggle-card" id="toggle-group" onclick="togglePlanView('group')">
+                    <div class="icon-wrap"><i class="fa-solid fa-people-group"></i></div>
+                    <h3>Group Coaching</h3>
+                    <p>Up to 5 members (Expandable)</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- INDIVIDUAL VIEW -->
+        <div id="view-individual">
+            <div class="comparison-wrapper mb-5">
+                <div style="overflow-x: auto;">
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left; padding-left: 1.5rem; width: 25%;">Coaching Feature</th>
+                                <th style="width: 18.75%;">Demo</th>
+                                <th style="width: 18.75%;">Single Day</th>
+                                <th style="width: 18.75%; color: var(--color-primary);">Monthly Package</th>
+                                <th style="width: 18.75%;">Customize</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="feature-name">Pool Facility</td>
+                                <td colspan="4" class="text-white text-center">Provided by Swimmer (At Your Villa, Apartment, or Club)</td>
+                            </tr>
+                            <tr>
+                                <td class="feature-name">Coaching Staff</td>
+                                <td>Assigned Trainer</td>
+                                <td>Selectable Coach</td>
+                                <td class="text-white">Preferred Coach</td>
+                                <td>Flexible selection</td>
+                            </tr>
+                            <tr>
+                                <td class="feature-name">Class Duration</td>
+                                <td>1hr / Session</td>
+                                <td>1hr / Session</td>
+                                <td class="text-white">1hr/day - Month Recurring</td>
+                                <td>Up to 60 Days Max</td>
+                            </tr>
+                            <tr>
+                                <td class="feature-name">Weekly Frequency</td>
+                                <td>Fixed 1 Class</td>
+                                <td>1 Class Booking</td>
+                                <td class="text-white">2 or 3 Days / week</td>
+                                <td>Up to 5 Days / week</td>
+                            </tr>
+                            <tr>
+                                <td class="feature-name">Skip & Makeup Credits</td>
+                                <td><i class="fa-solid fa-circle-xmark text-danger"></i></td>
+                                <td><i class="fa-solid fa-circle-xmark text-danger"></i></td>
+                                <td><i class="fa-solid fa-circle-check text-success"></i> Yes</td>
+                                <td><i class="fa-solid fa-circle-check text-success"></i> Yes</td>
+                            </tr>
+                            <tr>
+                                <td class="feature-name">Pause Subscription</td>
+                                <td><i class="fa-solid fa-circle-xmark text-danger"></i></td>
+                                <td><i class="fa-solid fa-circle-xmark text-danger"></i></td>
+                                <td><i class="fa-solid fa-circle-check text-success"></i> Yes (1 time)</td>
+                                <td><i class="fa-solid fa-circle-xmark text-danger"></i></td>
+                            </tr>
+                            <tr>
+                                <td class="feature-name">Multi-Person Discounts</td>
+                                <td><i class="fa-solid fa-circle-xmark text-danger"></i></td>
+                                <td><i class="fa-solid fa-circle-xmark text-danger"></i></td>
+                                <td class="text-white">Up to 21% off</td>
+                                <td>Up to 21% off</td>
+                            </tr>
+                            <tr>
+                                <td class="feature-name">Coaching Fee</td>
+                                <td>₹{{ '{:,}'.format(pkg['individual']['demo'].final_price) }} {% if pkg['individual']['demo'].final_price == 0 %}(Free){% endif %} <span class="small text-muted">/ session</span></td>
+                                <td>₹{{ '{:,}'.format(pkg['individual']['single'].final_price) }} <span class="small text-muted">/ session</span></td>
+                                <td class="text-white fw-bold">₹{{ '{:,}'.format(pkg['individual']['monthly'].final_price) }} <span class="small text-muted">/ month</span></td>
+                                <td>Dynamic pricing</td>
+                            </tr> 
+                            <tr>
+                                <td></td>
+                                <td><button class="btn btn-secondary btn-sm px-4" onclick="openLoginModal()">Book Demo</button></td>
+                                <td><button class="btn btn-secondary btn-sm px-4" onclick="openLoginModal()">Book Single</button></td>
+                                <td><button class="btn btn-primary btn-sm px-4" onclick="openLoginModal()">Book Monthly</button></td>
+                                <td><button class="btn btn-secondary btn-sm px-4" onclick="openLoginModal()">Configure</button></td>
+                            </tr>                                                       
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="text-center mb-4">
+                <h3 class="font-display text-white" style="font-weight: 700;">Long Term Coaching (Individual)</h3>
+                <p class="text-muted">Commit longer, save more.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- 3 Months -->
+                <div class="long-term-card">
+                    {% if pkg['individual']['3_months'].discount_percentage > 0 %}
+                    <div class="badge badge-primary mb-2" style="background: rgba(6,182,212,0.1); color: var(--color-primary); padding: 0.3rem 0.6rem;">{{ pkg['individual']['3_months'].discount_percentage }}% OFF</div>
+                    {% endif %}
+                    <h4>3 Months</h4>
+                    {% if pkg['individual']['3_months'].discount_percentage > 0 %}
+                    <div class="price-strike">₹{{ '{:,}'.format(pkg['individual']['3_months'].base_price) }}</div>
+                    {% endif %}
+                    <div class="price-actual mb-0">₹{{ '{:,}'.format(pkg['individual']['3_months'].final_price) }}</div>
+                </div>
+                <!-- 6 Months -->
+                <div class="long-term-card">
+                    {% if pkg['individual']['6_months'].discount_percentage > 0 %}
+                    <div class="badge badge-primary mb-2" style="background: rgba(6,182,212,0.1); color: var(--color-primary); padding: 0.3rem 0.6rem;">{{ pkg['individual']['6_months'].discount_percentage }}% OFF</div>
+                    {% endif %}
+                    <h4>6 Months</h4>
+                    {% if pkg['individual']['6_months'].discount_percentage > 0 %}
+                    <div class="price-strike">₹{{ '{:,}'.format(pkg['individual']['6_months'].base_price) }}</div>
+                    {% endif %}
+                    <div class="price-actual mb-0">₹{{ '{:,}'.format(pkg['individual']['6_months'].final_price) }}</div>
+                </div>
+                <!-- 9 Months -->
+                <div class="long-term-card">
+                    {% if pkg['individual']['9_months'].discount_percentage > 0 %}
+                    <div class="badge badge-primary mb-2" style="background: rgba(6,182,212,0.1); color: var(--color-primary); padding: 0.3rem 0.6rem;">{{ pkg['individual']['9_months'].discount_percentage }}% OFF</div>
+                    {% endif %}
+                    <h4>9 Months</h4>
+                    {% if pkg['individual']['9_months'].discount_percentage > 0 %}
+                    <div class="price-strike">₹{{ '{:,}'.format(pkg['individual']['9_months'].base_price) }}</div>
+                    {% endif %}
+                    <div class="price-actual mb-0">₹{{ '{:,}'.format(pkg['individual']['9_months'].final_price) }}</div>
+                </div>
+                <!-- 1 Year -->
+                <div class="long-term-card">
+                    {% if pkg['individual']['12_months'].discount_percentage > 0 %}
+                    <div class="badge badge-primary mb-2" style="background: rgba(6,182,212,0.1); color: var(--color-primary); padding: 0.3rem 0.6rem;">{{ pkg['individual']['12_months'].discount_percentage }}% OFF</div>
+                    {% endif %}
+                    <h4>1 Year</h4>
+                    {% if pkg['individual']['12_months'].discount_percentage > 0 %}
+                    <div class="price-strike">₹{{ '{:,}'.format(pkg['individual']['12_months'].base_price) }}</div>
+                    {% endif %}
+                    <div class="price-actual mb-0">₹{{ '{:,}'.format(pkg['individual']['12_months'].final_price) }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- GROUP VIEW -->
+        <div id="view-group" style="display: none;">
+            <div class="comparison-wrapper mb-5">
+                <div style="overflow-x: auto;">
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left; padding-left: 1.5rem; width: 25%;">Coaching Feature</th>
+                                <th style="width: 18.75%;">Demo (Group)</th>
+                                <th style="width: 18.75%;">Single Day (Group)</th>
+                                <th style="width: 18.75%; color: var(--color-primary);">Monthly Package (Group)</th>
+                                <th style="width: 18.75%;">Customize (Group)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="feature-name">Coaching Fee</td>
+                                <td>₹{{ '{:,}'.format(pkg['group']['demo'].final_price) }} {% if pkg['group']['demo'].final_price == 0 %}(Free){% endif %} <span class="small text-muted">/ session</span></td>
+                                <td>₹{{ '{:,}'.format(pkg['group']['single'].final_price) }} <span class="small text-muted">/ session</span></td>
+                                <td class="text-white fw-bold">₹{{ '{:,}'.format(pkg['group']['monthly'].final_price) }} <span class="small text-muted">/ month</span></td>
+                                <td>Dynamic pricing</td>
+                            </tr>
+                            <tr>
+                                <td class="feature-name">Max Members</td>
+                                <td>Up to 5 (Add more for extra fee)</td>
+                                <td>Up to 5 (Add more for extra fee)</td>
+                                <td class="text-white">Up to 5 (Add more for extra fee)</td>
+                                <td>Flexible selection</td>
+                            </tr>
+                            <tr>
+                                <td class="feature-name">Pool Facility</td>
+                                <td colspan="4" class="text-white text-center">Provided by Swimmers (At Your Villa, Apartment, or Club)</td>
+                            </tr>
+                            <tr>
+                                <td class="feature-name">Coaching Staff</td>
+                                <td>Assigned Trainer</td>
+                                <td>Selectable Coach</td>
+                                <td class="text-white">Preferred Coach</td>
+                                <td>Flexible selection</td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td><button class="btn btn-secondary btn-sm px-4" onclick="openLoginModal()">Book Demo</button></td>
+                                <td><button class="btn btn-secondary btn-sm px-4" onclick="openLoginModal()">Book Single</button></td>
+                                <td><button class="btn btn-primary btn-sm px-4" onclick="openLoginModal()">Book Monthly</button></td>
+                                <td><button class="btn btn-secondary btn-sm px-4" onclick="openLoginModal()">Configure</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="text-center mb-4">
+                <h3 class="font-display text-white" style="font-weight: 700;">Long Term Coaching (Group)</h3>
+                <p class="text-muted">Commit longer, save more as a group.</p>
+                <p class="text-warning small mb-0">*Note: Prices shown are placeholders pending confirmation.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- 3 Months -->
+                <div class="long-term-card">
+                    {% if pkg['group']['3_months'].discount_percentage > 0 %}
+                    <div class="badge badge-primary mb-2" style="background: rgba(6,182,212,0.1); color: var(--color-primary); padding: 0.3rem 0.6rem;">{{ pkg['group']['3_months'].discount_percentage }}% OFF</div>
+                    {% endif %}
+                    <h4>3 Months</h4>
+                    {% if pkg['group']['3_months'].discount_percentage > 0 %}
+                    <div class="price-strike">₹{{ '{:,}'.format(pkg['group']['3_months'].base_price) }}</div>
+                    {% endif %}
+                    <div class="price-actual mb-0">₹{{ '{:,}'.format(pkg['group']['3_months'].final_price) }}</div>
+                </div>
+                <!-- 6 Months -->
+                <div class="long-term-card">
+                    {% if pkg['group']['6_months'].discount_percentage > 0 %}
+                    <div class="badge badge-primary mb-2" style="background: rgba(6,182,212,0.1); color: var(--color-primary); padding: 0.3rem 0.6rem;">{{ pkg['group']['6_months'].discount_percentage }}% OFF</div>
+                    {% endif %}
+                    <h4>6 Months</h4>
+                    {% if pkg['group']['6_months'].discount_percentage > 0 %}
+                    <div class="price-strike">₹{{ '{:,}'.format(pkg['group']['6_months'].base_price) }}</div>
+                    {% endif %}
+                    <div class="price-actual mb-0">₹{{ '{:,}'.format(pkg['group']['6_months'].final_price) }}</div>
+                </div>
+                <!-- 9 Months -->
+                <div class="long-term-card">
+                    {% if pkg['group']['9_months'].discount_percentage > 0 %}
+                    <div class="badge badge-primary mb-2" style="background: rgba(6,182,212,0.1); color: var(--color-primary); padding: 0.3rem 0.6rem;">{{ pkg['group']['9_months'].discount_percentage }}% OFF</div>
+                    {% endif %}
+                    <h4>9 Months</h4>
+                    {% if pkg['group']['9_months'].discount_percentage > 0 %}
+                    <div class="price-strike">₹{{ '{:,}'.format(pkg['group']['9_months'].base_price) }}</div>
+                    {% endif %}
+                    <div class="price-actual mb-0">₹{{ '{:,}'.format(pkg['group']['9_months'].final_price) }}</div>
+                </div>
+                <!-- 1 Year -->
+                <div class="long-term-card">
+                    {% if pkg['group']['12_months'].discount_percentage > 0 %}
+                    <div class="badge badge-primary mb-2" style="background: rgba(6,182,212,0.1); color: var(--color-primary); padding: 0.3rem 0.6rem;">{{ pkg['group']['12_months'].discount_percentage }}% OFF</div>
+                    {% endif %}
+                    <h4>1 Year</h4>
+                    {% if pkg['group']['12_months'].discount_percentage > 0 %}
+                    <div class="price-strike">₹{{ '{:,}'.format(pkg['group']['12_months'].base_price) }}</div>
+                    {% endif %}
+                    <div class="price-actual mb-0">₹{{ '{:,}'.format(pkg['group']['12_months'].final_price) }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .plan-toggle-card {
+        background: rgba(255,255,255,0.02);
+        border: 2px solid rgba(255,255,255,0.05);
+        border-radius: var(--radius-md);
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    .plan-toggle-card:hover {
+        background: rgba(255,255,255,0.05);
+        transform: translateY(-5px);
+    }
+    .plan-toggle-card.active {
+        border-color: var(--color-primary);
+        background: rgba(6, 182, 212, 0.1);
+        box-shadow: 0 10px 30px rgba(6, 182, 212, 0.15);
+    }
+    .plan-toggle-card .icon-wrap {
+        font-size: 2.5rem;
+        color: var(--color-primary);
+        margin-bottom: 1rem;
+    }
+    .plan-toggle-card h3 {
+        color: white;
+        font-family: var(--font-display);
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    .plan-toggle-card p {
+        color: var(--color-text-secondary);
+        margin-bottom: 0;
+        font-size: 0.95rem;
+    }
+    
+    @media (max-width: 767.98px) {
+        .plans-toggle-row {
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
+        }
+        .plan-toggle-card {
+            padding: 0.5rem 0.25rem !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            border-radius: var(--radius-sm) !important;
+            height: 44px !important;
+            border-width: 1px !important;
+        }
+        .plan-toggle-card:hover {
+            transform: none !important;
+        }
+        .plan-toggle-card .icon-wrap {
+            font-size: 0.9rem !important;
+            margin-bottom: 0 !important;
+        }
+        .plan-toggle-card h3 {
+            font-size: 0.8rem !important;
+            margin-bottom: 0 !important;
+            white-space: nowrap;
+        }
+        .plan-toggle-card p {
+            display: none !important;
+        }
+    }
+    
+    .long-term-card {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: var(--radius-sm);
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    .long-term-card:hover {
+        border-color: rgba(255,255,255,0.2);
+        background: rgba(255,255,255,0.05);
+    }
+    .long-term-card h4 {
+        color: white;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    .long-term-card .price-strike {
+        text-decoration: line-through;
+        color: var(--color-text-secondary);
+        font-size: 1rem;
+    }
+    .long-term-card .price-actual {
+        color: var(--color-primary);
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+</style>
+<script>
+    function togglePlanView(view) {
+        document.getElementById('toggle-individual').classList.remove('active');
+        document.getElementById('toggle-group').classList.remove('active');
+        
+        document.getElementById('view-individual').style.display = 'none';
+        document.getElementById('view-group').style.display = 'none';
+        
+        document.getElementById('toggle-' + view).classList.add('active');
+        document.getElementById('view-' + view).style.display = 'block';
+    }
+</script>
+
+<!-- Modal login overlay -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0 pb-0">
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body pt-0">
+        
+        <div class="login-container">
+            <div class="logo-wrapper text-center mb-4">
+                <div class="logo-icon"><i class="fa-solid fa-water"></i></div>
+                <h2 class="font-display text-white mb-1" style="font-weight: 800; font-size: 1.6rem;">Access SwimTrackPro</h2>
+                <p class="text-muted small">Fear less. Swim more.</p>
+            </div>
+            
+            <div class="role-toggle">
+                <button type="button" id="guestBtn" class="role-btn active">Guest</button>
+                <button type="button" id="trainerBtn" class="role-btn">Trainer</button>
+            </div>
+            
+            <form action="/login" method="post" id="loginForm">
+                <input type="hidden" name="role" id="roleInput" value="guest">
+                
+                <div class="form-group mb-3">
+                    <label class="form-label">Username</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon"><i class="fa-solid fa-user"></i></span>
+                        <input type="text" name="name" id="nameInput" class="form-control login-input" placeholder="Enter username" maxlength="50" required autocomplete="username">
+                    </div>
+                    <small id="nameError" class="text-danger d-none" style="margin-top: -1rem; display: block; margin-bottom: 1rem;">Please enter a valid username</small>
+                </div>
+                
+                <div class="form-group mb-3 d-none" id="passwordField">
+                    <label class="form-label">Password</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon"><i class="fa-solid fa-lock"></i></span>
+                        <input type="password" name="password" id="passwordInput" class="form-control login-input" placeholder="Enter password">
+                        <button class="toggle-pass-btn" type="button" id="togglePasswordBtn">
+                            <i class="fa-solid fa-eye" id="togglePasswordIcon"></i>
+                        </button>
+                    </div>
+                    <div id="forgotPasswordContainer" class="d-none" style="text-align: right; margin-top: -0.5rem; margin-bottom: 1rem;">
+                        <a href="/forgot-password" style="font-size: 0.85rem; color: var(--color-primary);">Forgot Password?</a>
+                    </div>
+                </div>
+                
+                <div class="form-group mb-3" id="phoneField">
+                    <label class="form-label">Mobile Number</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon"><i class="fa-solid fa-phone"></i></span>
+                        <input type="tel" id="phoneInput" name="phone" class="form-control login-input" placeholder="Enter mobile number" maxlength="10" pattern="[0-9]{10}" inputmode="numeric" required autocomplete="tel">
+                    </div>
+                    <small id="phoneError" class="text-danger d-none" style="margin-top: -1rem; display: block; margin-bottom: 1rem;">Please enter a valid 10-digit mobile number</small>
+                </div>
+                
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <div class="text-center mb-3">
+                            <small class="text-danger" style="font-size: 0.85rem; font-weight: 500;">
+>>>>>>> feature/newVersion_3.0
                                 <i class="fa-solid fa-triangle-exclamation"></i> {{ messages[-1] }}
                             </small>
                         </div>
                     {% endif %}
                 {% endwith %}
+<<<<<<< HEAD
 
                 <button type="submit" class="login-btn">
                     <span
@@ -333,18 +1220,71 @@
         </div>
     </div>
 <script>
+=======
+                
+                <button type="submit" class="register-btn w-100 py-3 mb-3" id="submitBtn">
+                    <span>Login as Guest</span>
+                </button>
+                
+                <div class="footer-links text-center">
+                    Are you a Coach? <a href="/register">Register Here</a>
+                </div>
+            </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let myModal;
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        // Clear greeted state so it shows up on next login
+        sessionStorage.clear();
+        
+        myModal = new bootstrap.Modal(document.getElementById('loginModal'));
+        
+        // Auto show modal if there is a failed message in URL or session flash
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                openLoginModal();
+            {% endif %}
+        {% endwith %}
+        
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('login') === 'true' || params.get('role')) {
+            openLoginModal();
+        }
+    });
+
+    function openLoginModal() {
+        if (myModal) {
+            myModal.show();
+        }
+    }
+
+>>>>>>> feature/newVersion_3.0
     const phoneInput = document.getElementById('phoneInput');
     const phoneError = document.getElementById('phoneError');
     const loginForm = document.getElementById('loginForm');
     const guestBtn = document.getElementById('guestBtn');
     const trainerBtn = document.getElementById('trainerBtn');
+<<<<<<< HEAD
     const adminBtn = document.getElementById('adminBtn');
+=======
+>>>>>>> feature/newVersion_3.0
     const roleInput = document.getElementById('roleInput');
     const phoneField = document.getElementById('phoneField');
     const passwordField = document.getElementById('passwordField');
     const passwordInput = document.getElementById('passwordInput');
     const nameInput = document.getElementById('nameInput');
     const nameError = document.getElementById('nameError');
+<<<<<<< HEAD
 
     function activateTrainerMode() {
         roleInput.value = 'trainer';
@@ -387,12 +1327,30 @@
         if (passIcon) {
             passIcon.innerHTML = '<i class="fa-solid fa-lock"></i>';
         }
+=======
+    const submitBtn = document.getElementById('submitBtn');
+
+    function activateTrainerMode() {
+        roleInput.value = 'trainer';
+        nameInput.value = '';
+        phoneInput.value = '';
+        passwordInput.value = '';
+        nameError.classList.add('d-none');
+        phoneError.classList.add('d-none');
+        
+        trainerBtn.classList.add('active');
+        guestBtn.classList.remove('active');
+        
+        phoneField.classList.add('d-none');
+        passwordField.classList.remove('d-none');
+>>>>>>> feature/newVersion_3.0
         
         const forgotPwd = document.getElementById('forgotPasswordContainer');
         if (forgotPwd) forgotPwd.classList.remove('d-none');
 
         phoneInput.required = false;
         passwordInput.required = true;
+<<<<<<< HEAD
 
         setTimeout(() => {
             nameInput.focus();
@@ -430,6 +1388,24 @@
             adminBtn.classList.remove('active-mode');
         }
 
+=======
+        
+        submitBtn.querySelector('span').textContent = 'Login as Trainer';
+        nameInput.focus();
+    }
+
+    function activateGuestMode() {
+        roleInput.value = 'guest';
+        nameInput.value = '';
+        phoneInput.value = '';
+        passwordInput.value = '';
+        nameError.classList.add('d-none');
+        phoneError.classList.add('d-none');
+        
+        guestBtn.classList.add('active');
+        trainerBtn.classList.remove('active');
+        
+>>>>>>> feature/newVersion_3.0
         phoneField.classList.remove('d-none');
         passwordField.classList.add('d-none');
         
@@ -438,6 +1414,7 @@
 
         phoneInput.required = true;
         passwordInput.required = false;
+<<<<<<< HEAD
 
         setTimeout(() => {
             nameInput.focus();
@@ -447,10 +1424,16 @@
         if (loginButtonLabel) {
             loginButtonLabel.textContent = 'Login as Guest';
         }
+=======
+        
+        submitBtn.querySelector('span').textContent = 'Login as Guest';
+        nameInput.focus();
+>>>>>>> feature/newVersion_3.0
     }
 
     function activateAdminMode() {
         roleInput.value = 'admin';
+<<<<<<< HEAD
 
         // Reset form when switching modes
         nameInput.value = '';
@@ -512,25 +1495,62 @@
     const logoIcon = document.querySelector('.logo-icon');
     if (logoIcon) {
         logoIcon.addEventListener('dblclick', function() {
+=======
+        nameInput.value = '';
+        phoneInput.value = '';
+        passwordInput.value = '';
+        nameError.classList.add('d-none');
+        phoneError.classList.add('d-none');
+        
+        guestBtn.classList.remove('active');
+        trainerBtn.classList.remove('active');
+        
+        phoneField.classList.add('d-none');
+        passwordField.classList.remove('d-none');
+        
+        phoneInput.required = false;
+        passwordInput.required = true;
+        
+        submitBtn.querySelector('span').textContent = 'Login as Admin';
+        nameInput.focus();
+    }
+
+    trainerBtn.addEventListener('click', activateTrainerMode);
+    guestBtn.addEventListener('click', activateGuestMode);
+
+    const logoIcons = document.querySelectorAll('.logo-icon');
+    logoIcons.forEach(icon => {
+        icon.addEventListener('dblclick', function() {
+>>>>>>> feature/newVersion_3.0
             if (roleInput.value === 'admin') {
                 activateGuestMode();
             } else {
                 activateAdminMode();
             }
         });
+<<<<<<< HEAD
     }
+=======
+    });
+>>>>>>> feature/newVersion_3.0
 
     if (phoneInput) {
         phoneInput.addEventListener('input', () => {
             phoneInput.value = phoneInput.value.replace(/\D/g, '').slice(0, 10);
+<<<<<<< HEAD
 
             if (phoneInput.value.length === 10) {
                 phoneError.classList.add('d-none');
                 phoneInput.classList.remove('is-invalid');
+=======
+            if (phoneInput.value.length === 10) {
+                phoneError.classList.add('d-none');
+>>>>>>> feature/newVersion_3.0
             }
         });
     }
 
+<<<<<<< HEAD
 if (loginForm) {
     loginForm.addEventListener('submit', (e) => {
         // Reset previous validation messages
@@ -568,11 +1588,22 @@ if (loginForm) {
                 nameInput.classList.add('is-invalid');
             }
 
+=======
+    loginForm.addEventListener('submit', (e) => {
+        nameError.classList.add('d-none');
+        phoneError.classList.add('d-none');
+        nameInput.value = nameInput.value.trim();
+
+        if (nameInput.value.length === 0) {
+            e.preventDefault();
+            nameError.classList.remove('d-none');
+>>>>>>> feature/newVersion_3.0
             return;
         }
 
         if (roleInput.value === 'guest') {
             const phone = phoneInput.value.trim();
+<<<<<<< HEAD
 
             // Normalize phone number to digits only
             phoneInput.value = phone.replace(/\D/g, '');
@@ -662,3 +1693,55 @@ if (togglePasswordBtn && passwordInput) {
 <script src="{{ url_for('static', filename='login.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </html>
+=======
+            phoneInput.value = phone.replace(/\D/g, '');
+            if (!/^\d{10}$/.test(phoneInput.value)) {
+                e.preventDefault();
+                phoneError.classList.remove('d-none');
+                return;
+            }
+        }
+        
+        // Show spinner and disable button on successful validation
+        const submitSpan = submitBtn.querySelector('span');
+        if (submitSpan) {
+            submitSpan.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Logging in...';
+        } else {
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Logging in...';
+        }
+        submitBtn.style.pointerEvents = 'none';
+        submitBtn.style.opacity = '0.8';
+    });
+
+    window.addEventListener('load', () => {
+        const params = new URLSearchParams(window.location.search);
+        const activeRole = params.get('role');
+        if (activeRole === 'trainer') {
+            activateTrainerMode();
+            openLoginModal();
+        } else if (activeRole === 'admin') {
+            activateAdminMode();
+            openLoginModal();
+        } else {
+            activateGuestMode();
+        }
+    });
+
+    const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+    const togglePasswordIcon = document.getElementById('togglePasswordIcon');
+    if (togglePasswordBtn && passwordInput) {
+        togglePasswordBtn.addEventListener('click', function() {
+            const type = passwordInput.type === 'password' ? 'text' : 'password';
+            passwordInput.type = type;
+            if (type === 'text') {
+                togglePasswordIcon.classList.remove('fa-eye');
+                togglePasswordIcon.classList.add('fa-eye-slash');
+            } else {
+                togglePasswordIcon.classList.remove('fa-eye-slash');
+                togglePasswordIcon.classList.add('fa-eye');
+            }
+        });
+    }
+</script>
+{% endblock %}
+>>>>>>> feature/newVersion_3.0
