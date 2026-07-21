@@ -1,18 +1,5 @@
 {% extends 'base.html' %}
 
-<<<<<<< HEAD
-{% block title %}About Your Trainer - SwimTrackPro{% endblock %}
-
-{% block content %}
-
-{% include 'components/page_header.html' %}
-
-<div class="container-fluid py-4">
-
-    <!-- Flash message alerts container -->
-    <div class="row justify-content-center">
-        <div class="col-12 col-xl-11">
-=======
 {% block title %}About Coach | SwimTrack Pro{% endblock %}
 {% block page_title %}Coach Profile{% endblock %}
 
@@ -67,17 +54,12 @@
     <!-- Flash message alerts container -->
     <div class="row justify-content-center">
         <div class="col-12">
->>>>>>> feature/newVersion_3.0
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
                         <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show mb-4 shadow-sm" role="alert" style="border-radius: 12px; font-weight: 500;">
                             {{ message }}
-<<<<<<< HEAD
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-=======
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
->>>>>>> feature/newVersion_3.0
                         </div>
                     {% endfor %}
                 {% endif %}
@@ -88,21 +70,6 @@
     {% if not coaches %}
     <div class="row justify-content-center">
         <div class="col-12 col-lg-8 text-center py-5">
-<<<<<<< HEAD
-            <div class="card border-0 rounded-4 bg-dark bg-opacity-20 p-5 text-white shadow-sm border border-secondary border-opacity-10" style="border-radius:24px;">
-                <div class="fs-1 mb-3"><i class="fa-solid fa-chalkboard-user"></i></div>
-                <h3 class="fw-bold mb-2">No Assigned Coach</h3>
-                <p class="text-secondary mb-4">You do not have any swimming coach assigned to your account at this moment.</p>
-                <div class="d-flex justify-content-center gap-3">
-                    {% if role == 'guest' %}
-                    <a href="/booking" class="btn btn-primary px-4 py-2.5 rounded-pill fw-semibold">
-                        <i class="fa-solid fa-calendar-check me-2"></i>Book a Session
-                    </a>
-                    {% endif %}
-                    <a href="/" class="btn btn-outline-light px-4 py-2.5 rounded-pill fw-semibold">
-                        Back to Dashboard
-                    </a>
-=======
             <div class="glass-panel animate-slide-up" style="padding: 3rem;">
                 <div style="font-size: 3rem; color: var(--color-text-secondary); margin-bottom: 1rem;"><i class="fa-solid fa-chalkboard-user"></i></div>
                 <h3 class="font-display mb-2" style="font-size: 1.5rem;">No Assigned Coach</h3>
@@ -114,7 +81,6 @@
                     </a>
                     {% endif %}
 
->>>>>>> feature/newVersion_3.0
                 </div>
             </div>
         </div>
@@ -122,21 +88,6 @@
     {% endif %}
 
     {% for c in coaches %}
-<<<<<<< HEAD
-    <div class="coach-profile-section" id="coach-sec-{{ c.username }}">
-        
-        <!-- Hero section card -->
-        <div class="card border-0 rounded-4 shadow-sm bg-dark bg-opacity-20 p-4 p-md-5 text-white mb-4 position-relative overflow-hidden" style="min-height: 480px;">
-            <div class="row align-items-center">
-                <div class="col-lg-6 text-center text-lg-start">
-                    <span class="badge bg-primary px-3 py-2.5 rounded-pill mb-3">
-                        <i class="fa-solid fa-medal me-1"></i>
-                        {{ c.qualification }}
-                    </span>
-                    <h1 class="display-5 fw-bold mt-2 mb-3">{{ c.name|title }}</h1>
-                    <h4 class="text-info mb-4">Professional Swimming Coach</h4>
-                    <p class="text-light opacity-75" style="line-height: 1.8; font-size: 1.05rem;">
-=======
     <div class="coach-profile-section mb-5" id="coach-sec-{{ c.username }}">
         
         <!-- Hero section card -->
@@ -150,33 +101,10 @@
                     <h1 class="font-display mb-3" style="font-size: 2.5rem; font-weight: 800; color: white;">{{ c.name|title }}</h1>
                     <h4 class="text-primary mb-4" style="font-weight: 600;">Professional Swimming Coach</h4>
                     <p class="text-muted" style="line-height: 1.8; font-size: 1rem;">
->>>>>>> feature/newVersion_3.0
                         Assigned Coach Info: currently working with {{ c.currently_working }}. 
                         Resides in {{ c.residence_location }} with over {{ c.experience }} experience. 
                         A reliable coach dedicated to student safety and technique correction.
                     </p>
-<<<<<<< HEAD
-                    <div class="d-flex flex-wrap gap-3 mt-5 justify-content-center justify-content-lg-start">
-                        {% if role == 'guest' %}
-                        <a href="/booking" class="btn btn-primary btn-lg px-4" style="border-radius: 50px; font-weight: 600;">
-                            <i class="fa-solid fa-calendar-check me-2"></i> Book Session
-                        </a>
-                        {% endif %}
-                        <a href="tel:{{ c.phone }}" class="btn btn-success btn-lg px-4" style="border-radius: 50px; font-weight: 600;">
-                            <i class="fa-solid fa-phone me-2"></i> Contact Coach
-                        </a>
-                    </div>
-                </div>
-                
-                <div class="col-lg-6 text-center mt-5 mt-lg-0">
-                    <div class="mx-auto" style="width: 100%; max-width: 420px;">
-                        {% if c.photos %}
-                            <div id="carousel-{{ c.username }}" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3500">
-                                <div class="carousel-inner rounded-4 border border-light border-opacity-10 shadow-lg">
-                                    {% for photo in c.photos %}
-                                    <div class="carousel-item {% if loop.first %}active{% endif %}">
-                                        <img src="{{ url_for('static', filename='images/Album/' ~ photo) }}" class="d-block w-100" alt="Training image" style="height: 400px; object-fit: cover;">
-=======
                     <div class="flex flex-wrap gap-3 mt-5 justify-center lg:justify-start">
                         {% if role == 'guest' %}
                         <a href="/booking" class="btn btn-primary px-5 py-3">
@@ -202,7 +130,6 @@
                                     {% for photo in c.photos %}
                                     <div class="carousel-item {% if loop.first %}active{% endif %}">
                                         <img src="{{ url_for('static', filename='images/Album/' ~ photo) }}" class="d-block w-100" alt="Training image" style="height: 380px; object-fit: cover;">
->>>>>>> feature/newVersion_3.0
                                     </div>
                                     {% endfor %}
                                 </div>
@@ -217,17 +144,6 @@
                             </div>
                         {% else %}
                             <div id="carousel-default-{{ c.username }}" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3500">
-<<<<<<< HEAD
-                                <div class="carousel-inner rounded-4 border border-light border-opacity-10 shadow-lg">
-                                    <div class="carousel-item active">
-                                        <img src="{{ url_for('static', filename='images/Album/IMG20220514170101_01.jpg') }}" class="d-block w-100" alt="Default profile" style="height: 400px; object-fit: cover;">
-                                    </div>
-                                    <div class="carousel-item">
-                                        <img src="{{ url_for('static', filename='images/Album/10376914.jpg') }}" class="d-block w-100" alt="Default event" style="height: 400px; object-fit: cover;">
-                                    </div>
-                                    <div class="carousel-item">
-                                        <img src="{{ url_for('static', filename='images/Album/DSC08188.JPG') }}" class="d-block w-100" alt="Default training" style="height: 400px; object-fit: cover;">
-=======
                                 <div class="carousel-inner shadow-lg">
                                     <div class="carousel-item active">
                                         <img src="{{ url_for('static', filename='images/Album/IMG20220514170101_01.jpg') }}" class="d-block w-100" alt="Default profile" style="height: 380px; object-fit: cover;">
@@ -237,7 +153,6 @@
                                     </div>
                                     <div class="carousel-item">
                                         <img src="{{ url_for('static', filename='images/Album/DSC08188.JPG') }}" class="d-block w-100" alt="Default training" style="height: 380px; object-fit: cover;">
->>>>>>> feature/newVersion_3.0
                                     </div>
                                 </div>
                                 <button class="carousel-control-prev" type="button" data-bs-target="#carousel-default-{{ c.username }}" data-bs-slide="prev">
@@ -254,37 +169,6 @@
         </div>
 
         <!-- Stats Bar -->
-<<<<<<< HEAD
-        <div class="card border-0 rounded-4 bg-dark bg-opacity-10 p-4 mb-4">
-            <div class="row text-center g-3">
-                <div class="col-md-3 col-6">
-                    <div class="py-2">
-                        <i class="fa-solid fa-person-swimming fs-3 text-primary mb-2"></i>
-                        <h3 class="fw-bold mb-0">500+</h3>
-                        <span class="text-secondary small">Students Trained</span>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6">
-                    <div class="py-2">
-                        <i class="fa-solid fa-award fs-3 text-primary mb-2"></i>
-                        <h3 class="fw-bold mb-0">{{ c.experience }}</h3>
-                        <span class="text-secondary small">Years Coaching</span>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6">
-                    <div class="py-2">
-                        <i class="fa-solid fa-star fs-3 text-warning mb-2"></i>
-                        <h3 class="fw-bold mb-0">{{ c.rating }}</h3>
-                        <span class="text-secondary small">Coach Rating</span>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6">
-                    <div class="py-2">
-                        <i class="fa-solid fa-shield-heart fs-3 text-primary mb-2"></i>
-                        <h3 class="fw-bold mb-0">100%</h3>
-                        <span class="text-secondary small">Safety Guaranteed</span>
-                    </div>
-=======
         <div class="glass-panel mb-4" style="padding: 1.5rem;">
             <div class="grid grid-cols-2 md:grid-cols-4 text-center gap-4">
                 <div>
@@ -306,79 +190,11 @@
                     <i class="fa-solid fa-shield-heart fs-3 text-primary mb-2"></i>
                     <h3 class="fw-bold text-white mb-0" style="font-size: 1.6rem;">100%</h3>
                     <span class="text-muted small">Safety Guaranteed</span>
->>>>>>> feature/newVersion_3.0
                 </div>
             </div>
         </div>
 
         <!-- Highlights & Details -->
-<<<<<<< HEAD
-        <div class="row g-4 mb-4 text-dark">
-            <div class="col-md-6 col-lg-4">
-                <div class="card border-0 shadow-sm p-4 h-100 rounded-4 bg-white">
-                    <i class="fa-solid fa-graduation-cap fs-2 text-primary mb-3"></i>
-                    <h5 class="fw-bold">Qualification</h5>
-                    <p class="text-muted mb-0">{{ c.qualification }}</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="card border-0 shadow-sm p-4 h-100 rounded-4 bg-white">
-                    <i class="fa-solid fa-briefcase fs-2 text-primary mb-3"></i>
-                    <h5 class="fw-bold">Experience</h5>
-                    <p class="text-muted mb-0">{{ c.experience }} of competitive and training experience.</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="card border-0 shadow-sm p-4 h-100 rounded-4 bg-white">
-                    <i class="fa-solid fa-building fs-2 text-primary mb-3"></i>
-                    <h5 class="fw-bold">Currently Working</h5>
-                    <p class="text-muted mb-0">Active Coach at {{ c.currently_working }}.</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="card border-0 shadow-sm p-4 h-100 rounded-4 bg-white">
-                    <i class="fa-solid fa-location-dot fs-2 text-primary mb-3"></i>
-                    <h5 class="fw-bold">Residence Location</h5>
-                    <p class="text-muted mb-0">Resides and holds classes around {{ c.residence_location }}.</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="card border-0 shadow-sm p-4 h-100 rounded-4 bg-white">
-                    <i class="fa-solid fa-address-book fs-2 text-primary mb-3"></i>
-                    <h5 class="fw-bold">Contact Info</h5>
-                    <p class="text-muted mb-0">Phone: {{ c.phone }}<br>Email: {{ c.email }}</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="card border-0 shadow-sm p-4 h-100 rounded-4 bg-white">
-                    <i class="fa-solid fa-star-half-stroke fs-2 text-primary mb-3"></i>
-                    <h5 class="fw-bold">Feedback Rating</h5>
-                    <p class="text-muted mb-0">Maintains a premium star rating of {{ c.rating }} / 5.0.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- V0044.0 - Feedback and Reviews block -->
-        <div class="card border-0 rounded-4 bg-dark bg-opacity-20 p-4 p-md-5 mb-4 text-white">
-            <div class="row g-4">
-                
-                <!-- Past feedbacks -->
-                <div class="col-lg-7">
-                    <h4 class="fw-bold mb-4 text-white"><i class="fa-regular fa-comments text-info me-2"></i> Swimmer Reviews</h4>
-                    {% if c.feedbacks %}
-                        <div class="d-flex flex-column gap-3">
-                            {% for f in c.feedbacks %}
-                                <div class="card border-0 bg-white text-dark p-3 rounded-3 shadow-sm border border-light">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <h6 class="mb-0 fw-bold text-primary">{{ f.guest_name|title }}</h6>
-                                        <span class="badge bg-warning text-dark fw-bold"><i class="fa-solid fa-star text-warning"></i> {{ f.rating }} / 5</span>
-                                    </div>
-                                    <div class="small text-muted mb-3"><i class="fa-regular fa-clock me-1"></i> Submitted on {{ f.created_at }}</div>
-                                    
-                                    <div class="text-start">
-                                        {% if f.pros %}
-                                        <p class="mb-2 text-dark" style="font-size: 0.92rem; line-height: 1.5;">
-=======
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
             {% if c.bio %}
             <div class="info-card-light col-span-1 md:col-span-2 lg:col-span-3">
@@ -466,17 +282,12 @@
                                     <div class="text-start" style="font-size: 0.85rem; line-height: 1.5;">
                                         {% if f.pros %}
                                         <p class="mb-2">
->>>>>>> feature/newVersion_3.0
                                             <strong class="text-success"><i class="fa-solid fa-circle-plus me-1"></i> PROs:</strong> {{ f.pros }}
                                         </p>
                                         {% endif %}
                                         
                                         {% if f.cons %}
-<<<<<<< HEAD
-                                        <p class="mb-0 text-dark" style="font-size: 0.92rem; line-height: 1.5;">
-=======
                                         <p class="mb-0">
->>>>>>> feature/newVersion_3.0
                                             <strong class="text-danger"><i class="fa-solid fa-circle-minus me-1"></i> CONs:</strong> {{ f.cons }}
                                         </p>
                                         {% endif %}
@@ -485,79 +296,40 @@
                             {% endfor %}
                         </div>
                     {% else %}
-<<<<<<< HEAD
-                        <div class="text-center py-5 text-muted rounded-3 bg-dark bg-opacity-30">
-                            <div class="fs-1 mb-2"><i class="fa-solid fa-comment"></i></div>
-                            <p class="mb-0 fw-semibold text-secondary">No feedback submitted yet for this coach.</p>
-                            <small class="text-secondary opacity-50">Be the first to share your training experience!</small>
-=======
                         <div class="text-center py-5 text-muted" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-sm);">
                             <div class="fs-1 mb-2"><i class="fa-solid fa-comment"></i></div>
                             <p class="mb-0 fw-semibold text-secondary">No feedback submitted yet for this coach.</p>
                             <small class="text-secondary opacity-50">Be the first to share your experience!</small>
->>>>>>> feature/newVersion_3.0
                         </div>
                     {% endif %}
                 </div>
 
                 <!-- Submit Feedback Form (Guests only if the coach is assigned to them) -->
                 {% if role == 'guest' and c.username in assigned_usernames %}
-<<<<<<< HEAD
-                <div class="col-lg-5">
-                    <div class="card border-0 bg-dark bg-opacity-40 p-4 rounded-3 text-white border border-info border-opacity-25">
-                        <h5 class="fw-bold mb-3"><i class="fa-solid fa-pen-to-square text-info me-2"></i> Write a Review</h5>
-                        <p class="text-secondary small mb-4">Provide rating, pros, and cons. Your submission updates the coach's public overall rating score.</p>
-=======
                 <div>
                     <div class="glass-panel" style="padding: 1.5rem; background: rgba(0,0,0,0.3); border-color: rgba(6,182,212,0.15);">
                         <h5 class="font-display mb-3" style="font-size: 1.15rem;"><i class="fa-solid fa-pen-to-square text-primary me-2"></i> Write a Review</h5>
                         <p class="text-muted small mb-4">Provide rating, pros, and cons. Your submission updates the coach's public overall rating score.</p>
->>>>>>> feature/newVersion_3.0
                         
                         <form action="/coach/feedback/{{ c.username }}" method="POST">
                             
                             <!-- Star Rating -->
-<<<<<<< HEAD
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold text-white-50 d-block">Overall Rating</label>
-                                <div class="star-rating-container d-flex gap-2 align-items-center mb-2">
-                                    <div class="stars d-flex gap-1" id="star-selector-{{ c.username }}" style="cursor: pointer; font-size: 1.5rem;">
-=======
                             <div class="form-group">
                                 <label class="form-label">Overall Rating</label>
                                 <div class="flex gap-3 items-center mb-2">
                                     <div class="stars flex gap-1" id="star-selector-{{ c.username }}" style="cursor: pointer; font-size: 1.5rem;">
->>>>>>> feature/newVersion_3.0
                                         <i class="fa-regular fa-star star-item text-warning" data-value="1"></i>
                                         <i class="fa-regular fa-star star-item text-warning" data-value="2"></i>
                                         <i class="fa-regular fa-star star-item text-warning" data-value="3"></i>
                                         <i class="fa-regular fa-star star-item text-warning" data-value="4"></i>
                                         <i class="fa-regular fa-star star-item text-warning" data-value="5"></i>
                                     </div>
-<<<<<<< HEAD
-                                    <span class="small text-white-50 fw-semibold ms-2" id="star-label-{{ c.username }}">Select Rating</span>
-=======
                                     <span class="text-muted small" id="star-label-{{ c.username }}">Select Rating</span>
->>>>>>> feature/newVersion_3.0
                                 </div>
                                 <input type="hidden" id="rating-{{ c.username }}" name="rating" value="" required>
                             </div>
                             
                             <!-- PROs -->
-<<<<<<< HEAD
-                            <div class="mb-3">
-                                <label for="pros-{{ c.username }}" class="form-label small fw-bold text-success"><i class="fa-solid fa-circle-plus me-1"></i> PROs</label>
-                                <textarea class="form-control bg-white text-dark border-success border-opacity-20" id="pros-{{ c.username }}" name="pros" rows="3" placeholder="What does this coach do best?" style="color: #000000 !important;" required></textarea>
-                            </div>
-
-                            <!-- CONs -->
-                            <div class="mb-3">
-                                <label for="cons-{{ c.username }}" class="form-label small fw-bold text-danger"><i class="fa-solid fa-circle-minus me-1"></i> CONs</label>
-                                <textarea class="form-control bg-white text-dark border-danger border-opacity-20" id="cons-{{ c.username }}" name="cons" rows="3" placeholder="What could be improved?" style="color: #000000 !important;" required></textarea>
-                            </div>
-
-                            <button type="submit" class="btn btn-info text-white w-100 fw-bold mt-2">Submit Feedback</button>
-=======
                             <div class="form-group">
                                 <label for="pros-{{ c.username }}" class="form-label text-success"><i class="fa-solid fa-circle-plus me-1"></i> PROs</label>
                                 <textarea class="form-control" id="pros-{{ c.username }}" name="pros" rows="3" placeholder="What does this coach do best?" style="background: rgba(0,0,0,0.4); color: white;" required></textarea>
@@ -570,24 +342,15 @@
                             </div>
 
                             <button type="submit" class="btn btn-primary w-100 py-3 mt-2">Submit Feedback</button>
->>>>>>> feature/newVersion_3.0
                         </form>
                     </div>
                 </div>
                 {% elif role == 'guest' %}
-<<<<<<< HEAD
-                <div class="col-lg-5">
-                    <div class="card border-0 bg-dark bg-opacity-30 p-4 rounded-3 text-secondary border border-secondary border-opacity-15 text-center py-5 h-100 d-flex flex-column align-items-center justify-content-center">
-                        <div class="fs-1 mb-2"><i class="fa-solid fa-lock"></i></div>
-                        <h5 class="fw-bold text-secondary mb-2">Feedback Disabled</h5>
-                        <p class="small text-secondary mb-0">You can only submit feedback for a coach assigned to you. Once a session is booked with this coach, feedback options will unlock.</p>
-=======
                 <div>
                     <div class="text-center py-5" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-sm); color: var(--color-text-secondary);">
                         <div class="fs-1 mb-2"><i class="fa-solid fa-lock text-muted"></i></div>
                         <h5 class="fw-bold mb-2">Feedback Disabled</h5>
                         <p class="small text-muted" style="max-width: 320px; margin: 0 auto;">You can only submit feedback for a coach assigned to you. Once a session is booked with this coach, feedback options will unlock.</p>
->>>>>>> feature/newVersion_3.0
                     </div>
                 </div>
                 {% endif %}
@@ -595,8 +358,6 @@
             </div>
         </div>
 
-<<<<<<< HEAD
-=======
         {% if role == 'trainer' %}
         <!-- Edit Profile Modal -->
         <div class="modal fade" id="editProfileModal-{{ c.username }}" tabindex="-1" aria-hidden="true">
@@ -683,78 +444,15 @@
             </div>
         </div>
         {% endif %}
->>>>>>> feature/newVersion_3.0
     </div>
     {% endfor %}
 
 </div>
 
-<<<<<<< HEAD
-<!-- Content wrapper close from page_header -->
-</div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('[id^="star-selector-"]').forEach(selector => {
-                const username = selector.id.replace('star-selector-', '');
-                const hiddenInput = document.getElementById(`rating-${username}`);
-                const starLabel = document.getElementById(`star-label-${username}`);
-                const stars = selector.querySelectorAll('.star-item');
-
-                const labels = {
-                    1: '<i class="fa-solid fa-star text-warning"></i> (1 - Needs Improvement)',
-                    2: '<i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i> (2 - Average)',
-                    3: '<i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i> (3 - Good)',
-                    4: '<i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i> (4 - Very Good)',
-                    5: '<i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i>• (5 - Excellent)'
-                };
-
-                stars.forEach(star => {
-                    // Highlight stars on hover
-                    star.addEventListener('mouseover', () => {
-                        const val = parseInt(star.getAttribute('data-value'));
-                        highlightStars(stars, val);
-                    });
-
-                    // Reset stars to selected value on mouse out
-                    star.addEventListener('mouseout', () => {
-                        const currentVal = parseInt(hiddenInput.value || 0);
-                        highlightStars(stars, currentVal);
-                    });
-
-                    // Set value on click
-                    star.addEventListener('click', () => {
-                        const val = parseInt(star.getAttribute('data-value'));
-                        hiddenInput.value = val;
-                        starLabel.innerHTML = labels[val] || 'Select Rating';
-                        highlightStars(stars, val);
-                    });
-                });
-            });
-
-            function highlightStars(stars, value) {
-                stars.forEach(star => {
-                    const val = parseInt(star.getAttribute('data-value'));
-                    if (val <= value) {
-                        star.classList.remove('fa-regular');
-                        star.classList.add('fa-solid');
-                    } else {
-                        star.classList.remove('fa-solid');
-                        star.classList.add('fa-regular');
-                    }
-                });
-            }
-        });
-    </script>
-
-=======
->>>>>>> feature/newVersion_3.0
 {% set active_page = 'about' %}
 {% include 'components/mobile_bottom_nav.html' %}
 {% endblock %}
 
-<<<<<<< HEAD
-=======
 {% block extra_js %}
 <script src="{{ url_for('static', filename='common.js') }}"></script>
 <script>
@@ -809,4 +507,3 @@
 </script>
 
 {% endblock %}
->>>>>>> feature/newVersion_3.0

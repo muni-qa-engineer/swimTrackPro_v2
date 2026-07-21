@@ -2,42 +2,6 @@
 
 {% block title %}Edit Booking - SwimTrackPro{% endblock %}
 
-<<<<<<< HEAD
-{% block content %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-{% include 'components/page_header.html' %}
-
-<div class="container-fluid py-4 px-2 px-md-4">
-    <div class="card shadow edit-card mx-auto" style="max-width: 760px; border-radius: 18px; border: none; overflow: hidden; background: #ffffff;">
-        <div class="card-header bg-primary text-white py-3">
-            <h4 class="mb-0 fw-bold"><i class="fa-solid fa-file-pen"></i> Edit Booking</h4>
-        </div>
-
-        <div class="card-body p-3 p-md-4">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-              {% if messages %}
-                {% for category, message in messages %}
-                  <div class="alert alert-{{ 'warning' if category == 'warning' else 'info' if category == 'info' else 'success' }} alert-dismissible fade show mb-3" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                  </div>
-                {% endfor %}
-              {% endif %}
-            {% endwith %}
-            
-            <form action="/update/{{ booking.id }}" method="POST" id="editBookingForm">
-
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Swimmer Name</label>
-                    <input type="text" name="student" class="form-control" value="{{ booking.student }}" required>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Assigned Trainer <span class="text-danger">*</span></label>
-                    <select name="trainer_username" class="form-select" required>
-=======
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -92,23 +56,11 @@
                 <div class="form-group">
                     <label class="form-label">Assigned Trainer <span class="text-danger">*</span></label>
                     <select name="trainer_username" class="form-control" required style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white;">
->>>>>>> feature/newVersion_3.0
                         {% for t in trainers %}
                             <option value="{{ t.username }}" {% if booking.trainer_username == t.username %}selected{% endif %}>{{ t.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
-<<<<<<< HEAD
-
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Start Date</label>
-                    <input type="date" name="date" class="form-control" value="{{ booking.start_date }}" required>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Package</label>
-                    <select name="package" id="packageSelect" class="form-select" required>
-=======
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -120,22 +72,11 @@
                 <div class="form-group">
                     <label class="form-label">Package</label>
                     <select name="package" id="packageSelect" class="form-control" required style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white;">
->>>>>>> feature/newVersion_3.0
                         <option value="Demo" {% if booking.package == 'Demo' %}selected{% endif %}>Demo Class</option>
                         <option value="Single" {% if booking.package == 'Single' %}selected{% endif %}>Single Session</option>
                         <option value="Monthly" {% if booking.package == 'Monthly' %}selected{% endif %}>Monthly</option>
                         <option value="Custom" {% if booking.package == 'Custom' %}selected{% endif %}>Custom</option>
                     </select>
-<<<<<<< HEAD
-                    <div id="customPackageHint" class="form-text text-muted" style="display:none;">
-                        <i class="fa-solid fa-circle-info"></i> Custom package supports a maximum duration of 60 days.
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Time</label>
-                    <select name="time" class="form-select" required>
-=======
                     <div id="customPackageHint" class="text-muted small mt-1" style="display:none;">
                         <i class="fa-solid fa-circle-info"></i> Custom package supports a maximum duration of 60 days.
                     </div>
@@ -146,7 +87,6 @@
                 <div class="form-group">
                     <label class="form-label">Time</label>
                     <select name="time" class="form-control" required style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white;">
->>>>>>> feature/newVersion_3.0
                         {% for hour in range(6, 22) %}
                             {% for minute in [0, 30] %}
                                 {% if not (hour == 21 and minute == 30) %}
@@ -162,143 +102,6 @@
                     </select>
                 </div>
 
-<<<<<<< HEAD
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">
-                        Select Class Days
-                        <span id="monthlyPackageHint" class="text-muted small ms-2" style="display:none;">
-                            -> Monthly: Choose 2 or 3 days/week
-                        </span>
-                        <span id="singleDemoHint" class="text-muted small ms-2" style="display:none;">
-                            (Day picked automatically.)
-                        </span>
-                        <span id="customDaysHint" class="text-muted small ms-2" style="display:none;">
-                            -> Max 5 class days per week are allowed
-                        </span>
-                    </label>
-
-                    {% set selected_days_text = booking.selected_days or '' %}
-                    <div class="d-flex flex-wrap gap-3 mt-2">
-                        <div class="form-check">
-                            <input class="form-check-input class-day" type="checkbox" name="selected_days" value="Monday" id="monday"
-                                {% if 'Monday' in selected_days_text or 'Mon' in selected_days_text %}checked{% endif %}>
-                            <label class="form-check-label" for="monday">Mon</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input class-day" type="checkbox" name="selected_days" value="Tuesday" id="tuesday"
-                                {% if 'Tuesday' in selected_days_text or 'Tue' in selected_days_text %}checked{% endif %}>
-                            <label class="form-check-label" for="tuesday">Tue</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input class-day" type="checkbox" name="selected_days" value="Wednesday" id="wednesday"
-                                {% if 'Wednesday' in selected_days_text or 'Wed' in selected_days_text %}checked{% endif %}>
-                            <label class="form-check-label" for="wednesday">Wed</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input class-day" type="checkbox" name="selected_days" value="Thursday" id="thursday"
-                                {% if 'Thursday' in selected_days_text or 'Thu' in selected_days_text %}checked{% endif %}>
-                            <label class="form-check-label" for="thursday">Thu</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input class-day" type="checkbox" name="selected_days" value="Friday" id="friday"
-                                {% if 'Friday' in selected_days_text or 'Fri' in selected_days_text %}checked{% endif %}>
-                            <label class="form-check-label" for="friday">Fri</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input class-day" type="checkbox" name="selected_days" value="Saturday" id="saturday"
-                                {% if 'Saturday' in selected_days_text or 'Sat' in selected_days_text %}checked{% endif %}>
-                            <label class="form-check-label" for="saturday">Sat</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input class-day" type="checkbox" name="selected_days" value="Sunday" id="sunday"
-                                {% if 'Sunday' in selected_days_text or 'Sun' in selected_days_text %}checked{% endif %}>
-                            <label class="form-check-label" for="sunday">Sun</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mb-3" id="endDateContainer">
-                    <label class="form-label fw-semibold">End Date</label>
-                    <input type="date" name="end_date" id="endDateInput" class="form-control" value="{{ booking.end_date or '' }}">
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Location</label>
-                    <div class="input-group">
-                        <button
-                            type="button"
-                            id="locationPickerBtn"
-                            class="btn btn-outline-primary"
-                            title="Location tools"
-                            aria-label="Open location tools">
-                            <i class="fa-solid fa-location-dot"></i>
-                        </button>
-                        <input
-                            type="text"
-                            id="locationInput"
-                            name="location"
-                            class="form-control"
-                            value="{{ booking.location or '' }}"
-                            placeholder="Enter swimming pool location"
-                            required
-                        >
-                    </div>
-                    <input type="hidden" name="latitude" id="latitudeInput" value="{{ booking.latitude or '' }}">
-                    <input type="hidden" name="longitude" id="longitudeInput" value="{{ booking.longitude or '' }}">
-                </div>
-
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label fw-semibold">No of Persons</label>
-                        <input
-                            type="number"
-                            name="persons"
-                            id="personsInput"
-                            class="form-control"
-                            min="1"
-                            max="5"
-                            value="{{ booking.persons or 1 }}"
-                            required
-                        >
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label fw-semibold">Payment Status</label>
-                        <select name="payment_status" class="form-select" required>
-                            {% set current_payment_status = ((booking.payment_status or booking.status or 'Not Paid') | trim | lower) %}
-                            <option value="Not Paid" {% if current_payment_status == 'not paid' %}selected{% endif %}>Not Paid</option>
-                            <option value="Paid" {% if current_payment_status == 'paid' %}selected{% endif %}>Paid</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label fw-semibold">Fee (<i class="fa-solid fa-indian-rupee-sign"></i>)</label>
-                        <input
-                            type="number"
-                            name="fee"
-                            id="feeInput"
-                            class="form-control"
-                            value="{{ booking.fee }}"
-                            {% if role != 'trainer' %}readonly{% endif %}
-                            required
-                        >
-                        <div class="form-text">
-                            Fee is calculated automatically.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="d-flex gap-3 mt-4">
-                    <a href="/my-bookings" class="btn btn-outline-secondary w-50">Back</a>
-                    <button type="submit" id="updateBookingBtn" class="btn btn-success w-50">
-                        <span id="updateBookingSpinner" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
-                        <span id="updateBookingText">Update Booking</span>
-                    </button>
-                </div>
-
-            </form>
-        </div>
-=======
                 <div class="form-group" id="endDateContainer">
                     <label class="form-label">End Date</label>
                     <input type="date" name="end_date" id="endDateInput" class="form-control" value="{{ booking.end_date or '' }}" style="background-color: rgba(0,0,0,0.4); color-scheme: dark;">
@@ -367,7 +170,6 @@
             </div>
 
         </form>
->>>>>>> feature/newVersion_3.0
     </div>
 </div>
 
@@ -376,23 +178,6 @@
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-<<<<<<< HEAD
-        <h5 class="modal-title" id="mapPickerModalLabel"><i class="fa-solid fa-map"></i> Choose Location</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="d-grid gap-3 mb-3">
-            <button type="button" id="modalCurrentLocationBtn" class="btn btn-outline-success btn-lg">
-                <i class="fa-solid fa-location-crosshairs me-2"></i>Use Current Location
-            </button>
-            <hr class="my-1">
-            <button type="button" id="modalChooseOnMapBtn" class="btn btn-outline-primary btn-lg">
-                <i class="fa-solid fa-map-location-dot me-2"></i>Choose on Map
-            </button>
-        </div>
-        <div id="mapPickerContainer" style="display:none;">
-            <div id="mapPicker" style="height:400px; width: 100%;"></div>
-=======
         <h5 class="modal-title" id="mapPickerModalLabel"><i class="fa-solid fa-map text-primary"></i> Choose Location</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
@@ -407,7 +192,6 @@
         </div>
         <div id="mapPickerContainer" style="display:none;">
             <div id="mapPicker" style="height:380px; width: 100%;"></div>
->>>>>>> feature/newVersion_3.0
         </div>
       </div>
       <div class="modal-footer">
@@ -418,14 +202,11 @@
   </div>
 </div>
 
-<<<<<<< HEAD
-=======
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 {% endblock %}
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='common.js') }}"></script>
->>>>>>> feature/newVersion_3.0
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const pkg = document.getElementById('packageSelect');
@@ -444,10 +225,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateEditBookingRules() {
         if (!pkg || !startDateInput) return;
 
-<<<<<<< HEAD
-        // Toggle hints
-=======
->>>>>>> feature/newVersion_3.0
         monthlyPackageHint.style.display = pkg.value === 'Monthly' ? 'inline' : 'none';
         singleDemoHint.style.display = (pkg.value === 'Demo' || pkg.value === 'Single') ? 'inline' : 'none';
         if (customDaysHint) customDaysHint.style.display = pkg.value === 'Custom' ? 'inline' : 'none';
@@ -606,10 +383,6 @@ document.addEventListener('DOMContentLoaded', function() {
         updateEditBookingFee();
     }
 
-<<<<<<< HEAD
-    // Attach listeners
-=======
->>>>>>> feature/newVersion_3.0
     if (pkg) pkg.addEventListener('change', function() {
         dayCheckboxes.forEach(cb => cb.checked = false);
         updateEditBookingRules();
@@ -626,11 +399,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     updateEditBookingRules();
 
-<<<<<<< HEAD
-    // Map Location Picker logic
-=======
     // Map picker
->>>>>>> feature/newVersion_3.0
     const locationPickerBtn = document.getElementById('locationPickerBtn');
     const modalCurrentLocationBtn = document.getElementById('modalCurrentLocationBtn');
     const modalChooseOnMapBtn = document.getElementById('modalChooseOnMapBtn');
@@ -702,20 +471,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             modalCurrentLocationBtn.disabled = true;
-<<<<<<< HEAD
-             modalCurrentLocationBtn.innerHTML = '<i class="fa-solid fa-hourglass-half"></i> Getting Location...';
-=======
             modalCurrentLocationBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Getting Location...';
->>>>>>> feature/newVersion_3.0
             navigator.geolocation.getCurrentPosition(
                 async function(position) {
                     const latitude = position.coords.latitude.toFixed(6);
                     const longitude = position.coords.longitude.toFixed(6);
-<<<<<<< HEAD
-                    currentLat = latitude;
-                    currentLng = longitude;
-=======
->>>>>>> feature/newVersion_3.0
                     selectedLat = latitude;
                     selectedLng = longitude;
                     const fullAddress = await reverseGeocode(latitude, longitude);
@@ -723,25 +483,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (latitudeInput) latitudeInput.value = latitude;
                     if (longitudeInput) longitudeInput.value = longitude;
                     modalCurrentLocationBtn.disabled = false;
-<<<<<<< HEAD
-                    modalCurrentLocationBtn.innerHTML = '<i class="fa-solid fa-location-dot"></i> Use Current Location';
-=======
                     modalCurrentLocationBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs me-2"></i>Use Current Location';
->>>>>>> feature/newVersion_3.0
                     const modalInstance = bootstrap.Modal.getInstance(document.getElementById('mapPickerModal'));
                     if (modalInstance) modalInstance.hide();
                 },
                 function(error) {
                     alert('Unable to fetch location.');
                     modalCurrentLocationBtn.disabled = false;
-<<<<<<< HEAD
-                     modalCurrentLocationBtn.innerHTML = '<i class="fa-solid fa-location-dot"></i> Use Current Location';
-                },
-                { enableHighAccuracy: true, timeout: 10000 }
-=======
                     modalCurrentLocationBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs me-2"></i>Use Current Location';
                 }
->>>>>>> feature/newVersion_3.0
             );
         });
     }
@@ -762,38 +512,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-<<<<<<< HEAD
-
-    // Submit Loading indicator
-    const editForm = document.getElementById('editBookingForm');
-    const updateButton = document.getElementById('updateBookingBtn');
-    const updateSpinner = document.getElementById('updateBookingSpinner');
-    const updateText = document.getElementById('updateBookingText');
-
-    if (editForm && updateButton) {
-        editForm.addEventListener('submit', function(event) {
-            // Verify monthly day count rules
-            const checkedCount = [...dayCheckboxes].filter(cb => cb.checked).length;
-            if (pkg.value === 'Monthly' && (checkedCount < 2 || checkedCount > 3)) {
-                event.preventDefault();
-                alert('Please select 2 or 3 class days for the Monthly package.');
-                return;
-            }
-
-            if (updateButton.disabled) {
-                event.preventDefault();
-                return;
-            }
-            updateButton.disabled = true;
-            if (updateSpinner) updateSpinner.classList.remove('d-none');
-            if (updateText) updateText.textContent = 'Updating...';
-        });
-    }
-});
-</script>
-=======
 });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
->>>>>>> feature/newVersion_3.0
 {% endblock %}

@@ -32,24 +32,15 @@ def get_pg_connection():
     return psycopg2.connect(DATABASE_URL)
 
 # V0033.0 - Make-Up Class Management
-<<<<<<< HEAD
-def ensure_makeup_tables():
-    """
-    V0033.0 - Make-Up Class Management
-    Creates and alters PostgreSQL tables required for makeup, multi-trainer support, and system defaults.
-=======
 def ensure_database_tables():
     """
     Creates and alters PostgreSQL tables required for core functionality, 
     makeup, multi-trainer support, and system defaults.
->>>>>>> feature/newVersion_3.0
     """
     conn = get_pg_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
-<<<<<<< HEAD
-=======
     CREATE TABLE IF NOT EXISTS students (
         id SERIAL PRIMARY KEY,
         student_name TEXT,
@@ -130,7 +121,6 @@ def ensure_database_tables():
         )
 
     cursor.execute("""
->>>>>>> feature/newVersion_3.0
     CREATE TABLE IF NOT EXISTS makeup_credits (
         id SERIAL PRIMARY KEY,
         booking_id TEXT NOT NULL,
@@ -158,22 +148,6 @@ def ensure_database_tables():
     )
     """)
 
-<<<<<<< HEAD
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS coach_feedback (
-        id SERIAL PRIMARY KEY,
-        trainer_username TEXT NOT NULL REFERENCES trainers(username) ON DELETE CASCADE,
-        guest_name TEXT NOT NULL,
-        guest_phone TEXT NOT NULL,
-        rating INTEGER NOT NULL,
-        pros TEXT,
-        cons TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    """)
-
-=======
->>>>>>> feature/newVersion_3.0
     # Multi-trainer tables
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS trainers (
@@ -192,8 +166,6 @@ def ensure_database_tables():
     )
     """)
 
-<<<<<<< HEAD
-=======
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS coach_feedback (
         id SERIAL PRIMARY KEY,
@@ -207,7 +179,6 @@ def ensure_database_tables():
     )
     """)
 
->>>>>>> feature/newVersion_3.0
     # Ensure columns exist if the table was created earlier without them
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS experience TEXT")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS qualification TEXT")
@@ -217,8 +188,6 @@ def ensure_database_tables():
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS consent_accepted BOOLEAN DEFAULT FALSE")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS rating NUMERIC(3,2) DEFAULT 5.00")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS photos TEXT DEFAULT ''")
-<<<<<<< HEAD
-=======
     
     # V0034.0 - Rich Trainer Profiles
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS bio TEXT")
@@ -232,7 +201,6 @@ def ensure_database_tables():
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS qr_code TEXT")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS account_holder_name TEXT")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS youtube TEXT")
->>>>>>> feature/newVersion_3.0
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS notice TEXT DEFAULT ''")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT FALSE")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS whatsapp TEXT DEFAULT ''")
@@ -363,11 +331,7 @@ def ensure_database_tables():
     conn.close()
 
 def load_data():
-<<<<<<< HEAD
-    ensure_makeup_tables()
-=======
     ensure_database_tables()
->>>>>>> feature/newVersion_3.0
     conn = get_pg_connection()
     cursor = conn.cursor()
 
@@ -614,15 +578,9 @@ runtime.configure(
     load_data=load_data,
 )
 try:
-<<<<<<< HEAD
-    ensure_makeup_tables()
-except Exception as e:
-    print(f"Warning: Could not run ensure_makeup_tables on startup: {e}")
-=======
     ensure_database_tables()
 except Exception as e:
     print(f"Warning: Could not run ensure_database_tables on startup: {e}")
->>>>>>> feature/newVersion_3.0
 
 register_dashboard_routes(app)
 register_page_routes(

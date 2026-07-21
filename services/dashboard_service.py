@@ -61,11 +61,7 @@ def get_admin_dashboard_data(current_user, data):
             'created_at': r[9].strftime('%Y-%m-%d %H:%M:%S') if r[9] else '--'
         })
         
-<<<<<<< HEAD
-    conn.close()
-=======
 
->>>>>>> feature/newVersion_3.0
 
     # Calculate today's sessions and weekly distribution from full bookings data
     today_str = datetime.now(ZoneInfo('Asia/Kolkata')).strftime('%Y-%m-%d')
@@ -109,8 +105,6 @@ def get_admin_dashboard_data(current_user, data):
     resume_pending_count = sum(1 for b in data.get('bookings', []) if b.get('pause_status') == 'Approval Pending')
     chart_data = [day_counts[d] for d in days_of_week]
     
-<<<<<<< HEAD
-=======
     # Fetch Packages
     cursor.execute("SELECT id, category, package_name, base_price, discount_percentage FROM packages ORDER BY id")
     packages_list = []
@@ -125,7 +119,6 @@ def get_admin_dashboard_data(current_user, data):
         
     conn.close()
 
->>>>>>> feature/newVersion_3.0
     return {
         'trainers': trainers_list,
         'bookings': data.get('bookings', []),
@@ -137,11 +130,6 @@ def get_admin_dashboard_data(current_user, data):
         'auto_resume_today_count': auto_resume_today_count,
         'paused_this_week_count': paused_this_week_count,
         'resume_pending_count': resume_pending_count,
-<<<<<<< HEAD
-        'audit_logs': audit_logs
-    }
-
-=======
         'audit_logs': audit_logs,
         'packages': packages_list
     }
@@ -175,7 +163,6 @@ def get_all_packages():
         
     return pkg_dict
 
->>>>>>> feature/newVersion_3.0
 def get_trainer_dashboard_data(trainer_username, data):
     """Fetch and process data specifically for the Trainer dashboard."""
     trainer_user_lower = (trainer_username or 'asdf').strip().lower()
@@ -194,9 +181,6 @@ def get_trainer_dashboard_data(trainer_username, data):
         if isinstance(s, dict)
         and ((s.get('owner_name') or '').strip().lower(), s.get('owner_phone')) in assigned_student_keys
     ]
-<<<<<<< HEAD
-    return _process_common_dashboard_data(user_bookings, user_students, 'trainer', trainer_username)
-=======
     base_data = _process_common_dashboard_data(user_bookings, user_students, 'trainer', trainer_username)
     
     # Custom Trainer Metrics
@@ -282,7 +266,6 @@ def get_trainer_dashboard_data(trainer_username, data):
     })
     
     return base_data
->>>>>>> feature/newVersion_3.0
 
 def get_guest_dashboard_data(current_user, current_phone, data):
     """Fetch and process data specifically for the Guest dashboard."""
@@ -372,10 +355,7 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
     trainer_upcoming_slots = []
     trainer_remaining_slots = 0
     upcoming_sessions = []
-<<<<<<< HEAD
-=======
     all_future_sessions = []
->>>>>>> feature/newVersion_3.0
 
     for booking in user_bookings:
         booking_time = (booking.get('time') or '').strip()
@@ -383,14 +363,6 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
             try:
                 session_datetime = datetime.strptime(f"{session_date} {booking_time}", '%Y-%m-%d %I:%M %p')
                 current_time = ist_now.replace(tzinfo=None)
-<<<<<<< HEAD
-                next_24_hours = current_time + timedelta(hours=24)
-                if current_time <= session_datetime <= next_24_hours:
-                    upcoming_sessions.append({'datetime': session_datetime, 'student': booking.get('student', '--'), 'time': booking_time})
-            except Exception:
-                continue
-
-=======
                 if session_datetime >= current_time:
                     session_info = {'datetime': session_datetime, 'student': booking.get('student', '--'), 'time': booking_time, 'booking_id': booking.get('id'), 'raw_date': session_date}
                     all_future_sessions.append(session_info)
@@ -400,7 +372,6 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
     all_future_sessions.sort(key=lambda x: x['datetime'])
     upcoming_sessions = all_future_sessions
 
->>>>>>> feature/newVersion_3.0
     if current_role == 'trainer':
         slot_counts = {}
         for session in upcoming_sessions:
@@ -425,20 +396,13 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
         ]
     elif upcoming_sessions:
         sorted_sessions = sorted(upcoming_sessions, key=lambda x: x['datetime'])
-<<<<<<< HEAD
-        guest_upcoming_sessions = [{'name': s['student'], 'date': s['datetime'].strftime('%d %b'), 'time': s['time']} for s in sorted_sessions[:5]]
-=======
         guest_upcoming_sessions = [{'name': s['student'], 'date': s['datetime'].strftime('%d %b'), 'time': s['time'], 'booking_id': s['booking_id'], 'raw_date': s['raw_date']} for s in sorted_sessions[:5]]
->>>>>>> feature/newVersion_3.0
         next_session = sorted_sessions[0]
         next_session_name = next_session['student']
         next_session_date = next_session['datetime'].strftime('%d %b')
         next_session_time = next_session['time']
-<<<<<<< HEAD
-=======
         
     guest_all_future = [{'name': s['student'], 'date': s['datetime'].strftime('%d %b %Y'), 'time': s['time'], 'booking_id': s['booking_id'], 'raw_date': s['raw_date']} for s in all_future_sessions[:15]]
->>>>>>> feature/newVersion_3.0
 
     total_packages = len(user_bookings)
     active_packages = active_bookings
@@ -584,15 +548,10 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
         'next_session_date': next_session_date,
         'next_session_time': next_session_time,
         'guest_upcoming_sessions': guest_upcoming_sessions,
-<<<<<<< HEAD
-        'trainer_upcoming_slots': trainer_upcoming_slots,
-        'trainer_remaining_slots': trainer_remaining_slots,
-=======
         'guest_all_future': guest_all_future,
         'trainer_upcoming_slots': trainer_upcoming_slots,
         'trainer_remaining_slots': trainer_remaining_slots,
         'upcoming_sessions': upcoming_sessions,
->>>>>>> feature/newVersion_3.0
         'active_package_name': active_package_name,
         'active_package_valid_till': active_package_valid_till,
         'package_status': package_status,

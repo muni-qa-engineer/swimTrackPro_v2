@@ -12,11 +12,7 @@ function updatePaymentSummary() {
     if (status === 'paid') {
       paidAmount += amount;
     }
-<<<<<<< HEAD
-    else if (status === 'pending') {
-=======
     else if (status === 'pending' || status === 'pending verification') {
->>>>>>> feature/newVersion_3.0
       pendingAmount += amount;
     }
     else {
@@ -28,49 +24,22 @@ function updatePaymentSummary() {
   const pendingCard = document.getElementById('pendingAmountCard');
   const notPaidCard = document.getElementById('notPaidAmountCard');
 
-<<<<<<< HEAD
-    if (paidCard) {
-        paidCard.innerHTML = `<i class="fa-solid fa-indian-rupee-sign"></i>${paidAmount.toLocaleString()}`;
-    }
-
-    if (pendingCard) {
-        pendingCard.innerHTML = `<i class="fa-solid fa-indian-rupee-sign"></i>${pendingAmount.toLocaleString()}`;
-    }
-
-    if (notPaidCard) {
-        notPaidCard.innerHTML = `<i class="fa-solid fa-indian-rupee-sign"></i>${notPaidAmount.toLocaleString()}`;
-    }
-}
-
-
-=======
   if (paidCard) paidCard.innerHTML = `<i class="fa-solid fa-indian-rupee-sign"></i>${paidAmount.toLocaleString()}`;
   if (pendingCard) pendingCard.innerHTML = `<i class="fa-solid fa-indian-rupee-sign"></i>${pendingAmount.toLocaleString()}`;
   if (notPaidCard) notPaidCard.innerHTML = `<i class="fa-solid fa-indian-rupee-sign"></i>${notPaidAmount.toLocaleString()}`;
 }
 
->>>>>>> feature/newVersion_3.0
 function updatePaymentTable() {
   const bookings = window.bookingsData || [];
   const currentRole = window.currentUserRole || '';
   const tableBody = document.getElementById('paymentTableBody');
 
-<<<<<<< HEAD
-  if (!tableBody) {
-    return;
-  }
-=======
   if (!tableBody) return;
->>>>>>> feature/newVersion_3.0
 
   if (bookings.length === 0) {
     tableBody.innerHTML = `
       <tr>
-<<<<<<< HEAD
-        <td colspan="6" class="text-center text-muted py-3">
-=======
         <td colspan="6" class="text-center text-muted py-4" style="color: var(--color-text-muted) !important;">
->>>>>>> feature/newVersion_3.0
           No payment records found.
         </td>
       </tr>
@@ -84,100 +53,12 @@ function updatePaymentTable() {
     const packageName = booking.package || '-';
     const status = booking.status || 'Not Paid';
     const amount = Number(booking.fee || 0).toLocaleString();
-<<<<<<< HEAD
-    // Refactored payment status logic
-=======
->>>>>>> feature/newVersion_3.0
     const isTrainer = currentRole === 'trainer';
     const isPendingVerification = status === 'Pending Verification';
     const isPaid = status === 'Paid';
 
     return `
       <tr>
-<<<<<<< HEAD
-        <td>${owner}</td>
-        <td>${swimmer}</td>
-        <td>${packageName}</td>
-        <td>
-    ${isTrainer ? `
-
-    ${isPendingVerification ? `
-      <div class="d-flex gap-2">
-        <button
-          type="button"
-          class="btn btn-sm btn-success payment-status-action-btn"
-          data-booking-id="${booking.id || ''}"
-          data-status="Paid">
-          <i class="fa-solid fa-circle-check"></i> Verify
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-sm btn-danger payment-status-action-btn"
-          data-booking-id="${booking.id || ''}"
-          data-status="Not Paid">
-          <i class="fa-solid fa-circle-xmark"></i> Reject
-        </button>
-      </div>
-    ` : `
-      <span class="fw-semibold ${isPaid ? 'text-success' : 'text-danger'}">
-        ${status}
-      </span>
-    `}
-
-  ` : `
-
-    ${isPaid ? `
-      <span class="fw-semibold text-success">
-        Paid
-      </span>
-    ` : isPendingVerification ? `
-      <span class="fw-semibold text-warning">
-        Pending Verification
-      </span>
-    ` : `
-      <select
-        class="form-select form-select-sm payment-status-select"
-        style="width: 120px;"
-        data-booking-id="${booking.id || ''}">
-        <option value="Not Paid" ${status === 'Not Paid' ? 'selected' : ''}>Not Paid</option>
-        <option value="Paid">Paid</option>
-      </select>
-    `}
-
-  `}
-</td>
-        <td><i class="fa-solid fa-indian-rupee-sign"></i>${amount}</td>
-        <td>
-    ${isTrainer ? `
-    ${isPendingVerification ? 'Awaiting Decision' : 'Verified'}
-  ` : `
-    ${isPaid ? `
-      <span class="badge bg-success"><i class="fa-solid fa-circle-check"></i> Paid</span>
-    ` : isPendingVerification ? `
-      <span class="badge bg-warning text-dark"><i class="fa-solid fa-hourglass-half"></i> Pending</span>
-    ` : `
-      <a href="upi://pay?pa=${window.upiId || ''}&pn=${encodeURIComponent(window.accountHolderName || '')}&am=${booking.fee || 0}&cu=INR&tn=SwimTrackPro%20Payment"
-        class="btn btn-sm btn-success w-100"
-        title="Open UPI App (Please enter amount of ₹${booking.fee || 0} manually if not pre-filled)">
-        <i class="fa-solid fa-credit-card"></i> Pay Now (₹${booking.fee || 0})
-      </a>
-    `}
-  `}
-</td>
-      </tr>
-    `;
-  }).join('');
-}
-
-
-function initializePaymentStatusActions() {
-  const buttons = document.querySelectorAll('.payment-status-update-btn');
-
-  // Trainer action buttons for verifying/rejecting payment
-  const trainerButtons = document.querySelectorAll('.payment-status-action-btn');
-
-=======
         <td style="color: white; font-weight: 600;">${owner}</td>
         <td>${swimmer}</td>
         <td>${packageName}</td>
@@ -239,7 +120,6 @@ function initializePaymentStatusActions() {
 function initializePaymentStatusActions() {
   // Trainer action buttons for verifying/rejecting payment
   const trainerButtons = document.querySelectorAll('.payment-status-action-btn');
->>>>>>> feature/newVersion_3.0
   trainerButtons.forEach(button => {
     button.addEventListener('click', async function() {
       const bookingId = this.dataset.bookingId;
@@ -257,49 +137,18 @@ function initializePaymentStatusActions() {
         });
 
         if (response.ok) {
-<<<<<<< HEAD
-          createToast('Payment status updated successfully');
-          setTimeout(() => window.location.reload(), 800);
-=======
           window.location.reload();
->>>>>>> feature/newVersion_3.0
         } else {
           throw new Error('Update failed');
         }
       } catch (error) {
-<<<<<<< HEAD
-        createToast('Failed to update payment status', 'danger');
-=======
         alert('Failed to update payment status');
         this.disabled = false;
         this.innerHTML = 'Retry';
->>>>>>> feature/newVersion_3.0
       }
     });
   });
 
-<<<<<<< HEAD
-  buttons.forEach(button => {
-    button.addEventListener('click', async function() {
-      const bookingId = this.dataset.bookingId;
-
-      const row = this.closest('tr');
-      const statusSelect = row?.querySelector('.payment-status-select');
-
-      if (!bookingId || !statusSelect) {
-        createToast('Unable to update payment status.', 'danger');
-        return;
-      }
-
-      const selectedStatus = statusSelect.value;
-      const originalHtml = this.innerHTML;
-
-      this.disabled = true;
-      this.innerHTML = `
-        <span class="spinner-border spinner-border-sm me-1"></span>
-        Updating...
-      `;
-=======
   // Swimmer status select dropdown change
   const selectDropdowns = document.querySelectorAll('.payment-status-select');
   selectDropdowns.forEach(select => {
@@ -316,28 +165,11 @@ function initializePaymentStatusActions() {
       }
 
       this.disabled = true;
->>>>>>> feature/newVersion_3.0
 
       try {
         const formData = new FormData();
         formData.append('status', selectedStatus);
 
-<<<<<<< HEAD
-        const response = await fetch(
-          `/update_payment_status/${bookingId}`,
-          {
-            method: 'POST',
-            body: formData
-          }
-        );
-
-        if (response.ok) {
-          createToast('Payment status updated successfully');
-
-          setTimeout(() => {
-            window.location.reload();
-          }, 800);
-=======
         const response = await fetch(`/update_payment_status/${bookingId}`, {
           method: 'POST',
           body: formData
@@ -345,28 +177,14 @@ function initializePaymentStatusActions() {
 
         if (response.ok) {
           window.location.reload();
->>>>>>> feature/newVersion_3.0
         } else {
           throw new Error('Update failed');
         }
       } catch (error) {
-<<<<<<< HEAD
-        createToast('Failed to update payment status', 'danger');
-
-        this.disabled = false;
-        this.innerHTML = originalHtml;
-=======
         alert('Failed to update payment status');
         this.disabled = false;
         this.value = 'Not Paid';
->>>>>>> feature/newVersion_3.0
       }
     });
   });
 }
-<<<<<<< HEAD
-
-
-
-=======
->>>>>>> feature/newVersion_3.0

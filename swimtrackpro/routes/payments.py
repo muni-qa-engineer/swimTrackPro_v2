@@ -118,10 +118,6 @@ def update_payment_status(booking_id):
     flash('Payment status updated successfully')
     return redirect(url_for('index'))
 
-<<<<<<< HEAD
-def register_payments_routes(app):
-    app.add_url_rule('/update_payment_status/<booking_id>', endpoint='update_payment_status', view_func=update_payment_status, methods=['POST'])
-=======
 def update_trainer_payment_details():
     import os
     if session.get('role') != 'trainer':
@@ -172,4 +168,3 @@ def update_trainer_payment_details():
 def register_payments_routes(app):
     app.add_url_rule('/update_payment_status/<booking_id>', endpoint='update_payment_status', view_func=update_payment_status, methods=['POST'])
     app.add_url_rule('/update_trainer_payment_details', endpoint='update_trainer_payment_details', view_func=update_trainer_payment_details, methods=['POST'])
->>>>>>> feature/newVersion_3.0

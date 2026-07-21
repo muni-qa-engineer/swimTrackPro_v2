@@ -181,8 +181,6 @@ def register_page_routes(app, *, get_pg_connection, load_data):
             for booking in user_bookings
             if str(booking.get("status", "")).strip().lower() != "paid"
         )
-<<<<<<< HEAD
-=======
         
         trainer_payment_settings = {}
         if current_role == "trainer":
@@ -227,7 +225,6 @@ def register_page_routes(app, *, get_pg_connection, load_data):
                     conn.close()
                 except Exception as e:
                     print("Error fetching trainer payment settings for guest:", e)
->>>>>>> feature/newVersion_3.0
 
         return render_template(
             "payments.html",
@@ -238,10 +235,7 @@ def register_page_routes(app, *, get_pg_connection, load_data):
             account_holder_name=get_setting("account_holder_name", ""),
             trainer_phone=get_setting("trainer_phone", ""),
             upi_id=get_setting("upi_id", ""),
-<<<<<<< HEAD
-=======
             trainer_payment_settings=trainer_payment_settings,
->>>>>>> feature/newVersion_3.0
         )
 
     @login_required

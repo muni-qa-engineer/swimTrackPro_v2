@@ -44,8 +44,6 @@ CREATE TABLE IF NOT EXISTS profile_pictures (
 )
 """)
 
-<<<<<<< HEAD
-=======
 # PACKAGES TABLE
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS packages (
@@ -82,7 +80,6 @@ if cursor.fetchone()[0] == 0:
         default_packages
     )
 
->>>>>>> feature/newVersion_3.0
 conn.commit()
 cursor.close()
 conn.close()

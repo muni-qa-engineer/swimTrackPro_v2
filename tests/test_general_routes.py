@@ -261,8 +261,6 @@ class GeneralRouteAccessTests(unittest.TestCase):
         response = self.client.post("/booking/reject_pause", data={"booking_id": "123"})
         self.assertEqual(response.status_code, 400)
 
-<<<<<<< HEAD
-=======
     def test_dashboard_guest_context_contains_all_future(self):
         with patch('swimtrackpro.routes.dashboard.get_guest_dashboard_data') as mock_get_data:
             mock_get_data.return_value = {
@@ -283,7 +281,6 @@ class GeneralRouteAccessTests(unittest.TestCase):
     def test_skip_session_unauthenticated_fails(self):
         response = self.client.post("/skip_session/123/2026-07-21")
         self.assertEqual(response.status_code, 302)
->>>>>>> feature/newVersion_3.0
 
 if __name__ == "__main__":
     unittest.main()

@@ -16,11 +16,7 @@
 
   // CENTRALIZED CONFIG
   const PRICING = {
-<<<<<<< HEAD
-    DEMO_DAY: 500,
-=======
     DEMO_DAY: 0,
->>>>>>> feature/newVersion_3.0
     SINGLE_DAY: 750,
     MONTHLY_PACKAGE: 9000,
     CUSTOM_PACKAGE_BASE: 9000
@@ -172,11 +168,7 @@
     let actualAmount = 0;
 
     if (pkg.value === 'Demo') {
-<<<<<<< HEAD
-      actualAmount = 500 * persons;
-=======
       actualAmount = 0 * persons;
->>>>>>> feature/newVersion_3.0
     }
     else if (pkg.value === 'Single') {
       actualAmount = 750 * persons;

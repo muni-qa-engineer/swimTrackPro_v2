@@ -3,18 +3,6 @@
 {% block title %}Verify OTP - SwimTrackPro{% endblock %}
 
 {% block content %}
-<<<<<<< HEAD
-<div class="d-flex premium-mesh-bg" style="min-height: 100vh;">
-    <div class="container d-flex justify-content-center align-items-center">
-        <div class="col-12 col-md-8 col-lg-5">
-            <div class="card border-0 premium-glass-card p-4 p-md-5 fade-in-up delay-1">
-                <div class="text-center mb-4">
-                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-sm" style="width:60px; height:60px; font-size:24px;">
-                        <i class="fa-solid fa-key"></i>
-                    </div>
-                    <h3 class="fw-bold mb-2">Reset Password</h3>
-                    <p class="text-muted">Enter the 6-digit OTP sent to <strong>{{ email }}</strong> and set your new password.</p>
-=======
 <div class="d-flex" style="min-height: 80vh; align-items: center;">
     <div class="container d-flex justify-content-center align-items-center">
         <div class="col-12 col-md-8 col-lg-5">
@@ -25,21 +13,14 @@
                     </div>
                     <h3 class="font-display text-white mb-2" style="font-size: 1.5rem;">Reset Password</h3>
                     <p class="text-muted small">Enter the 6-digit OTP sent to <strong>{{ email }}</strong> and set your new password.</p>
->>>>>>> feature/newVersion_3.0
                 </div>
 
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}
-<<<<<<< HEAD
-                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-=======
                             <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
                                 {{ message }}
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
->>>>>>> feature/newVersion_3.0
                             </div>
                         {% endfor %}
                     {% endif %}
@@ -48,22 +29,6 @@
                 <form action="{{ url_for('verify_otp') }}" method="POST">
                     <input type="hidden" name="email" value="{{ email }}">
                     
-<<<<<<< HEAD
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">6-Digit OTP</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-white"><i class="fa-solid fa-hashtag text-muted"></i></span>
-                            <input type="text" name="otp" class="form-control" placeholder="123456" maxlength="6" pattern="\d{6}" required autofocus autocomplete="off">
-                        </div>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="form-label fw-bold">New Password</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-white"><i class="fa-solid fa-lock text-muted"></i></span>
-                            <input type="password" id="newPassword" name="new_password" class="form-control border-end-0" placeholder="Create new password" required minlength="6">
-                            <button class="input-group-text bg-white border-start-0" type="button" onclick="togglePasswordVisibility('newPassword', this)">
-=======
                     <div class="form-group mb-3">
                         <label class="form-label">6-Digit OTP</label>
                         <div style="display: flex;">
@@ -78,27 +43,17 @@
                             <span class="btn btn-secondary" style="border-top-right-radius: 0; border-bottom-right-radius: 0; border: 1px solid rgba(255,255,255,0.1); border-right: none; padding: 0 1rem; display: flex; align-items: center; background: rgba(0,0,0,0.2);"><i class="fa-solid fa-lock text-muted"></i></span>
                             <input type="password" id="newPassword" name="new_password" class="form-control" placeholder="Create new password" required minlength="6" style="border-top-left-radius: 0; border-bottom-left-radius: 0; border-right: none;">
                             <button class="btn btn-secondary" type="button" onclick="togglePasswordVisibility('newPassword', this)" style="border-top-left-radius: 0; border-bottom-left-radius: 0; border: 1px solid rgba(255,255,255,0.1); border-left: none; padding: 0 1rem;">
->>>>>>> feature/newVersion_3.0
                                 <i class="fa-solid fa-eye text-muted"></i>
                             </button>
                         </div>
                     </div>
 
-<<<<<<< HEAD
-                    <button type="submit" class="btn btn-primary w-100 fw-bold py-2 mb-3 shadow-sm rounded-3">
-                        Reset Password <i class="fa-solid fa-check ms-1"></i>
-                    </button>
-                    
-                    <div class="text-center">
-                        <a href="{{ url_for('forgot_password') }}" class="text-decoration-none small text-muted hover-primary">
-=======
                     <button type="submit" class="btn btn-primary w-100 py-3 mb-3">
                         Reset Password <i class="fa-solid fa-check ms-1" style="font-size: 0.85rem;"></i>
                     </button>
                     
                     <div class="text-center mt-3">
                         <a href="{{ url_for('forgot_password') }}" class="text-decoration-none small text-muted">
->>>>>>> feature/newVersion_3.0
                             <i class="fa-solid fa-arrow-left me-1"></i> Back or Resend OTP
                         </a>
                     </div>
@@ -107,32 +62,6 @@
         </div>
     </div>
 </div>
-<<<<<<< HEAD
-
-<style>
-.hover-primary:hover {
-    color: #0d6efd !important;
-}
-.input-group-text {
-    border-right: none;
-}
-.form-control {
-    border-left: none;
-}
-.form-control:focus {
-    box-shadow: none;
-    border-color: #dee2e6;
-}
-.input-group:focus-within {
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-    border-radius: var(--bs-border-radius);
-}
-.input-group:focus-within .input-group-text,
-.input-group:focus-within .form-control {
-    border-color: #86b7fe;
-}
-</style>
-=======
 {% endblock %}
 
 {% block extra_js %}
@@ -151,5 +80,4 @@ function togglePasswordVisibility(inputId, btn) {
     }
 }
 </script>
->>>>>>> feature/newVersion_3.0
 {% endblock %}

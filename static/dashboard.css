@@ -458,27 +458,6 @@ input::placeholder {
 
 .mobile-bottom-nav {
   position: fixed;
-<<<<<<< HEAD
-  bottom: 12px;
-  left: 12px;
-  right: 12px;
-  z-index: 1050;
-
-  background: rgba(255, 255, 255, 0.85) !important;
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.5) !important;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.15) !important;
-  border-radius: 20px !important;
-
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-
-  height: 60px;
-  padding: 0 8px;
-  transition: all 0.3s ease;
-=======
   bottom: 8px;
   left: 8px;
   right: 8px;
@@ -498,7 +477,6 @@ input::placeholder {
   padding: 0.8rem 12px;
   box-sizing: border-box;
   transition: transform 0.2s ease, opacity 0.2s ease;
->>>>>>> feature/newVersion_3.0
 }
 
 .mobile-nav-item {
@@ -509,28 +487,6 @@ input::placeholder {
   align-items: center;
   justify-content: center;
   flex: 1;
-<<<<<<< HEAD
-
-  color: #64748b;
-  font-size: 11px;
-  line-height: 1.1;
-  cursor: pointer;
-  padding: 6px 0;
-  border-radius: 14px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.mobile-nav-item div {
-  font-size: 18px;
-  margin-bottom: 2px;
-  transition: transform 0.2s ease;
-}
-
-/* FontAwesome icon support */
-.mobile-nav-item i {
-  font-size: 18px;
-  margin-bottom: 3px;
-=======
   color: #cbd5e1;
   font-size: 11px;
   line-height: 1.15;
@@ -545,17 +501,10 @@ input::placeholder {
 .mobile-nav-item div,
 .mobile-nav-item i {
   font-size: 20px;
->>>>>>> feature/newVersion_3.0
   transition: transform 0.2s ease;
   display: block;
 }
 
-<<<<<<< HEAD
-.mobile-nav-item.active {
-  color: #2563eb !important;
-  font-weight: 700;
-  background: rgba(37, 99, 235, 0.08) !important;
-=======
 .mobile-nav-item.small,
 .mobile-nav-item small {
   display: block;
@@ -571,28 +520,15 @@ input::placeholder {
   color: #38bdf8 !important;
   font-weight: 700;
   background: rgba(56, 189, 248, 0.12) !important;
->>>>>>> feature/newVersion_3.0
 }
 
 .mobile-nav-item.active div,
 .mobile-nav-item.active i {
-<<<<<<< HEAD
-  transform: translateY(-2px) scale(1.1);
-}
-
-.mobile-nav-item small {
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-  margin-top: 1px;
-=======
   transform: translateY(-2px) scale(1.05);
 }
 
 .mobile-nav-item:hover {
   color: #f8fafc;
->>>>>>> feature/newVersion_3.0
 }
 
 .mobile-nav-item:focus,
@@ -602,9 +538,6 @@ input::placeholder {
 
 @media (max-width: 991.98px) {
   body {
-<<<<<<< HEAD
-    padding-bottom: 88px !important;
-=======
     padding-bottom: 104px !important;
   }
   .mobile-bottom-nav {
@@ -615,7 +548,6 @@ input::placeholder {
     max-width: 100%;
     border-radius: 0 !important;
     padding: 0.55rem 12px;
->>>>>>> feature/newVersion_3.0
   }
 }
 
@@ -638,13 +570,10 @@ input::placeholder {
     margin-left: 0 !important;
     margin-right: 0 !important;
   }
-<<<<<<< HEAD
-=======
   
   .dashboard-main {
     padding-bottom: 90px !important;
   }
->>>>>>> feature/newVersion_3.0
 }
 
 /* ==========================================================================
