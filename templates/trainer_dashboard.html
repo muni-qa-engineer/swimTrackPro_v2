@@ -1,0 +1,297 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | SwimTrack Pro{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .action-required-panel {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: var(--radius-md);
+        padding: 1.5rem;
+    }
+    .action-item {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: var(--radius-sm);
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .feedback-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: var(--radius-sm);
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+        width: 100%;
+    }
+    .fade-out {
+        opacity: 0;
+        transition: opacity 1.5s ease-out;
+        pointer-events: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    
+    <!-- Main Content Panel -->
+    <section class="dashboard-main animate-fade-in">
+        
+
+
+        <!-- Floating Welcome Toast -->
+        <div id="welcomeToast" style="display: none; position: fixed; top: 50%; left: 50%; z-index: 9999; background: rgba(16, 185, 129, 0.95); backdrop-filter: blur(10px); padding: 1.5rem 2.5rem; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.6); color: white; border: 1px solid rgba(255,255,255,0.2); transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform: translate(-50%, -40%) scale(0.9); opacity: 0; text-align: center; width: 85%; max-width: 400px;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;"><i class="fa-solid fa-hand-wave"></i>👋</div>
+            <h4 style="font-weight: 700; margin-bottom: 0.25rem;">Welcome, Coach {{ session.get('user_name')|title }}!</h4>
+            <p style="margin-bottom: 0; font-size: 0.95rem; opacity: 0.9;">Ready for your next coaching session?</p>
+        </div>
+
+        <!-- Top Metrics Grid -->
+        <div class="metrics-grid">
+            <div class="metric-card primary">
+                <div class="metric-icon"><i class="fa-solid fa-users"></i></div>
+                <div>
+                    <div class="text-muted" style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Active Bookings</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; line-height: 1;">{{ active_bookings if active_bookings is defined else 0 }}</div>
+                </div>
+            </div>
+
+            <div class="metric-card success">
+                <div class="metric-icon"><i class="fa-solid fa-user-graduate"></i></div>
+                <div>
+                    <div class="text-muted" style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Lifetime Students</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; line-height: 1; margin-bottom: 0.25rem;">{{ lifetime_students }}</div>
+                    <div class="text-secondary" style="font-size: 0.75rem;">
+                        {% if trend_growth > 0 %}
+                            <i class="fa-solid fa-arrow-trend-up text-success"></i> +{{ trend_growth }} this month
+                        {% elif trend_growth < 0 %}
+                            <i class="fa-solid fa-arrow-trend-down text-danger"></i> {{ trend_growth }} this month
+                        {% else %}
+                            Same as last month
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="metric-card warning">
+                <div class="metric-icon"><i class="fa-solid fa-star"></i></div>
+                <div>
+                    <div class="text-muted" style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Average Rating</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; line-height: 1; margin-bottom: 0.25rem;">{{ avg_rating }} <span style="font-size: 1rem;">/ 5.0</span></div>
+                    <div class="text-secondary" style="font-size: 0.75rem;">Based on feedback</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            
+            <!-- Left Column: Upcoming Sessions & Chart -->
+            <div class="lg:col-span-2 flex flex-col gap-6">
+                
+                <!-- Session Schedule (High Priority) -->
+                <div class="glass-panel" style="padding: 1.5rem;">
+                    <h3 class="font-display" style="font-size: 1.25rem; margin-bottom: 1.5rem;"><i class="fa-regular fa-calendar-check text-accent"></i> Upcoming Sessions</h3>
+                    {% if upcoming_sessions %}
+                        <div class="table-responsive" style="background: none; border: none; padding: 0;">
+                            <table class="table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Date / Time</th>
+                                        <th>Student</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for session in upcoming_sessions[:5] %}
+                                    <tr>
+                                        <td><strong class="text-white">{{ session.datetime.strftime('%d %b') }} at {{ session.time }}</strong></td>
+                                        <td>{{ session.student }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted" style="padding: 2rem 0;">
+                            <i class="fa-solid fa-mug-hot" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                            <p>No sessions scheduled. Enjoy your break!</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Earnings Chart -->
+                <div class="glass-panel" style="padding: 1.5rem;">
+                    <h3 class="font-display" style="font-size: 1.25rem; margin-bottom: 1.5rem;"><i class="fa-solid fa-chart-column text-accent"></i> Earnings Trend ({{ current_year if current_year else '' }})</h3>
+                    <div class="chart-container">
+                        <canvas id="earningsChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Approvals & Feedback -->
+            <div class="flex flex-col gap-6">
+                
+                <!-- ACTION REQUIRED PANEL (Approvals Only) -->
+                {% if pending_pauses or pending_payments %}
+                <div class="glass-panel action-required-panel" style="padding: 1.5rem;">
+                    <h3 class="font-display text-danger" style="font-size: 1.25rem; margin-bottom: 1.25rem;"><i class="fa-solid fa-triangle-exclamation"></i> Approvals Needed</h3>
+                    
+                    <div style="max-height: 260px; overflow-y: auto; padding-right: 0.5rem;" class="custom-scrollbar">
+                        {% for p in pending_pauses %}
+                        <div class="action-item" style="flex-direction: column; align-items: stretch; gap: 0.5rem;">
+                            <div>
+                                <strong class="text-white">{{ p.student }}</strong> - <strong class="text-warning">Pause</strong>
+                                <div class="text-muted" style="font-size: 0.8rem;">Reason: {{ p.pause_reason }}</div>
+                            </div>
+                            <form action="{{ url_for('approve_pause') }}" method="POST" style="margin: 0; text-align: right;">
+                                <input type="hidden" name="booking_id" value="{{ p.id }}">
+                                <button type="submit" class="btn btn-sm btn-success w-100">Approve Pause</button>
+                            </form>
+                        </div>
+                        {% endfor %}
+
+                        {% for payment in pending_payments %}
+                        <div class="action-item" style="flex-direction: column; align-items: stretch; gap: 0.5rem;">
+                            <div>
+                                <strong class="text-white">{{ payment.student }}</strong> - <strong class="text-warning">Payment Pending</strong>
+                                <div class="text-muted" style="font-size: 0.8rem;">{{ payment.package }} | ₹{{ payment.fee }}</div>
+                            </div>
+                            <form action="{{ url_for('update_payment_status', booking_id=payment.id) }}" method="POST" style="margin: 0; text-align: right;">
+                                <input type="hidden" name="status" value="Paid">
+                                <button type="submit" class="btn btn-sm btn-success w-100">Mark Paid</button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Feedback -->
+                <div class="glass-panel" style="padding: 1.5rem; flex-grow: 1;">
+                    <h3 class="font-display" style="font-size: 1.25rem; margin-bottom: 1.5rem;"><i class="fa-solid fa-comment-dots text-accent"></i> Recent Feedback</h3>
+                    
+                    {% if feedbacks %}
+                        <div style="max-height: 400px; overflow-y: auto; padding-right: 0.5rem;">
+                            {% for f in feedbacks %}
+                            <div class="feedback-card">
+                                <div class="flex justify-between items-center mb-2">
+                                    <strong class="text-white">{{ f.guest_name }}</strong>
+                                    <div class="text-warning">
+                                        {% for i in range(f.rating) %}<i class="fa-solid fa-star"></i>{% endfor %}
+                                        {% for i in range(5 - f.rating) %}<i class="fa-regular fa-star"></i>{% endfor %}
+                                    </div>
+                                </div>
+                                {% if f.pros %}
+                                <div style="font-size: 0.85rem; margin-bottom: 0.25rem;">
+                                    <strong class="text-success">Pros:</strong> <span class="text-secondary">{{ f.pros }}</span>
+                                </div>
+                                {% endif %}
+                                {% if f.cons %}
+                                <div style="font-size: 0.85rem;">
+                                    <strong class="text-danger">Cons:</strong> <span class="text-secondary">{{ f.cons }}</span>
+                                </div>
+                                {% endif %}
+                                <div class="text-muted text-end mt-2" style="font-size: 0.7rem;">{{ f.created_at }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted" style="padding: 2rem 0;">
+                            <p>No feedback received yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </section>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const earningsData = {{ monthly_earnings | tojson }};
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    const ctx = document.getElementById('earningsChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: months,
+            datasets: [{
+                label: 'Earnings (₹)',
+                data: earningsData,
+                backgroundColor: 'rgba(56, 189, 248, 0.7)',
+                borderColor: 'rgba(56, 189, 248, 1)',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.05)'
+                    },
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.6)',
+                        callback: function(value, index, values) {
+                            return '₹' + value;
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.6)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+});
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if(!sessionStorage.getItem('greeted_{{ session.get("user_name") }}')) {
+            const toast = document.getElementById('welcomeToast');
+            if(toast) {
+                toast.style.display = 'block';
+                // Trigger reflow
+                void toast.offsetWidth;
+                toast.style.opacity = '1';
+                toast.style.transform = 'translate(-50%, -50%) scale(1)';
+                sessionStorage.setItem('greeted_{{ session.get("user_name") }}', 'true');
+                
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translate(-50%, -40%) scale(0.9)';
+                    setTimeout(() => toast.remove(), 500);
+                }, 3500);
+            }
+        }
+    });
+</script>
+{% endblock %}
