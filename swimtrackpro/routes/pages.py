@@ -22,6 +22,7 @@ def _bookings_for_session(data):
             booking
             for booking in data.get("bookings", [])
             if (booking.get("trainer_username") or "asdf").strip().lower() == trainer_user.strip().lower()
+            and booking.get("payment_request") != "unconfirmed"
         ]
 
     return [
@@ -29,6 +30,7 @@ def _bookings_for_session(data):
         for booking in data.get("bookings", [])
         if (booking.get("owner_name") or "").strip().lower() == current_user
         and booking.get("owner_phone") == current_phone
+        and booking.get("payment_request") != "unconfirmed"
     ]
 
 

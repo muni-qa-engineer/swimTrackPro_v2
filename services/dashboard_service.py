@@ -70,7 +70,9 @@ def get_admin_dashboard_data(current_user, data):
     days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     day_counts = {d: 0 for d in days_of_week}
     
-    for b in data.get('bookings', []):
+    bookings_data = [b for b in data.get('bookings', []) if b.get('payment_request') != 'unconfirmed']
+    
+    for b in bookings_data:
         if today_str in b.get('calendar_dates', []):
             today_sessions.append({
                 'time': b.get('time', '06:00 AM'),
@@ -85,7 +87,7 @@ def get_admin_dashboard_data(current_user, data):
                 if day.lower() in sel_days.lower():
                     day_counts[day] += 1
                     
-    paused_bookings = [b for b in data.get('bookings', []) if str(b.get('pause_status')).upper() == 'PAUSED']
+    paused_bookings = [b for b in bookings_data if str(b.get('pause_status')).upper() == 'PAUSED']
     paused_packages_count = len(paused_bookings)
     
     today_date = datetime.now(ZoneInfo('Asia/Kolkata')).date()
@@ -102,7 +104,7 @@ def get_admin_dashboard_data(current_user, data):
             except ValueError:
                 pass
                 
-    resume_pending_count = sum(1 for b in data.get('bookings', []) if b.get('pause_status') == 'Approval Pending')
+    resume_pending_count = sum(1 for b in bookings_data if b.get('pause_status') == 'Approval Pending')
     chart_data = [day_counts[d] for d in days_of_week]
     
     # Fetch Packages
@@ -121,7 +123,7 @@ def get_admin_dashboard_data(current_user, data):
 
     return {
         'trainers': trainers_list,
-        'bookings': data.get('bookings', []),
+        'bookings': bookings_data,
         'students': data.get('students', []),
         'today_sessions': today_sessions,
         'activities': activities_list,
@@ -170,6 +172,7 @@ def get_trainer_dashboard_data(trainer_username, data):
     user_bookings = [
         b for b in data.get('bookings', [])
         if (b.get('trainer_username') or 'asdf').strip().lower() == trainer_user_lower
+        and b.get('payment_request') != 'unconfirmed'
     ]
     
     assigned_student_keys = set(
@@ -273,6 +276,7 @@ def get_guest_dashboard_data(current_user, current_phone, data):
         b for b in data.get('bookings', [])
         if (b.get('owner_name') or '').strip().lower() == current_user
         and b.get('owner_phone') == current_phone
+        and b.get('payment_request') != 'unconfirmed'
     ]
     user_students = [
         s for s in data.get('students', [])

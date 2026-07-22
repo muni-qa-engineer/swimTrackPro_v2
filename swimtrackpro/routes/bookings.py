@@ -201,12 +201,8 @@ def book():
 
 
 
-    payment_choice = request.form.get('payment_status', 'Not Paid')
-
-    if payment_choice == 'Paid':
-        status = 'Pending'
-    else:
-        status = 'Not Paid'
+    payment_choice = 'unconfirmed'
+    status = 'unconfirmed'
 
     trainer_username = request.form.get('trainer_username', 'asdf').strip().lower()
 

@@ -14,6 +14,7 @@ Environment Variables Required:
 import os
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException   
+import threading
 from config import (
     BREVO_API_KEY,
     BREVO_SENDER_EMAIL,
@@ -23,32 +24,14 @@ from config import (
 
 
 
-def send_email(subject, html_content, to_email=None, to_name="Admin"):
+def send_email_sync(subject, html_content, to_email=None, to_name="Admin"):
     """
-    Send an email using Brevo.
-
-    Parameters:
-        subject (str): Email subject.
-        html_content (str): HTML body content.
-        to_email (str, optional): Recipient email address.
-            If not provided, ADMIN_ALERT_EMAIL will be used.
-        to_name (str, optional): Recipient display name.
-
-    Returns:
-        bool: True if email was sent successfully, False otherwise.
+    Send an email using Brevo synchronously.
     """
-    # api_key = os.getenv("BREVO_API_KEY")
-    # sender_email = os.getenv("BREVO_SENDER_EMAIL")
-    # sender_name = os.getenv("BREVO_SENDER_NAME", "SwimTrackPro")
-    # default_recipient = os.getenv("ADMIN_ALERT_EMAIL")
     api_key = BREVO_API_KEY
     sender_email = BREVO_SENDER_EMAIL
     sender_name = BREVO_SENDER_NAME
     default_recipient = ADMIN_ALERT_EMAIL
-
-    # print("DEBUG API KEY:", bool(api_key))
-    # print("DEBUG SENDER:", sender_email)
-    # print("DEBUG ADMIN:", default_recipient)
 
     # Validate required configuration.
     if not api_key:
@@ -100,6 +83,19 @@ def send_email(subject, html_content, to_email=None, to_name="Admin"):
     except Exception as exc:
         print(f"Unexpected email error: {exc}")
         return False
+
+
+def send_email(subject, html_content, to_email=None, to_name="Admin"):
+    """
+    Send an email using Brevo asynchronously in a background thread.
+    """
+    thread = threading.Thread(
+        target=send_email_sync,
+        args=(subject, html_content, to_email, to_name)
+    )
+    thread.daemon = True
+    thread.start()
+    return True
 
 
 # --- Booking Confirmation Email to Swimmer ---
