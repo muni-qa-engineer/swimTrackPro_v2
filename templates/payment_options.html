@@ -163,6 +163,7 @@
         btn.disabled = true;
         spinner.classList.remove('d-none');
         text.textContent = 'Processing...';
+        btn.classList.add('btn-action-loading');
 
         // Submit form via fetch
         fetch(this.action, {

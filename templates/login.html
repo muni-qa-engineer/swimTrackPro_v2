@@ -208,7 +208,7 @@
             <h1 class="font-display text-white mb-3" style="font-size: 3.5rem; font-weight: 800; line-height: 1.15;">Your Pool.<br>Our Coaches.</h1>
             <p class="text-muted mb-5" style="font-size: 1.1rem; line-height: 1.6;">Have access to a swimming pool in your apartment complex, community club, or villa? We match you with verified, elite coaches who travel to your location. Learn swimming in the comfort of your own facility.</p>
             <div class="d-flex flex-column flex-sm-row gap-3 mt-4">
-                <button type="button" class="btn btn-primary px-5 py-3 w-100" onclick="openLoginModal()">Choose a Coach</button>
+                <button type="button" class="btn btn-primary px-5 py-3 w-100" onclick="document.getElementById('coaches').scrollIntoView({ behavior: 'smooth' })">Choose a Coach</button>
                 <button type="button" class="btn btn-secondary px-5 py-3 w-100" onclick="openLoginModal()">Track Progress</button>
             </div>
         </div>
@@ -442,6 +442,69 @@
         modal.show();
     }
 </script>
+
+<!-- Our Coaches Section -->
+<div class="coaches-section py-5" id="coaches" style="background: rgba(9, 9, 11, 0.3); border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 3rem;">
+    <div class="container">
+        <div class="text-center mb-5 animate-slide-up">
+            <h2 class="font-display text-white" style="font-weight: 800; font-size: 2.2rem; margin-bottom: 0.5rem;">Meet Our Coaches</h2>
+            <p class="text-muted">Highly qualified and certified trainers ready to guide you.</p>
+        </div>
+        
+        <div class="row g-4 justify-content-center">
+            {% if coaches %}
+                {% for coach in coaches %}
+                    <div class="col-12 col-md-6 col-lg-4 animate-slide-up">
+                        <div class="glass-panel h-100 p-4 d-flex flex-column" style="position: relative; overflow: hidden; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: var(--radius-md); transition: all 0.3s ease;">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.2);">
+                                    <i class="fa-solid fa-user-tie fs-4"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-display text-white m-0" style="font-weight: 700; font-size: 1.15rem;">{{ coach.name }}</h4>
+                                    <span class="badge bg-success bg-opacity-10 text-success" style="font-size: 0.72rem; padding: 0.2rem 0.5rem;"><i class="fa-solid fa-circle-check me-1"></i> Verified</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex-grow-1 mb-4" style="font-size: 0.85rem; color: rgba(255, 255, 255, 0.7);">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span><i class="fa-solid fa-briefcase text-primary me-2"></i> Experience</span>
+                                    <span class="text-white fw-semibold">{{ coach.experience or 'N/A' }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span><i class="fa-solid fa-graduation-cap text-primary me-2"></i> Qualification</span>
+                                    <span class="text-white fw-semibold text-end" style="max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ coach.qualification or 'N/A' }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span><i class="fa-solid fa-star text-warning me-2"></i> Rating</span>
+                                    <span class="text-white fw-semibold"><i class="fa-solid fa-star text-warning me-1 small"></i>{{ '%.2f' | format(coach.rating | float) }} / 5.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span><i class="fa-solid fa-users text-primary me-2"></i> Swimmers Trained</span>
+                                    <span class="text-white fw-semibold">{{ coach.student_count or 0 }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span><i class="fa-solid fa-location-dot text-danger me-2"></i> Location</span>
+                                    <span class="text-white fw-semibold text-end" style="max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ coach.residence_location or 'N/A' }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-auto">
+                                <a href="/booking?coach={{ coach.username }}" class="btn btn-primary w-100 py-2.5 btn-book-session" style="border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600;">
+                                    <i class="fa-solid fa-calendar-check me-2"></i> Book Session
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12 text-center text-muted py-4">
+                    <p>No certified coaches available at the moment. Please check back later.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
 
 <!-- Comparison Layout Section -->
 <div class="plans-section" id="plans">
@@ -844,6 +907,7 @@
             
             <form action="/login" method="post" id="loginForm">
                 <input type="hidden" name="role" id="roleInput" value="guest">
+                <input type="hidden" name="booking_id" id="bookingIdInput" value="">
                 
                 <div class="form-group mb-3">
                     <label class="form-label">Username</label>
@@ -908,6 +972,20 @@
 <script>
     let myModal;
     
+    // DOM Element references
+    const phoneInput = document.getElementById('phoneInput');
+    const phoneError = document.getElementById('phoneError');
+    const loginForm = document.getElementById('loginForm');
+    const guestBtn = document.getElementById('guestBtn');
+    const trainerBtn = document.getElementById('trainerBtn');
+    const roleInput = document.getElementById('roleInput');
+    const phoneField = document.getElementById('phoneField');
+    const passwordField = document.getElementById('passwordField');
+    const passwordInput = document.getElementById('passwordInput');
+    const nameInput = document.getElementById('nameInput');
+    const nameError = document.getElementById('nameError');
+    const submitBtn = document.getElementById('submitBtn');
+
     document.addEventListener('DOMContentLoaded', () => {
         // Clear greeted state so it shows up on next login
         sessionStorage.clear();
@@ -922,9 +1000,45 @@
         {% endwith %}
         
         const params = new URLSearchParams(window.location.search);
-        if (params.get('login') === 'true' || params.get('role')) {
-            openLoginModal();
+        const prefillName = params.get('prefill_name');
+        const bookingId = params.get('booking_id');
+        
+        if (prefillName && nameInput) {
+            activateGuestMode(true);
+            nameInput.value = prefillName;
         }
+        if (bookingId) {
+            const bookingIdInput = document.getElementById('bookingIdInput');
+            if (bookingIdInput) {
+                bookingIdInput.value = bookingId;
+            }
+        }
+        
+        if (params.get('login') === 'true' || params.get('role') || prefillName) {
+            openLoginModal();
+            if (prefillName && phoneInput) {
+                setTimeout(() => {
+                    phoneInput.focus();
+                }, 500);
+            }
+        }
+
+        // Intercept Book Session click to animate first
+        document.querySelectorAll('.btn-book-session').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetUrl = this.getAttribute('href');
+                
+                this.classList.add('btn-action-loading');
+                this.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Booking...';
+                this.style.opacity = '0.8';
+                this.style.pointerEvents = 'none';
+                
+                setTimeout(() => {
+                    window.location.href = targetUrl;
+                }, 400);
+            });
+        });
     });
 
     function openLoginModal() {
@@ -932,19 +1046,6 @@
             myModal.show();
         }
     }
-
-    const phoneInput = document.getElementById('phoneInput');
-    const phoneError = document.getElementById('phoneError');
-    const loginForm = document.getElementById('loginForm');
-    const guestBtn = document.getElementById('guestBtn');
-    const trainerBtn = document.getElementById('trainerBtn');
-    const roleInput = document.getElementById('roleInput');
-    const phoneField = document.getElementById('phoneField');
-    const passwordField = document.getElementById('passwordField');
-    const passwordInput = document.getElementById('passwordInput');
-    const nameInput = document.getElementById('nameInput');
-    const nameError = document.getElementById('nameError');
-    const submitBtn = document.getElementById('submitBtn');
 
     function activateTrainerMode() {
         roleInput.value = 'trainer';
@@ -970,9 +1071,11 @@
         nameInput.focus();
     }
 
-    function activateGuestMode() {
+    function activateGuestMode(keepPrefill = false) {
         roleInput.value = 'guest';
-        nameInput.value = '';
+        if (!keepPrefill && !nameInput.value) {
+            nameInput.value = '';
+        }
         phoneInput.value = '';
         passwordInput.value = '';
         nameError.classList.add('d-none');
@@ -991,7 +1094,11 @@
         passwordInput.required = false;
         
         submitBtn.querySelector('span').textContent = 'Login as Guest';
-        nameInput.focus();
+        if (!keepPrefill && !nameInput.value) {
+            nameInput.focus();
+        } else if (nameInput.value && phoneInput) {
+            phoneInput.focus();
+        }
     }
 
     function activateAdminMode() {
@@ -1073,6 +1180,7 @@
     window.addEventListener('load', () => {
         const params = new URLSearchParams(window.location.search);
         const activeRole = params.get('role');
+        const prefillName = params.get('prefill_name');
         if (activeRole === 'trainer') {
             activateTrainerMode();
             openLoginModal();
@@ -1080,7 +1188,16 @@
             activateAdminMode();
             openLoginModal();
         } else {
-            activateGuestMode();
+            const hasPrefill = Boolean(prefillName || (nameInput && nameInput.value));
+            activateGuestMode(hasPrefill);
+            if (params.get('login') === 'true' || activeRole || hasPrefill) {
+                openLoginModal();
+                if (hasPrefill && phoneInput) {
+                    setTimeout(() => {
+                        phoneInput.focus();
+                    }, 400);
+                }
+            }
         }
     });
 

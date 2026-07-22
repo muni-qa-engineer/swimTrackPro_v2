@@ -14,7 +14,32 @@ from swimtrackpro.routes.bookings import check_and_perform_auto_resumes
 def index():
     if 'user_name' not in session:
         packages = get_all_packages()
-        return render_template('login.html', pkg=packages)
+        coaches_list = []
+        try:
+            conn = get_pg_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT t.username, t.name, t.experience, t.qualification, t.currently_working, t.residence_location, t.rating,
+                       (SELECT COUNT(DISTINCT b.student_name) FROM bookings b WHERE LOWER(b.trainer_username) = LOWER(t.username)) as student_count
+                FROM trainers t
+                WHERE t.is_approved = TRUE
+                ORDER BY t.rating DESC, t.name
+            """)
+            for row in cursor.fetchall():
+                coaches_list.append({
+                    'username': row[0],
+                    'name': row[1],
+                    'experience': row[2],
+                    'qualification': row[3],
+                    'currently_working': row[4],
+                    'residence_location': row[5],
+                    'rating': float(row[6]) if row[6] is not None else 5.0,
+                    'student_count': row[7]
+                })
+            conn.close()
+        except Exception as e:
+            print("Error loading coaches for landing page:", e)
+        return render_template('login.html', pkg=packages, coaches=coaches_list)
 
     
     check_and_perform_auto_resumes()

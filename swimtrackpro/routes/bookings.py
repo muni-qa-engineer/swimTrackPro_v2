@@ -204,13 +204,16 @@ def book():
     payment_choice = 'unconfirmed'
     status = 'unconfirmed'
 
+    owner_name = session.get('user_name') or (request.form.get('owner_name') or '').strip() or student.strip()
+    owner_phone = session.get('phone') or 'unconfirmed'
+
     trainer_username = request.form.get('trainer_username', 'asdf').strip().lower()
 
     new_booking = {
         "id": booking_id,
         "booking_code": booking_code,
         "student": student,
-        "created_by": session.get('user_name'),
+        "created_by": session.get('user_name') or owner_name,
         "start_date": date_str,
         "end_date": end_date,
         "package": package,
@@ -222,8 +225,8 @@ def book():
         "fee": fee,
         "status": status,
         "payment_request": payment_choice,
-        "owner_name": session.get('user_name'),
-        "owner_phone": session.get('phone'),
+        "owner_name": owner_name,
+        "owner_phone": owner_phone,
         "trainer_username": trainer_username,
     }
 
@@ -233,8 +236,8 @@ def book():
             s for s in data['students']
             if isinstance(s, dict)
             and (s.get('name') or '').strip().lower() == student.strip().lower()
-            and s.get('owner_name') == session.get('user_name')
-            and s.get('owner_phone') == session.get('phone')
+            and s.get('owner_name') == owner_name
+            and s.get('owner_phone') == owner_phone
         ),
         None
     )
@@ -252,8 +255,8 @@ def book():
         ) VALUES (%s, %s, %s, %s)
         ''', (
             student.strip(),
-            session.get('user_name'),
-            session.get('phone'),
+            owner_name,
+            owner_phone,
             request.form.get('skill_level', 'Beginner')
         ))
 
@@ -319,6 +322,10 @@ def book():
 
     conn.commit()
     conn.close()
+
+    if not session.get('user_name'):
+        from flask import url_for
+        return redirect(url_for('index', login='true', role='guest', booking_id=booking_id, prefill_name=owner_name))
 
     # The confirmation email will be sent after payment options are confirmed.
     return redirect(f'/payment_options/{booking_id}')

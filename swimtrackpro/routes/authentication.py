@@ -181,13 +181,16 @@ def register_authentication_routes(
                 print("LOGIN DB ERROR (guest block check):", e)
 
             if existing_row:
-                existing_name = (existing_row[0] or "").strip().lower()
-                if existing_name != normalized_name:
+                existing_name = (existing_row[0] or "").strip()
+                if existing_name.lower() != normalized_name:
                     flash("User already exists with this mobile number.")
                     return redirect(url_for("index"))
+                display_name = existing_name
+            else:
+                display_name = name
 
             session["role"] = "guest"
-            session["user_name"] = normalized_name
+            session["user_name"] = display_name
             session["phone"] = phone
 
             try:
@@ -212,13 +215,33 @@ def register_authentication_routes(
 
                     cursor.execute(
                         "INSERT INTO user_activity (user_name, phone, role, current_login, previous_login, id_number) VALUES (%s, %s, %s, CURRENT_TIMESTAMP, NULL, %s)",
-                        (normalized_name, phone, "guest", new_id_number)
+                        (display_name, phone, "guest", new_id_number)
                     )
                 conn.commit()
                 conn.close()
             except Exception as db_err:
                 print("LOGIN DB ERROR (guest activity):", db_err)
                 # Activity log failure should not block login
+
+            booking_id = (request.form.get("booking_id") or "").strip()
+            if booking_id:
+                try:
+                    conn = get_pg_connection()
+                    cursor = conn.cursor()
+                    cursor.execute(
+                        "UPDATE bookings SET owner_phone = %s, owner_name = %s, created_by = %s WHERE id = %s",
+                        (phone, display_name, display_name, booking_id)
+                    )
+                    cursor.execute(
+                        "UPDATE students SET owner_phone = %s WHERE LOWER(owner_name) = LOWER(%s) AND owner_phone = 'unconfirmed'",
+                        (phone, normalized_name)
+                    )
+                    conn.commit()
+                    conn.close()
+                    return redirect(f"/payment_options/{booking_id}")
+                except Exception as e:
+                    print("Error updating booking/student owner after guest login:", e)
+
             return redirect(url_for("index"))
 
         flash("Please enter all required fields.")

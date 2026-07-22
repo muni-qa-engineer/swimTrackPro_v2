@@ -481,10 +481,14 @@ function checkLocationConflict() {
     return;
   }
 
+  const selectedTrainer = (document.getElementById('hiddenTrainerInput')?.value || '').trim();
+
   let locationConflict = false;
   let groupSwimmers = new Set();
 
   for (const booking of bookings) {
+    if (!selectedTrainer || booking.trainer_username !== selectedTrainer) continue;
+    
     // Use calendar_dates (array) if present, else skip
     const calendarDates = Array.isArray(booking.calendar_dates) ? booking.calendar_dates : [];
     if (!calendarDates.includes(selectedDate)) continue;
@@ -494,7 +498,8 @@ function checkLocationConflict() {
     const minuteDiff = Math.abs(bookingTimeMinutes - selectedTimeMinutes);
     if (minuteDiff >= 60) continue; // Only check if time diff is less than 60
     const bookingLocation = String(booking.location || '').trim().toLowerCase();
-    if (bookingLocation !== selectedLocation) {
+    const isSameLocation = bookingLocation.includes(selectedLocation) || selectedLocation.includes(bookingLocation);
+    if (!isSameLocation) {
       // Location conflict
       locationConflict = true;
       break;
@@ -520,16 +525,19 @@ function checkLocationConflict() {
   if (currentSwimmer) groupSwimmers.delete(currentSwimmer);
 
   const info = document.getElementById('groupSessionInfo');
+  const step1NextBtn = document.getElementById('step1NextBtn');
 
   if (locationConflict) {
     warning.style.display = 'block';
     confirmBookingBtn.disabled = true;
+    if (step1NextBtn) step1NextBtn.disabled = true;
     // Hide group info if present
     if (info) info.style.display = 'none';
     return;
   } else {
     warning.style.display = 'none';
     confirmBookingBtn.disabled = false;
+    if (step1NextBtn) step1NextBtn.disabled = false;
 
     // Show info about group swimmers if any
     if (groupSwimmers.size > 0) {
@@ -721,8 +729,10 @@ function updateSwimmerBookingState() {
     if (warning) {
       warning.remove();
     }
-
-    confirmBookingBtn.disabled = !studentSelect.value.trim();
+    
+    const conflictWarning = document.getElementById('locationConflictWarning');
+    const hasConflict = conflictWarning && conflictWarning.style.display === 'block';
+    confirmBookingBtn.disabled = hasConflict;
     return;
   }
 
@@ -737,7 +747,7 @@ function updateSwimmerBookingState() {
   let warning = document.getElementById('noSwimmersWarning');
 
   if (!hasValidOptions) {
-    confirmBookingBtn.disabled = true;
+    // confirmBookingBtn.disabled = true;
 
     if (!warning) {
       warning = document.createElement('div');
@@ -798,6 +808,8 @@ const bookingStudentInput = document.getElementById('studentSelect');
 
 if (bookingStudentInput && bookingStudentInput.tagName === 'INPUT') {
   bookingStudentInput.addEventListener('input', updateSwimmerBookingState);
+  bookingStudentInput.addEventListener('change', updateSwimmerBookingState);
+  bookingStudentInput.addEventListener('keyup', updateSwimmerBookingState);
 }
 
 

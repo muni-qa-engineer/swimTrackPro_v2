@@ -35,7 +35,6 @@ def _bookings_for_session(data):
 
 
 def register_page_routes(app, *, get_pg_connection, load_data):
-    @login_required
     def booking_page():
         check_and_perform_auto_resumes()
         data = load_data()

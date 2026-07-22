@@ -75,7 +75,6 @@ class GeneralRouteAccessTests(unittest.TestCase):
 
     def test_anonymous_user_is_redirected_from_authenticated_pages(self):
         for path in (
-            "/booking",
             "/my-bookings",
             "/calendar",
             "/payments",
