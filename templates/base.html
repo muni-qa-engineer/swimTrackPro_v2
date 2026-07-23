@@ -265,7 +265,7 @@
                         <a href="/my-bookings" class="nav-link">Bookings</a>
                         <a href="/payments" class="nav-link">Payments</a>
                         {% if session.get('role') == 'trainer' %}
-                        <a href="{{ url_for('about_trainer') }}" class="nav-link">Update My Profile</a>
+                        <a href="{{ url_for('profile_page') }}" class="nav-link">Update My Profile</a>
                         {% else %}
                         <a href="{{ url_for('about_trainer') }}" class="nav-link">About Coach</a>
                         {% endif %}
@@ -308,6 +308,9 @@
                             <li style="padding: 0.5rem 1rem;"><span class="text-secondary small">Logged in as: <strong class="text-white">{{ session.get('user_name')|title }}</strong></span></li>
                             <li><hr class="dropdown-divider" style="border-color: rgba(255, 255, 255, 0.08);"></li>
                             {% if session.get('role') != 'admin' %}
+                            {% if session.get('role') == 'trainer' %}
+                            <li><a class="dropdown-item" href="/profile"><i class="fa-solid fa-user me-2"></i> My Profile </a></li>
+                            {% endif %}
                             <li><a class="dropdown-item" href="#" onclick="showMyIdCard(); return false;"><i class="fa-solid fa-id-card me-2"></i> My ID</a></li>
                             <li><a class="dropdown-item" href="/help"><i class="fa-solid fa-headset me-2"></i> Help & Contact</a></li>
                             <li><hr class="dropdown-divider" style="border-color: rgba(255, 255, 255, 0.08);"></li>

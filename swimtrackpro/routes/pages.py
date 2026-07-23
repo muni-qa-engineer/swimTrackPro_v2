@@ -1,6 +1,6 @@
 """Authenticated booking, calendar, and payment page routes."""
 
-from flask import redirect, render_template, session, url_for
+from flask import redirect, render_template, session, url_for, request
 
 from services.email_service import (
     send_package_completion_email,
@@ -93,7 +93,7 @@ def register_page_routes(app, *, get_pg_connection, load_data):
         location_suggestions = [row[0] for row in cursor.fetchall() if row[0]]
 
         cursor.execute("""
-            SELECT username, name, experience, qualification, currently_working, residence_location, rating, phone, email, whatsapp 
+            SELECT username, name, experience, qualification, currently_working, residence_location, rating, phone, email, whatsapp, available_slots
             FROM trainers 
             WHERE is_approved = TRUE
             ORDER BY rating DESC, name
@@ -109,11 +109,32 @@ def register_page_routes(app, *, get_pg_connection, load_data):
                 "rating": float(row[6]) if row[6] is not None else 5.0,
                 "phone": row[7] or "N/A",
                 "email": row[8] or "N/A",
-                "whatsapp": row[9] or "N/A"
+                "whatsapp": row[9] or "N/A",
+                "available_slots": row[10] or "[]"
             }
             for row in cursor.fetchall()
         ]
         conn.close()
+
+        renew_booking = None
+        renew_from_id = request.args.get('renew_from')
+        renew_start_date = request.args.get('start_date')
+        if renew_from_id:
+            booking_obj = next((b for b in data.get('bookings', []) if str(b.get('id')) == str(renew_from_id)), None)
+            if booking_obj:
+                renew_booking = {
+                    'package': booking_obj.get('package'),
+                    'start_date': renew_start_date or booking_obj.get('start_date'),
+                    'end_date': booking_obj.get('end_date'),
+                    'time': booking_obj.get('time'),
+                    'selected_days': booking_obj.get('selected_days', ''),
+                    'location': booking_obj.get('location'),
+                    'student': booking_obj.get('student'),
+                    'email': booking_obj.get('email'),
+                    'persons': booking_obj.get('persons', 1),
+                    'trainer_username': booking_obj.get('trainer_username'),
+                    'fee': booking_obj.get('fee')
+                }
 
         return render_template(
             "booking.html",
@@ -124,7 +145,8 @@ def register_page_routes(app, *, get_pg_connection, load_data):
             all_bookings=data.get("bookings", []),
             location_suggestions=location_suggestions,
             trainers=trainers,
-            admin_phone=get_setting("trainer_phone", "")
+            admin_phone=get_setting("trainer_phone", ""),
+            renew_booking=renew_booking
         )
 
     @login_required

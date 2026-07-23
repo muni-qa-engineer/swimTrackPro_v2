@@ -165,7 +165,7 @@ def profile_page():
         flash("Profile updated successfully!", "success")
 
     cursor.execute("""
-        SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, rating, whatsapp 
+        SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, rating, whatsapp
         FROM trainers WHERE username = %s
     """, (trainer_user,))
     row = cursor.fetchone()
@@ -597,6 +597,30 @@ def update_trainer_profile():
             
     return redirect(url_for("about_trainer"))
 
+@login_required
+def save_trainer_slots():
+    current_role = session.get("role", "guest")
+    if current_role != "trainer":
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+        
+    trainer_user = session.get("trainer_username") or "asdf"
+    import json
+    try:
+        data = request.get_json()
+        slots = data.get("slots", [])
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE trainers
+            SET available_slots = %s
+            WHERE username = %s
+        """, (json.dumps(slots), trainer_user))
+        conn.commit()
+        conn.close()
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
 def register_general_routes(app):
     """Register routes with their legacy endpoint names unchanged."""
 
@@ -802,6 +826,12 @@ def register_general_routes(app):
         endpoint="profile_page",
         view_func=profile_page,
         methods=["GET", "POST"],
+    )
+    app.add_url_rule(
+        "/trainer/save_slots",
+        endpoint="save_trainer_slots",
+        view_func=save_trainer_slots,
+        methods=["POST"]
     )
     app.add_url_rule(
         "/profile/update_password",

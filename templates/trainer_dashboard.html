@@ -38,6 +38,41 @@
         transition: opacity 1.5s ease-out;
         pointer-events: none;
     }
+    .time-slot-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.45rem 0.65rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: var(--radius-sm);
+        color: white;
+        font-weight: 500;
+        font-size: 0.8rem;
+        cursor: pointer;
+        user-select: none;
+        transition: all var(--transition-fast);
+    }
+    .time-slot-badge:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+    .time-slot-badge.active-slot {
+        background: rgba(6, 182, 212, 0.12);
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+    }
+    .time-slot-badge.active-slot:hover {
+        background: rgba(6, 182, 212, 0.2);
+    }
+    .drag-handle {
+        color: rgba(255, 255, 255, 0.3);
+        cursor: grab;
+        font-size: 0.75rem;
+    }
+    .time-slot-badge.active-slot .drag-handle {
+        color: rgba(6, 182, 212, 0.5);
+    }
 </style>
 {% endblock %}
 
@@ -91,6 +126,15 @@
                     <div class="text-secondary" style="font-size: 0.75rem;">Based on feedback</div>
                 </div>
             </div>
+
+            <div class="metric-card" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3);">
+                <div class="metric-icon" style="color: #10b981; background: rgba(16, 185, 129, 0.2);"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                <div>
+                    <div class="text-muted" style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Total Payment</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; line-height: 1; margin-bottom: 0.25rem;">₹{{ total_earnings }}</div>
+                    <div class="text-secondary" style="font-size: 0.75rem;">Lifetime Earnings</div>
+                </div>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -128,11 +172,21 @@
                     {% endif %}
                 </div>
 
-                <!-- Earnings Chart -->
-                <div class="glass-panel" style="padding: 1.5rem;">
-                    <h3 class="font-display" style="font-size: 1.25rem; margin-bottom: 1.5rem;"><i class="fa-solid fa-chart-column text-accent"></i> Earnings Trend ({{ current_year if current_year else '' }})</h3>
-                    <div class="chart-container">
-                        <canvas id="earningsChart"></canvas>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Earnings Chart -->
+                    <div class="glass-panel" style="padding: 1.5rem;">
+                        <h3 class="font-display" style="font-size: 1.25rem; margin-bottom: 1.5rem;"><i class="fa-solid fa-chart-column text-accent"></i> Earnings Trend ({{ current_year if current_year else '' }})</h3>
+                        <div class="chart-container">
+                            <canvas id="earningsChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Bookings Trend Chart -->
+                    <div class="glass-panel" style="padding: 1.5rem;">
+                        <h3 class="font-display" style="font-size: 1.25rem; margin-bottom: 1.5rem;"><i class="fa-solid fa-chart-line text-success"></i> Bookings Trend ({{ current_year if current_year else '' }})</h3>
+                        <div class="chart-container">
+                            <canvas id="bookingsChart"></canvas>
+                        </div>
                     </div>
                 </div>
 
@@ -214,6 +268,50 @@
             </div>
         </div>
 
+        <!-- Manage Time Slots (Card) -->
+        <div class="glass-panel mb-6 animate-slide-up" style="padding: 2rem;">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-1">
+                <h3 class="font-display" style="font-size: 1.35rem; margin: 0;"><i class="fa-solid fa-clock text-accent me-2"></i> Manage My Available Time Slots</h3>
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline btn-xs" id="selectAllSlotsBtn" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: white; border-radius: 4px;">Select All</button>
+                    <button type="button" class="btn btn-outline btn-xs text-danger" id="clearAllSlotsBtn" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); margin-left: 0.25rem; border-radius: 4px;">Clear All</button>
+                </div>
+            </div>
+            <p class="text-muted small mb-4">Swimmers booking your sessions will only see the active slots selected here. Drag slots from the available pool or click/tap to toggle them.</p>
+
+            <input type="hidden" id="availableSlotsData" value='{{ available_slots or "[]" }}'>
+
+            <div class="row g-3">
+                <!-- Left: Available Pool -->
+                <div class="col-md-6">
+                    <div class="glass-panel p-3" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); min-height: 250px; max-height: 350px; overflow-y: auto; border-radius: 12px;">
+                        <div class="fw-bold text-secondary mb-2 small text-uppercase tracking-wider">Available Pools (Standard hours)</div>
+                        <div id="inactiveSlotsContainer" class="d-flex flex-wrap gap-2 align-content-start" style="min-height: 200px;">
+                            <!-- Inactive slots will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right: Selected Active Slots -->
+                <div class="col-md-6">
+                    <div class="glass-panel p-3" style="background: rgba(6, 182, 212, 0.05); border: 1px dashed rgba(6, 182, 212, 0.3); min-height: 250px; max-height: 350px; overflow-y: auto; border-radius: 12px;">
+                        <div class="fw-bold text-primary mb-2 small text-uppercase tracking-wider">Your Selected Slots (Active)</div>
+                        <div id="activeSlotsContainer" class="d-flex flex-wrap gap-2 align-content-start" style="min-height: 200px;">
+                            <!-- Active slots will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="slotsStatusAlert" class="alert d-none mt-3 animate-fade-in" style="font-size: 0.9rem; padding: 0.75rem 1.25rem; border-radius: 8px;"></div>
+
+            <div class="d-flex justify-content-end mt-4">
+                <button type="button" id="saveSlotsBtn" class="btn btn-primary px-5 py-3" style="font-weight: 700; border-radius: 50px; box-shadow: 0 4px 15px rgba(6, 182, 212, 0.2);">
+                    <i class="fa-solid fa-circle-check me-2"></i> Save Available Slots
+                </button>
+            </div>
+        </div>
+
     </section>
 </div>
 
@@ -222,7 +320,190 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // ----------------------------------------------------
+    // Available Time Slots Configuration (15-min Intervals)
+    // ----------------------------------------------------
+    const defaultSlots = [
+      "06:00 AM", "06:15 AM", "06:30 AM", "06:45 AM",
+      "07:00 AM", "07:15 AM", "07:30 AM", "07:45 AM",
+      "08:00 AM", "08:15 AM", "08:30 AM", "08:45 AM",
+      "09:00 AM", "09:15 AM", "09:30 AM", "09:45 AM",
+      "10:00 AM", "10:15 AM", "10:30 AM", "10:45 AM",
+      "11:00 AM", "11:15 AM", "11:30 AM", "11:45 AM",
+      "12:00 PM", "12:15 PM", "12:30 PM", "12:45 PM",
+      "01:00 PM", "01:15 PM", "01:30 PM", "01:45 PM",
+      "02:00 PM", "02:15 PM", "02:30 PM", "02:45 PM",
+      "03:00 PM", "03:15 PM", "03:30 PM", "03:45 PM",
+      "04:00 PM", "04:15 PM", "04:30 PM", "04:45 PM",
+      "05:00 PM", "05:15 PM", "05:30 PM", "05:45 PM",
+      "06:00 PM", "06:15 PM", "06:30 PM", "06:45 PM",
+      "07:00 PM", "07:15 PM", "07:30 PM", "07:45 PM",
+      "08:00 PM", "08:15 PM", "08:30 PM", "08:45 PM",
+      "09:00 PM"
+    ];
+
+    const slotsDataEl = document.getElementById('availableSlotsData');
+    const inactiveContainer = document.getElementById('inactiveSlotsContainer');
+    const activeContainer = document.getElementById('activeSlotsContainer');
+    const selectAllBtn = document.getElementById('selectAllSlotsBtn');
+    const clearAllBtn = document.getElementById('clearAllSlotsBtn');
+    const saveSlotsBtn = document.getElementById('saveSlotsBtn');
+
+    let activeSlots = [];
+    if (slotsDataEl) {
+        try {
+            activeSlots = JSON.parse(slotsDataEl.value || '[]');
+        } catch(e) {
+            activeSlots = [];
+        }
+        if (!Array.isArray(activeSlots)) {
+            activeSlots = [];
+        }
+    }
+
+    function sortSlots(slotsArray) {
+      return [...slotsArray].sort((a, b) => {
+        const parseToMinutes = (timeStr) => {
+          const [time, ampm] = timeStr.split(' ');
+          let [hours, minutes] = time.split(':').map(Number);
+          if (ampm === 'PM' && hours < 12) hours += 12;
+          if (ampm === 'AM' && hours === 12) hours = 0;
+          return hours * 60 + minutes;
+        };
+        return parseToMinutes(a) - parseToMinutes(b);
+      });
+    }
+
+    function renderSlots() {
+      if (!inactiveContainer || !activeContainer) return;
+      inactiveContainer.innerHTML = '';
+      activeContainer.innerHTML = '';
+
+      activeSlots = activeSlots.filter(s => defaultSlots.includes(s));
+      activeSlots = sortSlots(activeSlots);
+
+      const inactiveSlots = defaultSlots.filter(s => !activeSlots.includes(s));
+
+      inactiveSlots.forEach(slot => {
+        inactiveContainer.appendChild(createSlotBadge(slot, false));
+      });
+
+      activeSlots.forEach(slot => {
+        activeContainer.appendChild(createSlotBadge(slot, true));
+      });
+    }
+
+    function createSlotBadge(slot, isActive) {
+      const badge = document.createElement('div');
+      badge.className = `time-slot-badge ${isActive ? 'active-slot' : ''}`;
+      badge.draggable = true;
+      badge.dataset.slot = slot;
+      badge.innerHTML = `<i class="fa-solid fa-grip-lines drag-handle"></i>${slot}`;
+
+      badge.addEventListener('click', () => {
+        if (isActive) {
+          activeSlots = activeSlots.filter(s => s !== slot);
+        } else {
+          activeSlots.push(slot);
+        }
+        renderSlots();
+      });
+
+      badge.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', slot);
+        badge.style.opacity = '0.4';
+      });
+
+      badge.addEventListener('dragend', () => {
+        badge.style.opacity = '1';
+      });
+
+      return badge;
+    }
+
+    if (inactiveContainer && activeContainer) {
+        inactiveContainer.addEventListener('dragover', (e) => e.preventDefault());
+        activeContainer.addEventListener('dragover', (e) => e.preventDefault());
+
+        inactiveContainer.addEventListener('drop', (e) => {
+          e.preventDefault();
+          const slot = e.dataTransfer.getData('text/plain');
+          if (slot && activeSlots.includes(slot)) {
+            activeSlots = activeSlots.filter(s => s !== slot);
+            renderSlots();
+          }
+        });
+
+        activeContainer.addEventListener('drop', (e) => {
+          e.preventDefault();
+          const slot = e.dataTransfer.getData('text/plain');
+          if (slot && !activeSlots.includes(slot)) {
+            activeSlots.push(slot);
+            renderSlots();
+          }
+        });
+    }
+
+    if (selectAllBtn) {
+        selectAllBtn.addEventListener('click', () => {
+          activeSlots = [...defaultSlots];
+          renderSlots();
+        });
+    }
+
+    if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', () => {
+          activeSlots = [];
+          renderSlots();
+        });
+    }
+
+    function showSlotsNotification(message, type) {
+        const alertEl = document.getElementById('slotsStatusAlert');
+        if (!alertEl) return;
+        alertEl.className = `alert alert-${type === 'success' ? 'success bg-success-subtle text-success-emphasis border-success-subtle' : 'danger bg-danger-subtle text-danger-emphasis border-danger-subtle'} mt-3`;
+        alertEl.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'} me-2"></i>${message}`;
+        alertEl.classList.remove('d-none');
+        
+        setTimeout(() => {
+            alertEl.classList.add('d-none');
+        }, 4000);
+    }
+
+    if (saveSlotsBtn) {
+        saveSlotsBtn.addEventListener('click', () => {
+            saveSlotsBtn.disabled = true;
+            saveSlotsBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+            
+            fetch('/trainer/save_slots', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ slots: activeSlots })
+            })
+            .then(res => res.json())
+            .then(data => {
+                saveSlotsBtn.disabled = false;
+                saveSlotsBtn.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i>Save Available Slots';
+                if (data.success) {
+                    showSlotsNotification('Time slots saved successfully!', 'success');
+                } else {
+                    showSlotsNotification('Error saving slots: ' + (data.error || 'Unknown error'), 'danger');
+                }
+            })
+            .catch(err => {
+                saveSlotsBtn.disabled = false;
+                saveSlotsBtn.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i>Save Available Slots';
+                showSlotsNotification('Error connecting to server.', 'danger');
+            });
+        });
+    }
+
+    renderSlots();
+
     const earningsData = {{ monthly_earnings | tojson }};
+    const bookingsData = {{ monthly_bookings | default([]) | tojson }};
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     
     const ctx = document.getElementById('earningsChart').getContext('2d');
@@ -269,6 +550,42 @@ document.addEventListener('DOMContentLoaded', function() {
                     display: false
                 }
             }
+        }
+    });
+
+    const ctxBookings = document.getElementById('bookingsChart').getContext('2d');
+    new Chart(ctxBookings, {
+        type: 'line',
+        data: {
+            labels: months,
+            datasets: [{
+                label: 'Bookings',
+                data: bookingsData,
+                backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                borderColor: 'rgba(16, 185, 129, 1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.6)',
+                        stepSize: 1
+                    }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: 'rgba(255, 255, 255, 0.6)' }
+                }
+            },
+            plugins: { legend: { display: false } }
         }
     });
 });

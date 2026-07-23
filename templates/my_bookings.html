@@ -406,8 +406,9 @@
                                 {% endfor %}
 
                                 {% if ns.show_add_card and role != 'trainer' %}
+                                {% set latest_booking = group_items[-1] %}
                                 <div class="col-12 col-lg-6 col-xl-4 mb-2">
-                                    <a href="{{ url_for('booking_page') }}" class="border-dashed">
+                                    <a href="#" class="border-dashed" onclick="openRenewModal('{{ latest_booking.id }}', '{{ latest_booking.start_date }}'); return false;">
                                         <div class="card-body d-flex flex-column align-items-center justify-content-center">
                                             <div style="font-size: 2.5rem; color: var(--color-primary); font-weight: 300;">+</div>
                                             <h5 class="text-primary font-display" style="font-size: 1.15rem; margin-top: 0.5rem; margin-bottom: 0.25rem;">Renew Package</h5>
@@ -762,6 +763,71 @@ window.submitResumeForm = function(e) {
             btn.disabled = false;
         }
     });
+};
+</script>
+
+<!-- Renew Package Modal -->
+<div class="modal fade" id="renewModal" tabindex="-1" aria-labelledby="renewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: rgba(24, 24, 27, 0.95); backdrop-filter: var(--backdrop-blur); border: 1px solid rgba(255, 255, 255, 0.08); color: white;">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+                <h5 class="modal-title font-display" id="renewModalLabel"><i class="fa-solid fa-arrows-rotate text-primary me-2"></i> Renew Package</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('renew_booking') }}" method="POST" id="renewForm">
+                <input type="hidden" name="booking_id" id="renewBookingId">
+                <div class="modal-body">
+                    <div class="form-group mb-3">
+                        <label for="renewStartDate" class="form-label">Select New Start Date <span class="text-danger">*</span></label>
+                        <input type="date" id="renewStartDate" name="start_date" class="form-control text-white" required style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color-scheme: dark;">
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid rgba(255, 255, 255, 0.08); gap: 0.5rem; justify-content: flex-end; width: 100%;">
+                    <button type="button" class="btn btn-outline" id="renewEditBtn" style="border-color: rgba(255, 255, 255, 0.15); color: white;">
+                        <i class="fa-solid fa-pen-to-square me-2"></i> Edit Details
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-circle-check me-2"></i> Confirm & Pay
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let renewModalObj;
+document.addEventListener('DOMContentLoaded', () => {
+    renewModalObj = new bootstrap.Modal(document.getElementById('renewModal'));
+    
+    const renewEditBtn = document.getElementById('renewEditBtn');
+    if (renewEditBtn) {
+        renewEditBtn.addEventListener('click', () => {
+            const bookingId = document.getElementById('renewBookingId').value;
+            const startDate = document.getElementById('renewStartDate').value;
+            if (!startDate) {
+                alert('Please select a start date.');
+                return;
+            }
+            window.location.href = `/booking?renew_from=${bookingId}&start_date=${startDate}`;
+        });
+    }
+});
+
+window.openRenewModal = function(bookingId, defaultStartDate) {
+    document.getElementById('renewBookingId').value = bookingId;
+    
+    // Default start date to today's date
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+    
+    document.getElementById('renewStartDate').value = todayStr;
+    document.getElementById('renewStartDate').min = todayStr;
+    
+    renewModalObj.show();
 };
 </script>
 

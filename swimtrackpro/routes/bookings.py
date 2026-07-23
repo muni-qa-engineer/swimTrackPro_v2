@@ -350,8 +350,8 @@ def edit_booking(booking_id):
 
     conn = get_pg_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT username, name FROM trainers ORDER BY name")
-    trainers = [{"username": row[0], "name": row[1]} for row in cursor.fetchall()]
+    cursor.execute("SELECT username, name, available_slots FROM trainers ORDER BY name")
+    trainers = [{"username": row[0], "name": row[1], "available_slots": row[2] or "[]"} for row in cursor.fetchall()]
     conn.close()
 
     # Render edit page with booking data and user role
@@ -1143,6 +1143,7 @@ def register_bookings_routes(app):
     app.add_url_rule('/booking/approve_pause', endpoint='approve_pause', view_func=approve_pause, methods=['POST'])
     app.add_url_rule('/booking/reject_pause', endpoint='reject_pause', view_func=reject_pause, methods=['POST'])
     app.add_url_rule('/booking/confirm_paylater/<booking_id>', endpoint='confirm_paylater', view_func=confirm_paylater, methods=['POST'])
+    app.add_url_rule('/booking/renew', endpoint='renew_booking', view_func=renew_booking, methods=['POST'])
 
 def confirm_paylater(booking_id):
     if not session.get('user_name'):
@@ -1327,3 +1328,203 @@ def reject_pause():
         "success": True,
         "message": "❌ Your package pause request has been declined. Please contact your trainer for further assistance."
     })
+
+@login_required
+def renew_booking():
+    if session.get('role') == 'trainer':
+        flash('Trainer cannot renew bookings')
+        return redirect(url_for('index'))
+    
+    booking_id = request.form.get('booking_id')
+    start_date = request.form.get('start_date')
+    
+    if not booking_id or not start_date:
+        flash('Missing required booking renewal parameters', 'warning')
+        return redirect('/my-bookings')
+        
+    data = load_data()
+    original = next((b for b in data['bookings'] if str(b['id']) == str(booking_id)), None)
+    if not original:
+        flash('Original booking not found', 'danger')
+        return redirect('/my-bookings')
+        
+    try:
+        selected_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+        if selected_date < datetime.today().date():
+            flash("Cannot book past dates")
+            return redirect('/my-bookings')
+    except Exception:
+        flash("Invalid start date", 'warning')
+        return redirect('/my-bookings')
+        
+    package = original.get('package', 'Single')
+    selected_days = original.get('selected_days', '')
+    
+    if package in ('Single', 'Demo'):
+        end_date = start_date
+    elif package == 'Monthly':
+        start_dt = datetime.strptime(start_date, '%Y-%m-%d').date()
+        next_month = start_dt + timedelta(days=31)
+        end_date = (next_month - timedelta(days=1)).strftime('%Y-%m-%d')
+    else: # Custom
+        try:
+            orig_start = datetime.strptime(original.get('start_date'), '%Y-%m-%d').date()
+            orig_end = datetime.strptime(original.get('end_date', original.get('start_date')), '%Y-%m-%d').date()
+            duration_days = (orig_end - orig_start).days
+            start_dt = datetime.strptime(start_date, '%Y-%m-%d').date()
+            end_date = (start_dt + timedelta(days=duration_days)).strftime('%Y-%m-%d')
+        except Exception:
+            end_date = start_date
+
+    # Validate duplicate/conflicts
+    time_str = original.get('time', '')
+    try:
+        booking_time = datetime.strptime(time_str, '%I:%M %p')
+    except Exception:
+        flash('Invalid time format')
+        return redirect('/my-bookings')
+
+    new_booking_dates = generate_recurring_dates(start_date, end_date, selected_days)
+    trainer_username = original.get('trainer_username', 'asdf').strip().lower()
+    new_location = original.get('location', '').strip().lower()
+    student = original.get('student', '')
+    owner_name = original.get('owner_name', '')
+    owner_phone = original.get('owner_phone', '')
+    current_user_lower = (session.get('user_name') or '').strip().lower()
+
+    # 1. Duplicate Booking Check (same student, same time)
+    for b in data['bookings']:
+        try:
+            b_owner = (b.get('owner_name') or '').strip().lower()
+            same_student = (b.get('student', '').strip().lower() == student.strip().lower() and 
+                            b_owner == current_user_lower)
+            if not same_student:
+                continue
+            
+            existing_start = str(b.get('start_date', ''))
+            existing_end = str(b.get('end_date', b.get('start_date', '')))
+            existing_days = b.get('selected_days', '')
+            existing_booking_dates = generate_recurring_dates(existing_start, existing_end, existing_days)
+            
+            overlapping_dates = set(new_booking_dates) & set(existing_booking_dates)
+            if not overlapping_dates:
+                continue
+                
+            existing_time_str = b.get('time')
+            if not existing_time_str: continue
+            
+            existing_time = datetime.strptime(existing_time_str, '%I:%M %p')
+            time_diff = abs((booking_time - existing_time).total_seconds()) / 60
+            
+            if time_diff < 60:
+                flash('Duplicate booking already exists.', 'warning')
+                return redirect('/my-bookings')
+        except Exception:
+            continue
+
+    # 2. Coach Availability Check
+    group_swimmers = set()
+    for b in data['bookings']:
+        try:
+            if b.get('trainer_username', '').strip().lower() != trainer_username:
+                continue
+                
+            existing_start = str(b.get('start_date', ''))
+            existing_end = str(b.get('end_date', b.get('start_date', '')))
+            existing_days = b.get('selected_days', '')
+            existing_booking_dates = generate_recurring_dates(existing_start, existing_end, existing_days)
+            
+            overlapping_dates = set(new_booking_dates) & set(existing_booking_dates)
+            if not overlapping_dates:
+                continue
+                
+            existing_time_str = b.get('time')
+            if not existing_time_str: continue
+            
+            existing_time = datetime.strptime(existing_time_str, '%I:%M %p')
+            time_diff = abs((booking_time - existing_time).total_seconds()) / 60
+            
+            if time_diff < 60:
+                existing_location = b.get('location', '').strip().lower()
+                if existing_location != new_location:
+                    suggested_time = (existing_time + timedelta(hours=1)).strftime('%I:%M %p')
+                    flash(f'The slot is already booked in other location. Please change timing, coach or location. Suggested time for this coach: {suggested_time}', 'warning')
+                    return redirect('/my-bookings')
+                else:
+                    group_swimmer_name = b.get('student')
+                    if group_swimmer_name and group_swimmer_name.strip().lower() != student.strip().lower():
+                        group_swimmers.add(group_swimmer_name)
+        except Exception:
+            continue
+
+    if group_swimmers:
+        swimmer_names = ", ".join(group_swimmers)
+        flash(f'You will swim along with a swimmer: {swimmer_names}', 'info')
+
+    # Calculate Session Count & Fee
+    session_count = None
+    if package == 'Monthly':
+        session_count = len([day.strip() for day in selected_days.split(',') if day.strip()])
+    elif package == 'Custom':
+        session_count = len(generate_recurring_dates(start_date, end_date, selected_days))
+        
+    persons = original.get('persons', 1)
+    fee = calculate_discounted_fee(package, persons, session_count)
+    if package == 'Demo':
+        fee = 0
+    elif package == 'Custom':
+        if fee == 0:
+            fee = original.get('fee', 0)
+
+    # Generate new booking ID
+    new_booking_id = generate_booking_id(student, start_date, time_str)
+    
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+    booking_code = generate_booking_code(cursor)
+
+    cursor.execute('''
+    INSERT INTO bookings (
+        id,
+        booking_code,
+        student_name,
+        created_by,
+        start_date,
+        end_date,
+        package,
+        selected_days,
+        location,
+        persons,
+        time,
+        fee,
+        status,
+        payment_request,
+        owner_name,
+        owner_phone,
+        email,
+        trainer_username
+    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    ''', (
+        new_booking_id,
+        booking_code,
+        student,
+        session.get('user_name') or owner_name,
+        start_date,
+        end_date,
+        package,
+        selected_days,
+        original.get('location', '').strip(),
+        int(persons),
+        time_str,
+        int(fee),
+        'unconfirmed',
+        'unconfirmed',
+        owner_name,
+        owner_phone,
+        original.get('email', '').strip(),
+        trainer_username
+    ))
+    conn.commit()
+    conn.close()
+
+    return redirect(f'/payment_options/{new_booking_id}')

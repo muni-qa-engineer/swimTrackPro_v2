@@ -280,5 +280,84 @@ class GeneralRouteAccessTests(unittest.TestCase):
         response = self.client.post("/skip_session/123/2026-07-21")
         self.assertEqual(response.status_code, 302)
 
+    def test_trainer_available_slots_retrieval_and_update(self):
+        self.login("trainer")
+        with self.client.session_transaction() as flask_session:
+            flask_session["trainer_username"] = "asdf"
+
+        import json
+        test_slots = ["07:15 AM", "07:30 AM", "06:45 PM"]
+        response = self.client.post(
+            "/trainer/save_slots",
+            data=json.dumps({"slots": test_slots}),
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 200)
+        res_data = json.loads(response.data)
+        self.assertTrue(res_data["success"])
+
+        from app import get_pg_connection
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT available_slots FROM trainers WHERE username = 'asdf'")
+        row = cursor.fetchone()
+        conn.close()
+        self.assertIsNotNone(row)
+        self.assertEqual(json.loads(row[0]), test_slots)
+
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"value='[&#34;07:15 AM&#34;, &#34;07:30 AM&#34;, &#34;06:45 PM&#34;]'", response.data)
+
+        response = self.client.get("/booking")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'data-slots=\'[&#34;07:15 AM&#34;, &#34;07:30 AM&#34;, &#34;06:45 PM&#34;]\'', response.data)
+
+    def test_renew_booking_flow(self):
+        self.login("guest")
+        
+        from app import get_pg_connection
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM bookings WHERE id = 'test-bk-123' OR student_name = 'Swimmer Name'")
+        cursor.execute("""
+            INSERT INTO bookings (
+                id, booking_code, student_name, created_by, start_date, end_date,
+                package, selected_days, location, persons, time, fee, status,
+                payment_request, owner_name, owner_phone, email, trainer_username
+            ) VALUES (
+                'test-bk-123', 'STP123', 'Swimmer Name', 'test user', '2026-07-01', '2026-07-31',
+                'Monthly', 'Monday,Wednesday', 'Gachibowli', 1, '06:00 AM', 9000, 'Paid',
+                'Paid', 'test user', '9999999999', 'swimmer@example.com', 'asdf'
+            )
+        """)
+        conn.commit()
+        
+        response = self.client.get("/my-bookings")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"openRenewModal('test-bk-123'", response.data)
+        
+        new_start_date = "2026-08-01"
+        response = self.client.post(
+            "/booking/renew",
+            data={
+                "booking_id": "test-bk-123",
+                "start_date": new_start_date
+            }
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response.headers["Location"].startswith("/payment_options/"))
+        
+        cursor.execute("SELECT id, start_date, end_date, package, trainer_username FROM bookings WHERE student_name = 'Swimmer Name' AND id != 'test-bk-123'")
+        row = cursor.fetchone()
+        self.assertIsNotNone(row)
+        self.assertEqual(row[1], new_start_date)
+        self.assertEqual(row[3], "Monthly")
+        self.assertEqual(row[4], "asdf")
+        
+        cursor.execute("DELETE FROM bookings WHERE id IN ('test-bk-123', %s)", (row[0],))
+        conn.commit()
+        conn.close()
+
 if __name__ == "__main__":
     unittest.main()

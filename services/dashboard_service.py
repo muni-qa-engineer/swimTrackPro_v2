@@ -197,17 +197,24 @@ def get_trainer_dashboard_data(trainer_username, data):
     current_month = ist_now.month
     
     monthly_earnings = [0] * 12
+    monthly_bookings = [0] * 12
+    total_earnings = 0
     for b in user_bookings:
-        if str(b.get('status', '')).lower() == 'paid':
-            start_date_str = b.get('start_date')
-            if start_date_str:
-                try:
-                    dt = datetime.strptime(start_date_str, '%Y-%m-%d')
-                    if dt.year == current_year:
-                        fee = int(b.get('fee', 0) or 0)
-                        monthly_earnings[dt.month - 1] += fee
-                except ValueError:
-                    pass
+        status = str(b.get('status', '')).lower()
+        if status == 'paid':
+            fee = int(b.get('fee', 0) or 0)
+            total_earnings += fee
+            
+        start_date_str = b.get('start_date')
+        if start_date_str:
+            try:
+                dt = datetime.strptime(start_date_str, '%Y-%m-%d')
+                if dt.year == current_year:
+                    if status == 'paid':
+                        monthly_earnings[dt.month - 1] += int(b.get('fee', 0) or 0)
+                    monthly_bookings[dt.month - 1] += 1
+            except ValueError:
+                pass
                     
     students_this_month = 0
     students_last_month = 0
@@ -228,15 +235,19 @@ def get_trainer_dashboard_data(trainer_username, data):
     # 3. Feedback and Ratings
     feedbacks = []
     avg_rating = 0.0
+    available_slots = "[]"
     try:
         from swimtrackpro.runtime import get_pg_connection
         conn = get_pg_connection()
         cursor = conn.cursor()
         
-        cursor.execute("SELECT rating FROM trainers WHERE LOWER(username) = LOWER(%s)", (trainer_username,))
+        cursor.execute("SELECT rating, available_slots FROM trainers WHERE LOWER(username) = LOWER(%s)", (trainer_username,))
         row = cursor.fetchone()
-        if row and row[0]:
-            avg_rating = float(row[0])
+        if row:
+            if row[0]:
+                avg_rating = float(row[0])
+            if row[1]:
+                available_slots = row[1]
             
         cursor.execute("""
             SELECT guest_name, rating, pros, cons, created_at 
@@ -261,11 +272,14 @@ def get_trainer_dashboard_data(trainer_username, data):
         'pending_pauses': pending_pauses,
         'pending_payments': pending_payments,
         'monthly_earnings': monthly_earnings,
+        'monthly_bookings': monthly_bookings,
+        'total_earnings': total_earnings,
         'trend_growth': trend_growth,
         'students_this_month': students_this_month,
         'lifetime_students': len(assigned_student_keys),
         'avg_rating': avg_rating,
-        'feedbacks': feedbacks
+        'feedbacks': feedbacks,
+        'available_slots': available_slots
     })
     
     return base_data

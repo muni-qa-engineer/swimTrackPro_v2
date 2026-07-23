@@ -289,18 +289,38 @@ const timeSelect = document.getElementById('timeSelect');
 function generateTimeSlots() {
   if (!timeSelect) return;
 
-  timeSelect.innerHTML = '';
+  // Keep track of the previously selected value if any
+  const previousValue = timeSelect.dataset.selectedValue || timeSelect.value || '';
 
-  const startHour = 6;
-  const endHour = 21;
+  timeSelect.innerHTML = '';
 
   const selectedDateInput = document.querySelector('input[name="date"]');
   const selectedDate = selectedDateInput ? selectedDateInput.value : '';
 
   const now = new Date();
 
+  // Check if a trainer is selected
+  const hiddenTrainerInput = document.getElementById('hiddenTrainerInput');
+  const selectedTrainer = hiddenTrainerInput ? hiddenTrainerInput.value : '';
+  
+  let allowedSlots = null;
+  if (selectedTrainer) {
+    const card = document.getElementById('trainer-card-' + selectedTrainer);
+    const slotsAttr = card ? card.getAttribute('data-slots') : '';
+    if (slotsAttr && slotsAttr.trim()) {
+      try {
+        allowedSlots = JSON.parse(slotsAttr);
+      } catch (e) {
+        console.error("Error parsing trainer slots:", e);
+      }
+    }
+  }
+
+  const startHour = 6;
+  const endHour = 21;
+
   for (let hour = startHour; hour <= endHour; hour++) {
-    for (let min of [0, 30]) {
+    for (let min of [0, 15, 30, 45]) {
 
       if (hour === endHour && min > 0) {
         continue;
@@ -318,14 +338,20 @@ function generateTimeSlots() {
 
       slotDate.setHours(hour, min, 0, 0);
 
-      const option = document.createElement('option');
-
       const displayHour = hour % 12 || 12;
       const displayMin = String(min).padStart(2, '0');
       const ampm = hour >= 12 ? 'PM' : 'AM';
 
       const label = `${String(displayHour).padStart(2, '0')}:${displayMin} ${ampm}`;
 
+      // Filter by trainer's allowed slots if configured
+      if (allowedSlots && Array.isArray(allowedSlots) && allowedSlots.length > 0) {
+        if (!allowedSlots.includes(label)) {
+          continue;
+        }
+      }
+
+      const option = document.createElement('option');
       option.value = label;
       option.textContent = label;
 
@@ -339,10 +365,28 @@ function generateTimeSlots() {
     }
   }
 
-  const enabledOption = [...timeSelect.options].find(opt => !opt.disabled);
-
-  if (enabledOption) {
-    enabledOption.selected = true;
+  if (timeSelect.options.length === 0) {
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = 'No slots available';
+    option.disabled = true;
+    timeSelect.appendChild(option);
+  } else {
+    // Try to restore previous selection if valid
+    let restored = false;
+    if (previousValue) {
+      const match = [...timeSelect.options].find(opt => opt.value === previousValue && !opt.disabled);
+      if (match) {
+        match.selected = true;
+        restored = true;
+      }
+    }
+    if (!restored) {
+      const enabledOption = [...timeSelect.options].find(opt => !opt.disabled);
+      if (enabledOption) {
+        enabledOption.selected = true;
+      }
+    }
   }
 }
 
@@ -399,6 +443,9 @@ function initializeBookingEventListeners() {
     const locationInput = document.querySelector('input[name="location"]');
 
   if (timeSelect) {
+    timeSelect.addEventListener('change', () => {
+      timeSelect.dataset.selectedValue = timeSelect.value;
+    });
     timeSelect.addEventListener('change', checkLocationConflict);
   }
 
@@ -852,5 +899,98 @@ function enableFormLoading(formId, loadingText) {
 
 // Enable loading animation for the trainer Notice Board form.
 enableFormLoading('updateNoticeForm', 'Updating...');
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.renewBookingData) {
+        const pkgSelect = document.getElementById('packageSelect');
+        const startDateInput = document.getElementById('startDateInput');
+        const endDateInput = document.getElementById('endDateInput');
+        const areaInput = document.getElementById('areaInput');
+        const studentSelect = document.getElementById('studentSelect');
+        const emailInput = document.getElementById('emailInput');
+        const personsInput = document.getElementById('personsInput');
+        
+        // 1. Pre-fill Package
+        if (pkgSelect) {
+            pkgSelect.value = window.renewBookingData.package;
+            pkgSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        // 2. Pre-fill Start Date
+        if (startDateInput && window.renewBookingData.start_date) {
+            startDateInput.value = window.renewBookingData.start_date;
+            startDateInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        // 3. Pre-fill End Date (for Custom packages)
+        if (endDateInput && window.renewBookingData.end_date && window.renewBookingData.package === 'Custom') {
+            endDateInput.value = window.renewBookingData.end_date;
+            endDateInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        // 4. Pre-fill Location
+        if (areaInput && window.renewBookingData.location) {
+            areaInput.value = window.renewBookingData.location;
+            areaInput.dispatchEvent(new Event('input', { bubbles: true }));
+            const locInput = document.getElementById('locationInput');
+            if (locInput) {
+                locInput.value = window.renewBookingData.location;
+            }
+        }
+
+        // 5. Pre-fill Days
+        if (window.renewBookingData.selected_days) {
+            const days = window.renewBookingData.selected_days.split(',').map(d => d.trim());
+            days.forEach(day => {
+                const cb = document.getElementById(day.toLowerCase());
+                if (cb) {
+                    cb.checked = true;
+                    cb.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+        }
+
+        // 6. Pre-fill Trainer Card
+        if (window.renewBookingData.trainer_username) {
+            const selectTrainer = () => {
+                const card = document.getElementById(`trainer-card-${window.renewBookingData.trainer_username}`);
+                if (card) {
+                    toggleTrainerSelection(window.renewBookingData.trainer_username);
+                } else {
+                    setTimeout(selectTrainer, 100);
+                }
+            };
+            selectTrainer();
+        }
+
+        // 7. Pre-fill Time Slot
+        if (window.renewBookingData.time) {
+            const selectTime = () => {
+                const timeSelect = document.getElementById('timeSelect');
+                if (timeSelect && timeSelect.options.length > 0) {
+                    timeSelect.value = window.renewBookingData.time;
+                    timeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                } else {
+                    setTimeout(selectTime, 100);
+                }
+            };
+            selectTime();
+        }
+
+        // 8. Pre-fill Swimmer Details
+        if (studentSelect) {
+            studentSelect.value = window.renewBookingData.student;
+            studentSelect.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        if (emailInput) {
+            emailInput.value = window.renewBookingData.email || '';
+            emailInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        if (personsInput) {
+            personsInput.value = window.renewBookingData.persons || 1;
+            personsInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    }
+});
 
 

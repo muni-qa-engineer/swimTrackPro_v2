@@ -275,7 +275,7 @@
                 <!-- Trainer List -->
                 <div id="trainerListContainer" class="flex flex-col gap-3" style="max-height: 480px; overflow-y: auto; padding-right: 0.5rem;">
                     {% for t in trainers %}
-                    <div class="trainer-card" id="trainer-card-{{ t.username }}" data-username="{{ t.username }}" data-name="{{ t.name|lower }}" data-rating="{{ t.rating }}" data-location="{{ t.residence_location|lower }}">
+                    <div class="trainer-card" id="trainer-card-{{ t.username }}" data-username="{{ t.username }}" data-name="{{ t.name|lower }}" data-rating="{{ t.rating }}" data-location="{{ t.residence_location|lower }}" data-slots='{{ t.available_slots or "[]" }}'>
                         <div class="profile-header-notice text-primary small fw-bold mb-2 d-none" id="profile-notice-{{ t.username }}" style="font-size: 0.8rem;">
                             <i class="fa-solid fa-user"></i> Coach Profile Details
                         </div>
@@ -852,6 +852,10 @@
                 const confirmBtn = document.getElementById('confirmBookingBtn');
                 // if (confirmBtn) confirmBtn.disabled = true;
             }
+
+            if (typeof generateTimeSlots === 'function') {
+                generateTimeSlots();
+            }
         };
 
         window.viewTrainerProfile = function(username) {
@@ -1200,4 +1204,9 @@
         }, 0);
     });
 </script>
+{% if renew_booking %}
+<script>
+    window.renewBookingData = {{ renew_booking | tojson }};
+</script>
+{% endif %}
 {% endblock %}

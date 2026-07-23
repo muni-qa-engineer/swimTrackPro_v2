@@ -207,8 +207,8 @@ def ensure_database_tables():
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS consent_version TEXT DEFAULT 'v1.0'")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS consent_accepted_at TIMESTAMP WITHOUT TIME ZONE")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS consent_ip TEXT")
-    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS id_number TEXT")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS is_blocked BOOLEAN DEFAULT FALSE")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS available_slots TEXT")
 
     cursor.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS is_blocked BOOLEAN DEFAULT FALSE")
 

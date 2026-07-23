@@ -344,18 +344,38 @@ const timeSelect = document.getElementById('timeSelect');
 function generateTimeSlots() {
   if (!timeSelect) return;
 
-  timeSelect.innerHTML = '';
+  // Keep track of the previously selected value if any
+  const previousValue = timeSelect.dataset.selectedValue || timeSelect.value || '';
 
-  const startHour = 6;
-  const endHour = 21;
+  timeSelect.innerHTML = '';
 
   const selectedDateInput = document.querySelector('input[name="date"]');
   const selectedDate = selectedDateInput ? selectedDateInput.value : '';
 
   const now = new Date();
 
+  // Check if a trainer is selected
+  const hiddenTrainerInput = document.getElementById('hiddenTrainerInput');
+  const selectedTrainer = hiddenTrainerInput ? hiddenTrainerInput.value : '';
+  
+  let allowedSlots = null;
+  if (selectedTrainer) {
+    const card = document.getElementById('trainer-card-' + selectedTrainer);
+    const slotsAttr = card ? card.getAttribute('data-slots') : '';
+    if (slotsAttr && slotsAttr.trim()) {
+      try {
+        allowedSlots = JSON.parse(slotsAttr);
+      } catch (e) {
+        console.error("Error parsing trainer slots:", e);
+      }
+    }
+  }
+
+  const startHour = 6;
+  const endHour = 21;
+
   for (let hour = startHour; hour <= endHour; hour++) {
-    for (let min of [0, 30]) {
+    for (let min of [0, 15, 30, 45]) {
 
       if (hour === endHour && min > 0) {
         continue;
@@ -373,14 +393,20 @@ function generateTimeSlots() {
 
       slotDate.setHours(hour, min, 0, 0);
 
-      const option = document.createElement('option');
-
       const displayHour = hour % 12 || 12;
       const displayMin = String(min).padStart(2, '0');
       const ampm = hour >= 12 ? 'PM' : 'AM';
 
       const label = `${String(displayHour).padStart(2, '0')}:${displayMin} ${ampm}`;
 
+      // Filter by trainer's allowed slots if configured
+      if (allowedSlots && Array.isArray(allowedSlots) && allowedSlots.length > 0) {
+        if (!allowedSlots.includes(label)) {
+          continue;
+        }
+      }
+
+      const option = document.createElement('option');
       option.value = label;
       option.textContent = label;
 
@@ -394,10 +420,28 @@ function generateTimeSlots() {
     }
   }
 
-  const enabledOption = [...timeSelect.options].find(opt => !opt.disabled);
-
-  if (enabledOption) {
-    enabledOption.selected = true;
+  if (timeSelect.options.length === 0) {
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = 'No slots available';
+    option.disabled = true;
+    timeSelect.appendChild(option);
+  } else {
+    // Try to restore previous selection if valid
+    let restored = false;
+    if (previousValue) {
+      const match = [...timeSelect.options].find(opt => opt.value === previousValue && !opt.disabled);
+      if (match) {
+        match.selected = true;
+        restored = true;
+      }
+    }
+    if (!restored) {
+      const enabledOption = [...timeSelect.options].find(opt => !opt.disabled);
+      if (enabledOption) {
+        enabledOption.selected = true;
+      }
+    }
   }
 }
 
@@ -452,6 +496,9 @@ function initializeBookingEventListeners() {
     const locationInput = document.querySelector('input[name="location"]');
 
   if (timeSelect) {
+    timeSelect.addEventListener('change', () => {
+      timeSelect.dataset.selectedValue = timeSelect.value;
+    });
     timeSelect.addEventListener('change', checkLocationConflict);
   }
 

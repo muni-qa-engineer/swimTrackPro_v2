@@ -55,9 +55,9 @@
 
                 <div class="form-group">
                     <label class="form-label">Assigned Trainer <span class="text-danger">*</span></label>
-                    <select name="trainer_username" class="form-control" required style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white;">
+                    <select name="trainer_username" id="trainerSelect" class="form-control" required style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white;">
                         {% for t in trainers %}
-                            <option value="{{ t.username }}" {% if booking.trainer_username == t.username %}selected{% endif %}>{{ t.name }}</option>
+                            <option value="{{ t.username }}" data-slots='{{ t.available_slots or "[]" }}' {% if booking.trainer_username == t.username %}selected{% endif %}>{{ t.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -86,10 +86,10 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="form-group">
                     <label class="form-label">Time</label>
-                    <select name="time" class="form-control" required style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white;">
+                    <select name="time" id="timeSelect" class="form-control" required style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white;">
                         {% for hour in range(6, 22) %}
-                            {% for minute in [0, 30] %}
-                                {% if not (hour == 21 and minute == 30) %}
+                            {% for minute in [0, 15, 30, 45] %}
+                                {% if not (hour == 21 and minute > 0) %}
                                     {% set display_hour = hour % 12 if hour % 12 != 0 else 12 %}
                                     {% set ampm = 'PM' if hour >= 12 else 'AM' %}
                                     {% set formatted = '%02d:%02d %s' % (display_hour, minute, ampm) %}
@@ -511,6 +511,68 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (modalInstance) modalInstance.hide();
             });
         });
+    }
+    const trainerSelect = document.getElementById('trainerSelect');
+    const timeSelect = document.getElementById('timeSelect');
+    if (trainerSelect && timeSelect) {
+        const originalTime = "{{ booking.time }}";
+
+        function updateAvailableSlots() {
+            const selectedOption = trainerSelect.options[trainerSelect.selectedIndex];
+            if (!selectedOption) return;
+
+            const slotsAttr = selectedOption.getAttribute('data-slots') || '';
+            let allowedSlots = null;
+            if (slotsAttr && slotsAttr.trim()) {
+                try {
+                    allowedSlots = JSON.parse(slotsAttr);
+                } catch (e) {
+                    console.error("Error parsing slots:", e);
+                }
+            }
+
+            const startHour = 6;
+            const endHour = 21;
+            const previousValue = timeSelect.value || originalTime;
+
+            timeSelect.innerHTML = '';
+
+            for (let hour = startHour; hour <= endHour; hour++) {
+                for (let min of [0, 15, 30, 45]) {
+                    if (hour === endHour && min > 0) continue;
+
+                    const displayHour = hour % 12 || 12;
+                    const displayMin = String(min).padStart(2, '0');
+                    const ampm = hour >= 12 ? 'PM' : 'AM';
+                    const label = `${String(displayHour).padStart(2, '0')}:${displayMin} ${ampm}`;
+
+                    if (allowedSlots && Array.isArray(allowedSlots) && allowedSlots.length > 0) {
+                        if (!allowedSlots.includes(label)) continue;
+                    }
+
+                    const option = document.createElement('option');
+                    option.value = label;
+                    option.textContent = label;
+                    if (label === previousValue) {
+                        option.selected = true;
+                    }
+                    timeSelect.appendChild(option);
+                }
+            }
+
+            if (timeSelect.options.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'No slots available';
+                option.disabled = true;
+                timeSelect.appendChild(option);
+            } else if (!timeSelect.value) {
+                timeSelect.options[0].selected = true;
+            }
+        }
+
+        trainerSelect.addEventListener('change', updateAvailableSlots);
+        updateAvailableSlots();
     }
 });
 </script>
