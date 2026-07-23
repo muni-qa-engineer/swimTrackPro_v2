@@ -132,10 +132,18 @@ def book():
     # Recurring-date Trainer Location Conflict Check & Group Swimmer Handling
     # -------------------------------------------------
     # 1. Duplicate Booking Check (same student, same time)
+    trainer_username = (request.form.get('trainer_username') or 'asdf').strip().lower()
+    new_location = (request.form.get('location') or '').strip().lower()
+    owner_name = session.get('user_name') or (request.form.get('owner_name') or '').strip() or student.strip()
+    owner_phone = session.get('phone') or 'unconfirmed'
+    current_user_lower = (session.get('user_name') or '').strip().lower()
+
+    # 1. Duplicate Booking Check (same student, same time)
     for b in data['bookings']:
         try:
+            b_owner = (b.get('owner_name') or '').strip().lower()
             same_student = (b.get('student', '').strip().lower() == student.strip().lower() and 
-                            b.get('owner_name') == session.get('user_name'))
+                            b_owner == current_user_lower)
             if not same_student:
                 continue
             
@@ -199,15 +207,8 @@ def book():
         swimmer_names = ", ".join(group_swimmers)
         flash(f'You will swim along with a swimmer: {swimmer_names}', 'info')
 
-
-
     payment_choice = 'unconfirmed'
     status = 'unconfirmed'
-
-    owner_name = session.get('user_name') or (request.form.get('owner_name') or '').strip() or student.strip()
-    owner_phone = session.get('phone') or 'unconfirmed'
-
-    trainer_username = request.form.get('trainer_username', 'asdf').strip().lower()
 
     new_booking = {
         "id": booking_id,
@@ -1155,7 +1156,11 @@ def confirm_paylater(booking_id):
         flash("Booking not found", "danger")
         return redirect('/booking')
         
-    if booking.get('owner_name') != session.get('user_name') and session.get('role') != 'admin':
+    current_user = (session.get('user_name') or '').strip().lower()
+    b_owner = (booking.get('owner_name') or '').strip().lower()
+    b_created = (booking.get('created_by') or '').strip().lower()
+
+    if b_owner != current_user and b_created != current_user and session.get('role') != 'admin':
         flash("Unauthorized action", "danger")
         return redirect('/booking')
         

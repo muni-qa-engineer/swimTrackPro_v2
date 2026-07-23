@@ -9,8 +9,10 @@ from swimtrackpro.runtime import get_pg_connection, load_data
 
 @login_required
 def about_trainer():
-    current_user = session.get("user_name")
-    current_phone = session.get("phone")
+    import re
+    current_user = (session.get("user_name") or "").strip().lower()
+    current_phone = (session.get("phone") or "").strip()
+    user_clean_phone = re.sub(r"\D", "", current_phone)
     current_role = session.get("role", "guest")
 
     conn = get_pg_connection()
@@ -27,11 +29,18 @@ def about_trainer():
     else:
         # Swimmer/Guest: find trainer usernames from bookings
         data = load_data()
-        bookings = [
-            b for b in data.get("bookings", [])
-            if (b.get("owner_name") or "").strip().lower() == current_user
-            and b.get("owner_phone") == current_phone
-        ]
+        bookings = []
+        for b in data.get("bookings", []):
+            b_owner = (b.get("owner_name") or "").strip().lower()
+            b_created = (b.get("created_by") or "").strip().lower()
+            b_student = (b.get("student") or "").strip().lower()
+            b_phone = re.sub(r"\D", "", str(b.get("owner_phone") or ""))
+            
+            name_match = current_user and (b_owner == current_user or b_created == current_user or b_student == current_user)
+            phone_match = user_clean_phone and b_phone and (user_clean_phone == b_phone or user_clean_phone.endswith(b_phone) or b_phone.endswith(user_clean_phone))
+            if name_match or phone_match:
+                bookings.append(b)
+
         assigned_usernames = list(set([b.get("trainer_username") for b in bookings if b.get("trainer_username")]))
         
         trainers = []

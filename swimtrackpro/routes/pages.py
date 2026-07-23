@@ -11,27 +11,52 @@ from swimtrackpro.auth import login_required
 from swimtrackpro.routes.bookings import check_and_perform_auto_resumes
 
 
+import re
+
 def _bookings_for_session(data):
-    current_user = session.get("user_name")
-    current_phone = session.get("phone")
+    current_user = (session.get("user_name") or "").strip().lower()
+    current_phone = (session.get("phone") or "").strip()
     current_role = session.get("role", "guest")
 
     if current_role == "trainer":
-        trainer_user = session.get("trainer_username") or "asdf"
+        trainer_user = (session.get("trainer_username") or "asdf").strip().lower()
         return [
             booking
             for booking in data.get("bookings", [])
-            if (booking.get("trainer_username") or "asdf").strip().lower() == trainer_user.strip().lower()
-            and booking.get("payment_request") != "unconfirmed"
+            if (booking.get("trainer_username") or "asdf").strip().lower() == trainer_user
         ]
 
-    return [
-        booking
-        for booking in data.get("bookings", [])
-        if (booking.get("owner_name") or "").strip().lower() == current_user
-        and booking.get("owner_phone") == current_phone
-        and booking.get("payment_request") != "unconfirmed"
-    ]
+    def clean_phone(p):
+        if not p:
+            return ""
+        return re.sub(r"\D", "", str(p))
+
+    user_clean_phone = clean_phone(current_phone)
+
+    result = []
+    for booking in data.get("bookings", []):
+        b_owner_name = (booking.get("owner_name") or "").strip().lower()
+        b_created_by = (booking.get("created_by") or "").strip().lower()
+        b_student = (booking.get("student") or "").strip().lower()
+        b_owner_phone = clean_phone(booking.get("owner_phone"))
+
+        name_match = (
+            (bool(current_user) and b_owner_name == current_user) or
+            (bool(current_user) and b_created_by == current_user) or
+            (bool(current_user) and b_student == current_user)
+        )
+        phone_match = (
+            bool(user_clean_phone) and bool(b_owner_phone) and (
+                user_clean_phone == b_owner_phone or
+                user_clean_phone.endswith(b_owner_phone) or
+                b_owner_phone.endswith(user_clean_phone)
+            )
+        )
+
+        if name_match or phone_match:
+            result.append(booking)
+
+    return result
 
 
 def register_page_routes(app, *, get_pg_connection, load_data):
