@@ -60,87 +60,116 @@
 </footer>
 
 
-<!-- Footer Content Modal -->
-<div class="modal fade" id="footerContentModal" tabindex="-1" aria-labelledby="footerContentModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
-        <div class="modal-content" style="background: rgba(24, 24, 27, 0.98); backdrop-filter: var(--backdrop-blur); border: 1px solid rgba(255, 255, 255, 0.08); color: white;">
-            <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
-                <h5 class="modal-title font-display" id="footerContentModalLabel"><i class="fa-solid fa-circle-info text-primary me-2"></i> Information</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- Footer Dynamic Modal -->
+<div class="modal fade" id="footerDynamicModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content" style="background: var(--color-bg); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-lg);">
+            <!-- Cancel Icon at top right -->
+            <div class="modal-header border-0 pb-0 justify-content-end" style="padding: 1rem 1.5rem 0; z-index: 10;">
+                <button type="button" class="btn text-white" data-bs-dismiss="modal" aria-label="Cancel" style="font-size: 1.5rem; padding: 0;">
+                    <i class="fa-solid fa-circle-xmark"></i>
+                </button>
             </div>
-            <div class="modal-body" id="footerContentModalBody" style="padding: 2rem;">
-                <!-- Dynamic Content goes here -->
-                <div class="text-center py-5">
-                    <i class="fa-solid fa-circle-notch fa-spin text-primary" style="font-size: 2rem;"></i>
-                    <p class="mt-3 text-muted">Loading...</p>
-                </div>
+            <div class="modal-body p-0" id="footerDynamicModalBody" style="min-height: 50vh;">
+                <!-- Content injected here -->
             </div>
         </div>
     </div>
 </div>
 
+<!-- Dynamic Mermaid Support for Modals -->
+<script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    window.mermaid = mermaid;
+    mermaid.initialize({ 
+        startOnLoad: false, 
+        theme: 'dark',
+        fontFamily: 'Inter, sans-serif'
+    });
+</script>
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const footerLinks = document.querySelectorAll('.footer a');
-    const footerModal = new bootstrap.Modal(document.getElementById('footerContentModal'));
-    const modalBody = document.getElementById('footerContentModalBody');
-    const modalTitle = document.getElementById('footerContentModalLabel');
+document.addEventListener('DOMContentLoaded', () => {
+    // Apply modal to all these internal pages linked in the footer
+    const targetPaths = ['/about', '/register', '/help', '/about-swimming', '/faq', '/terms-agreement'];
     
-    // Intercept footer links
+    const footerLinks = document.querySelectorAll('footer a');
     footerLinks.forEach(link => {
-        if(link.closest('ul')) {
-            link.addEventListener('click', function(e) {
+        const href = link.getAttribute('href');
+        
+        if (href && targetPaths.includes(href)) {
+            // Handle internal pages with fetch
+            link.addEventListener('click', (e) => {
                 e.preventDefault();
-                const href = this.getAttribute('href');
-                const titleText = this.textContent.trim();
+                const modalEl = document.getElementById('footerDynamicModal');
+                const modalBody = document.getElementById('footerDynamicModalBody');
                 
-                modalTitle.innerHTML = `<i class="fa-solid fa-circle-info text-primary me-2"></i> ${titleText}`;
-                
-                if(!href || href === '#' || href.startsWith('/#')) {
-                    modalBody.innerHTML = `
-                        <div class="text-center py-5">
-                            <i class="fa-solid fa-person-digging text-muted" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                            <h4 class="text-white">Coming Soon</h4>
-                            <p class="text-secondary">This section is currently under development. Please check back later!</p>
-                        </div>
-                    `;
-                    footerModal.show();
-                    return;
-                }
-                
-                // Show loading state
                 modalBody.innerHTML = `
-                    <div class="text-center py-5">
-                        <i class="fa-solid fa-circle-notch fa-spin text-primary" style="font-size: 2rem;"></i>
-                        <p class="mt-3 text-muted">Loading content...</p>
+                    <div class="d-flex justify-content-center align-items-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
                     </div>
                 `;
-                footerModal.show();
                 
-                // Fetch the page
+                if (typeof bootstrap !== 'undefined') {
+                    const modal = new bootstrap.Modal(modalEl);
+                    modal.show();
+                }
+                
                 fetch(href)
-                    .then(response => response.text())
+                    .then(r => r.text())
                     .then(html => {
                         const parser = new DOMParser();
                         const doc = parser.parseFromString(html, 'text/html');
-                        const mainContent = doc.querySelector('.site-main');
                         
-                        if (mainContent) {
-                            modalBody.innerHTML = mainContent.innerHTML;
-                        } else {
-                            const container = doc.querySelector('.container.py-4') || doc.body;
-                            modalBody.innerHTML = container.innerHTML || 'Failed to load content.';
+                        // Extract the main content. Prioritize <main>, then a main container, then body.
+                        let contentToInject = doc.querySelector('main');
+                        if (!contentToInject) {
+                            contentToInject = doc.querySelector('.container.py-4') || doc.body;
+                        }
+                        
+                        modalBody.innerHTML = contentToInject.innerHTML;
+                        
+                        // Re-render Mermaid graphs if any exist in the injected content
+                        if (window.mermaid && modalBody.querySelector('.mermaid')) {
+                            // Give the DOM a tiny bit of time to settle before rendering
+                            setTimeout(() => {
+                                try {
+                                    window.mermaid.run({
+                                        nodes: modalBody.querySelectorAll('.mermaid')
+                                    });
+                                } catch (e) {
+                                    console.error('Mermaid render error:', e);
+                                }
+                            }, 500);
                         }
                     })
-                    .catch(error => {
-                        modalBody.innerHTML = `
-                            <div class="text-center py-5 text-danger">
-                                <i class="fa-solid fa-triangle-exclamation" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                                <h4>Error</h4>
-                                <p>Failed to load the content. Please try again later.</p>
-                            </div>
-                        `;
+                    .catch(err => {
+                        modalBody.innerHTML = '<div class="text-center py-5 text-danger">Failed to load content.</div>';
                     });
+            });
+        } 
+        else if (href === '#' || !href) {
+            // Handle empty links like Privacy, Press, Social Media
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const modalEl = document.getElementById('footerDynamicModal');
+                const modalBody = document.getElementById('footerDynamicModalBody');
+                
+                modalBody.innerHTML = `
+                    <div class="text-center py-5" style="color: var(--color-text-secondary);">
+                        <i class="fa-solid fa-person-digging mb-3" style="font-size: 3.5rem; color: var(--color-primary); opacity: 0.8;"></i>
+                        <h3 style="color: white; margin-bottom: 0.5rem;">Under Construction</h3>
+                        <p style="font-size: 1.1rem;">We will update this soon!</p>
+                        <button type="button" class="btn btn-outline-light mt-3 px-4" data-bs-dismiss="modal">Okay</button>
+                    </div>
+                `;
+                
+                if (typeof bootstrap !== 'undefined') {
+                    const modal = new bootstrap.Modal(modalEl);
+                    modal.show();
+                }
             });
         }
     });
