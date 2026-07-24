@@ -300,13 +300,23 @@ function generateTimeSlots() {
   const now = new Date();
 
   // Check if a trainer is selected
-  const hiddenTrainerInput = document.getElementById('hiddenTrainerInput');
-  const selectedTrainer = hiddenTrainerInput ? hiddenTrainerInput.value : '';
+  const coachSelect = document.getElementById('coachSelect');
+  const selectedTrainer = coachSelect ? coachSelect.value : '';
+  
+  if (!selectedTrainer) {
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = '-- Please select a coach first --';
+    option.disabled = true;
+    option.selected = true;
+    timeSelect.appendChild(option);
+    return;
+  }
   
   let allowedSlots = null;
-  if (selectedTrainer) {
-    const card = document.getElementById('trainer-card-' + selectedTrainer);
-    const slotsAttr = card ? card.getAttribute('data-slots') : '';
+  if (selectedTrainer && coachSelect) {
+    const selectedOption = coachSelect.options[coachSelect.selectedIndex];
+    const slotsAttr = selectedOption ? selectedOption.getAttribute('data-slots') : '';
     if (slotsAttr && slotsAttr.trim()) {
       try {
         allowedSlots = JSON.parse(slotsAttr);
@@ -344,11 +354,9 @@ function generateTimeSlots() {
 
       const label = `${String(displayHour).padStart(2, '0')}:${displayMin} ${ampm}`;
 
-      // Filter by trainer's allowed slots if configured
-      if (allowedSlots && Array.isArray(allowedSlots) && allowedSlots.length > 0) {
-        if (!allowedSlots.includes(label)) {
-          continue;
-        }
+      // Filter strictly by the selected trainer's allowed slots
+      if (!allowedSlots || !Array.isArray(allowedSlots) || !allowedSlots.includes(label)) {
+        continue;
       }
 
       const option = document.createElement('option');
@@ -442,6 +450,11 @@ function initializeBookingEventListeners() {
 
     const locationInput = document.querySelector('input[name="location"]');
 
+  const coachSelect = document.getElementById('coachSelect');
+  if (coachSelect) {
+    coachSelect.addEventListener('change', generateTimeSlots);
+  }
+
   if (timeSelect) {
     timeSelect.addEventListener('change', () => {
       timeSelect.dataset.selectedValue = timeSelect.value;
@@ -528,7 +541,7 @@ function checkLocationConflict() {
     return;
   }
 
-  const selectedTrainer = (document.getElementById('hiddenTrainerInput')?.value || '').trim();
+  const selectedTrainer = (document.getElementById('coachSelect')?.value || '').trim();
 
   let locationConflict = false;
   let groupSwimmers = new Set();
@@ -950,12 +963,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // 6. Pre-fill Trainer Card
+        // 6. Pre-fill Trainer Dropdown
         if (window.renewBookingData.trainer_username) {
             const selectTrainer = () => {
-                const card = document.getElementById(`trainer-card-${window.renewBookingData.trainer_username}`);
-                if (card) {
-                    toggleTrainerSelection(window.renewBookingData.trainer_username);
+                const coachSelect = document.getElementById('coachSelect');
+                if (coachSelect) {
+                    coachSelect.value = window.renewBookingData.trainer_username;
+                    coachSelect.dispatchEvent(new Event('change', { bubbles: true }));
                 } else {
                     setTimeout(selectTrainer, 100);
                 }

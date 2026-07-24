@@ -111,11 +111,13 @@
         box-shadow: var(--shadow-glow);
     }
 </style>
+
+
 {% endblock %}
 
 {% block content %}
 {% macro render_booking_card(b, role, trainer_map, upi_id, account_holder_name) %}
-<div class="booking-card h-100 {% if b.is_completed %}past-session{% endif %}">
+<div class="booking-card h-100 {% if b.is_completed %}past-session{% endif %}" data-booking-status="{% if b.is_completed %}completed{% elif (b.completed_classes or 0) > 0 %}active{% else %}booked{% endif %}">
                                     <div class="card-body d-flex flex-column" style="padding: 1.5rem;">
                                         <div class="flex justify-between items-start mb-3">
                                             <div>
@@ -435,41 +437,23 @@
                 {% endfor %}
 
                 <div class="text-center mb-5 mt-2">
-                    <ul class="nav nav-pills d-inline-flex" id="mainPills-tab" role="tablist" style="background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 50px; border: 1px solid rgba(255,255,255,0.05);">
-                      <li class="nav-item" role="presentation">
-                        <button class="nav-link active rounded-pill px-2 px-sm-4 py-2" id="mainPills-active-tab" data-bs-toggle="pill" data-bs-target="#mainPills-active" type="button" role="tab" aria-controls="mainPills-active" aria-selected="true" style="font-weight: 600; font-size: 0.95rem; transition: all 0.3s ease;"><i class="fa-solid fa-circle-play me-1 me-sm-2 text-accent"></i><span class="d-none d-sm-inline">Active</span><span class="d-inline d-sm-none">Acti</span> <span class="badge bg-light text-dark ms-1 ms-sm-2 rounded-pill">{{active_all|length}}</span></button>
-                      </li>
-                      <li class="nav-item" role="presentation">
-                        <button class="nav-link rounded-pill px-2 px-sm-4 py-2" id="mainPills-booked-tab" data-bs-toggle="pill" data-bs-target="#mainPills-booked" type="button" role="tab" aria-controls="mainPills-booked" aria-selected="false" style="font-weight: 600; font-size: 0.95rem; transition: all 0.3s ease;"><i class="fa-solid fa-calendar-check me-1 me-sm-2 text-primary"></i><span class="d-none d-sm-inline">Booked</span><span class="d-inline d-sm-none">Book</span> <span class="badge bg-light text-dark ms-1 ms-sm-2 rounded-pill">{{booked_all|length}}</span></button>
-                      </li>
-                      <li class="nav-item" role="presentation">
-                        <button class="nav-link rounded-pill px-2 px-sm-4 py-2" id="mainPills-completed-tab" data-bs-toggle="pill" data-bs-target="#mainPills-completed" type="button" role="tab" aria-controls="mainPills-completed" aria-selected="false" style="font-weight: 600; font-size: 0.95rem; transition: all 0.3s ease;"><i class="fa-solid fa-check-double me-1 me-sm-2 text-muted"></i><span class="d-none d-sm-inline">Completed</span><span class="d-inline d-sm-none">Comp</span> <span class="badge bg-light text-dark ms-1 ms-sm-2 rounded-pill">{{completed_all|length}}</span></button>
-                      </li>
-                    </ul>
+                    <div class="d-inline-flex" style="background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 50px; border: 1px solid rgba(255,255,255,0.05);">
+                        <button class="btn btn-outline-primary border-0 rounded-pill px-3 px-sm-4 py-2 filter-btn" data-filter="booked" type="button" style="font-weight: 600; font-size: 0.95rem; transition: all 0.3s ease;"><i class="fa-solid fa-calendar-check me-1 me-sm-2"></i><span class="d-none d-sm-inline">Booked</span><span class="d-inline d-sm-none">Book</span> <span class="badge bg-light text-dark ms-1 ms-sm-2 rounded-pill">{{booked_all|length}}</span></button>
+                        <button class="btn btn-outline-info border-0 rounded-pill px-3 px-sm-4 py-2 filter-btn mx-1" data-filter="active" type="button" style="font-weight: 600; font-size: 0.95rem; transition: all 0.3s ease;"><i class="fa-solid fa-circle-play me-1 me-sm-2"></i><span class="d-none d-sm-inline">Active</span><span class="d-inline d-sm-none">Acti</span> <span class="badge bg-light text-dark ms-1 ms-sm-2 rounded-pill">{{active_all|length}}</span></button>
+                        <button class="btn btn-outline-secondary border-0 rounded-pill px-3 px-sm-4 py-2 filter-btn" data-filter="completed" type="button" style="font-weight: 600; font-size: 0.95rem; transition: all 0.3s ease;"><i class="fa-solid fa-check-double me-1 me-sm-2"></i><span class="d-none d-sm-inline">Completed</span><span class="d-inline d-sm-none">Comp</span> <span class="badge bg-light text-dark ms-1 ms-sm-2 rounded-pill">{{completed_all|length}}</span></button>
+                    </div>
                 </div>
 
-                <div class="tab-content" id="mainPills-tabContent">
-                  <div class="tab-pane fade show active" id="mainPills-active" role="tabpanel" aria-labelledby="mainPills-active-tab" tabindex="0">
-                      {% if active_all %}
-                          {{ render_grouped_bookings(active_all, role, trainer_map, upi_id, account_holder_name) }}
-                      {% else %}
-                          <p class="text-muted text-center py-5"><i class="fa-solid fa-mug-hot me-2 text-accent" style="font-size: 2rem; opacity: 0.5;"></i><br><br>No active bookings.</p>
-                      {% endif %}
-                  </div>
-                  <div class="tab-pane fade" id="mainPills-booked" role="tabpanel" aria-labelledby="mainPills-booked-tab" tabindex="0">
-                      {% if booked_all %}
-                          {{ render_grouped_bookings(booked_all, role, trainer_map, upi_id, account_holder_name) }}
-                      {% else %}
-                          <p class="text-muted text-center py-5"><i class="fa-solid fa-mug-hot me-2 text-primary" style="font-size: 2rem; opacity: 0.5;"></i><br><br>No upcoming bookings.</p>
-                      {% endif %}
-                  </div>
-                  <div class="tab-pane fade" id="mainPills-completed" role="tabpanel" aria-labelledby="mainPills-completed-tab" tabindex="0">
-                      {% if completed_all %}
-                          {{ render_grouped_bookings(completed_all, role, trainer_map, upi_id, account_holder_name) }}
-                      {% else %}
-                          <p class="text-muted text-center py-5"><i class="fa-solid fa-mug-hot me-2 text-muted" style="font-size: 2rem; opacity: 0.5;"></i><br><br>No completed bookings yet.</p>
-                      {% endif %}
-                  </div>
+                <div id="all-bookings-container">
+                    <div id="filter-empty-state" class="text-muted text-center py-5" style="display: none;">
+                        <i class="fa-solid fa-mug-hot me-2 text-primary" style="font-size: 2rem; opacity: 0.5;"></i><br><br>
+                        <span id="filter-empty-text">No bookings found.</span>
+                    </div>
+                    {% if bookings %}
+                        {{ render_grouped_bookings(bookings, role, trainer_map, upi_id, account_holder_name) }}
+                    {% else %}
+                        <p class="text-muted text-center py-5"><i class="fa-solid fa-folder-open me-2 text-info" style="font-size: 2rem; opacity: 0.5;"></i><br><br>No bookings found.</p>
+                    {% endif %}
                 </div>
             {% endif %}
         </div>
@@ -557,325 +541,97 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script>
-    async function downloadBooking(btn, format, bookingId) {
-        const card = btn.closest('.booking-card');
-        if (!card) return;
 
-        const actions = card.querySelector('.mt-auto.pt-3');
-        const dropdown = card.querySelector('.dropdown');
-        const originalActionsDisplay = actions ? actions.style.display : '';
-        const originalDropdownDisplay = dropdown ? dropdown.style.display : '';
-        
-        if (actions) actions.style.display = 'none';
-        if (dropdown) dropdown.style.display = 'none';
 
-        try {
-            const canvas = await html2canvas(card, {
-                scale: 2,
-                backgroundColor: '#18181b',
-                useCORS: true,
-                logging: false
-            });
-
-            if (actions) actions.style.display = originalActionsDisplay;
-            if (dropdown) dropdown.style.display = originalDropdownDisplay;
-
-            const filename = `booking_${bookingId}_swimtrackpro`;
-
-            if (format === 'png' || format === 'jpeg') {
-                const imgData = canvas.toDataURL(`image/${format}`, 1.0);
-                const link = document.createElement('a');
-                link.download = `${filename}.${format}`;
-                link.href = imgData;
-                link.click();
-            } else if (format === 'pdf') {
-                const imgData = canvas.toDataURL('image/png');
-                const pdf = new window.jspdf.jsPDF({
-                    orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
-                    unit: 'px',
-                    format: [canvas.width, canvas.height]
-                });
-                pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-                pdf.save(`${filename}.pdf`);
-            }
-        } catch (e) {
-            console.error("Error generating image:", e);
-            if (actions) actions.style.display = originalActionsDisplay;
-            if (dropdown) dropdown.style.display = originalDropdownDisplay;
-            alert("Could not generate download. Please try again.");
-        }
-    }
-</script>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='common.js') }}"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Delete confirm button
-    document.querySelectorAll('.animated-delete-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            if (this.dataset.confirmed !== 'true') {
-                this.dataset.confirmed = 'true';
-                this.classList.remove('btn-outline-danger', 'btn-outline');
-                this.classList.add('btn-primary');
-                this.style.background = 'var(--color-danger)';
-                this.style.borderColor = 'var(--color-danger)';
-                this.style.color = '#ffffff';
-                this.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Confirm Delete';
 
-                clearTimeout(this.resetTimer);
-                this.resetTimer = setTimeout(() => {
-                    if (this.dataset.confirmed === 'true' && !this.disabled) {
-                        this.dataset.confirmed = 'false';
-                        this.classList.remove('btn-primary');
-                        this.classList.add('btn-outline');
-                        this.style.background = 'transparent';
-                        this.style.borderColor = 'var(--color-danger)';
-                        this.style.color = 'var(--color-danger)';
-                        this.innerHTML = 'Delete';
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const cards = document.querySelectorAll('.booking-card');
+        const emptyState = document.getElementById('filter-empty-state');
+        const emptyText = document.getElementById('filter-empty-text');
+        
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const isCurrentlyActive = this.classList.contains('active');
+                
+                // Remove active class from all buttons
+                filterBtns.forEach(b => {
+                    b.classList.remove('active');
+                    b.style.backgroundColor = '';
+                    b.style.color = '';
+                });
+                
+                let activeFilter = null;
+                
+                if (!isCurrentlyActive) {
+                    this.classList.add('active');
+                    activeFilter = this.dataset.filter;
+                    // Add solid background to active button
+                    if (activeFilter === 'booked') {
+                        this.style.backgroundColor = '#0d6efd';
+                        this.style.color = 'white';
+                    } else if (activeFilter === 'active') {
+                        this.style.backgroundColor = '#0dcaf0';
+                        this.style.color = 'black';
+                    } else if (activeFilter === 'completed') {
+                        this.style.backgroundColor = '#6c757d';
+                        this.style.color = 'white';
                     }
-                }, 5000);
-                return;
-            }
-
-            this.disabled = true;
-            clearTimeout(this.resetTimer);
-            this.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Deleting...';
-
-            const toast = document.createElement('div');
-            toast.className = 'delete-toast';
-            toast.innerText = 'Deleting booking, please wait...';
-            document.body.appendChild(toast);
-
-            setTimeout(() => {
-                this.closest('form').submit();
-            }, 700);
+                }
+                
+                let totalVisible = 0;
+                
+                // Filter the cards
+                cards.forEach(card => {
+                    if (!activeFilter || card.dataset.bookingStatus === activeFilter) {
+                        card.style.display = '';
+                        totalVisible++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                
+                // Show empty state if no cards are visible
+                if (totalVisible === 0) {
+                    emptyState.style.display = 'block';
+                    if (activeFilter === 'booked') {
+                        emptyText.textContent = 'No booked bookings found.';
+                    } else if (activeFilter === 'active') {
+                        emptyText.textContent = 'No active bookings found.';
+                    } else if (activeFilter === 'completed') {
+                        emptyText.textContent = 'No completed bookings found.';
+                    } else {
+                        emptyText.textContent = 'No bookings found.';
+                    }
+                } else {
+                    emptyState.style.display = 'none';
+                }
+                
+                // Hide empty groups
+                document.querySelectorAll('.col-12.mb-4').forEach(groupContainer => {
+                    const grid = groupContainer.querySelector('.grid');
+                    if (grid) {
+                        const visibleCards = grid.querySelectorAll('.booking-card:not([style*="display: none"])');
+                        const addCard = grid.querySelector('.border-dashed'); // Renew card
+                        
+                        // If there are no visible cards, hide the group
+                        if (visibleCards.length === 0) {
+                            groupContainer.style.display = 'none';
+                        } else {
+                            groupContainer.style.display = '';
+                        }
+                    }
+                });
+            });
         });
     });
-
-    // Trainer group collapse
-    const headers = document.querySelectorAll('.trainer-group-header');
-    headers.forEach(header => {
-        header.addEventListener('click', function () {
-            const currentBody = this.parentElement.querySelector('.trainer-group-body');
-            if (!currentBody) return;
-
-            const isOpen = currentBody.style.display !== 'none';
-            document.querySelectorAll('.trainer-group-body').forEach(body => body.style.display = 'none');
-            document.querySelectorAll('.trainer-group-arrow').forEach(arrow => arrow.innerHTML = '<i class="fa-solid fa-play"></i>');
-
-            if (!isOpen) {
-                currentBody.style.display = '';
-                const arrow = this.querySelector('.trainer-group-arrow');
-                if (arrow) arrow.textContent = '▼';
-                sessionStorage.setItem('trainerOpenGroup', this.dataset.groupKey);
-            }
-        });
-    });
-
-    const savedGroup = sessionStorage.getItem('trainerOpenGroup');
-    if (savedGroup) {
-        const savedHeader = document.querySelector(`.trainer-group-header[data-group-key="${savedGroup}"]`);
-        if (savedHeader) {
-            document.querySelectorAll('.trainer-group-body').forEach(body => body.style.display = 'none');
-            document.querySelectorAll('.trainer-group-arrow').forEach(arrow => arrow.innerHTML = '<i class="fa-solid fa-play"></i>');
-            const body = savedHeader.parentElement.querySelector('.trainer-group-body');
-            if (body) body.style.display = '';
-            const arrow = savedHeader.querySelector('.trainer-group-arrow');
-            if (arrow) arrow.textContent = '▼';
-        }
-    }
-});
-
-let pauseModalObj = null;
-let resumeModalObj = null;
-
-document.addEventListener('DOMContentLoaded', () => {
-    pauseModalObj = new bootstrap.Modal(document.getElementById('pauseModal'));
-    resumeModalObj = new bootstrap.Modal(document.getElementById('resumeModal'));
-    
-    // Countdown timer updates
-    document.querySelectorAll('.countdown-timer').forEach(el => {
-        const resumeDateStr = el.getAttribute('data-auto-resume');
-        if (!resumeDateStr) return;
-        try {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const resumeParts = resumeDateStr.split('-');
-            const resumeDate = new Date(resumeParts[0], resumeParts[1] - 1, resumeParts[2]);
-            resumeDate.setHours(0, 0, 0, 0);
-            
-            const diffTime = resumeDate - today;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
-            if (diffDays > 1) el.textContent = `Auto resumes in ${diffDays} days.`;
-            else if (diffDays === 1) el.textContent = `Auto resumes tomorrow.`;
-            else if (diffDays === 0) el.textContent = `Auto resumes today!`;
-            else el.textContent = `Auto resume pending.`;
-        } catch (e) {
-            el.textContent = 'Auto resume scheduled.';
-        }
-    });
-});
-
-window.showPauseModal = function(bookingId, remainingClasses, pauseCount) {
-    document.getElementById('pauseBookingId').value = bookingId;
-    document.getElementById('pauseRemainingClasses').textContent = remainingClasses;
-    
-    const today = new Date();
-    const autoResume = new Date();
-    autoResume.setDate(today.getDate() + 7);
-    
-    document.getElementById('pauseAutoResumeDate').textContent = autoResume.toLocaleDateString('en-IN', {
-        day: 'numeric', month: 'short', year: 'numeric'
-    });
-    
-    document.getElementById('pauseReasonSelect').value = '';
-    document.getElementById('pauseOtherReasonInput').value = '';
-    document.getElementById('pauseOtherReasonContainer').classList.add('d-none');
-    
-    pauseModalObj.show();
-};
-
-window.togglePauseOtherReason = function() {
-    const select = document.getElementById('pauseReasonSelect');
-    const container = document.getElementById('pauseOtherReasonContainer');
-    const input = document.getElementById('pauseOtherReasonInput');
-    if (select.value === 'Other') {
-        container.classList.remove('d-none');
-        input.required = true;
-    } else {
-        container.classList.add('d-none');
-        input.required = false;
-    }
-};
-
-window.submitPauseForm = function(e) {
-    e.preventDefault();
-    const btn = document.getElementById('pauseSubmitBtn');
-    btn.disabled = true;
-    
-    const bookingId = document.getElementById('pauseBookingId').value;
-    const reason = document.getElementById('pauseReasonSelect').value;
-    const otherReason = document.getElementById('pauseOtherReasonInput').value;
-    const comments = document.getElementById('pauseCommentsInput') ? document.getElementById('pauseCommentsInput').value : '';
-    
-    const formData = new FormData();
-    formData.append('booking_id', bookingId);
-    formData.append('reason', reason);
-    formData.append('other_reason', otherReason);
-    formData.append('comments', comments);
-    
-    fetch('/booking/pause', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.reload();
-        } else {
-            alert(data.error || 'Failed to process pause.');
-            btn.disabled = false;
-        }
-    });
-};
-
-window.showResumeModal = function(bookingId) {
-    document.getElementById('resumeBookingId').value = bookingId;
-    resumeModalObj.show();
-};
-
-window.submitResumeForm = function(e) {
-    e.preventDefault();
-    const btn = document.getElementById('resumeSubmitBtn');
-    btn.disabled = true;
-    
-    const bookingId = document.getElementById('resumeBookingId').value;
-    const formData = new FormData();
-    formData.append('booking_id', bookingId);
-    
-    fetch('/booking/resume', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.reload();
-        } else {
-            alert(data.error || 'Failed to resume.');
-            btn.disabled = false;
-        }
-    });
-};
 </script>
 
-<!-- Renew Package Modal -->
-<div class="modal fade" id="renewModal" tabindex="-1" aria-labelledby="renewModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="background: rgba(24, 24, 27, 0.95); backdrop-filter: var(--backdrop-blur); border: 1px solid rgba(255, 255, 255, 0.08); color: white;">
-            <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
-                <h5 class="modal-title font-display" id="renewModalLabel"><i class="fa-solid fa-arrows-rotate text-primary me-2"></i> Renew Package</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="{{ url_for('renew_booking') }}" method="POST" id="renewForm">
-                <input type="hidden" name="booking_id" id="renewBookingId">
-                <div class="modal-body">
-                    <div class="form-group mb-3">
-                        <label for="renewStartDate" class="form-label">Select New Start Date <span class="text-danger">*</span></label>
-                        <input type="date" id="renewStartDate" name="start_date" class="form-control text-white" required style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color-scheme: dark;">
-                    </div>
-                </div>
-                <div class="modal-footer" style="border-top: 1px solid rgba(255, 255, 255, 0.08); gap: 0.5rem; justify-content: flex-end; width: 100%;">
-                    <button type="button" class="btn btn-outline" id="renewEditBtn" style="border-color: rgba(255, 255, 255, 0.15); color: white;">
-                        <i class="fa-solid fa-pen-to-square me-2"></i> Edit Details
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fa-solid fa-circle-check me-2"></i> Confirm & Pay
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+<script src="{{ url_for('static', filename='common.js') }}"></script>
 
-<script>
-let renewModalObj;
-document.addEventListener('DOMContentLoaded', () => {
-    renewModalObj = new bootstrap.Modal(document.getElementById('renewModal'));
-    
-    const renewEditBtn = document.getElementById('renewEditBtn');
-    if (renewEditBtn) {
-        renewEditBtn.addEventListener('click', () => {
-            const bookingId = document.getElementById('renewBookingId').value;
-            const startDate = document.getElementById('renewStartDate').value;
-            if (!startDate) {
-                alert('Please select a start date.');
-                return;
-            }
-            window.location.href = `/booking?renew_from=${bookingId}&start_date=${startDate}`;
-        });
-    }
-});
-
-window.openRenewModal = function(bookingId, defaultStartDate) {
-    document.getElementById('renewBookingId').value = bookingId;
-    
-    // Default start date to today's date
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    const todayStr = `${yyyy}-${mm}-${dd}`;
-    
-    document.getElementById('renewStartDate').value = todayStr;
-    document.getElementById('renewStartDate').min = todayStr;
-    
-    renewModalObj.show();
-};
-</script>
 
 {% endblock %}

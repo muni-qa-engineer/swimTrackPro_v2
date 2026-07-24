@@ -127,7 +127,20 @@
     
     <form action="{{ url_for('book') }}" method="POST" id="bookingForm">
         <input type="hidden" name="active_tab" value="book_slot">
-        <input type="hidden" name="trainer_username" id="hiddenTrainerInput" required>
+        
+        <!-- Coach Selection added to Step 1 -->
+        <div class="booking-step-pane" id="step-pane-0" style="display:none;"></div> <!-- dummy to keep indexing simple if needed, wait no -->
+        
+        <div class="form-group mb-4" style="max-width: 800px; margin: 0 auto 1.5rem auto;">
+            <label for="coachSelect" class="form-label" style="color: var(--color-primary); font-weight: 700;">Select Coach <span class="text-danger">*</span></label>
+            <select name="trainer_username" id="coachSelect" class="form-control" required style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 0.75rem; border-radius: var(--radius-sm);">
+                <option value="">-- Choose a Coach --</option>
+                {% for t in trainers %}
+                <option value="{{ t.username }}" data-slots='{{ t.available_slots or "[]" }}'>{{ t.name }} (Rating: {{ t.rating }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
         
         <!-- STEP 1: Session Details -->
         <div class="booking-step-pane" id="step-pane-1">
@@ -245,95 +258,10 @@
             </div>
         </div>
 
-        <!-- STEP 2: Coach Selection -->
+        <!-- STEP 2: Swimmer Details -->
         <div class="booking-step-pane d-none" id="step-pane-2">
             <div class="glass-panel animate-slide-up" style="padding: 2rem; max-width: 800px; margin: 0 auto;">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-display" style="font-size: 1.4rem; color: var(--color-primary); margin: 0;">2. Select Coach</h3>
-                    <span class="badge badge-success" id="coachesCount">{{ trainers|length }}</span>
-                </div>
-                
-                <!-- Filter Box -->
-                <div class="glass-panel mb-4" id="trainerFilterBox" style="padding: 1rem; background: rgba(0, 0, 0, 0.2);">
-                    <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 0.75rem;"><i class="fa-solid fa-filter text-primary me-1"></i> FILTER & SORT</div>
-                    <div class="flex flex-col gap-2" style="font-size: 0.85rem; color: var(--color-text-secondary);">
-                        <div class="flex items-center gap-2">
-                            <input class="filter-checkbox" type="checkbox" id="sortAZCheckbox" style="accent-color: var(--color-primary);">
-                            <label for="sortAZCheckbox">Sort A - Z</label>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <input class="filter-checkbox" type="checkbox" id="sortRatingCheckbox" checked style="accent-color: var(--color-primary);">
-                            <label for="sortRatingCheckbox">Sort by Rating (High - Low)</label>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <input class="filter-checkbox" type="checkbox" id="nearMeCheckbox" style="accent-color: var(--color-primary);">
-                            <label for="nearMeCheckbox">Near my location</label>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Trainer List -->
-                <div id="trainerListContainer" class="flex flex-col gap-3" style="max-height: 480px; overflow-y: auto; padding-right: 0.5rem;">
-                    {% for t in trainers %}
-                    <div class="trainer-card" id="trainer-card-{{ t.username }}" data-username="{{ t.username }}" data-name="{{ t.name|lower }}" data-rating="{{ t.rating }}" data-location="{{ t.residence_location|lower }}" data-slots='{{ t.available_slots or "[]" }}'>
-                        <div class="profile-header-notice text-primary small fw-bold mb-2 d-none" id="profile-notice-{{ t.username }}" style="font-size: 0.8rem;">
-                            <i class="fa-solid fa-user"></i> Coach Profile Details
-                        </div>
-                        
-                        <div class="flex justify-between items-start">
-                            <div class="flex items-center gap-2">
-                                <input type="checkbox" class="trainer-select-checkbox" data-username="{{ t.username }}" id="checkbox-{{ t.username }}" style="accent-color: var(--color-primary); width: 16px; height: 16px;" onclick="event.stopPropagation(); toggleTrainerSelection('{{ t.username }}');">
-                                <span style="font-weight: 700; font-size: 0.95rem;">{{ t.name|title }}</span>
-                            </div>
-                            <span class="badge badge-warning" style="text-transform: none; font-size: 0.75rem;"><i class="fa-solid fa-star text-warning"></i> {{ t.rating }}</span>
-                        </div>
-                        
-                        <div class="text-muted mt-2" style="font-size: 0.8rem; line-height: 1.4;">
-                            <div><strong>Exp:</strong> {{ t.experience }}</div>
-                            <div><strong>Qualifications:</strong> {{ t.qualification }}</div>
-                            <div><strong>Works:</strong> {{ t.currently_working }}</div>
-                        </div>
-                        
-                        <div class="text-secondary mt-2 pt-2" style="font-size: 0.75rem; border-top: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 0.25rem;">
-                            <i class="fa-solid fa-location-dot"></i> Resides: <strong>{{ t.residence_location }}</strong>
-                        </div>
-                        
-                        <div class="flex justify-end mt-2" id="view-profile-btn-container-{{ t.username }}">
-                            <button type="button" class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; border-radius: var(--radius-sm);" onclick="event.stopPropagation(); viewTrainerProfile('{{ t.username }}');">
-                                View Profile
-                            </button>
-                        </div>
-                        
-                        <!-- Profile Expansion Details -->
-                        <div class="profile-details-more d-none mt-3 pt-3" id="profile-details-more-{{ t.username }}" style="border-top: 1px solid rgba(255,255,255,0.05); font-size: 0.8rem; display: flex; flex-direction: column; gap: 0.25rem;">
-                            <div><strong>Mobile:</strong> {{ t.phone }}</div>
-                            <div><strong>Email:</strong> {{ t.email }}</div>
-                            <div><strong>WhatsApp:</strong> {{ t.whatsapp }}</div>
-                        </div>
-                        
-                        <div class="profile-actions d-none mt-3 flex gap-2" id="profile-actions-{{ t.username }}">
-                            <button type="button" class="btn btn-secondary w-50" style="padding: 0.4rem; font-size: 0.8rem;" onclick="event.stopPropagation(); cancelTrainerProfile();">Cancel</button>
-                            <button type="button" class="btn btn-primary w-50" style="padding: 0.4rem; font-size: 0.8rem;" onclick="event.stopPropagation(); selectTrainerProfile('{{ t.username }}');">Select</button>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                
-                <div class="text-danger mt-3 d-none text-center" id="trainerSelectionError" style="font-size: 0.8rem;">
-                    <i class="fa-solid fa-triangle-exclamation"></i> Please select a coach to continue.
-                </div>
-
-                <div class="mt-4 flex justify-between">
-                    <button type="button" class="btn btn-secondary px-4 py-2.5 rounded-pill" onclick="wizardPrev(2)"><i class="fa-solid fa-arrow-left me-2"></i> Previous</button>
-                    <button type="button" class="btn btn-primary px-5 py-2.5 rounded-pill" onclick="wizardNext(2)">Next <i class="fa-solid fa-arrow-right ms-2"></i></button>
-                </div>
-            </div>
-        </div>
-
-        <!-- STEP 3: Swimmer Details -->
-        <div class="booking-step-pane d-none" id="step-pane-3">
-            <div class="glass-panel animate-slide-up" style="padding: 2rem; max-width: 800px; margin: 0 auto;">
-                <h3 class="font-display mb-4" style="font-size: 1.4rem; color: var(--color-primary);">3. Swimmer Details</h3>
+                <h3 class="font-display mb-4" style="font-size: 1.4rem; color: var(--color-primary);">2. Swimmer Details</h3>
                 
                 {% if not session.get('user_name') %}
                 <input type="hidden" id="ownerNameInput" name="owner_name">
@@ -378,7 +306,7 @@
                 </div>
 
                 <div class="mt-4 flex justify-between gap-3">
-                    <button type="button" class="btn btn-secondary px-4 py-3 rounded-pill" onclick="wizardPrev(3)"><i class="fa-solid fa-arrow-left me-2"></i> Previous</button>
+                    <button type="button" class="btn btn-secondary px-4 py-3 rounded-pill" onclick="wizardPrev(2)"><i class="fa-solid fa-arrow-left me-2"></i> Previous</button>
                     <button id="confirmBookingBtn" type="button" class="btn btn-primary px-5 py-3 rounded-pill flex-grow-1" onclick="wizardSubmit()">
                         <span id="confirmBookingSpinner" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
                         <span id="confirmBookingText">
@@ -442,7 +370,7 @@
 {% block extra_js %}
 <!-- Add standard booking controllers -->
 <script src="{{ url_for('static', filename='common.js') }}"></script>
-<script src="{{ url_for('static', filename='booking.js') }}"></script>
+<script src="{{ url_for('static', filename='booking.js') }}?v=2"></script>
 <script>
     // Copy filters, details visibility controllers
     document.addEventListener('DOMContentLoaded', function() {
@@ -1016,16 +944,6 @@
             }
         }
         
-        // Custom validation for Step 2
-        if (currentStep === 2) {
-            const hiddenTrainerInput = document.getElementById('hiddenTrainerInput');
-            if (!hiddenTrainerInput || !hiddenTrainerInput.value) {
-                const trainerSelectionError = document.getElementById('trainerSelectionError');
-                if (trainerSelectionError) trainerSelectionError.classList.remove('d-none');
-                return;
-            }
-        }
-        
         // Hide current step, show next
         pane.classList.add('d-none');
         document.getElementById('step-pane-' + (currentStep + 1)).classList.remove('d-none');
@@ -1082,7 +1000,7 @@
     }
 
     function wizardSubmit() {
-        const pane = document.getElementById('step-pane-3');
+        const pane = document.getElementById('step-pane-2');
         const inputs = pane.querySelectorAll('input[required], select[required]');
         let isValid = true;
         inputs.forEach(input => {
@@ -1174,10 +1092,12 @@
         const coachUsername = params.get('coach');
         if (coachUsername) {
             setTimeout(() => {
-                if (typeof window.selectTrainerProfile === 'function') {
-                    window.selectTrainerProfile(coachUsername);
+                const coachSelect = document.getElementById('coachSelect');
+                if (coachSelect) {
+                    coachSelect.value = coachUsername;
+                    coachSelect.dispatchEvent(new Event('change', { bubbles: true }));
                 }
-            }, 600);
+            }, 100);
         }
     });
 </script>
@@ -1189,8 +1109,11 @@
             document.getElementById('startDateInput')?.dispatchEvent(new Event('change', { bubbles: true }));
             document.getElementById('studentSelect')?.dispatchEvent(new Event('input', { bubbles: true }));
             
-            const hiddenTrainerInput = document.getElementById('hiddenTrainerInput');
-            if (hiddenTrainerInput) hiddenTrainerInput.value = '';
+            const coachSelect = document.getElementById('coachSelect');
+            if (coachSelect) {
+                coachSelect.value = '';
+                coachSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
 
             const trainerCards = document.querySelectorAll('.trainer-card');
             trainerCards.forEach(c => {
