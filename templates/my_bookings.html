@@ -628,7 +628,227 @@
                 });
             });
         });
+    // Trainer group collapse
+    const headers = document.querySelectorAll('.trainer-group-header');
+    headers.forEach(header => {
+        header.addEventListener('click', function () {
+            const currentBody = this.parentElement.querySelector('.trainer-group-body');
+            if (!currentBody) return;
+
+            const isOpen = currentBody.style.display !== 'none';
+            document.querySelectorAll('.trainer-group-body').forEach(body => body.style.display = 'none');
+            document.querySelectorAll('.trainer-group-arrow').forEach(arrow => arrow.innerHTML = '<i class="fa-solid fa-play"></i>');
+
+            if (!isOpen) {
+                currentBody.style.display = '';
+                const arrow = this.querySelector('.trainer-group-arrow');
+                if (arrow) arrow.textContent = '▼';
+                sessionStorage.setItem('trainerOpenGroup', this.dataset.groupKey);
+            }
+        });
     });
+
+    const savedGroup = sessionStorage.getItem('trainerOpenGroup');
+    if (savedGroup) {
+        const savedHeader = document.querySelector(`.trainer-group-header[data-group-key="${savedGroup}"]`);
+        if (savedHeader) {
+            document.querySelectorAll('.trainer-group-body').forEach(body => body.style.display = 'none');
+            document.querySelectorAll('.trainer-group-arrow').forEach(arrow => arrow.innerHTML = '<i class="fa-solid fa-play"></i>');
+            const body = savedHeader.parentElement.querySelector('.trainer-group-body');
+            if (body) body.style.display = '';
+            const arrow = savedHeader.querySelector('.trainer-group-arrow');
+            if (arrow) arrow.textContent = '▼';
+        }
+    }
+});
+
+let pauseModalObj = null;
+let resumeModalObj = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+    pauseModalObj = new bootstrap.Modal(document.getElementById('pauseModal'));
+    resumeModalObj = new bootstrap.Modal(document.getElementById('resumeModal'));
+    
+    // Countdown timer updates
+    document.querySelectorAll('.countdown-timer').forEach(el => {
+        const resumeDateStr = el.getAttribute('data-auto-resume');
+        if (!resumeDateStr) return;
+        try {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const resumeParts = resumeDateStr.split('-');
+            const resumeDate = new Date(resumeParts[0], resumeParts[1] - 1, resumeParts[2]);
+            resumeDate.setHours(0, 0, 0, 0);
+            
+            const diffTime = resumeDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays > 1) el.textContent = `Auto resumes in ${diffDays} days.`;
+            else if (diffDays === 1) el.textContent = `Auto resumes tomorrow.`;
+            else if (diffDays === 0) el.textContent = `Auto resumes today!`;
+            else el.textContent = `Auto resume pending.`;
+        } catch (e) {
+            el.textContent = 'Auto resume scheduled.';
+        }
+    });
+});
+
+window.showPauseModal = function(bookingId, remainingClasses, pauseCount) {
+    document.getElementById('pauseBookingId').value = bookingId;
+    document.getElementById('pauseRemainingClasses').textContent = remainingClasses;
+    
+    const today = new Date();
+    const autoResume = new Date();
+    autoResume.setDate(today.getDate() + 7);
+    
+    document.getElementById('pauseAutoResumeDate').textContent = autoResume.toLocaleDateString('en-IN', {
+        day: 'numeric', month: 'short', year: 'numeric'
+    });
+    
+    document.getElementById('pauseReasonSelect').value = '';
+    document.getElementById('pauseOtherReasonInput').value = '';
+    document.getElementById('pauseOtherReasonContainer').classList.add('d-none');
+    
+    pauseModalObj.show();
+};
+
+window.togglePauseOtherReason = function() {
+    const select = document.getElementById('pauseReasonSelect');
+    const container = document.getElementById('pauseOtherReasonContainer');
+    const input = document.getElementById('pauseOtherReasonInput');
+    if (select.value === 'Other') {
+        container.classList.remove('d-none');
+        input.required = true;
+    } else {
+        container.classList.add('d-none');
+        input.required = false;
+    }
+};
+
+window.submitPauseForm = function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('pauseSubmitBtn');
+    btn.disabled = true;
+    
+    const bookingId = document.getElementById('pauseBookingId').value;
+    const reason = document.getElementById('pauseReasonSelect').value;
+    const otherReason = document.getElementById('pauseOtherReasonInput').value;
+    const comments = document.getElementById('pauseCommentsInput') ? document.getElementById('pauseCommentsInput').value : '';
+    
+    const formData = new FormData();
+    formData.append('booking_id', bookingId);
+    formData.append('reason', reason);
+    formData.append('other_reason', otherReason);
+    formData.append('comments', comments);
+    
+    fetch('/booking/pause', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.reload();
+        } else {
+            alert(data.error || 'Failed to process pause.');
+            btn.disabled = false;
+        }
+    });
+};
+
+window.showResumeModal = function(bookingId) {
+    document.getElementById('resumeBookingId').value = bookingId;
+    resumeModalObj.show();
+};
+
+window.submitResumeForm = function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('resumeSubmitBtn');
+    btn.disabled = true;
+    
+    const bookingId = document.getElementById('resumeBookingId').value;
+    const formData = new FormData();
+    formData.append('booking_id', bookingId);
+    
+    fetch('/booking/resume', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.reload();
+        } else {
+            alert(data.error || 'Failed to resume.');
+            btn.disabled = false;
+        }
+    });
+};
+</script>
+
+<!-- Renew Package Modal -->
+<div class="modal fade" id="renewModal" tabindex="-1" aria-labelledby="renewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: rgba(24, 24, 27, 0.95); backdrop-filter: var(--backdrop-blur); border: 1px solid rgba(255, 255, 255, 0.08); color: white;">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+                <h5 class="modal-title font-display" id="renewModalLabel"><i class="fa-solid fa-arrows-rotate text-primary me-2"></i> Renew Package</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('renew_booking') }}" method="POST" id="renewForm">
+                <input type="hidden" name="booking_id" id="renewBookingId">
+                <div class="modal-body">
+                    <div class="form-group mb-3">
+                        <label for="renewStartDate" class="form-label">Select New Start Date <span class="text-danger">*</span></label>
+                        <input type="date" id="renewStartDate" name="start_date" class="form-control text-white" required style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color-scheme: dark;">
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid rgba(255, 255, 255, 0.08); gap: 0.5rem; justify-content: flex-end; width: 100%;">
+                    <button type="button" class="btn btn-outline" id="renewEditBtn" style="border-color: rgba(255, 255, 255, 0.15); color: white;">
+                        <i class="fa-solid fa-pen-to-square me-2"></i> Edit Details
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-circle-check me-2"></i> Confirm & Pay
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let renewModalObj;
+document.addEventListener('DOMContentLoaded', () => {
+    renewModalObj = new bootstrap.Modal(document.getElementById('renewModal'));
+    
+    const renewEditBtn = document.getElementById('renewEditBtn');
+    if (renewEditBtn) {
+        renewEditBtn.addEventListener('click', () => {
+            const bookingId = document.getElementById('renewBookingId').value;
+            const startDate = document.getElementById('renewStartDate').value;
+            if (!startDate) {
+                alert('Please select a start date.');
+                return;
+            }
+            window.location.href = `/booking?renew_from=${bookingId}&start_date=${startDate}`;
+        });
+    }
+});
+
+window.openRenewModal = function(bookingId, defaultStartDate) {
+    document.getElementById('renewBookingId').value = bookingId;
+    
+    // Default start date to today's date
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+    
+    document.getElementById('renewStartDate').value = todayStr;
+    document.getElementById('renewStartDate').min = todayStr;
+    
+    renewModalObj.show();
+};
 </script>
 
 <script src="{{ url_for('static', filename='common.js') }}"></script>
