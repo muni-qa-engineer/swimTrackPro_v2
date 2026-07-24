@@ -91,6 +91,20 @@ def calculate_discounted_fee(package, persons, session_count=None):
 
         actual_amount = weekly_days * 3000 * persons
 
+    # Long Term Packages
+    elif package in ['3_months', '6_months', '9_months', '12_months']:
+        from services.dashboard_service import get_all_packages
+        packages = get_all_packages()
+        category = 'group' if persons > 1 else 'individual'
+        if category in packages and package in packages[category]:
+            final_price_per_person = packages[category][package]['final_price']
+            # Reverse engineer the actual_amount so the final calculation equals (final_price_per_person * persons)
+            actual_amount = (final_price_per_person * persons * 100) / (100 - discount)
+        else:
+            actual_amount = 0
+
+
+
     # Fallback
     else:
         actual_amount = 9000 * persons

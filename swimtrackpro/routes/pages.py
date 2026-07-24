@@ -7,6 +7,8 @@ from services.email_service import (
     send_payment_reminder_email,
 )
 from services.settings_service import get_setting
+from services.dashboard_service import get_all_packages
+import json
 from swimtrackpro.auth import login_required
 from swimtrackpro.routes.bookings import check_and_perform_auto_resumes
 
@@ -136,6 +138,9 @@ def register_page_routes(app, *, get_pg_connection, load_data):
                     'fee': booking_obj.get('fee')
                 }
 
+        packages = get_all_packages()
+        preselected_package = request.args.get('package', '')
+        
         return render_template(
             "booking.html",
             role=current_role,
@@ -146,7 +151,10 @@ def register_page_routes(app, *, get_pg_connection, load_data):
             location_suggestions=location_suggestions,
             trainers=trainers,
             admin_phone=get_setting("trainer_phone", ""),
-            renew_booking=renew_booking
+            renew_booking=renew_booking,
+            packages=packages,
+            preselected_package=preselected_package,
+            packages_json=json.dumps(packages)
         )
 
     @login_required

@@ -78,12 +78,25 @@
 
       endDateDiv.style.display = 'block';
 
-      if (pkg.value === 'Monthly') {
+      if (['Monthly', '3_months', '6_months', '9_months', '12_months'].includes(pkg.value)) {
         const autoEndDate = new Date(selectedDate);
-        autoEndDate.setMonth(autoEndDate.getMonth() + 1);
+        let m = 1;
+        if (pkg.value === '3_months') m = 3;
+        if (pkg.value === '6_months') m = 6;
+        if (pkg.value === '9_months') m = 9;
+        if (pkg.value === '12_months') m = 12;
+        autoEndDate.setMonth(autoEndDate.getMonth() + m);
         autoEndDate.setDate(autoEndDate.getDate() - 1);
 
         endDateInput.value = formatDate(autoEndDate);
+        
+        if (['3_months', '6_months', '9_months', '12_months'].includes(pkg.value)) {
+            endDateInput.readOnly = true;
+            endDateInput.style.pointerEvents = 'none';
+        } else {
+            endDateInput.readOnly = false;
+            endDateInput.style.pointerEvents = 'auto';
+        }
       }
       else if (pkg.value === 'Custom') {
         endDateInput.value = startDateInput.value;
@@ -105,8 +118,8 @@
       }
     });
 
-    if (pkg.value === 'Monthly' && selected.length > 3) {
-      alert('Monthly package allows maximum 3 class days');
+    if (['Monthly', '3_months', '6_months', '9_months', '12_months'].includes(pkg.value) && selected.length > 3) {
+      alert('Maximum 3 class days allowed');
 
       const lastChecked = selected[selected.length - 1];
 
@@ -120,9 +133,14 @@
     }
 
     // Insert: Monthly package must have 2 or 3 days
-    if (pkg.value === 'Monthly' && selected.length === 1) {
+    if (['Monthly', '3_months', '6_months', '9_months', '12_months'].includes(pkg.value) && selected.length === 1) {
       feeInput.value = '';
-      feeInput.placeholder = 'Select 2 or 3 class days';
+      feeInput.placeholder = pkg.value === 'Monthly' ? 'Select 2 or 3 class days' : 'Select exactly 3 class days';
+      return;
+    }
+    if (['3_months', '6_months', '9_months', '12_months'].includes(pkg.value) && selected.length === 2) {
+      feeInput.value = '';
+      feeInput.placeholder = 'Select exactly 3 class days';
       return;
     }
 
@@ -173,18 +191,32 @@
     else if (pkg.value === 'Single') {
       actualAmount = 750 * persons;
     }
-    else if (pkg.value === 'Monthly') {
-      if (selected.length < 2 || selected.length > 3) {
-        feeInput.value = '';
-        feeInput.placeholder = 'Select 2 or 3 class days';
-        return;
-      }
-
-      if (selected.length === 2) {
-        actualAmount = 6000 * persons;
-      }
-      else {
-        actualAmount = 9000 * persons;
+    else if (['Monthly', '3_months', '6_months', '9_months', '12_months'].includes(pkg.value)) {
+      if (pkg.value === 'Monthly') {
+          if (selected.length < 2 || selected.length > 3) {
+            feeInput.value = '';
+            feeInput.placeholder = 'Select 2 or 3 class days';
+            return;
+          }
+          if (selected.length === 2) {
+            actualAmount = 6000 * persons;
+          } else {
+            actualAmount = 9000 * persons;
+          }
+      } else {
+          if (selected.length !== 3) {
+            feeInput.value = '';
+            feeInput.placeholder = 'Select exactly 3 class days';
+            return;
+          }
+          const isGroup = persons > 1;
+          const category = isGroup ? 'group' : 'individual';
+          const pricingData = window.LONG_TERM_PACKAGES && window.LONG_TERM_PACKAGES[category] && window.LONG_TERM_PACKAGES[category][pkg.value];
+          if (pricingData) {
+              actualAmount = Math.round((pricingData.final_price * persons * 100) / (100 - discountPercent));
+          } else {
+              actualAmount = 0;
+          }
       }
     }
     else if (pkg.value === 'Custom') {
@@ -684,18 +716,16 @@ if (bookingForm) {
     const confirmBookingText = document.getElementById('confirmBookingText');
 
     // Monthly package requires exactly 2 or 3 selected class days.
-    if (pkg && pkg.value === 'Monthly') {
+    if (pkg && ['Monthly', '3_months', '6_months', '9_months', '12_months'].includes(pkg.value)) {
       const selectedCount = document.querySelectorAll('.class-day:checked').length;
 
-      if (selectedCount < 2 || selectedCount > 3) {
+      if (pkg.value === 'Monthly' && (selectedCount < 2 || selectedCount > 3)) {
         event.preventDefault();
-
-        createToast(
-          'Monthly package requires selecting 2 or 3 class days.',
-          'danger',
-          3000
-        );
-
+        createToast('Monthly package requires selecting 2 or 3 class days.', 'danger', 3000);
+        return;
+      } else if (pkg.value !== 'Monthly' && selectedCount !== 3) {
+        event.preventDefault();
+        createToast('Long term packages require selecting exactly 3 class days.', 'danger', 3000);
         return;
       }
     }
@@ -914,6 +944,13 @@ function enableFormLoading(formId, loadingText) {
 enableFormLoading('updateNoticeForm', 'Updating...');
 
 document.addEventListener('DOMContentLoaded', () => {
+    if (window.PRESELECTED_PACKAGE) {
+        const pkgSelect = document.getElementById('packageSelect');
+        if (pkgSelect) {
+            pkgSelect.value = window.PRESELECTED_PACKAGE;
+            pkgSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
     if (window.renewBookingData) {
         const pkgSelect = document.getElementById('packageSelect');
         const startDateInput = document.getElementById('startDateInput');

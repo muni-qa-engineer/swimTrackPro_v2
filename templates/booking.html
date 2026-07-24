@@ -151,10 +151,14 @@
                     <div class="form-group">
                         <label for="packageSelect" class="form-label">Select Package <span class="text-danger">*</span></label>
                         <select name="package" class="form-control" id="packageSelect" required style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white;">
-                            <option value="Demo">Demo Class</option>
+                                                        <option value="Demo">Demo Class</option>
                             <option value="Single">Single Session</option>
                             <option value="Monthly">Monthly Pack</option>
                             <option value="Custom">Custom Duration</option>
+                            <option value="3_months">Long Term (3 Months)</option>
+                            <option value="6_months">Long Term (6 Months)</option>
+                            <option value="9_months">Long Term (9 Months)</option>
+                            <option value="12_months">Long Term (1 Year)</option>
                         </select>
                         <div id="customPackageHint" class="text-muted" style="display:none; font-size: 0.8rem; margin-top: 0.25rem;">
                             <i class="fa-solid fa-circle-info"></i> Custom package supports a maximum duration of 60 days.
@@ -185,6 +189,7 @@
                     <label class="form-label">
                         Select Class Days
                         <span id="monthlyPackageHint" class="text-muted small ms-2" style="display:none;">(Monthly: Choose 2 or 3 days/week)</span>
+                        <span id="longtermPackageHint" class="text-muted small ms-2" style="display:none;">(Long Term: Choose exactly 3 days/week)</span>
                         <span id="singleDemoHint" class="text-muted small ms-2" style="display:none;">(Picked automatically based on start date)</span>
                         <span id="customDaysHint" class="text-muted small ms-2" style="display:none;">(Max 5 class days per week)</span>
                     </label>

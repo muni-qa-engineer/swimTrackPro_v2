@@ -619,7 +619,8 @@
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <!-- 3 Months -->
-                <div class="long-term-card">
+                <a href="/booking?package=3_months" class="text-decoration-none d-block">
+                    <div class="long-term-card">
                     {% if pkg['individual']['3_months'].discount_percentage > 0 %}
                     <div class="badge badge-primary mb-2" style="background: rgba(6,182,212,0.1); color: var(--color-primary); padding: 0.3rem 0.6rem;">{{ pkg['individual']['3_months'].discount_percentage }}% OFF</div>
                     {% endif %}
@@ -627,10 +628,12 @@
                     {% if pkg['individual']['3_months'].discount_percentage > 0 %}
                     <div class="price-strike">₹{{ '{:,}'.format(pkg['individual']['3_months'].base_price) }}</div>
                     {% endif %}
-                    <div class="price-actual mb-0">₹{{ '{:,}'.format(pkg['individual']['3_months'].final_price) }}</div>
-                </div>
+                    <div class="price-actual mb-0">₹{{ "{:,}".format(pkg["individual"]["3_months"].final_price) }}</div>
+                    </div>
+                </a>
                 <!-- 6 Months -->
-                <div class="long-term-card">
+                <a href="/booking?package=6_months" class="text-decoration-none d-block">
+                    <div class="long-term-card">
                     {% if pkg['individual']['6_months'].discount_percentage > 0 %}
                     <div class="badge badge-primary mb-2" style="background: rgba(6,182,212,0.1); color: var(--color-primary); padding: 0.3rem 0.6rem;">{{ pkg['individual']['6_months'].discount_percentage }}% OFF</div>
                     {% endif %}
@@ -638,10 +641,12 @@
                     {% if pkg['individual']['6_months'].discount_percentage > 0 %}
                     <div class="price-strike">₹{{ '{:,}'.format(pkg['individual']['6_months'].base_price) }}</div>
                     {% endif %}
-                    <div class="price-actual mb-0">₹{{ '{:,}'.format(pkg['individual']['6_months'].final_price) }}</div>
-                </div>
+                    <div class="price-actual mb-0">₹{{ "{:,}".format(pkg["individual"]["6_months"].final_price) }}</div>
+                    </div>
+                </a>
                 <!-- 9 Months -->
-                <div class="long-term-card">
+                <a href="/booking?package=9_months" class="text-decoration-none d-block">
+                    <div class="long-term-card">
                     {% if pkg['individual']['9_months'].discount_percentage > 0 %}
                     <div class="badge badge-primary mb-2" style="background: rgba(6,182,212,0.1); color: var(--color-primary); padding: 0.3rem 0.6rem;">{{ pkg['individual']['9_months'].discount_percentage }}% OFF</div>
                     {% endif %}
@@ -649,10 +654,12 @@
                     {% if pkg['individual']['9_months'].discount_percentage > 0 %}
                     <div class="price-strike">₹{{ '{:,}'.format(pkg['individual']['9_months'].base_price) }}</div>
                     {% endif %}
-                    <div class="price-actual mb-0">₹{{ '{:,}'.format(pkg['individual']['9_months'].final_price) }}</div>
-                </div>
+                    <div class="price-actual mb-0">₹{{ "{:,}".format(pkg["individual"]["9_months"].final_price) }}</div>
+                    </div>
+                </a>
                 <!-- 1 Year -->
-                <div class="long-term-card">
+                <a href="/booking?package=12_months" class="text-decoration-none d-block">
+                    <div class="long-term-card">
                     {% if pkg['individual']['12_months'].discount_percentage > 0 %}
                     <div class="badge badge-primary mb-2" style="background: rgba(6,182,212,0.1); color: var(--color-primary); padding: 0.3rem 0.6rem;">{{ pkg['individual']['12_months'].discount_percentage }}% OFF</div>
                     {% endif %}
@@ -660,8 +667,9 @@
                     {% if pkg['individual']['12_months'].discount_percentage > 0 %}
                     <div class="price-strike">₹{{ '{:,}'.format(pkg['individual']['12_months'].base_price) }}</div>
                     {% endif %}
-                    <div class="price-actual mb-0">₹{{ '{:,}'.format(pkg['individual']['12_months'].final_price) }}</div>
-                </div>
+                    <div class="price-actual mb-0">₹{{ "{:,}".format(pkg["individual"]["12_months"].final_price) }}</div>
+                    </div>
+                </a>
             </div>
         </div>
         
@@ -725,7 +733,8 @@
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <!-- 3 Months -->
-                <div class="long-term-card">
+                <a href="/booking?package=3_months" class="text-decoration-none d-block">
+                    <div class="long-term-card">
                     {% if pkg['group']['3_months'].discount_percentage > 0 %}
                     <div class="badge badge-primary mb-2" style="background: rgba(6,182,212,0.1); color: var(--color-primary); padding: 0.3rem 0.6rem;">{{ pkg['group']['3_months'].discount_percentage }}% OFF</div>
                     {% endif %}
@@ -733,10 +742,12 @@
                     {% if pkg['group']['3_months'].discount_percentage > 0 %}
                     <div class="price-strike">₹{{ '{:,}'.format(pkg['group']['3_months'].base_price) }}</div>
                     {% endif %}
-                    <div class="price-actual mb-0">₹{{ '{:,}'.format(pkg['group']['3_months'].final_price) }}</div>
-                </div>
+                    <div class="price-actual mb-0">₹{{ "{:,}".format(pkg["individual"]["3_months"].final_price) }}</div>
+                    </div>
+                </a>
                 <!-- 6 Months -->
-                <div class="long-term-card">
+                <a href="/booking?package=6_months" class="text-decoration-none d-block">
+                    <div class="long-term-card">
                     {% if pkg['group']['6_months'].discount_percentage > 0 %}
                     <div class="badge badge-primary mb-2" style="background: rgba(6,182,212,0.1); color: var(--color-primary); padding: 0.3rem 0.6rem;">{{ pkg['group']['6_months'].discount_percentage }}% OFF</div>
                     {% endif %}
@@ -744,10 +755,12 @@
                     {% if pkg['group']['6_months'].discount_percentage > 0 %}
                     <div class="price-strike">₹{{ '{:,}'.format(pkg['group']['6_months'].base_price) }}</div>
                     {% endif %}
-                    <div class="price-actual mb-0">₹{{ '{:,}'.format(pkg['group']['6_months'].final_price) }}</div>
-                </div>
+                    <div class="price-actual mb-0">₹{{ "{:,}".format(pkg["individual"]["6_months"].final_price) }}</div>
+                    </div>
+                </a>
                 <!-- 9 Months -->
-                <div class="long-term-card">
+                <a href="/booking?package=9_months" class="text-decoration-none d-block">
+                    <div class="long-term-card">
                     {% if pkg['group']['9_months'].discount_percentage > 0 %}
                     <div class="badge badge-primary mb-2" style="background: rgba(6,182,212,0.1); color: var(--color-primary); padding: 0.3rem 0.6rem;">{{ pkg['group']['9_months'].discount_percentage }}% OFF</div>
                     {% endif %}
@@ -755,10 +768,12 @@
                     {% if pkg['group']['9_months'].discount_percentage > 0 %}
                     <div class="price-strike">₹{{ '{:,}'.format(pkg['group']['9_months'].base_price) }}</div>
                     {% endif %}
-                    <div class="price-actual mb-0">₹{{ '{:,}'.format(pkg['group']['9_months'].final_price) }}</div>
-                </div>
+                    <div class="price-actual mb-0">₹{{ "{:,}".format(pkg["individual"]["9_months"].final_price) }}</div>
+                    </div>
+                </a>
                 <!-- 1 Year -->
-                <div class="long-term-card">
+                <a href="/booking?package=12_months" class="text-decoration-none d-block">
+                    <div class="long-term-card">
                     {% if pkg['group']['12_months'].discount_percentage > 0 %}
                     <div class="badge badge-primary mb-2" style="background: rgba(6,182,212,0.1); color: var(--color-primary); padding: 0.3rem 0.6rem;">{{ pkg['group']['12_months'].discount_percentage }}% OFF</div>
                     {% endif %}
@@ -766,8 +781,9 @@
                     {% if pkg['group']['12_months'].discount_percentage > 0 %}
                     <div class="price-strike">₹{{ '{:,}'.format(pkg['group']['12_months'].base_price) }}</div>
                     {% endif %}
-                    <div class="price-actual mb-0">₹{{ '{:,}'.format(pkg['group']['12_months'].final_price) }}</div>
-                </div>
+                    <div class="price-actual mb-0">₹{{ "{:,}".format(pkg["individual"]["12_months"].final_price) }}</div>
+                    </div>
+                </a>
             </div>
         </div>
     </div>
