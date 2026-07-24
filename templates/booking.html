@@ -298,7 +298,36 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <div class="form-group">
                         <label for="personsInput" class="form-label">Number of Persons</label>
-                        <input type="number" id="personsInput" name="persons" class="form-control" min="1" max="5" value="1">
+                        <div class="d-flex align-items-center">
+                            <div class="input-group input-group-sm" style="width: 120px;">
+                                <button class="btn btn-outline-secondary" type="button" id="btn-minus-person" style="background-color: var(--color-bg-alt); border-color: rgba(255,255,255,0.1); color: white; width: 36px;"><i class="fa-solid fa-minus"></i></button>
+                                <input type="text" id="personsInput" name="persons" class="form-control text-center fw-bold px-0" value="1" readonly style="background-color: rgba(0,0,0,0.4); color: white; pointer-events: none; min-width: 40px;">
+                                <button class="btn btn-outline-secondary" type="button" id="btn-plus-person" style="background-color: var(--color-bg-alt); border-color: rgba(255,255,255,0.1); color: white; width: 36px;"><i class="fa-solid fa-plus"></i></button>
+                            </div>
+                        </div>
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const minusBtn = document.getElementById('btn-minus-person');
+                                const plusBtn = document.getElementById('btn-plus-person');
+                                const personsInput = document.getElementById('personsInput');
+                                
+                                minusBtn.addEventListener('click', () => {
+                                    let val = parseInt(personsInput.value) || 1;
+                                    if (val > 1) {
+                                        personsInput.value = val - 1;
+                                        personsInput.dispatchEvent(new Event('input', { bubbles: true }));
+                                    }
+                                });
+                                
+                                plusBtn.addEventListener('click', () => {
+                                    let val = parseInt(personsInput.value) || 1;
+                                    if (val < 5) {
+                                        personsInput.value = val + 1;
+                                        personsInput.dispatchEvent(new Event('input', { bubbles: true }));
+                                    }
+                                });
+                            });
+                        </script>
                     </div>
                     
                     <div class="form-group">
@@ -375,7 +404,7 @@
 {% block extra_js %}
 <!-- Add standard booking controllers -->
 <script src="{{ url_for('static', filename='common.js') }}"></script>
-<script src="{{ url_for('static', filename='booking.js') }}?v=2"></script>
+<script src="{{ url_for('static', filename='booking.js') }}?v=3"></script>
 <script>
     // Copy filters, details visibility controllers
     document.addEventListener('DOMContentLoaded', function() {

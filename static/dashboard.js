@@ -1386,7 +1386,7 @@ window.addEventListener('load', () => {
   createToast(
     '<i class="fa-solid fa-circle-check"></i> Booking created successfully.',
     'success',
-    3000
+    1000
   );
 
   window.history.replaceState(

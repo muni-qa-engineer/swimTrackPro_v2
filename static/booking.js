@@ -42,7 +42,7 @@
 
     if (!startDateInput || !startDateInput.value) return;
 
-    const selectedDate = new Date(startDateInput.value);
+    const selectedDate = new Date(startDateInput.value + 'T00:00:00');
 
     const days = [
       'Sunday',
@@ -721,11 +721,11 @@ if (bookingForm) {
 
       if (pkg.value === 'Monthly' && (selectedCount < 2 || selectedCount > 3)) {
         event.preventDefault();
-        createToast('Monthly package requires selecting 2 or 3 class days.', 'danger', 3000);
+        createToast('Monthly package requires selecting 2 or 3 class days.', 'danger', 1000);
         return;
       } else if (pkg.value !== 'Monthly' && selectedCount !== 3) {
         event.preventDefault();
-        createToast('Long term packages require selecting exactly 3 class days.', 'danger', 3000);
+        createToast('Long term packages require selecting exactly 3 class days.', 'danger', 1000);
         return;
       }
     }
@@ -762,7 +762,7 @@ window.addEventListener('load', () => {
   createToast(
     '<i class="fa-solid fa-circle-check"></i> Booking created successfully.',
     'success',
-    3000
+    1000
   );
 
   window.history.replaceState(
