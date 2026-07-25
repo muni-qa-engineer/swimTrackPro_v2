@@ -403,8 +403,12 @@
 
 {% block extra_js %}
 <!-- Add standard booking controllers -->
+<script>
+    // Inject pricing configuration for frontend validation
+    window.LONG_TERM_PACKAGES = {{ packages_json|safe if packages_json else 'null' }};
+</script>
 <script src="{{ url_for('static', filename='common.js') }}"></script>
-<script src="{{ url_for('static', filename='booking.js') }}?v=4"></script>
+<script src="{{ url_for('static', filename='booking.js') }}?v=5"></script>
 <script>
     // Copy filters, details visibility controllers
     document.addEventListener('DOMContentLoaded', function() {

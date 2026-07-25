@@ -344,6 +344,22 @@
 {% endmacro %}
 
 <div class="container py-4">
+    <!-- Flash message alerts container -->
+    <div class="row justify-content-center">
+        <div class="col-12">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'success' if category == 'success' else 'danger' if category == 'danger' or category == 'error' else 'warning' if category == 'warning' else 'info' }} alert-dismissible fade show mb-4 shadow-sm" role="alert" style="border-radius: 12px; font-weight: 500;">
+                            {{ message }}
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+
 
 
 
