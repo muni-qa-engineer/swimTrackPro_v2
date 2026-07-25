@@ -191,6 +191,13 @@
                 </div>
 
             </div>
+             <!-- Bookings Trend Chart -->
+            <div class="glass-panel" style="padding: 1.5rem;">
+                <h3 class="font-display" style="font-size: 1.25rem; margin-bottom: 1.5rem;"><i class="fa-solid fa-chart-line text-success"></i> Bookings Trend ({{ current_year if current_year else '' }})</h3>
+                <div class="chart-container">
+                    <canvas id="bookingsChart"></canvas>
+                </div>
+            </div>
 
             <!-- Right Column: Approvals & Feedback -->
             <div class="flex flex-col gap-6">

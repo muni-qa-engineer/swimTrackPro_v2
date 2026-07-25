@@ -92,8 +92,8 @@
         
         <!-- Hero section card -->
         <div class="coach-hero mb-4 animate-slide-up">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                <div class="text-center lg:text-left">
+            <div class="row align-items-center gy-5">
+                <div class="col-lg-6 text-center text-lg-start">
                     <span class="badge badge-success mb-3">
                         <i class="fa-solid fa-medal me-1"></i>
                         {{ c.qualification }}
@@ -105,24 +105,24 @@
                         Resides in {{ c.residence_location }} with over {{ c.experience }} experience. 
                         A reliable coach dedicated to student safety and technique correction.
                     </p>
-                    <div class="flex flex-wrap gap-3 mt-5 justify-center lg:justify-start">
+                    <div class="d-flex flex-wrap gap-3 mt-5 justify-content-center justify-content-lg-start">
                         {% if role == 'guest' %}
-                        <a href="/booking" class="btn btn-primary px-5 py-3">
+                        <a href="/booking" class="btn btn-primary px-4 py-2">
                             <i class="fa-solid fa-calendar-check me-2"></i> Book Session
                         </a>
                         {% endif %}
-                        <a href="tel:{{ c.phone }}" class="btn btn-outline px-5 py-3" style="border-color: var(--color-success); color: var(--color-success);">
+                        <a href="tel:{{ c.phone }}" class="btn btn-outline px-4 py-2" style="border-color: var(--color-success); color: var(--color-success);">
                             <i class="fa-solid fa-phone me-2"></i> Contact Coach
                         </a>
                         {% if role == 'trainer' %}
-                        <button type="button" class="btn btn-primary px-5 py-3" data-bs-toggle="modal" data-bs-target="#editProfileModal-{{ c.username }}">
+                        <button type="button" class="btn btn-primary px-4 py-2" data-bs-toggle="modal" data-bs-target="#editProfileModal-{{ c.username }}">
                             <i class="fa-solid fa-pen-to-square me-2"></i> Edit Profile
                         </button>
                         {% endif %}
                     </div>
                 </div>
                 
-                <div class="flex justify-center mt-5 lg:mt-0">
+                <div class="col-lg-6 d-flex justify-content-center">
                     <div style="width: 100%; max-width: 420px;">
                         {% if c.photos %}
                             <div id="carousel-{{ c.username }}" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3500">

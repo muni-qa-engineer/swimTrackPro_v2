@@ -212,6 +212,15 @@ def ensure_database_tables():
 
     cursor.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS is_blocked BOOLEAN DEFAULT FALSE")
 
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS guest_favorites (
+        guest_phone TEXT,
+        trainer_username TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (guest_phone, trainer_username)
+    )
+    """)
+
     # Pre-populate default admin trainer if not exists
     cursor.execute("SELECT username FROM trainers WHERE LOWER(username) = LOWER(%s)", (ADMIN_USERNAME,))
     if not cursor.fetchone():
