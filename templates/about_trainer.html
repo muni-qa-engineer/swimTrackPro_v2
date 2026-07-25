@@ -311,7 +311,7 @@
                         <h5 class="font-display mb-3" style="font-size: 1.15rem;"><i class="fa-solid fa-pen-to-square text-primary me-2"></i> Write a Review</h5>
                         <p class="text-muted small mb-4">Provide rating, pros, and cons. Your submission updates the coach's public overall rating score.</p>
                         
-                        <form action="/coach/feedback/{{ c.username }}" method="POST">
+                        <form action="/coach/feedback/{{ c.username }}" method="POST" onsubmit="return validateFeedback(this, '{{ c.username }}')">
                             
                             <!-- Star Rating -->
                             <div class="form-group">
@@ -326,7 +326,7 @@
                                     </div>
                                     <span class="text-muted small" id="star-label-{{ c.username }}">Select Rating</span>
                                 </div>
-                                <input type="hidden" id="rating-{{ c.username }}" name="rating" value="" required>
+                                <input type="hidden" id="rating-{{ c.username }}" name="rating" value="">
                             </div>
                             
                             <!-- PROs -->
@@ -490,6 +490,24 @@
                 });
             });
         });
+
+        window.validateFeedback = function(form, username) {
+            const hiddenInput = document.getElementById(`rating-${username}`);
+            const starLabel = document.getElementById(`star-label-${username}`);
+            if (!hiddenInput.value || hiddenInput.value === "0" || hiddenInput.value === "") {
+                starLabel.innerHTML = '<span class="text-danger fw-bold"><i class="fa-solid fa-circle-exclamation"></i> Please select a rating!</span>';
+                
+                // Add a small shake animation to draw attention
+                const starSelector = document.getElementById(`star-selector-${username}`);
+                starSelector.style.transform = 'translate(5px, 0)';
+                setTimeout(() => starSelector.style.transform = 'translate(-5px, 0)', 100);
+                setTimeout(() => starSelector.style.transform = 'translate(5px, 0)', 200);
+                setTimeout(() => starSelector.style.transform = 'translate(0, 0)', 300);
+                
+                return false;
+            }
+            return true;
+        }
 
         function highlightStars(stars, value) {
             stars.forEach(star => {

@@ -393,6 +393,8 @@
             // Fallback JS removed to allow Bootstrap JS to manage dropdowns.
             // Global Loading Spinner for all form submissions
             document.addEventListener('submit', function(e) {
+                if (e.defaultPrevented) return;
+                
                 const form = e.target;
                 const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]') || 
                                   document.querySelector(`button[type="submit"][form="${form.id}"], input[type="submit"][form="${form.id}"]`);
