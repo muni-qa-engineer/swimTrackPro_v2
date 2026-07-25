@@ -988,8 +988,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 5. Pre-fill Days
-        if (window.renewBookingData.selected_days) {
+        // 5. Pre-fill Days (Skip for Single/Demo because Start Date dictates the day)
+        if (window.renewBookingData.selected_days && !['Single', 'Demo'].includes(window.renewBookingData.package)) {
             const days = window.renewBookingData.selected_days.split(',').map(d => d.trim());
             days.forEach(day => {
                 const cb = document.getElementById(day.toLowerCase());

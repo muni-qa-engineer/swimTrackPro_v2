@@ -218,7 +218,11 @@ def book():
         "start_date": date_str,
         "end_date": end_date,
         "package": package,
-        "selected_days": request.form.get('selected_days', ''),
+        "selected_days": (
+            datetime.strptime(date_str, '%Y-%m-%d').strftime('%A') 
+            if package in ('Single', 'Demo') 
+            else request.form.get('selected_days', '')
+        ),
         "location": request.form.get('location', '').strip(),
         "email": email,
         "persons": persons,
@@ -1359,6 +1363,10 @@ def renew_booking():
         
     package = original.get('package', 'Single')
     selected_days = original.get('selected_days', '')
+    
+    # Ensure correct day for Single/Demo
+    if package in ('Single', 'Demo'):
+        selected_days = datetime.strptime(start_date, '%Y-%m-%d').strftime('%A')
     
     if package in ('Single', 'Demo'):
         end_date = start_date
