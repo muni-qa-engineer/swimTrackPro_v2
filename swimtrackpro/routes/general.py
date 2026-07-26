@@ -621,6 +621,10 @@ def save_trainer_slots():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+@admin_required("Only admin can view marketing materials.")
+def marketing_materials():
+    return render_template("marketing_materials.html", role=session.get("role", "guest"))
+
 def register_general_routes(app):
     """Register routes with their legacy endpoint names unchanged."""
 
@@ -649,6 +653,11 @@ def register_general_routes(app):
         "/about",
         endpoint="about_page",
         view_func=about_page,
+    )
+    app.add_url_rule(
+        "/promo",
+        endpoint="marketing_materials",
+        view_func=marketing_materials,
     )
     app.add_url_rule(
         "/faq",

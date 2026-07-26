@@ -1,0 +1,391 @@
+{% extends 'base.html' %}
+
+{% block title %}Marketing Materials | SwimTrack Pro{% endblock %}
+{% block page_title %}Marketing Materials{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<style>
+    :root {
+        --print-scale: 1;
+    }
+    
+    .print-preview-container {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        margin-bottom: 3rem;
+    }
+    
+    /* VISITING CARD STYLES */
+    .visiting-card {
+        width: 3.5in;
+        height: 2in;
+        background: linear-gradient(135deg, rgba(24, 24, 27, 0.92) 0%, rgba(9, 9, 11, 0.98) 100%), url("{{ url_for('static', filename='images/Album/IMG20220514170101_01.jpg') }}") center/cover;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        position: relative;
+        overflow: hidden;
+        color: white;
+        font-family: 'Inter', sans-serif;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        margin: 0 auto;
+    }
+    
+    .vc-watermark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 85pt;
+        opacity: 0.15;
+        pointer-events: none;
+        z-index: 0;
+    }
+    
+    .vc-content {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .vc-front {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+    
+    .vc-back {
+        display: flex;
+        align-items: center;
+        padding: 0.3in;
+    }
+    
+    .vc-accent {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+    }
+    
+    .vc-logo-text {
+        font-family: 'Outfit', sans-serif;
+        font-size: 16pt;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        margin-bottom: 2pt;
+    }
+    
+    .vc-tagline {
+        color: var(--color-primary);
+        font-size: 7pt;
+        font-weight: 600;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+    
+    .vc-details {
+        font-size: 7.5pt;
+        line-height: 1.6;
+    }
+    
+    .vc-icon {
+        color: var(--color-primary);
+        width: 12pt;
+        display: inline-block;
+    }
+    
+    .vc-qr-placeholder {
+        width: 0.7in;
+        height: 0.7in;
+        background: white;
+        padding: 2pt;
+        border-radius: 4pt;
+        margin-left: auto;
+    }
+
+    /* PAMPHLET STYLES */
+    .pamphlet {
+        width: 8.5in;
+        height: 11in;
+        background: #09090b;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        margin: 0 auto;
+        font-family: 'Inter', sans-serif;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .pam-header {
+        height: 3.5in;
+        background: linear-gradient(to bottom, rgba(9, 9, 11, 0.2), #09090b), url("{{ url_for('static', filename='images/Album/IMG20220514170101_01.jpg') }}") center/cover;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 0.5in;
+        position: relative;
+    }
+    
+    .pam-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 48pt;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 10pt;
+        background: linear-gradient(135deg, #fff 0%, #a1a1aa 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .pam-subtitle {
+        font-size: 16pt;
+        color: var(--color-primary);
+        font-weight: 600;
+    }
+    
+    .pam-content {
+        padding: 0.5in;
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.4in;
+    }
+    
+    .pam-feature {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 12pt;
+        padding: 16pt;
+    }
+    
+    .pam-feature i {
+        font-size: 24pt;
+        color: var(--color-accent);
+        margin-bottom: 12pt;
+    }
+    
+    .pam-feature h4 {
+        font-family: 'Outfit', sans-serif;
+        font-size: 14pt;
+        font-weight: 700;
+        margin-bottom: 6pt;
+        color: white;
+    }
+    
+    .pam-feature p {
+        font-size: 10pt;
+        color: #a1a1aa;
+        line-height: 1.5;
+        margin: 0;
+    }
+    
+    .pam-footer {
+        background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+        padding: 0.4in;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .pam-footer-text h3 {
+        font-family: 'Outfit', sans-serif;
+        font-size: 20pt;
+        font-weight: 800;
+        color: white;
+        margin-bottom: 4pt;
+    }
+    
+    .pam-footer-text p {
+        font-size: 12pt;
+        color: rgba(255,255,255,0.9);
+        margin: 0;
+    }
+    
+    /* PRINT MEDIA QUERIES */
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        
+        .printable-area, .printable-area * {
+            visibility: visible;
+        }
+        
+        .printable-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            margin: 0;
+            padding: 0;
+            box-shadow: none;
+            width: 100%;
+        }
+        
+        .no-print {
+            display: none !important;
+        }
+        
+        /* Force background colors and images in Chrome/Safari */
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="font-display mb-1"><i class="fa-solid fa-bullhorn text-primary me-2"></i> Marketing Materials</h2>
+            <p class="text-muted">High-quality, print-ready digital assets for SwimTrackPro.</p>
+        </div>
+    </div>
+
+    <!-- Visiting Card Section -->
+    <div class="print-preview-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+            <h4 class="font-display mb-0 text-white"><i class="fa-solid fa-id-card text-accent me-2"></i> Visiting Card</h4>
+            <button class="btn btn-primary" onclick="printElement('visitingCardArea')"><i class="fa-solid fa-print me-2"></i> Print Cards</button>
+        </div>
+        
+        <div class="overflow-auto text-center py-4" style="background: rgba(0,0,0,0.5); border-radius: var(--radius-md);">
+            <div id="visitingCardArea" class="d-inline-flex gap-4 flex-wrap justify-content-center">
+                <!-- Front -->
+                <div class="visiting-card vc-front printable-area-item">
+                    <div class="vc-accent"></div>
+                    <div class="vc-watermark">🏊🏼‍♂️</div>
+                    <div class="vc-content">
+                        <div class="mb-2" style="font-size: 24pt; color: white;">🏊🏼‍♂️</div>
+                        <div class="vc-logo-text">SwimTrackPro</div>
+                        <div class="vc-tagline">Professional Swimming Coaches</div>
+                    </div>
+                </div>
+                
+                <!-- Back -->
+                <div class="visiting-card vc-back printable-area-item">
+                    <div class="vc-accent"></div>
+                    <div class="vc-watermark">🏊🏼‍♂️</div>
+                    <div style="position: relative; z-index: 1; display: flex; align-items: center; width: 100%; justify-content: space-between;">
+                        <div>
+                            <div class="vc-logo-text" style="font-size: 12pt; margin-bottom: 10pt;">SwimTrackPro</div>
+                            <div class="vc-details text-start">
+                                <div class="mb-1"><i class="fa-solid fa-phone vc-icon"></i> +91 9133851400</div>
+                                <div class="mb-1"><i class="fa-solid fa-envelope vc-icon"></i> swimtrackpro.updates@gmail.com</div>
+                                <div class="mb-1"><i class="fa-solid fa-globe vc-icon"></i> https://swimtrackpro.onrender.com</div>
+                                <div><i class="fa-solid fa-location-dot vc-icon"></i> Hyderabad, India</div>
+                            </div>
+                        </div>
+                        <div class="vc-qr-placeholder d-flex align-items-center justify-content-center" style="padding: 0; background: transparent;">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://swimtrackpro.onrender.com" alt="QR Code" style="width: 100%; height: 100%; border-radius: 4pt;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pamphlet Section -->
+    <div class="print-preview-container">
+        <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+            <h4 class="font-display mb-0 text-white"><i class="fa-solid fa-file-lines text-warning me-2"></i> Promotional Flyer / Pamphlet</h4>
+            <button class="btn btn-primary" onclick="printElement('pamphletArea')"><i class="fa-solid fa-print me-2"></i> Print Flyer</button>
+        </div>
+        
+        <div class="overflow-auto py-4" style="background: rgba(0,0,0,0.5); border-radius: var(--radius-md);">
+            <div id="pamphletArea" class="printable-area-item" style="transform: scale(0.6); transform-origin: top center; margin-bottom: -40%;">
+                
+                <div class="pamphlet">
+                    <div class="pam-header">
+                        <div class="pam-subtitle mb-2"><i class="fa-solid fa-person-swimming me-2"></i>EXPERT SWIM COACHES</div>
+                        <div class="pam-title">MASTER THE<br>WATER.</div>
+                        <p style="font-size: 14pt; color: rgba(255,255,255,0.8); max-width: 60%;">Professional swimming coaching for all ages. Build confidence, improve technique, and swim like a pro.</p>
+                    </div>
+                    
+                    <div class="pam-content">
+                        <div class="pam-feature">
+                            <i class="fa-solid fa-calendar-check"></i>
+                            <h4>Flexible Packages</h4>
+                            <p>Choose from monthly, quarterly, or yearly plans for individuals and groups. Book sessions entirely online.</p>
+                        </div>
+                        <div class="pam-feature">
+                            <i class="fa-solid fa-chalkboard-user"></i>
+                            <h4>Expert Coaches</h4>
+                            <p>Learn from certified, highly-rated professionals who prioritize safety and personalized feedback.</p>
+                        </div>
+                        <div class="pam-feature">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            <h4>Make-Up Classes</h4>
+                            <p>Missed a class? No problem! Our automated make-up credit system ensures you never lose a session.</p>
+                        </div>
+                        <div class="pam-feature">
+                            <i class="fa-solid fa-mobile-screen"></i>
+                            <h4>Interactive Dashboard</h4>
+                            <p>Track your progress, view coach feedback, and manage your schedule directly from your mobile device.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="pam-footer">
+                        <div class="pam-footer-text">
+                            <h3>Ready to dive in?</h3>
+                            <p>Visit www.swimtrackpro.onrender.com or call +91 9133851400</p>
+                        </div>
+                        <div style="background: white; padding: 10pt; border-radius: 8pt;">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://swimtrackpro.onrender.com" alt="QR Code" style="width: 80pt; height: 80pt;">
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function printElement(elementId) {
+        // Remove printable-area class from all items first
+        document.querySelectorAll('.printable-area-item').forEach(el => {
+            el.classList.remove('printable-area');
+        });
+        
+        // Add printable-area class to target element
+        const targetElement = document.getElementById(elementId);
+        
+        // If the target contains multiple items (like front and back card), add class to the container
+        targetElement.classList.add('printable-area');
+        
+        // Temporarily remove transform scaling for printing if it's the pamphlet
+        const originalTransform = targetElement.style.transform;
+        if (elementId === 'pamphletArea') {
+            targetElement.style.transform = 'none';
+        }
+        
+        // Print
+        window.print();
+        
+        // Restore styling after print dialog closes
+        setTimeout(() => {
+            targetElement.classList.remove('printable-area');
+            if (elementId === 'pamphletArea') {
+                targetElement.style.transform = originalTransform;
+            }
+        }, 500);
+    }
+</script>
+{% endblock %}
