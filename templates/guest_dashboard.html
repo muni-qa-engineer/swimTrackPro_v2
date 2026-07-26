@@ -602,7 +602,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content glass-panel" style="background: rgba(15, 15, 18, 0.95); border: 1px solid rgba(255,255,255,0.1);">
             <div class="modal-header border-0 pb-0">
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white position-absolute" style="top: 1.25rem; right: 1.25rem; z-index: 1060;" data-bs-dismiss="modal" onclick="if(coachModalObj) coachModalObj.hide()" aria-label="Close"></button>
             </div>
             <div class="modal-body pt-0 px-4 pb-4">
                 <div class="row g-4">
