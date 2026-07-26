@@ -341,22 +341,37 @@ def ensure_database_tables():
         id SERIAL PRIMARY KEY,
         author_type TEXT,
         author_name TEXT,
-        author_id INTEGER,
+        author_id TEXT,
         message TEXT,
-        created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
+    
+    # In case author_id was previously created as INTEGER, alter it to TEXT
+    try:
+        cursor.execute("ALTER TABLE notices ALTER COLUMN author_id TYPE TEXT")
+    except psycopg2.Error:
+        conn.rollback()
+    else:
+        conn.commit()
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS notice_reads (
         id SERIAL PRIMARY KEY,
         notice_id INTEGER,
         user_type TEXT,
-        user_id INTEGER,
-        read_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        user_id TEXT,
+        read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(notice_id, user_type, user_id)
     )
     """)
+    
+    try:
+        cursor.execute("ALTER TABLE notice_reads ALTER COLUMN user_id TYPE TEXT")
+    except psycopg2.Error:
+        conn.rollback()
+    else:
+        conn.commit()
 
     conn.commit()
     conn.close()
@@ -704,8 +719,15 @@ def handle_db_error(e):
 @app.context_processor
 def inject_unread_notices():
     user_type = session.get('role')
-    user_id = session.get('user_id')
-    if not user_type or not user_id:
+    
+    if user_type == 'trainer':
+        user_identifier = session.get('trainer_username')
+    elif user_type == 'admin':
+        user_identifier = session.get('admin_username', 'admin')
+    else:
+        user_identifier = session.get('user_name')
+        
+    if not user_type or not user_identifier:
         return {'unread_notices_count': 0, 'all_notices': []}
     
     conn = get_pg_connection()
@@ -718,61 +740,62 @@ def inject_unread_notices():
         if user_type == 'admin':
             # Admin sees all notices they posted or all notices period
             cursor.execute("""
-                SELECT id, author_type, author_name, message, created_at 
+                SELECT id, author_type, author_name, message, created_at, author_id
                 FROM notices 
                 ORDER BY created_at DESC
             """)
             rows = cursor.fetchall()
             for r in rows:
                 notices.append({
-                    'id': r[0], 'author_type': r[1], 'author_name': r[2], 'message': r[3], 'created_at': r[4], 'is_read': True
+                    'id': r[0], 'author_type': r[1], 'author_name': r[2], 'message': r[3], 'created_at': r[4], 'author_id': r[5], 'is_read': True
                 })
         
         elif user_type == 'trainer':
             cursor.execute("""
-                SELECT n.id, n.author_type, n.author_name, n.message, n.created_at, r.id 
+                SELECT n.id, n.author_type, n.author_name, n.message, n.created_at, r.id, n.author_id
                 FROM notices n
                 LEFT JOIN notice_reads r ON n.id = r.notice_id AND r.user_type = 'trainer' AND r.user_id = %s
-                WHERE n.author_type = 'admin'
+                WHERE n.author_type = 'admin' OR (n.author_type = 'trainer' AND n.author_id = %s)
                 ORDER BY n.created_at DESC
-            """, (user_id,))
+            """, (user_identifier, user_identifier))
             rows = cursor.fetchall()
             for r in rows:
-                if r[5] is None:
+                # Don't increment unread count for their own notices
+                if r[5] is None and r[1] != 'trainer':
                     unread_count += 1
                 notices.append({
-                    'id': r[0], 'author_type': r[1], 'author_name': r[2], 'message': r[3], 'created_at': r[4], 'is_read': r[5] is not None
+                    'id': r[0], 'author_type': r[1], 'author_name': r[2], 'message': r[3], 'created_at': r[4], 'author_id': r[6], 'is_read': r[5] is not None or r[1] == 'trainer'
                 })
                 
         elif user_type == 'guest':
             cursor.execute("""
-                SELECT DISTINCT trainer_id FROM bookings WHERE student_id = %s AND status = 'Confirmed'
-            """, (user_id,))
+                SELECT DISTINCT trainer_id FROM bookings WHERE owner_name = %s AND status = 'Confirmed'
+            """, (user_identifier,))
             trainers = [row[0] for row in cursor.fetchall() if row[0]]
             
             if trainers:
                 cursor.execute("""
-                    SELECT n.id, n.author_type, n.author_name, n.message, n.created_at, r.id 
+                    SELECT n.id, n.author_type, n.author_name, n.message, n.created_at, r.id, n.author_id 
                     FROM notices n
                     LEFT JOIN notice_reads r ON n.id = r.notice_id AND r.user_type = 'student' AND r.user_id = %s
                     WHERE n.author_type = 'admin' OR (n.author_type = 'trainer' AND n.author_id = ANY(%s))
                     ORDER BY n.created_at DESC
-                """, (user_id, trainers))
+                """, (user_identifier, trainers))
             else:
                 cursor.execute("""
-                    SELECT n.id, n.author_type, n.author_name, n.message, n.created_at, r.id 
+                    SELECT n.id, n.author_type, n.author_name, n.message, n.created_at, r.id, n.author_id
                     FROM notices n
                     LEFT JOIN notice_reads r ON n.id = r.notice_id AND r.user_type = 'student' AND r.user_id = %s
                     WHERE n.author_type = 'admin'
                     ORDER BY n.created_at DESC
-                """, (user_id,))
+                """, (user_identifier,))
                 
             rows = cursor.fetchall()
             for r in rows:
                 if r[5] is None:
                     unread_count += 1
                 notices.append({
-                    'id': r[0], 'author_type': r[1], 'author_name': r[2], 'message': r[3], 'created_at': r[4], 'is_read': r[5] is not None
+                    'id': r[0], 'author_type': r[1], 'author_name': r[2], 'message': r[3], 'created_at': r[4], 'author_id': r[6], 'is_read': r[5] is not None
                 })
     except Exception as e:
         print(f"Error fetching notices: {e}")
@@ -797,7 +820,13 @@ def create_notice():
     conn = get_pg_connection()
     cursor = conn.cursor()
     try:
-        author_id = user_id if user_type == 'trainer' else None
+        if user_type == 'trainer':
+            author_id = session.get('trainer_username')
+        elif user_type == 'admin':
+            author_id = session.get('admin_username', 'admin')
+        else:
+            author_id = session.get('user_name')
+            
         cursor.execute("""
             INSERT INTO notices (author_type, author_name, author_id, message)
             VALUES (%s, %s, %s, %s)
@@ -815,9 +844,14 @@ def create_notice():
 @app.route('/api/notices/mark-read', methods=['POST'])
 def mark_notices_read():
     user_type = session.get('role')
-    user_id = session.get('user_id')
+    if user_type == 'trainer':
+        user_identifier = session.get('trainer_username')
+    elif user_type == 'admin':
+        user_identifier = session.get('admin_username', 'admin')
+    else:
+        user_identifier = session.get('user_name')
     
-    if not user_type or not user_id:
+    if not user_type or not user_identifier:
         return jsonify({'error': 'Unauthorized'}), 403
         
     notice_ids = request.json.get('notice_ids', [])
@@ -835,7 +869,52 @@ def mark_notices_read():
                 INSERT INTO notice_reads (notice_id, user_type, user_id)
                 VALUES (%s, %s, %s)
                 ON CONFLICT (notice_id, user_type, user_id) DO NOTHING
-            """, (nid, db_user_type, user_id))
+            """, (nid, db_user_type, user_identifier))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+        
+    return jsonify({'success': True})
+
+@app.route('/api/notices/<int:notice_id>/delete', methods=['POST'])
+def delete_notice(notice_id):
+    user_type = session.get('role')
+    
+    if user_type == 'trainer':
+        user_identifier = session.get('trainer_username')
+    elif user_type == 'admin':
+        user_identifier = session.get('admin_username', 'admin')
+    else:
+        user_identifier = session.get('user_name')
+    
+    if user_type not in ['admin', 'trainer']:
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+    try:
+        # First verify ownership
+        cursor.execute("SELECT author_type, author_id FROM notices WHERE id = %s", (notice_id,))
+        row = cursor.fetchone()
+        
+        if not row:
+            return jsonify({'error': 'Notice not found'}), 404
+            
+        author_type, author_id = row
+        
+        if user_type == 'admin' and author_type == 'admin':
+            pass # Admin can delete admin notices
+        elif user_type == 'trainer' and author_type == 'trainer' and author_id == user_identifier:
+            pass # Trainer can delete their own notices
+        else:
+            return jsonify({'error': 'Unauthorized to delete this notice'}), 403
+            
+        # Delete notice and its read records
+        cursor.execute("DELETE FROM notice_reads WHERE notice_id = %s", (notice_id,))
+        cursor.execute("DELETE FROM notices WHERE id = %s", (notice_id,))
         conn.commit()
     except Exception as e:
         conn.rollback()
