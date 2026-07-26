@@ -136,16 +136,28 @@ img {
 .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
 .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
 .grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+.col-span-1 { grid-column: span 1 / span 1 !important; }
+.col-span-2 { grid-column: span 2 / span 2 !important; }
+.col-span-3 { grid-column: span 3 / span 3 !important; }
+.col-span-4 { grid-column: span 4 / span 4 !important; }
 
 /* Responsive Grid */
 @media (min-width: 768px) {
   .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
   .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
   .md\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+  .md\:col-span-1 { grid-column: span 1 / span 1 !important; }
+  .md\:col-span-2 { grid-column: span 2 / span 2 !important; }
+  .md\:col-span-3 { grid-column: span 3 / span 3 !important; }
+  .md\:col-span-4 { grid-column: span 4 / span 4 !important; }
 }
 @media (min-width: 1024px) {
   .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
   .lg\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+  .lg\:col-span-1 { grid-column: span 1 / span 1 !important; }
+  .lg\:col-span-2 { grid-column: span 2 / span 2 !important; }
+  .lg\:col-span-3 { grid-column: span 3 / span 3 !important; }
+  .lg\:col-span-4 { grid-column: span 4 / span 4 !important; }
 }
 
 /* Glassmorphism & Cards */

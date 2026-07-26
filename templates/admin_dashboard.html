@@ -284,7 +284,9 @@
                         </div>
                     </div>
 
-                    <!-- Right: Bookings Overview Chart -->
+                    <!-- Right Column: Chart & Notices -->
+                    <div class="flex flex-col gap-6">
+                        <!-- Bookings Overview Chart -->
                     <div class="glass-panel" style="padding: 1.5rem;">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="font-display" style="font-size: 1.25rem; margin: 0;">Bookings Overview</h3>
@@ -302,6 +304,21 @@
                         </div>
                         <div style="position: relative; height: 200px;">
                             <canvas id="bookingsChart"></canvas>
+                        </div>
+                    </div>
+                        
+                        <!-- Notice Board Post Widget -->
+                        <div class="glass-panel" style="padding: 1.5rem;">
+                            <h3 class="font-display text-primary" style="font-size: 1.25rem; margin-bottom: 1rem;"><i class="fa-solid fa-bullhorn text-accent me-2"></i> Global Notice Board</h3>
+                            <p class="text-muted small mb-3">Broadcast a message to ALL Swimmers and Coaches. They will receive a notification.</p>
+                            <form action="/api/notices" method="POST">
+                                <div class="mb-3">
+                                    <textarea class="form-control" name="message" rows="3" placeholder="Type your global notice here..." required style="background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;"></textarea>
+                                </div>
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-paper-plane me-1"></i> Broadcast Notice</button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>

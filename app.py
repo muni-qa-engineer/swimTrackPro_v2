@@ -1,5 +1,5 @@
 import psycopg2
-from flask import Flask
+from flask import Flask, session, request, jsonify, redirect
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from services.booking_engine import generate_recurring_dates
@@ -333,6 +333,28 @@ def ensure_database_tables():
         otp TEXT NOT NULL,
         expires_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
         created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS notices (
+        id SERIAL PRIMARY KEY,
+        author_type TEXT,
+        author_name TEXT,
+        author_id INTEGER,
+        message TEXT,
+        created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS notice_reads (
+        id SERIAL PRIMARY KEY,
+        notice_id INTEGER,
+        user_type TEXT,
+        user_id INTEGER,
+        read_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(notice_id, user_type, user_id)
     )
     """)
 
@@ -678,6 +700,151 @@ def handle_db_error(e):
 </body>
 </html>
 """, 503
+
+@app.context_processor
+def inject_unread_notices():
+    user_type = session.get('role')
+    user_id = session.get('user_id')
+    if not user_type or not user_id:
+        return {'unread_notices_count': 0, 'all_notices': []}
+    
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+    
+    unread_count = 0
+    notices = []
+    
+    try:
+        if user_type == 'admin':
+            # Admin sees all notices they posted or all notices period
+            cursor.execute("""
+                SELECT id, author_type, author_name, message, created_at 
+                FROM notices 
+                ORDER BY created_at DESC
+            """)
+            rows = cursor.fetchall()
+            for r in rows:
+                notices.append({
+                    'id': r[0], 'author_type': r[1], 'author_name': r[2], 'message': r[3], 'created_at': r[4], 'is_read': True
+                })
+        
+        elif user_type == 'trainer':
+            cursor.execute("""
+                SELECT n.id, n.author_type, n.author_name, n.message, n.created_at, r.id 
+                FROM notices n
+                LEFT JOIN notice_reads r ON n.id = r.notice_id AND r.user_type = 'trainer' AND r.user_id = %s
+                WHERE n.author_type = 'admin'
+                ORDER BY n.created_at DESC
+            """, (user_id,))
+            rows = cursor.fetchall()
+            for r in rows:
+                if r[5] is None:
+                    unread_count += 1
+                notices.append({
+                    'id': r[0], 'author_type': r[1], 'author_name': r[2], 'message': r[3], 'created_at': r[4], 'is_read': r[5] is not None
+                })
+                
+        elif user_type == 'guest':
+            cursor.execute("""
+                SELECT DISTINCT trainer_id FROM bookings WHERE student_id = %s AND status = 'Confirmed'
+            """, (user_id,))
+            trainers = [row[0] for row in cursor.fetchall() if row[0]]
+            
+            if trainers:
+                cursor.execute("""
+                    SELECT n.id, n.author_type, n.author_name, n.message, n.created_at, r.id 
+                    FROM notices n
+                    LEFT JOIN notice_reads r ON n.id = r.notice_id AND r.user_type = 'student' AND r.user_id = %s
+                    WHERE n.author_type = 'admin' OR (n.author_type = 'trainer' AND n.author_id = ANY(%s))
+                    ORDER BY n.created_at DESC
+                """, (user_id, trainers))
+            else:
+                cursor.execute("""
+                    SELECT n.id, n.author_type, n.author_name, n.message, n.created_at, r.id 
+                    FROM notices n
+                    LEFT JOIN notice_reads r ON n.id = r.notice_id AND r.user_type = 'student' AND r.user_id = %s
+                    WHERE n.author_type = 'admin'
+                    ORDER BY n.created_at DESC
+                """, (user_id,))
+                
+            rows = cursor.fetchall()
+            for r in rows:
+                if r[5] is None:
+                    unread_count += 1
+                notices.append({
+                    'id': r[0], 'author_type': r[1], 'author_name': r[2], 'message': r[3], 'created_at': r[4], 'is_read': r[5] is not None
+                })
+    except Exception as e:
+        print(f"Error fetching notices: {e}")
+    finally:
+        conn.close()
+        
+    return {'unread_notices_count': unread_count, 'all_notices': notices}
+
+@app.route('/api/notices', methods=['POST'])
+def create_notice():
+    user_type = session.get('role')
+    user_id = session.get('user_id')
+    user_name = session.get('user_name', 'Coach' if user_type == 'trainer' else 'Admin')
+    
+    if user_type not in ['admin', 'trainer']:
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    message = request.form.get('message')
+    if not message:
+        return jsonify({'error': 'Message required'}), 400
+        
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+    try:
+        author_id = user_id if user_type == 'trainer' else None
+        cursor.execute("""
+            INSERT INTO notices (author_type, author_name, author_id, message)
+            VALUES (%s, %s, %s, %s)
+        """, (user_type, user_name, author_id, message))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+        
+    # Redirect back to where they came from
+    return redirect(request.referrer)
+
+@app.route('/api/notices/mark-read', methods=['POST'])
+def mark_notices_read():
+    user_type = session.get('role')
+    user_id = session.get('user_id')
+    
+    if not user_type or not user_id:
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    notice_ids = request.json.get('notice_ids', [])
+    if not notice_ids:
+        return jsonify({'success': True})
+        
+    # user_type for the db uses 'student' for 'guest' role
+    db_user_type = 'student' if user_type == 'guest' else user_type
+        
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+    try:
+        for nid in notice_ids:
+            cursor.execute("""
+                INSERT INTO notice_reads (notice_id, user_type, user_id)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (notice_id, user_type, user_id) DO NOTHING
+            """, (nid, db_user_type, user_id))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+        
+    return jsonify({'success': True})
+
 
 if __name__ == '__main__':
     app.run(debug=True)

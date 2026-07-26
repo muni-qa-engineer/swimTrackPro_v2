@@ -139,8 +139,8 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             
-            <!-- Left Column: Upcoming Sessions & Chart -->
-            <div class="lg:col-span-2 flex flex-col gap-6">
+            <!-- Column 1: Sessions & Earnings -->
+            <div class="flex flex-col gap-6">
                 
                 <!-- Session Schedule (High Priority) -->
                 <div class="glass-panel" style="padding: 1.5rem;">
@@ -172,7 +172,6 @@
                     {% endif %}
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Earnings Chart -->
                     <div class="glass-panel" style="padding: 1.5rem;">
                         <h3 class="font-display" style="font-size: 1.25rem; margin-bottom: 1.5rem;"><i class="fa-solid fa-chart-column text-accent"></i> Earnings Trend ({{ current_year if current_year else '' }})</h3>
@@ -181,25 +180,35 @@
                         </div>
                     </div>
 
-                    <!-- Bookings Trend Chart -->
-                    <div class="glass-panel" style="padding: 1.5rem;">
-                        <h3 class="font-display" style="font-size: 1.25rem; margin-bottom: 1.5rem;"><i class="fa-solid fa-chart-line text-success"></i> Bookings Trend ({{ current_year if current_year else '' }})</h3>
-                        <div class="chart-container">
-                            <canvas id="bookingsChart"></canvas>
-                        </div>
+            </div>
+
+            <!-- Column 2: Bookings Trend & Notice Board -->
+            <div class="flex flex-col gap-6">
+                
+                <!-- Bookings Trend Chart (Moved to right column) -->
+                <div class="glass-panel" style="padding: 1.5rem;">
+                    <h3 class="font-display" style="font-size: 1.25rem; margin-bottom: 1.5rem;"><i class="fa-solid fa-chart-line text-success"></i> Bookings Trend</h3>
+                    <div class="chart-container" style="height: 200px;">
+                        <canvas id="bookingsChart"></canvas>
                     </div>
                 </div>
-
-            </div>
-             <!-- Bookings Trend Chart -->
-            <div class="glass-panel" style="padding: 1.5rem;">
-                <h3 class="font-display" style="font-size: 1.25rem; margin-bottom: 1.5rem;"><i class="fa-solid fa-chart-line text-success"></i> Bookings Trend ({{ current_year if current_year else '' }})</h3>
-                <div class="chart-container">
-                    <canvas id="bookingsChart"></canvas>
+                
+                <!-- Notice Board Post Widget -->
+                <div class="glass-panel" style="padding: 1.5rem;">
+                    <h3 class="font-display text-primary" style="font-size: 1.25rem; margin-bottom: 1rem;"><i class="fa-solid fa-bullhorn text-accent me-2"></i> Notice Board</h3>
+                    <p class="text-muted small mb-3">Broadcast a message to all swimmers currently taking classes with you. They will receive a notification.</p>
+                    <form action="/api/notices" method="POST">
+                        <div class="mb-3">
+                            <textarea class="form-control" name="message" rows="3" placeholder="Type your notice here... e.g., 'Pool maintenance tomorrow, classes moved to 9 AM.'" required style="background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;"></textarea>
+                        </div>
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-paper-plane me-1"></i> Post Notice</button>
+                        </div>
+                    </form>
                 </div>
             </div>
-
-            <!-- Right Column: Approvals & Feedback -->
+            
+            <!-- Column 3: Approvals & Feedback -->
             <div class="flex flex-col gap-6">
                 
                 <!-- ACTION REQUIRED PANEL (Approvals Only) -->
