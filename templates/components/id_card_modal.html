@@ -60,7 +60,7 @@
                                 </div>
                                 <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="font-size: 0.85rem; z-index: 1055;">
                                     <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); document.getElementById('idCardPhotoInput').click();"><i class="fa-solid fa-upload me-2 text-primary"></i>Upload Photo</a></li>
-                                    <li><a class="dropdown-item text-danger" id="removePhotoBtn" href="#" onclick="event.preventDefault(); removeIdCardPhoto();"><i class="fa-solid fa-trash me-2"></i>Remove Photo</a></li>
+                                    <li><a class="dropdown-item text-danger" id="removePhotoBtn" href="#" onclick="event.preventDefault(); removeIdCardPhoto(this);"><i class="fa-solid fa-trash me-2"></i>Remove Photo</a></li>
                                 </ul>
                             </div>
                             
@@ -401,8 +401,28 @@ function saveCroppedPhoto() {
     }, 'image/png');
 }
 
-function removeIdCardPhoto() {
-    if (!confirm("Are you sure you want to remove your profile picture?")) return;
+function removeIdCardPhoto(elem) {
+    if (elem.dataset.confirmed !== 'true') {
+        elem.dataset.confirmed = 'true';
+        if (!elem.dataset.originalHtml) elem.dataset.originalHtml = elem.innerHTML;
+        elem.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-2"></i>Confirm';
+        elem.classList.remove('text-danger');
+        elem.classList.add('text-warning');
+        
+        clearTimeout(elem.resetTimer);
+        elem.resetTimer = setTimeout(() => {
+            if (elem.dataset.confirmed === 'true') {
+                elem.dataset.confirmed = 'false';
+                elem.innerHTML = elem.dataset.originalHtml;
+                elem.classList.remove('text-warning');
+                elem.classList.add('text-danger');
+            }
+        }, 3000);
+        return;
+    }
+    
+    elem.style.pointerEvents = 'none';
+    elem.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>...';
     
     document.getElementById('idCardPhoto').style.opacity = '0.5';
     
@@ -415,15 +435,30 @@ function removeIdCardPhoto() {
         if (data.success) {
             document.getElementById('idCardPhoto').style.display = 'none';
             document.getElementById('noPhotoPlaceholder').style.display = 'flex';
-            document.getElementById('removePhotoBtn').style.display = 'none';
+            elem.style.pointerEvents = '';
+            elem.dataset.confirmed = 'false';
+            elem.innerHTML = elem.dataset.originalHtml;
+            elem.classList.remove('text-warning');
+            elem.classList.add('text-danger');
+            elem.style.display = 'none';
         } else {
             alert(data.error || "Failed to remove photo");
+            elem.style.pointerEvents = '';
+            elem.dataset.confirmed = 'false';
+            elem.innerHTML = elem.dataset.originalHtml;
+            elem.classList.remove('text-warning');
+            elem.classList.add('text-danger');
         }
     })
     .catch(err => {
-        console.error(err);
+        console.error("Error removing photo:", err);
+        alert("Failed to remove photo.");
         document.getElementById('idCardPhoto').style.opacity = '1';
-        alert("An error occurred.");
+        elem.style.pointerEvents = '';
+        elem.dataset.confirmed = 'false';
+        elem.innerHTML = elem.dataset.originalHtml;
+        elem.classList.remove('text-warning');
+        elem.classList.add('text-danger');
     });
 }
 </script>

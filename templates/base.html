@@ -533,7 +533,38 @@
         }
         
         function deleteNotice(noticeId, btnElem) {
-            if (!confirm('Are you sure you want to delete this announcement?')) return;
+            if (btnElem.dataset.confirmed !== 'true') {
+                btnElem.dataset.confirmed = 'true';
+                
+                // Save original HTML
+                if (!btnElem.dataset.originalHtml) {
+                    btnElem.dataset.originalHtml = btnElem.innerHTML;
+                }
+                
+                // Change to confirm state
+                btnElem.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Confirm';
+                btnElem.classList.remove('text-danger');
+                btnElem.classList.add('text-warning');
+                
+                // Clear any existing reset timer
+                clearTimeout(btnElem.resetTimer);
+                
+                // Set timer to reset back after 3 seconds
+                btnElem.resetTimer = setTimeout(() => {
+                    if (btnElem.dataset.confirmed === 'true') {
+                        btnElem.dataset.confirmed = 'false';
+                        btnElem.innerHTML = btnElem.dataset.originalHtml;
+                        btnElem.classList.remove('text-warning');
+                        btnElem.classList.add('text-danger');
+                    }
+                }, 3000);
+                
+                return;
+            }
+            
+            // Proceed with deletion
+            btnElem.disabled = true;
+            btnElem.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
             
             fetch('/api/notices/' + noticeId + '/delete', {
                 method: 'POST'
@@ -549,11 +580,55 @@
                     }
                 } else {
                     alert('Failed to delete notice: ' + data.error);
+                    btnElem.disabled = false;
+                    btnElem.dataset.confirmed = 'false';
+                    btnElem.innerHTML = btnElem.dataset.originalHtml;
+                    btnElem.classList.remove('text-warning');
+                    btnElem.classList.add('text-danger');
                 }
             }).catch(err => {
                 console.error('Error deleting notice:', err);
                 alert('An error occurred while deleting the notice.');
+                btnElem.disabled = false;
+                btnElem.dataset.confirmed = 'false';
+                btnElem.innerHTML = btnElem.dataset.originalHtml;
+                btnElem.classList.remove('text-warning');
+                btnElem.classList.add('text-danger');
             });
+        }
+        
+        function handleAnimatedDelete(event, formElem) {
+            const btn = formElem.querySelector('button[type="submit"]');
+            if (!btn) return true;
+            
+            if (btn.dataset.confirmed !== 'true') {
+                event.preventDefault();
+                btn.dataset.confirmed = 'true';
+                
+                if (!btn.dataset.originalHtml) {
+                    btn.dataset.originalHtml = btn.innerHTML;
+                }
+                
+                btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Confirm';
+                
+                // Keep original classes but ensure it looks like a warning/danger state if needed
+                // We'll just rely on the text change to "Confirm"
+                
+                clearTimeout(btn.resetTimer);
+                btn.resetTimer = setTimeout(() => {
+                    if (btn.dataset.confirmed === 'true') {
+                        btn.dataset.confirmed = 'false';
+                        btn.innerHTML = btn.dataset.originalHtml;
+                    }
+                }, 3000);
+                
+                return false;
+            }
+            
+            // Proceed with submission
+            btn.style.pointerEvents = 'none';
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>...';
+            return true;
         }
     </script>
     {% block extra_js %}{% endblock %}
