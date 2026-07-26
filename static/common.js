@@ -77,34 +77,35 @@ function restoreScrollPosition() {
 // --------------------------------------
 // V0033.5.0 - Auto Logout After Inactivity
 (function () {
-  let inactivityTimer;
-  let countdownTimer;
-  let countdown = 20;
-
   const INACTIVITY_MS = 60 * 1000; // 1 minute
+  const COUNTDOWN_SEC = 20;
 
   const toast = document.getElementById('inactiveLogoutToast');
   const countdownElement = document.getElementById('logoutCountdown');
   const stayLoggedInBtn = document.getElementById('stayLoggedInBtn');
 
-
   if (!toast || !countdownElement || !stayLoggedInBtn) {
     return;
   }
 
-  function resetInactivityTimer() {
-    clearTimeout(inactivityTimer);
-    inactivityTimer = setTimeout(showLogoutWarning, INACTIVITY_MS);
+  let countdownTimer;
+  let countdown = COUNTDOWN_SEC;
+  let isWarningVisible = false;
 
-    // Dismiss the warning and clear the countdown if it is showing
-    if (toast.style.display === 'block') {
-      toast.style.display = 'none';
-      clearInterval(countdownTimer);
-    }
+  // Initialize if not present
+  if (!localStorage.getItem('lastActivityTime')) {
+    localStorage.setItem('lastActivityTime', Date.now().toString());
+  }
+
+  function updateActivity() {
+    localStorage.setItem('lastActivityTime', Date.now().toString());
   }
 
   function showLogoutWarning() {
-    countdown = 20;
+    if (isWarningVisible) return;
+    
+    isWarningVisible = true;
+    countdown = COUNTDOWN_SEC;
     countdownElement.textContent = countdown;
     toast.style.display = 'block';
 
@@ -121,24 +122,54 @@ function restoreScrollPosition() {
     }, 1000);
   }
 
-  function stayLoggedIn() {
+  function hideLogoutWarning() {
+    if (!isWarningVisible) return;
+    
+    isWarningVisible = false;
     toast.style.display = 'none';
     clearInterval(countdownTimer);
-    resetInactivityTimer();
+  }
+
+  function stayLoggedIn() {
+    updateActivity();
+    hideLogoutWarning();
   }
 
   stayLoggedInBtn.addEventListener('click', stayLoggedIn);
 
-  ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll']
-    .forEach(eventName => {
-      document.addEventListener(
-        eventName,
-        resetInactivityTimer,
-        true
-      );
-    });
+  // Throttle activity updates to once per second
+  let lastEventTime = 0;
+  function handleUserActivity() {
+    // If warning is visible, require explicit click on "Stay Logged In"
+    if (isWarningVisible) return;
+    
+    const now = Date.now();
+    if (now - lastEventTime > 1000) {
+      updateActivity();
+      lastEventTime = now;
+    }
+  }
 
-  resetInactivityTimer();
+  ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(eventName => {
+    document.addEventListener(eventName, handleUserActivity, true);
+  });
+
+  // Sync state across tabs every second
+  setInterval(() => {
+    const lastActivityTime = parseInt(localStorage.getItem('lastActivityTime') || '0', 10);
+    const timeSinceLastActivity = Date.now() - lastActivityTime;
+    
+    if (timeSinceLastActivity >= INACTIVITY_MS) {
+      // 1 minute has passed since ANY tab was active
+      showLogoutWarning();
+    } else {
+      // Activity occurred recently (perhaps in another tab)
+      if (isWarningVisible) {
+        hideLogoutWarning();
+      }
+    }
+  }, 1000);
+
 })();
 
 

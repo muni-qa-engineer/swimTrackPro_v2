@@ -59,19 +59,23 @@ def delete_booking(booking_id):
     start_date = booking_info['start_date']
     booking_time_str = booking_info['time']
 
-    # Guest users can delete immediately only before the first class starts.
-    # After the first class start time, trainer approval is required.
+    # Guest users can delete immediately if no classes have been completed.
+    # A class is completed 1 hour after its start time.
     if role != 'trainer':
+        completed_classes = 0
         try:
             first_class_datetime = datetime.strptime(
                 f"{start_date} {booking_time_str}",
                 '%Y-%m-%d %I:%M %p'
             )
+            first_class_end_datetime = first_class_datetime + timedelta(hours=1)
+            if datetime.now() >= first_class_end_datetime:
+                completed_classes = 1
         except Exception:
-            first_class_datetime = None
+            completed_classes = 0
 
-        # If current time is before the first class, delete immediately.
-        if first_class_datetime and datetime.now() < first_class_datetime:
+        # If progress is 0, delete immediately.
+        if completed_classes == 0:
             cursor.execute(
                 'DELETE FROM bookings WHERE id = %s',
                 (booking_id,)
