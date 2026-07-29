@@ -123,7 +123,7 @@
                                             <div>
                                                 <h5 class="font-display text-primary" style="font-size: 1.15rem; margin: 0;">🏊 {{ b.student|title }}</h5>
                                                 <div class="text-secondary mt-1" style="font-size: 0.8rem;">
-                                                    Coach: <a href="{{ url_for('about_trainer') }}" class="fw-bold text-accent text-decoration-none hover-underline" title="View Assigned Coach Profile">{{ (trainer_map.get(b.trainer_username.lower().strip(), b.trainer_username) or 'Unassigned')|title }} <i class="fa-solid fa-arrow-up-right-from-square small ms-1" style="font-size: 0.7rem;"></i></a>
+                                                    Coach: <span class="fw-bold text-accent">{{ (trainer_map.get(b.trainer_username.lower().strip(), b.trainer_username) or 'Unassigned')|title }}</span>
                                                 </div>
                                             </div>
                                             

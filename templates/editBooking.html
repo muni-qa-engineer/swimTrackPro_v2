@@ -53,26 +53,26 @@
                     <input type="text" name="student" class="form-control" value="{{ booking.student }}" required>
                 </div>
 
-                {% set b_status = (booking.status or 'Booked')|trim|lower %}
-                {% set is_active_booking = (b_status == 'active' or (booking.completed_classes or 0) > 0) %}
-                {% set can_change_coach = (role == 'admin' or not is_active_booking) %}
-
                 <div class="form-group">
                     <label class="form-label">Assigned Trainer <span class="text-danger">*</span></label>
-                    {% if can_change_coach %}
-                        <select name="trainer_username" id="trainerSelect" class="form-control" required style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white;">
-                            {% for t in trainers %}
-                                <option value="{{ t.username }}" data-slots='{{ t.available_slots or "[]" }}' {% if (booking.trainer_username or '')|lower == t.username|lower %}selected{% endif %}>{{ t.name }}</option>
-                            {% endfor %}
-                        </select>
-                        <div class="text-muted small mt-1" style="font-size: 0.78rem;">
-                            <i class="fa-solid fa-user-pen text-primary me-1"></i>You can select a different coach while booking status is <strong>Booked</strong>.
+                    {% set bk_status = (booking.status or '')|lower|trim %}
+                    {% set pkg_status = (booking.package_status or '')|lower|trim %}
+                    {% set is_active_status = (bk_status in ['active', 'confirmed', 'paid']) or (pkg_status == 'active' and bk_status not in ['booked', 'not paid', 'pending', 'unconfirmed']) %}
+                    {% set can_change_coach = (role in ['admin', 'trainer']) or (not is_active_status or bk_status in ['booked', 'not paid', 'pending', 'unconfirmed']) %}
+                    
+                    <select name="trainer_username" id="trainerSelect" class="form-control" required style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white;" {% if not can_change_coach %}disabled{% endif %}>
+                        {% for t in trainers %}
+                            <option value="{{ t.username }}" data-slots='{{ t.available_slots or "[]" }}' {% if (booking.trainer_username or '')|lower == (t.username or '')|lower %}selected{% endif %}>{{ t.name }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if not can_change_coach %}
+                        <input type="hidden" name="trainer_username" value="{{ booking.trainer_username }}">
+                        <div class="text-warning small mt-1">
+                            <i class="fa-solid fa-lock me-1"></i> Coach can only be changed by Admin once status is Active.
                         </div>
                     {% else %}
-                        <input type="text" class="form-control" value="{{ trainer_map.get((booking.trainer_username or '')|lower, booking.trainer_username)|title if trainer_map else (booking.trainer_username|title) }}" readonly style="background: rgba(0,0,0,0.4); color: white;">
-                        <input type="hidden" name="trainer_username" value="{{ booking.trainer_username }}">
-                        <div class="text-warning small mt-1" style="font-size: 0.8rem;">
-                            <i class="fa-solid fa-lock me-1"></i>Coach cannot be changed once session is Active. Contact Admin to request a coach change.
+                        <div class="text-muted small mt-1">
+                            <i class="fa-solid fa-circle-info text-info me-1"></i> You can change your assigned coach while booking status is Booked.
                         </div>
                     {% endif %}
                 </div>

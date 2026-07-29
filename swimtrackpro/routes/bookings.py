@@ -356,7 +356,6 @@ def edit_booking(booking_id):
     cursor = conn.cursor()
     cursor.execute("SELECT username, name, available_slots FROM trainers ORDER BY name")
     trainers = [{"username": row[0], "name": row[1], "available_slots": row[2] or "[]"} for row in cursor.fetchall()]
-    trainer_map = {t["username"].lower().strip(): t["name"] for t in trainers}
     conn.close()
 
     # Render edit page with booking data and user role
@@ -364,8 +363,7 @@ def edit_booking(booking_id):
         'editBooking.html',
         booking=booking,
         role=session.get('role', 'guest'),
-        trainers=trainers,
-        trainer_map=trainer_map
+        trainers=trainers
     )
 
 def update_booking(booking_id):
@@ -610,17 +608,18 @@ def update_booking(booking_id):
         else:
             booking['status'] = 'Not Paid'
 
-    # Check if booking is Active (status == 'Active' or completed_classes > 0)
-    current_b_status = (booking.get('status') or '').strip().lower()
-    is_active_booking = (current_b_status == 'active' or int(booking.get('completed_classes') or 0) > 0)
+    curr_status = str(booking.get('status') or '').strip().lower()
+    curr_pkg_status = str(booking.get('package_status') or '').strip().lower()
+    is_admin = (role in ('admin', 'trainer'))
 
-    # Swimmers can change coach while status is Booked. Once Active, only Admin can change coach.
-    if role != 'admin' and is_active_booking:
-        trainer_username = (booking.get('trainer_username') or 'asdf').strip().lower()
-    else:
-        trainer_username = (request.form.get('trainer_username') or booking.get('trainer_username') or 'asdf').strip().lower()
+    # Swimmers can edit & change coach while status is 'Booked'.
+    # Once status turns 'Active', coach change can only be done by Admin.
+    is_active = (curr_status in ('active', 'confirmed', 'paid')) or (curr_pkg_status == 'active' and curr_status not in ('booked', 'not paid', 'pending', 'unconfirmed'))
+    can_change_coach = is_admin or not is_active
 
-    booking['trainer_username'] = trainer_username
+    if can_change_coach and request.form.get('trainer_username'):
+        trainer_username = request.form.get('trainer_username').strip().lower()
+        booking['trainer_username'] = trainer_username
 
     conn = get_pg_connection()
     cursor = conn.cursor()

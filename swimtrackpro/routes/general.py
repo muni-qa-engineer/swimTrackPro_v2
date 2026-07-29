@@ -19,66 +19,71 @@ def about_trainer():
     cursor = conn.cursor()
 
     if current_role == "trainer":
-        trainer_user = (session.get("trainer_username") or "asdf").strip().lower()
+        assigned_usernames = []
+        trainer_user = session.get("trainer_username") or "asdf"
         cursor.execute("""
-            SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, rating, photos, whatsapp, bio, specialties, instagram, facebook, twitter, youtube, id_number 
-            FROM trainers WHERE LOWER(username) = %s
+            SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, rating, photos, whatsapp, bio, specialties, instagram, facebook, twitter, youtube 
+            FROM trainers WHERE username = %s
         """, (trainer_user,))
         trainers = cursor.fetchall()
-        assigned_usernames = [trainer_user]
     else:
-        # Swimmer/Guest: find trainer usernames from PostgreSQL bookings AND data.json bookings
-        assigned_usernames = []
-        
-        # 1. From PostgreSQL bookings table
-        if user_clean_phone or current_user:
-            cursor.execute("""
-                SELECT DISTINCT LOWER(trainer_username) 
-                FROM bookings 
-                WHERE (trainer_username IS NOT NULL AND TRIM(trainer_username) <> '')
-                  AND (
-                    (LOWER(TRIM(owner_name)) = %s OR LOWER(TRIM(student_name)) = %s)
-                    OR (%s <> '' AND REGEXP_REPLACE(owner_phone, '\\D', '', 'g') LIKE %s)
-                  )
-            """, (current_user, current_user, user_clean_phone, f"%{user_clean_phone}%"))
-            assigned_usernames.extend([r[0] for r in cursor.fetchall() if r[0]])
-
-        # 2. From load_data() JSON bookings (as backup)
+        # Swimmer/Guest: find trainer usernames from bookings
         data = load_data()
-        for b in _bookings_for_session(data):
-            tu = (b.get("trainer_username") or "").strip().lower()
-            if tu:
-                assigned_usernames.append(tu)
+        bookings = []
+        for b in data.get("bookings", []):
+            b_owner = (b.get("owner_name") or "").strip().lower()
+            b_created = (b.get("created_by") or "").strip().lower()
+            b_student = (b.get("student") or "").strip().lower()
+            b_phone = re.sub(r"\D", "", str(b.get("owner_phone") or ""))
+            
+            name_match = current_user and (b_owner == current_user or b_created == current_user or b_student == current_user)
+            phone_match = user_clean_phone and b_phone and (user_clean_phone == b_phone or user_clean_phone.endswith(b_phone) or b_phone.endswith(user_clean_phone))
+            if name_match or phone_match:
+                bookings.append(b)
+
+        assigned_usernames = [str(b.get("trainer_username")).strip() for b in bookings if b.get("trainer_username")]
+
+        # Also query PostgreSQL bookings table directly to ensure no assigned coaches are missed
+        try:
+            cursor.execute("""
+                SELECT DISTINCT trainer_username FROM bookings 
+                WHERE LOWER(owner_name) = %s OR LOWER(student_name) = %s OR LOWER(created_by) = %s
+                   OR (owner_phone IS NOT NULL AND %s <> '' AND regexp_replace(owner_phone, '\D', '', 'g') = %s)
+            """, (current_user, current_user, current_user, user_clean_phone, user_clean_phone))
+            for row in cursor.fetchall():
+                if row[0] and row[0].strip():
+                    assigned_usernames.append(row[0].strip())
+        except Exception as e:
+            print("DB lookup in about_trainer error:", e)
 
         assigned_usernames = list(set([u for u in assigned_usernames if u]))
-        
+
         trainers = []
         if assigned_usernames:
-            placeholders = ", ".join(["%s"] * len(assigned_usernames))
+            clean_list = [u.lower() for u in assigned_usernames if u]
+            placeholders = ", ".join(["%s"] * len(clean_list))
             cursor.execute(f"""
                 SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, rating, photos, whatsapp, bio, specialties, instagram, facebook, twitter, youtube, id_number 
-                FROM trainers WHERE LOWER(username) IN ({placeholders}) AND is_approved = TRUE
-            """, tuple(assigned_usernames))
+                FROM trainers 
+                WHERE (LOWER(username) IN ({placeholders}) OR LOWER(name) IN ({placeholders})) AND is_approved = TRUE
+            """, tuple(clean_list) + tuple(clean_list))
             trainers = cursor.fetchall()
-
-    # Batch-fetch profile pictures from profile_pictures table
-    id_numbers = [r[17] for r in trainers if len(r) > 17 and r[17]]
-    profile_pics_map = {}
-    if id_numbers:
-        cursor.execute("SELECT id_number, filename FROM profile_pictures WHERE id_number = ANY(%s)", (id_numbers,))
-        for pic_row in cursor.fetchall():
-            profile_pics_map[pic_row[0]] = pic_row[1]
 
     coaches_list = []
     for r in trainers:
         username = r[0]
-        id_num = r[17] if len(r) > 17 else ""
-        profile_pic = profile_pics_map.get(id_num, "")
+        trainer_id_num = r[17] if len(r) > 17 and r[17] else ""
+        profile_pic = ""
+        if trainer_id_num:
+            cursor.execute("SELECT filename FROM profile_pictures WHERE id_number = %s", (trainer_id_num,))
+            pic_row = cursor.fetchone()
+            if pic_row and pic_row[0]:
+                profile_pic = pic_row[0]
 
         cursor.execute("""
             SELECT guest_name, rating, pros, cons, created_at 
             FROM coach_feedback 
-            WHERE LOWER(trainer_username) = LOWER(%s)
+            WHERE trainer_username = %s 
             ORDER BY created_at DESC
         """, (username,))
         feedbacks = []
@@ -102,6 +107,7 @@ def about_trainer():
             "residence_location": r[7] or "Local Camp",
             "rating": float(r[8]) if r[8] is not None else 5.0,
             "photos": [p.strip() for p in (r[9] or "").split(",") if p.strip()],
+            "profile_pic": profile_pic,
             "whatsapp": r[10] or "",
             "bio": r[11] or "",
             "specialties": r[12] or "",
@@ -109,7 +115,6 @@ def about_trainer():
             "facebook": r[14] or "",
             "twitter": r[15] or "",
             "youtube": r[16] or "",
-            "profile_pic": profile_pic,
             "feedbacks": feedbacks
         })
 
