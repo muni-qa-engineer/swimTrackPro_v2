@@ -771,8 +771,8 @@ def inject_unread_notices():
                 
         elif user_type == 'guest':
             cursor.execute("""
-                SELECT DISTINCT trainer_id FROM bookings WHERE owner_name = %s AND status = 'Confirmed'
-            """, (user_identifier,))
+                SELECT DISTINCT trainer_username FROM bookings WHERE (owner_name = %s OR student_name = %s) AND trainer_username IS NOT NULL AND TRIM(trainer_username) <> ''
+            """, (user_identifier, user_identifier))
             trainers = [row[0] for row in cursor.fetchall() if row[0]]
             
             if trainers:
