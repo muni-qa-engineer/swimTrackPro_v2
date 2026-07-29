@@ -244,7 +244,9 @@
                     </button>
                     
                     <div class="d-flex align-items-center gap-3 mb-4">
-                        {% if coach.photos %}
+                        {% if coach.profile_pic %}
+                            <img src="{{ url_for('static', filename='profile_pictures/' + coach.profile_pic) }}" alt="{{ coach.name }}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid var(--color-primary);">
+                        {% elif coach.photos %}
                             <img src="{{ url_for('static', filename='uploads/' + coach.photos) }}" alt="{{ coach.name }}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid var(--color-primary);">
                         {% else %}
                             <div style="width: 70px; height: 70px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 700; color: var(--color-primary); border: 2px solid var(--color-primary);">
@@ -704,7 +706,9 @@
         document.getElementById('modalCoachSpec').innerText = coach.specialties || "N/A";
         
         const avatarContainer = document.getElementById('modalCoachAvatar');
-        if (coach.photos) {
+        if (coach.profile_pic) {
+            avatarContainer.innerHTML = `<img src="/static/profile_pictures/${coach.profile_pic}" style="width: 100%; height: 100%; object-fit: cover;">`;
+        } else if (coach.photos) {
             avatarContainer.innerHTML = `<img src="/static/uploads/${coach.photos}" style="width: 100%; height: 100%; object-fit: cover;">`;
         } else {
             avatarContainer.innerHTML = coach.name.substring(0, 1).toUpperCase();

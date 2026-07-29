@@ -165,15 +165,29 @@ def profile_page():
         flash("Profile updated successfully!", "success")
 
     cursor.execute("""
-        SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, rating, whatsapp
+        SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, rating, whatsapp, photos, id_number
         FROM trainers WHERE username = %s
     """, (trainer_user,))
     row = cursor.fetchone()
-    conn.close()
 
     if not row:
+        conn.close()
         flash("Trainer not found.", "error")
         return redirect(url_for("index"))
+
+    # Get the ID card profile picture from profile_pictures table
+    profile_pic = ""
+    trainer_id_number = row[12] or ""
+    if trainer_id_number:
+        cursor.execute("SELECT filename FROM profile_pictures WHERE id_number = %s", (trainer_id_number,))
+        pic_row = cursor.fetchone()
+        if pic_row and pic_row[0]:
+            profile_pic = pic_row[0]
+
+    conn.close()
+
+    photos_str = row[11] or ""
+    first_photo = photos_str.split(',')[0] if photos_str else ""
 
     trainer_data = {
         "username": row[0],
@@ -186,7 +200,9 @@ def profile_page():
         "residence_location": row[7] or "",
         "id_proof": row[8] or "",
         "rating": float(row[9]) if row[9] is not None else 5.0,
-        "whatsapp": row[10] or ""
+        "whatsapp": row[10] or "",
+        "photos": first_photo,
+        "profile_pic": profile_pic
     }
 
     return render_template("profile.html", trainer=trainer_data, role=current_role)
@@ -793,6 +809,7 @@ def register_general_routes(app):
                 ON CONFLICT (id_number) 
                 DO UPDATE SET filename = EXCLUDED.filename, updated_at = EXCLUDED.updated_at
             """, (id_number, new_filename))
+
             conn.commit()
             conn.close()
 
