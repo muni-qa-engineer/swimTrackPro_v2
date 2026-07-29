@@ -186,6 +186,7 @@ def ensure_database_tables():
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS residence_location TEXT")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS id_proof TEXT")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS id_proof_file TEXT")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS qualification_file TEXT")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS consent_accepted BOOLEAN DEFAULT FALSE")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS rating NUMERIC(3,2) DEFAULT 5.00")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS photos TEXT DEFAULT ''")

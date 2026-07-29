@@ -269,13 +269,25 @@ def register_authentication_routes(
             flash("Please upload an ID proof image.")
             return redirect(url_for("register_page"))
 
-        # Validate file size (< 1 MB)
+        qualification_file = request.files.get("qualification_file")
+        if not qualification_file or qualification_file.filename == "":
+            flash("Please upload a Qualification / Certification document.")
+            return redirect(url_for("register_page"))
+
+        # Validate file sizes (< 1 MB)
         import os
         id_proof_file.seek(0, os.SEEK_END)
         file_size = id_proof_file.tell()
         id_proof_file.seek(0)
         if file_size > 1024 * 1024:
             flash("ID proof image size must be less than 1 MB.")
+            return redirect(url_for("register_page"))
+
+        qualification_file.seek(0, os.SEEK_END)
+        qual_file_size = qualification_file.tell()
+        qualification_file.seek(0)
+        if qual_file_size > 1024 * 1024:
+            flash("Qualification certificate image size must be less than 1 MB.")
             return redirect(url_for("register_page"))
 
         from werkzeug.utils import secure_filename
@@ -287,6 +299,14 @@ def register_authentication_routes(
         upload_dir = os.path.join("static", "uploads", "id_proofs")
         os.makedirs(upload_dir, exist_ok=True)
         id_proof_file.save(os.path.join(upload_dir, saved_filename))
+
+        clean_qual = secure_filename(qualification) or "cert"
+        orig_qual_filename = secure_filename(qualification_file.filename) or "certificate.png"
+        saved_qual_filename = f"{clean_name}_{clean_qual}_{orig_qual_filename}"
+
+        qual_upload_dir = os.path.join("static", "uploads", "qualifications")
+        os.makedirs(qual_upload_dir, exist_ok=True)
+        qualification_file.save(os.path.join(qual_upload_dir, saved_qual_filename))
 
         import random
         rating = round(random.uniform(4.5, 5.0), 1)
@@ -310,10 +330,10 @@ def register_authentication_routes(
 
         cursor.execute(
             """
-            INSERT INTO trainers (username, password, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, consent_accepted, rating, is_approved, whatsapp, consent_version, consent_accepted_at, consent_ip, id_number, id_proof_file)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO trainers (username, password, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, consent_accepted, rating, is_approved, whatsapp, consent_version, consent_accepted_at, consent_ip, id_number, id_proof_file, qualification_file)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
-            (username.lower(), password, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, True, rating, False, whatsapp, consent_version, consent_accepted_at, consent_ip, new_id_number, saved_filename)
+            (username.lower(), password, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, True, rating, False, whatsapp, consent_version, consent_accepted_at, consent_ip, new_id_number, saved_filename, saved_qual_filename)
         )
         conn.commit()
         conn.close()

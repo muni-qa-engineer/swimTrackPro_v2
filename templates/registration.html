@@ -264,6 +264,18 @@
                 </div>
 
                 <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label" for="qualFileInput">Upload Qualification / Certificate Image <span class="text-danger">*</span> <small class="text-muted">(Max 1 MB)</small></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-certificate"></i></span>
+                            <input type="file" name="qualification_file" id="qualFileInput" accept="image/*" class="form-control" required>
+                        </div>
+                        <div class="form-text text-muted" style="font-size: 0.78rem; margin-top: 0.35rem;">Supported formats: JPEG, PNG, WebP. File size must be less than 1 MB.</div>
+                        <div id="qualFileSizeError" class="text-danger small mt-1 d-none" style="font-weight: 600;"><i class="fa-solid fa-circle-exclamation me-1"></i>File size exceeds 1 MB limit. Please select a smaller file.</div>
+                    </div>
+                </div>
+
+                <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Currently Working? <span class="text-danger">*</span></label>
                         <div class="d-flex align-items-center gap-4 mt-2">
@@ -399,6 +411,8 @@
 
         const idProofFileInput = document.getElementById('idProofFileInput');
         const fileSizeError = document.getElementById('fileSizeError');
+        const qualFileInput = document.getElementById('qualFileInput');
+        const qualFileSizeError = document.getElementById('qualFileSizeError');
         const registrationForm = document.getElementById('registrationForm');
 
         if (idProofFileInput) {
@@ -415,6 +429,20 @@
             });
         }
 
+        if (qualFileInput) {
+            qualFileInput.addEventListener('change', function () {
+                if (this.files && this.files.length > 0) {
+                    const file = this.files[0];
+                    if (file.size > 1024 * 1024) {
+                        if (qualFileSizeError) qualFileSizeError.classList.remove('d-none');
+                        this.value = '';
+                    } else {
+                        if (qualFileSizeError) qualFileSizeError.classList.add('d-none');
+                    }
+                }
+            });
+        }
+
         if (registrationForm) {
             registrationForm.addEventListener('submit', function (e) {
                 if (idProofFileInput && idProofFileInput.files && idProofFileInput.files.length > 0) {
@@ -422,6 +450,14 @@
                         e.preventDefault();
                         if (fileSizeError) fileSizeError.classList.remove('d-none');
                         alert("ID Proof image size must be less than 1 MB.");
+                        return false;
+                    }
+                }
+                if (qualFileInput && qualFileInput.files && qualFileInput.files.length > 0) {
+                    if (qualFileInput.files[0].size > 1024 * 1024) {
+                        e.preventDefault();
+                        if (qualFileSizeError) qualFileSizeError.classList.remove('d-none');
+                        alert("Qualification certificate image size must be less than 1 MB.");
                         return false;
                     }
                 }

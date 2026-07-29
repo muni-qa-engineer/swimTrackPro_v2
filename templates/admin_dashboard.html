@@ -581,6 +581,40 @@
                                                 </div>
                                             </div>
                                         {% endif %}
+
+                                        {% if trainer.qualification_file %}
+                                            <div style="margin-top: 0.25rem;">
+                                                <button type="button" class="btn btn-sm" style="background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); padding: 0.2rem 0.5rem; font-size: 0.75rem; border-radius: 6px;" data-bs-toggle="modal" data-bs-target="#qualModal-{{ loop.index }}">
+                                                    <i class="fa-solid fa-graduation-cap me-1"></i> View Certificate
+                                                </button>
+                                            </div>
+
+                                            <!-- Qualification Certificate View Modal -->
+                                            <div class="modal fade" id="qualModal-{{ loop.index }}" tabindex="-1" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered modal-lg">
+                                                    <div class="modal-content glass-panel text-start" style="background: rgba(15, 15, 18, 0.98); border: 1px solid rgba(255,255,255,0.15);">
+                                                        <div class="modal-header border-0 pb-0">
+                                                            <h5 class="modal-title font-display text-white fw-bold"><i class="fa-solid fa-graduation-cap text-success me-2"></i> Qualification Certificate: {{ trainer.name|title }}</h5>
+                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body text-center p-4">
+                                                            <div class="mb-3 text-start text-muted small">
+                                                                <div><strong>Coach Name:</strong> {{ trainer.name }}</div>
+                                                                <div><strong>Qualification / Certification:</strong> {{ trainer.qualification or 'N/A' }}</div>
+                                                            </div>
+                                                            <div class="p-2 rounded" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);">
+                                                                <img src="{{ url_for('static', filename='uploads/qualifications/' + trainer.qualification_file) }}" alt="Qualification Certificate" style="max-width: 100%; max-height: 500px; object-fit: contain; border-radius: 8px;">
+                                                            </div>
+                                                            <div class="mt-3">
+                                                                <a href="{{ url_for('static', filename='uploads/qualifications/' + trainer.qualification_file) }}" target="_blank" class="btn btn-sm btn-outline-success">
+                                                                    <i class="fa-solid fa-up-right-from-square me-1"></i> Open Original Certificate in New Tab
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
                                     </td>
                                     <td>
                                         <span class="badge badge-warning" style="text-transform: none;">

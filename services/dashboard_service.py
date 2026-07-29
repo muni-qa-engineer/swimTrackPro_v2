@@ -11,7 +11,7 @@ def get_admin_dashboard_data(current_user, data):
     cursor = conn.cursor()
     
     # Fetch trainers
-    cursor.execute("SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, rating, is_approved, is_blocked, photos, id_proof, id_proof_file FROM trainers ORDER BY name")
+    cursor.execute("SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, rating, is_approved, is_blocked, photos, id_proof, id_proof_file, qualification_file FROM trainers ORDER BY name")
     trainers_list = []
     for row in cursor.fetchall():
         photos_str = row[11] if row[11] else ""
@@ -30,7 +30,8 @@ def get_admin_dashboard_data(current_user, data):
             'is_blocked': row[10],
             'photos': photos_list,
             'id_proof': row[12] if len(row) > 12 and row[12] else "",
-            'id_proof_file': row[13] if len(row) > 13 and row[13] else ""
+            'id_proof_file': row[13] if len(row) > 13 and row[13] else "",
+            'qualification_file': row[14] if len(row) > 14 and row[14] else ""
         })
         
     # Fetch user activities
