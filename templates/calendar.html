@@ -190,6 +190,39 @@
     .modal-header, .modal-footer {
         border-color: rgba(255, 255, 255, 0.08);
     }
+    
+    /* Calendar day card */
+    #calendarGrid .border.rounded {
+      min-height: 100px;
+      border-radius: 12px !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      background: rgba(255, 255, 255, 0.03) !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      transition: all 0.2s ease;
+    }
+
+    #calendarGrid .border.rounded:hover {
+      background: rgba(255, 255, 255, 0.06) !important;
+      border-color: rgba(255, 255, 255, 0.2) !important;
+    }
+
+    /* Today card */
+    #calendarGrid .bg-primary-subtle {
+      background: rgba(13, 110, 253, 0.15) !important;
+      border-color: rgba(13, 110, 253, 0.5) !important;
+    }
+
+    /* Day number */
+    #calendarGrid .fw-bold.text-primary {
+      font-size: 1.1rem;
+      color: #fff !important;
+    }
+
+    /* Day name */
+    #calendarGrid .small.fw-semibold.text-secondary {
+      font-size: 0.75rem;
+      color: var(--color-text-secondary) !important;
+    }
 </style>
 {% endblock %}
 

@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             cell.className = isToday
                 ? 'calendar-day-card border border-primary rounded shadow-sm p-2 bg-primary-subtle'
-                : 'calendar-day-card border rounded shadow-sm bg-white p-2';
+                : 'calendar-day-card border rounded shadow-sm p-2';
 
             cell.style.minHeight = '100px';
 
