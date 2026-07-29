@@ -187,7 +187,7 @@
                 {% endif %}
             {% endwith %}
 
-            <form action="/register_trainer" method="post" id="registrationForm">
+            <form action="/register_trainer" method="post" id="registrationForm" enctype="multipart/form-data">
                 <!-- Section 1: Account Information -->
                 <div class="section-header"><i class="fa-solid fa-user-gear me-2"></i> Account Details</div>
                 <div class="row">
@@ -305,6 +305,18 @@
                     </div>
                 </div>
 
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label" for="idProofFileInput">Upload ID Proof Image <span class="text-danger">*</span> <small class="text-muted">(Max 1 MB)</small></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-file-image"></i></span>
+                            <input type="file" name="id_proof_file" id="idProofFileInput" accept="image/*" class="form-control" required>
+                        </div>
+                        <div class="form-text text-muted" style="font-size: 0.78rem; margin-top: 0.35rem;">Supported formats: JPEG, PNG, WebP. File size must be less than 1 MB.</div>
+                        <div id="fileSizeError" class="text-danger small mt-1 d-none" style="font-weight: 600;"><i class="fa-solid fa-circle-exclamation me-1"></i>File size exceeds 1 MB limit. Please select a smaller file.</div>
+                    </div>
+                </div>
+
                 <!-- Section 4: Consent check -->
                 <div class="mb-4 mt-3">
                     <div class="form-check text-start flex items-start gap-2">
@@ -383,6 +395,37 @@
         if (workingYes && workingNo) {
             workingYes.addEventListener('change', toggleWorkingInput);
             workingNo.addEventListener('change', toggleWorkingInput);
+        }
+
+        const idProofFileInput = document.getElementById('idProofFileInput');
+        const fileSizeError = document.getElementById('fileSizeError');
+        const registrationForm = document.getElementById('registrationForm');
+
+        if (idProofFileInput) {
+            idProofFileInput.addEventListener('change', function () {
+                if (this.files && this.files.length > 0) {
+                    const file = this.files[0];
+                    if (file.size > 1024 * 1024) {
+                        if (fileSizeError) fileSizeError.classList.remove('d-none');
+                        this.value = '';
+                    } else {
+                        if (fileSizeError) fileSizeError.classList.add('d-none');
+                    }
+                }
+            });
+        }
+
+        if (registrationForm) {
+            registrationForm.addEventListener('submit', function (e) {
+                if (idProofFileInput && idProofFileInput.files && idProofFileInput.files.length > 0) {
+                    if (idProofFileInput.files[0].size > 1024 * 1024) {
+                        e.preventDefault();
+                        if (fileSizeError) fileSizeError.classList.remove('d-none');
+                        alert("ID Proof image size must be less than 1 MB.");
+                        return false;
+                    }
+                }
+            });
         }
     </script>
 </body>

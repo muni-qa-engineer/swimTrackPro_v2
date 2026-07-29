@@ -11,7 +11,7 @@ def get_admin_dashboard_data(current_user, data):
     cursor = conn.cursor()
     
     # Fetch trainers
-    cursor.execute("SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, rating, is_approved, is_blocked, photos FROM trainers ORDER BY name")
+    cursor.execute("SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, rating, is_approved, is_blocked, photos, id_proof, id_proof_file FROM trainers ORDER BY name")
     trainers_list = []
     for row in cursor.fetchall():
         photos_str = row[11] if row[11] else ""
@@ -28,7 +28,9 @@ def get_admin_dashboard_data(current_user, data):
             'rating': float(row[8]) if row[8] else 5.0,
             'is_approved': row[9],
             'is_blocked': row[10],
-            'photos': photos_list
+            'photos': photos_list,
+            'id_proof': row[12] if len(row) > 12 and row[12] else "",
+            'id_proof_file': row[13] if len(row) > 13 and row[13] else ""
         })
         
     # Fetch user activities
@@ -311,15 +313,27 @@ def get_guest_dashboard_data(current_user, current_phone, data):
         cursor.execute("SELECT trainer_username FROM guest_favorites WHERE guest_phone = %s", (current_phone,))
         favorite_usernames = {row[0] for row in cursor.fetchall()}
         
-        # Get approved coaches
+        # Get approved coaches with their id_numbers
         cursor.execute("""
-            SELECT username, name, experience, qualification, currently_working, residence_location, rating, photos, bio, specialties, instagram, facebook, twitter, youtube
+            SELECT username, name, experience, qualification, currently_working, residence_location, rating, photos, bio, specialties, instagram, facebook, twitter, youtube, id_number
             FROM trainers
             WHERE is_approved = TRUE
             ORDER BY rating DESC, name
         """)
         
-        for row in cursor.fetchall():
+        trainer_rows = cursor.fetchall()
+        
+        # Collect all id_numbers to batch-fetch profile pictures
+        id_numbers = [r[14] for r in trainer_rows if r[14]]
+        profile_pics_map = {}
+        if id_numbers:
+            cursor.execute("SELECT id_number, filename FROM profile_pictures WHERE id_number = ANY(%s)", (id_numbers,))
+            for pic_row in cursor.fetchall():
+                profile_pics_map[pic_row[0]] = pic_row[1]
+        
+        for row in trainer_rows:
+            trainer_id_number = row[14] or ""
+            profile_pic = profile_pics_map.get(trainer_id_number, "")
             coaches_list.append({
                 'username': row[0],
                 'name': row[1],
@@ -335,7 +349,8 @@ def get_guest_dashboard_data(current_user, current_phone, data):
                 'facebook': row[11],
                 'twitter': row[12],
                 'youtube': row[13],
-                'is_favorited': row[0] in favorite_usernames
+                'is_favorited': row[0] in favorite_usernames,
+                'profile_pic': profile_pic
             })
             
         conn.close()

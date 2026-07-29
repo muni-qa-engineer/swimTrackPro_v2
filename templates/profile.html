@@ -79,7 +79,11 @@
         <div class="flex flex-col gap-6">
             <div class="glass-panel text-center" style="padding: 2rem;">
                 <div class="profile-avatar-container">
-                    <span>🏊</span>
+                    {% if trainer.profile_pic %}
+                        <img src="{{ url_for('static', filename='profile_pictures/' + trainer.profile_pic) }}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                    {% else %}
+                        <span>🏊</span>
+                    {% endif %}
                 </div>
                 <h3 class="font-display text-white mb-2" style="font-size: 1.5rem;">{{ trainer.name|title }}</h3>
                 <span class="badge badge-warning" style="font-size: 0.8rem;"><i class="fa-solid fa-star text-warning"></i> {{ trainer.rating }} Rating</span>

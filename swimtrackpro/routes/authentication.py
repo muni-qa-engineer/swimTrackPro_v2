@@ -264,13 +264,29 @@ def register_authentication_routes(
         whatsapp = (request.form.get("whatsapp") or "").strip()
         consent_accepted = request.form.get("consent_accepted") == "on"
 
-        if not username or not password or not name or not phone or not email or not whatsapp:
-            flash("Please fill in all mandatory fields (marked with *).")
+        id_proof_file = request.files.get("id_proof_file")
+        if not id_proof_file or id_proof_file.filename == "":
+            flash("Please upload an ID proof image.")
             return redirect(url_for("register_page"))
 
-        if not consent_accepted:
-            flash("You must accept the Coach Terms & Agreement to register.")
+        # Validate file size (< 1 MB)
+        import os
+        id_proof_file.seek(0, os.SEEK_END)
+        file_size = id_proof_file.tell()
+        id_proof_file.seek(0)
+        if file_size > 1024 * 1024:
+            flash("ID proof image size must be less than 1 MB.")
             return redirect(url_for("register_page"))
+
+        from werkzeug.utils import secure_filename
+        clean_name = secure_filename(name) or "coach"
+        clean_id_proof = secure_filename(id_proof) or "id"
+        orig_filename = secure_filename(id_proof_file.filename) or "image.png"
+        saved_filename = f"{clean_name}_{clean_id_proof}_{orig_filename}"
+
+        upload_dir = os.path.join("static", "uploads", "id_proofs")
+        os.makedirs(upload_dir, exist_ok=True)
+        id_proof_file.save(os.path.join(upload_dir, saved_filename))
 
         import random
         rating = round(random.uniform(4.5, 5.0), 1)
@@ -294,10 +310,10 @@ def register_authentication_routes(
 
         cursor.execute(
             """
-            INSERT INTO trainers (username, password, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, consent_accepted, rating, is_approved, whatsapp, consent_version, consent_accepted_at, consent_ip, id_number)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO trainers (username, password, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, consent_accepted, rating, is_approved, whatsapp, consent_version, consent_accepted_at, consent_ip, id_number, id_proof_file)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
-            (username.lower(), password, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, True, rating, False, whatsapp, consent_version, consent_accepted_at, consent_ip, new_id_number)
+            (username.lower(), password, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, True, rating, False, whatsapp, consent_version, consent_accepted_at, consent_ip, new_id_number, saved_filename)
         )
         conn.commit()
         conn.close()
