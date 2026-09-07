@@ -15,12 +15,19 @@ from swimtrackpro.routes.payments import register_payments_routes
 from swimtrackpro.routes.swimmers import register_swimmer_routes
 
 app = Flask(__name__)
-from config import (
-    ADMIN_USERNAME,
-    ADMIN_PASSWORD,
-    SECRET_KEY,
-    DATABASE_URL
-)
+import os
+try:
+    from config import (
+        ADMIN_USERNAME,
+        ADMIN_PASSWORD,
+        SECRET_KEY,
+        DATABASE_URL
+    )
+except ImportError:
+    ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
+    ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "password")
+    SECRET_KEY = os.getenv("SECRET_KEY", "default_secret")
+    DATABASE_URL = os.getenv("DATABASE_URL", "")
 app.secret_key = SECRET_KEY
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 

@@ -15,12 +15,19 @@ import os
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException   
 import threading
-from config import (
-    BREVO_API_KEY,
-    BREVO_SENDER_EMAIL,
-    BREVO_SENDER_NAME,
-    ADMIN_ALERT_EMAIL,
+import os
+try:
+    from config import (
+        BREVO_API_KEY,
+        BREVO_SENDER_EMAIL,
+        BREVO_SENDER_NAME,
+        ADMIN_ALERT_EMAIL,
     )
+except ImportError:
+    BREVO_API_KEY = os.getenv("BREVO_API_KEY", "")
+    BREVO_SENDER_EMAIL = os.getenv("BREVO_SENDER_EMAIL", "swimtrackpro.updates@gmail.com")
+    BREVO_SENDER_NAME = os.getenv("BREVO_SENDER_NAME", "SwimTrackPro")
+    ADMIN_ALERT_EMAIL = os.getenv("ADMIN_ALERT_EMAIL", "swimtrackpro.updates@gmail.com")
 
 
 
