@@ -65,15 +65,19 @@ def register_authentication_routes(
                     conn = get_pg_connection()
                     cursor = conn.cursor()
                     cursor.execute(
-                        "SELECT id, current_login FROM user_activity WHERE LOWER(user_name) = LOWER(%s) AND role = %s",
+                        "SELECT id, current_login FROM user_activity WHERE LOWER(user_name) = LOWER(%s) AND role = %s ORDER BY current_login DESC",
                         (trainer_row[2], "trainer")
                     )
-                    act_row = cursor.fetchone()
-                    if act_row:
+                    rows = cursor.fetchall()
+                    if rows:
+                        act_row = rows[0]
                         cursor.execute(
                             "UPDATE user_activity SET previous_login = %s, current_login = CURRENT_TIMESTAMP, phone = %s WHERE id = %s",
                             (act_row[1], "", act_row[0])
                         )
+                        if len(rows) > 1:
+                            duplicate_ids = tuple([r[0] for r in rows[1:]])
+                            cursor.execute("DELETE FROM user_activity WHERE id IN %s", (duplicate_ids,))
                     else:
                         cursor.execute(
                             "INSERT INTO user_activity (user_name, phone, role, current_login, previous_login) VALUES (%s, %s, %s, CURRENT_TIMESTAMP, NULL)",
@@ -111,14 +115,18 @@ def register_authentication_routes(
                     conn = get_pg_connection()
                     cursor = conn.cursor()
                     cursor.execute(
-                        "SELECT id, current_login FROM user_activity WHERE LOWER(user_name) = 'super admin' AND role = 'admin'"
+                        "SELECT id, current_login FROM user_activity WHERE LOWER(user_name) = 'super admin' AND role = 'admin' ORDER BY current_login DESC"
                     )
-                    act_row = cursor.fetchone()
-                    if act_row:
+                    rows = cursor.fetchall()
+                    if rows:
+                        act_row = rows[0]
                         cursor.execute(
                             "UPDATE user_activity SET previous_login = %s, current_login = CURRENT_TIMESTAMP, phone = %s WHERE id = %s",
                             (act_row[1], "", act_row[0])
                         )
+                        if len(rows) > 1:
+                            duplicate_ids = tuple([r[0] for r in rows[1:]])
+                            cursor.execute("DELETE FROM user_activity WHERE id IN %s", (duplicate_ids,))
                     else:
                         cursor.execute(
                             "INSERT INTO user_activity (user_name, phone, role, current_login, previous_login) VALUES (%s, %s, %s, CURRENT_TIMESTAMP, NULL)",
@@ -197,16 +205,20 @@ def register_authentication_routes(
                 conn = get_pg_connection()
                 cursor = conn.cursor()
                 cursor.execute(
-                    "SELECT id, current_login, id_number FROM user_activity WHERE LOWER(user_name) = LOWER(%s) AND role = %s",
+                    "SELECT id, current_login, id_number FROM user_activity WHERE LOWER(user_name) = LOWER(%s) AND role = %s ORDER BY current_login DESC",
                     (normalized_name, "guest")
                 )
-                act_row = cursor.fetchone()
-                if act_row:
+                rows = cursor.fetchall()
+                if rows:
+                    act_row = rows[0]
                     session["id_number"] = act_row[2] or "STPS0000"
                     cursor.execute(
                         "UPDATE user_activity SET previous_login = %s, current_login = CURRENT_TIMESTAMP, phone = %s WHERE id = %s",
                         (act_row[1], phone, act_row[0])
                     )
+                    if len(rows) > 1:
+                        duplicate_ids = tuple([r[0] for r in rows[1:]])
+                        cursor.execute("DELETE FROM user_activity WHERE id IN %s", (duplicate_ids,))
                 else:
                     cursor.execute("SELECT MAX(CAST(SUBSTRING(id_number FROM 5) AS INTEGER)) FROM user_activity WHERE id_number LIKE 'STPS%'")
                     max_guest_val = cursor.fetchone()[0] or 0
