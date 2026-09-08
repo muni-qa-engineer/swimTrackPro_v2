@@ -72,29 +72,44 @@
                 <!-- Track Booked Sessions -->
                 <div class="glass-panel" style="padding: 1.5rem;">
                     <h3 class="font-display" style="font-size: 1.25rem; margin-bottom: 1rem;"><i class="fa-solid fa-chart-line text-accent"></i> Progress Tracker</h3>
-                    {% set progress_percent = ((completed_sessions * 100) / total_sessions) if total_sessions > 0 else 0 %}
-                    <div class="flex items-center justify-between gap-4">
-                        <div class="progress-circle" style="--progress:{{ progress_percent|round(0,'floor') }};">
-                            <div class="progress-circle-inner">{{ progress_percent|round(0,'floor') }}%</div>
-                        </div>
-                        <div style="flex: 1;">
-                            <div style="font-size: 1.4rem; font-weight: 800; line-height: 1;">
-                                {{ completed_sessions }} / {{ total_sessions }}
-                            </div>
-                            <div class="text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">Sessions Completed</div>
-                            <div class="text-secondary" style="font-size: 0.8rem; margin-top: 0.1rem;">{{ remaining_sessions }} sessions remaining</div>
-                        </div>
-                    </div>
                     
-                    <!-- Quick Actions -->
-                    <div class="d-flex gap-2 mt-4 pt-3" style="border-top: 1px solid rgba(255,255,255,0.05);">
-                        <button type="button" class="btn btn-outline flex-grow-1" style="color: var(--color-warning); border-color: rgba(245, 158, 11, 0.5);" onclick="openSkipModal()">
-                            <i class="fa-solid fa-forward-step"></i> Skip
-                        </button>
-                        <button type="button" class="btn btn-outline flex-grow-1" style="color: var(--color-danger); border-color: rgba(239, 68, 68, 0.5);" onclick="openPauseModal()">
-                            <i class="fa-solid fa-pause"></i> Pause
-                        </button>
-                    </div>
+                    {% if has_active_package %}
+                        {% set progress_percent = ((completed_sessions * 100) / total_sessions) if total_sessions > 0 else 0 %}
+                        <div class="flex items-center justify-between gap-4">
+                            <div class="progress-circle" style="--progress:{{ progress_percent|round(0,'floor') }};">
+                                <div class="progress-circle-inner">{{ progress_percent|round(0,'floor') }}%</div>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-size: 1.4rem; font-weight: 800; line-height: 1;">
+                                    {{ completed_sessions }} / {{ total_sessions }}
+                                </div>
+                                <div class="text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">Sessions Completed</div>
+                                <div class="text-secondary" style="font-size: 0.8rem; margin-top: 0.1rem;">{{ remaining_sessions }} sessions remaining</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Actions -->
+                        <div class="d-flex gap-2 mt-4 pt-3" style="border-top: 1px solid rgba(255,255,255,0.05);">
+                            <button type="button" class="btn btn-outline flex-grow-1" style="color: var(--color-warning); border-color: rgba(245, 158, 11, 0.5);" onclick="openSkipModal()">
+                                <i class="fa-solid fa-forward-step"></i> Skip
+                            </button>
+                            {% if has_monthly_custom %}
+                            <button type="button" class="btn btn-outline flex-grow-1" style="color: var(--color-danger); border-color: rgba(239, 68, 68, 0.5);" onclick="openPauseModal()">
+                                <i class="fa-solid fa-pause"></i> Pause
+                            </button>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <div class="mb-3">
+                                <i class="fa-solid fa-person-swimming" style="font-size: 2.5rem; color: rgba(255,255,255,0.1);"></i>
+                            </div>
+                            <p class="text-muted mb-3" style="font-size: 0.95rem;">No active bookings found.</p>
+                            <a href="/booking" class="btn btn-primary btn-sm rounded-pill px-4 py-2">
+                                <i class="fa-solid fa-plus me-1"></i> Book Now
+                            </a>
+                        </div>
+                    {% endif %}
                 </div>
 
                 <!-- My Swimmers Interactive -->

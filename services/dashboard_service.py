@@ -375,6 +375,9 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
     total_swimmers = len(user_students)
     active_bookings = sum(1 for b in user_bookings if not b.get('is_completed', False))
     completed_bookings = sum(1 for b in user_bookings if b.get('is_completed', False))
+    
+    has_active_package = any(not b.get('is_completed', False) and str(b.get('status', '')).strip().lower() in ('active', 'confirmed', 'paid') for b in user_bookings)
+    has_monthly_custom = any(not b.get('is_completed', False) and str(b.get('status', '')).strip().lower() in ('active', 'confirmed', 'paid') and b.get('package') in ('Monthly', 'Custom') for b in user_bookings)
 
     monthly_revenue = sum(int(b.get('fee', 0) or 0) for b in user_bookings if str(b.get('status', '')).lower() == 'paid')
     pending_payments = sum(int(b.get('fee', 0) or 0) for b in user_bookings if str(b.get('status', '')).lower() != 'paid')
@@ -625,6 +628,8 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
         'students': user_students,
         'total_swimmers': total_swimmers,
         'active_bookings': active_bookings,
+        'has_active_package': has_active_package,
+        'has_monthly_custom': has_monthly_custom,
         'completed_bookings': completed_bookings,
         'monthly_revenue': monthly_revenue,
         'pending_payments': pending_payments,
