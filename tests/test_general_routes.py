@@ -346,7 +346,7 @@ class GeneralRouteAccessTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"openRenewModal('test-bk-123'", response.data)
         
-        new_start_date = "2026-08-01"
+        new_start_date = "2030-08-01"
         response = self.client.post(
             "/booking/renew",
             data={
