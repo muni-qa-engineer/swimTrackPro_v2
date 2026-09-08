@@ -929,7 +929,7 @@
 
             <!-- SECTION: Settings -->
             <div id="section-settings" class="dashboard-section d-none">
-                <div class="glass-panel" style="padding: 1.5rem;">
+                <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
                     <h3 class="font-display" style="font-size: 1.25rem; margin-bottom: 1rem;">Admin Settings</h3>
                     <p class="text-muted" style="font-size: 0.95rem; margin-bottom: 1.5rem;">General configuration settings for SwimTrackPro will be placed here.</p>
                     <hr style="border-color: rgba(255,255,255,0.05); margin-bottom: 1.5rem;">
@@ -942,6 +942,38 @@
                             <label class="form-label">System Email</label>
                             <input type="text" class="form-control" value="admin@swimtrackpro.com" disabled>
                         </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel" style="padding: 1.5rem;">
+                    <h3 class="font-display" style="font-size: 1.25rem; margin-bottom: 1rem;"><i class="fa-solid fa-images text-accent"></i> Homepage Carousel</h3>
+                    <p class="text-muted" style="font-size: 0.95rem; margin-bottom: 1.5rem;">Upload background images for the landing page hero section.</p>
+                    
+                    <form action="/admin/carousel/upload" method="POST" enctype="multipart/form-data" class="mb-4">
+                        <div class="d-flex gap-3 align-items-end">
+                            <div class="flex-grow-1">
+                                <label class="form-label">Select Image</label>
+                                <input type="file" name="carousel_img" class="form-control" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white;" accept="image/*" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary px-4 py-2" style="border-radius: var(--radius-sm);">Upload</button>
+                        </div>
+                    </form>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {% if carousel_images %}
+                            {% for img in carousel_images %}
+                                <div class="position-relative rounded overflow-hidden" style="border: 1px solid rgba(255,255,255,0.1);">
+                                    <img src="{{ img.url }}" class="w-100 h-100 object-fit-cover" style="min-height: 150px; max-height: 150px;" alt="Carousel Image">
+                                    <form action="/admin/carousel/delete/{{ img.id }}" method="POST" class="position-absolute top-0 end-0 p-1" onsubmit="return handleAnimatedDelete(event, this);">
+                                        <button type="submit" class="btn btn-sm btn-danger rounded-circle shadow-sm" style="width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fa-solid fa-trash-can" style="font-size: 0.75rem;"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">No images uploaded. Using default background.</p>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -1085,10 +1117,11 @@
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {% for photo in trainer.photos %}
                             <div class="position-relative card" style="padding: 0; overflow: hidden; border: none;">
-                                <img src="{{ url_for('static', filename='images/Album/' ~ photo) }}" class="img-fluid" alt="Trainer Image" style="object-fit: cover; width: 100%; height: 200px;">
-                                <form action="{{ url_for('delete_trainer_image', username=trainer.username, filename=photo) }}" method="POST" class="position-absolute top-0 end-0 p-2" onsubmit="return handleAnimatedDelete(event, this);">
-                                    <button type="submit" class="btn btn-primary rounded-circle shadow" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: var(--color-danger); border: none;">
-                                        <i class="fa-solid fa-trash" style="font-size: 0.95rem;"></i>
+                                <img src="{{ photo if photo.startswith('http') else url_for('static', filename='images/Album/' ~ photo) }}" class="img-fluid" alt="Trainer Image" style="object-fit: cover; width: 100%; height: 200px;">
+                                <form action="{{ url_for('delete_trainer_image', username=trainer.username) }}" method="POST" class="position-absolute top-0 end-0 p-2" onsubmit="return handleAnimatedDelete(event, this);">
+                                    <input type="hidden" name="filename" value="{{ photo }}">
+                                    <button type="submit" class="btn btn-sm btn-danger rounded-circle shadow-sm" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;" title="Delete Image" data-original-html='<i class="fa-solid fa-trash-can"></i>'>
+                                        <i class="fa-solid fa-trash-can"></i>
                                     </button>
                                 </form>
                             </div>

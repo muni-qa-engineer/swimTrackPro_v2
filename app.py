@@ -84,6 +84,14 @@ def ensure_database_tables():
     """)
 
     cursor.execute("""
+    CREATE TABLE IF NOT EXISTS homepage_carousel (
+        id SERIAL PRIMARY KEY,
+        image_url TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS profile_pictures (
         id SERIAL PRIMARY KEY,
         id_number VARCHAR(50) UNIQUE NOT NULL,

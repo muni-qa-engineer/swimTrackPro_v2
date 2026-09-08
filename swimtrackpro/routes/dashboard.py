@@ -15,9 +15,15 @@ def index():
     if 'user_name' not in session:
         packages = get_all_packages()
         coaches_list = []
+        carousel_images = []
         try:
             conn = get_pg_connection()
             cursor = conn.cursor()
+            
+            # Fetch carousel images
+            cursor.execute("SELECT id, image_url FROM homepage_carousel ORDER BY created_at DESC")
+            carousel_images = [{'id': row[0], 'url': row[1]} for row in cursor.fetchall()]
+            
             cursor.execute("""
                 SELECT t.username, t.name, t.experience, t.qualification, t.currently_working, t.residence_location, t.rating,
                        (SELECT COUNT(DISTINCT b.student_name) FROM bookings b WHERE LOWER(b.trainer_username) = LOWER(t.username)) as student_count
@@ -38,8 +44,8 @@ def index():
                 })
             conn.close()
         except Exception as e:
-            print("Error loading coaches for landing page:", e)
-        return render_template('login.html', pkg=packages, coaches=coaches_list)
+            print("Error loading data for landing page:", e)
+        return render_template('login.html', pkg=packages, coaches=coaches_list, carousel_images=carousel_images)
 
     
     check_and_perform_auto_resumes()

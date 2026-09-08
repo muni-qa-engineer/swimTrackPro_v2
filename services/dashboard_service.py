@@ -122,6 +122,9 @@ def get_admin_dashboard_data(current_user, data):
             'discount_percentage': row[4]
         })
         
+    cursor.execute("SELECT id, image_url FROM homepage_carousel ORDER BY created_at DESC")
+    carousel_images = [{'id': row[0], 'url': row[1]} for row in cursor.fetchall()]
+
     conn.close()
 
     return {
@@ -136,7 +139,8 @@ def get_admin_dashboard_data(current_user, data):
         'paused_this_week_count': paused_this_week_count,
         'resume_pending_count': resume_pending_count,
         'audit_logs': audit_logs,
-        'packages': packages_list
+        'packages': packages_list,
+        'carousel_images': carousel_images
     }
 
 def get_all_packages():

@@ -80,7 +80,7 @@
             <div class="glass-panel text-center" style="padding: 2rem;">
                 <div class="profile-avatar-container">
                     {% if trainer.profile_pic %}
-                        <img src="{{ url_for('static', filename='profile_pictures/' + trainer.profile_pic) }}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                        <img src="{{ trainer.profile_pic if trainer.profile_pic.startswith('http') else trainer.profile_pic if trainer.profile_pic.startswith('http') else url_for('static', filename='profile_pictures/' + trainer.profile_pic) }}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                     {% else %}
                         <span>🏊</span>
                     {% endif %}

@@ -260,7 +260,7 @@
                     
                     <div class="d-flex align-items-center gap-3 mb-4">
                         {% if coach.profile_pic %}
-                            <img src="{{ url_for('static', filename='profile_pictures/' + coach.profile_pic) }}" alt="{{ coach.name }}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid var(--color-primary);">
+                            <img src="{{ coach.profile_pic if coach.profile_pic.startswith('http') else coach.profile_pic if coach.profile_pic.startswith('http') else url_for('static', filename='profile_pictures/' + coach.profile_pic) }}" alt="{{ coach.name }}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid var(--color-primary);">
                         {% elif coach.photos %}
                             <img src="{{ url_for('static', filename='uploads/' + coach.photos) }}" alt="{{ coach.name }}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid var(--color-primary);">
                         {% else %}

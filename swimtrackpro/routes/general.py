@@ -236,10 +236,6 @@ def profile_page():
 
 @login_required
 def profile_upload_photo():
-    import os
-    import time
-    from werkzeug.utils import secure_filename
-
     current_role = session.get("role", "guest")
     if current_role != "trainer":
         flash("Only trainers can upload photos.", "error")
@@ -257,14 +253,13 @@ def profile_upload_photo():
         return redirect(url_for("profile_page"))
 
     if file:
-        filename = secure_filename(file.filename)
-        filename = f"{trainer_user}_{int(time.time())}_{filename}"
-
-        album_dir = os.path.join("static", "images", "Album")
-        os.makedirs(album_dir, exist_ok=True)
-
-        filepath = os.path.join(album_dir, filename)
-        file.save(filepath)
+        from services.cloudinary_service import upload_image
+        folder = f"swimtrackpro/coaches/{trainer_user}_gallery"
+        
+        cloudinary_url = upload_image(file, folder=folder)
+        if not cloudinary_url:
+            flash("Failed to upload image to Cloudinary.", "error")
+            return redirect(url_for("profile_page"))
 
         conn = get_pg_connection()
         cursor = conn.cursor()
@@ -273,9 +268,9 @@ def profile_upload_photo():
 
         current_photos = row[0] if (row and row[0]) else ""
         if current_photos:
-            new_photos = f"{current_photos},{filename}"
+            new_photos = f"{current_photos},{cloudinary_url}"
         else:
-            new_photos = filename
+            new_photos = cloudinary_url
 
         cursor.execute("UPDATE trainers SET photos = %s WHERE username = %s", (new_photos, trainer_user))
         conn.commit()
@@ -564,8 +559,12 @@ def edit_trainer(username):
         return redirect(url_for("index"))
 
 @admin_required("Only admin can delete trainer images.")
-def delete_trainer_image(username, filename):
-    import os
+def delete_trainer_image(username):
+    filename = request.form.get("filename")
+    if not filename:
+        flash("Filename not provided.", "error")
+        return redirect(url_for("index"))
+        
     if request.method == "POST":
         conn = get_pg_connection()
         cursor = conn.cursor()
@@ -581,14 +580,19 @@ def delete_trainer_image(username, filename):
                 # Delete from database
                 cursor.execute("UPDATE trainers SET photos = %s WHERE username = %s", (new_photos_str, username))
                 
-                # Delete file from disk
-                album_dir = os.path.join("static", "images", "Album")
-                filepath = os.path.join(album_dir, filename)
-                try:
-                    if os.path.exists(filepath):
-                        os.remove(filepath)
-                except Exception as e:
-                    print(f"Error removing file {filepath}: {e}")
+                # Delete from Cloudinary or local disk
+                if filename.startswith('http'):
+                    from services.cloudinary_service import delete_image
+                    delete_image(filename)
+                else:
+                    import os
+                    album_dir = os.path.join("static", "images", "Album")
+                    filepath = os.path.join(album_dir, filename)
+                    try:
+                        if os.path.exists(filepath):
+                            os.remove(filepath)
+                    except Exception:
+                        pass
                 
                 conn.commit()
                 flash("Image deleted successfully.", "success")
@@ -596,7 +600,7 @@ def delete_trainer_image(username, filename):
                 flash("Image not found in trainer's album.", "warning")
         
         conn.close()
-        return redirect(url_for("index"))
+    return redirect(url_for("index"))
 
 @trainer_required("Only trainers can update their profile")
 def update_trainer_profile():
@@ -666,6 +670,57 @@ def save_trainer_slots():
 @admin_required("Only admin can view marketing materials.")
 def marketing_materials():
     return render_template("marketing_materials.html", role=session.get("role", "guest"))
+
+@admin_required("Only admin can manage carousel.")
+def upload_carousel_image():
+    if "carousel_img" not in request.files:
+        flash("No file part in the request.", "error")
+        return redirect(url_for("index"))
+
+    file = request.files["carousel_img"]
+    if file.filename == "":
+        flash("No file selected.", "error")
+        return redirect(url_for("index"))
+
+    if file:
+        from services.cloudinary_service import upload_image
+        folder = "swimtrackpro/admin_carousel"
+        cloudinary_url = upload_image(file, folder=folder)
+        
+        if not cloudinary_url:
+            flash("Failed to upload image to Cloudinary.", "error")
+            return redirect(url_for("index"))
+
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO homepage_carousel (image_url) VALUES (%s)", (cloudinary_url,))
+        conn.commit()
+        conn.close()
+        flash("Carousel image uploaded successfully!", "success")
+
+    return redirect(url_for("index"))
+
+@admin_required("Only admin can manage carousel.")
+def delete_carousel_image(img_id):
+    if request.method == "POST":
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT image_url FROM homepage_carousel WHERE id = %s", (img_id,))
+        row = cursor.fetchone()
+        
+        if row and row[0]:
+            image_url = row[0]
+            from services.cloudinary_service import delete_image
+            delete_image(image_url)
+            
+            cursor.execute("DELETE FROM homepage_carousel WHERE id = %s", (img_id,))
+            conn.commit()
+            flash("Carousel image deleted successfully.", "success")
+        else:
+            flash("Image not found.", "warning")
+            
+        conn.close()
+    return redirect(url_for("index"))
 
 def register_general_routes(app):
     """Register routes with their legacy endpoint names unchanged."""
@@ -785,7 +840,12 @@ def register_general_routes(app):
         cursor.execute("SELECT filename FROM profile_pictures WHERE id_number = %s", (id_number,))
         pic_row = cursor.fetchone()
         if pic_row and pic_row[0]:
-            photo = url_for('static', filename='profile_pictures/' + pic_row[0])
+            # If it's a Cloudinary URL, use it directly, otherwise keep old static path for backwards compatibility
+            filename = pic_row[0]
+            if filename.startswith('http'):
+                photo = filename
+            else:
+                photo = url_for('static', filename='profile_pictures/' + filename)
             
         conn.close()
 
@@ -812,21 +872,25 @@ def register_general_routes(app):
             return jsonify({'error': 'No file selected.'}), 400
 
         if file:
-            import os
-            from werkzeug.utils import secure_filename
             id_number = session.get('id_number', 'UNKNOWN')
-            original_ext = os.path.splitext(file.filename)[1]
-            original_base = os.path.splitext(file.filename)[0]
-            # Use original name with ID appended as requested
-            new_filename = secure_filename(f"{original_base}_{id_number}{original_ext}")
-
-            profile_dir = os.path.join("static", "profile_pictures")
-            os.makedirs(profile_dir, exist_ok=True)
-            filepath = os.path.join(profile_dir, new_filename)
-            file.save(filepath)
-
+            role = session.get('role', 'students')
+            folder = f"swimtrackpro/{role}_id_cards"
+            
+            from services.cloudinary_service import upload_image, delete_image
+            
+            # Fetch existing to delete from Cloudinary if replacing
             conn = get_pg_connection()
             cursor = conn.cursor()
+            cursor.execute("SELECT filename FROM profile_pictures WHERE id_number = %s", (id_number,))
+            old_pic = cursor.fetchone()
+            if old_pic and old_pic[0] and old_pic[0].startswith('http'):
+                delete_image(old_pic[0])
+            
+            # Upload new image
+            cloudinary_url = upload_image(file, folder=folder)
+            if not cloudinary_url:
+                conn.close()
+                return jsonify({'error': 'Failed to upload image to Cloudinary'}), 500
             
             # Upsert into profile_pictures
             cursor.execute("""
@@ -834,12 +898,12 @@ def register_general_routes(app):
                 VALUES (%s, %s, CURRENT_TIMESTAMP)
                 ON CONFLICT (id_number) 
                 DO UPDATE SET filename = EXCLUDED.filename, updated_at = EXCLUDED.updated_at
-            """, (id_number, new_filename))
+            """, (id_number, cloudinary_url))
 
             conn.commit()
             conn.close()
 
-            return jsonify({'success': True, 'photo': url_for('static', filename='profile_pictures/' + new_filename)})
+            return jsonify({'success': True, 'photo': cloudinary_url})
             
         return jsonify({'error': 'Upload failed'}), 500
 
@@ -856,15 +920,19 @@ def register_general_routes(app):
         cursor.execute("SELECT filename FROM profile_pictures WHERE id_number = %s", (id_number,))
         row = cursor.fetchone()
         
-        if row:
-            import os
+        if row and row[0]:
             filename = row[0]
-            filepath = os.path.join("static", "profile_pictures", filename)
-            if os.path.exists(filepath):
-                try:
-                    os.remove(filepath)
-                except Exception:
-                    pass
+            if filename.startswith('http'):
+                from services.cloudinary_service import delete_image
+                delete_image(filename)
+            else:
+                import os
+                filepath = os.path.join("static", "profile_pictures", filename)
+                if os.path.exists(filepath):
+                    try:
+                        os.remove(filepath)
+                    except Exception:
+                        pass
             
             cursor.execute("DELETE FROM profile_pictures WHERE id_number = %s", (id_number,))
             conn.commit()
@@ -963,8 +1031,22 @@ def register_general_routes(app):
         methods=["POST"],
     )
     app.add_url_rule(
-        "/admin/delete_trainer_image/<username>/<filename>",
+        "/admin/delete_trainer_image/<username>",
         endpoint="delete_trainer_image",
         view_func=delete_trainer_image,
-        methods=["POST"],
+        methods=["POST"]
+    )
+
+
+    app.add_url_rule(
+        "/admin/carousel/upload",
+        endpoint="upload_carousel_image",
+        view_func=upload_carousel_image,
+        methods=["POST"]
+    )
+    app.add_url_rule(
+        "/admin/carousel/delete/<int:img_id>",
+        endpoint="delete_carousel_image",
+        view_func=delete_carousel_image,
+        methods=["POST"]
     )
