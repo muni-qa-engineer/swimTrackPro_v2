@@ -105,14 +105,9 @@
                 <p class="text-muted small mb-3">Upload training photos or action shots to showcase your coaching style.</p>
                 
                 <form id="uploadPhotoForm" action="/profile/upload-photo" method="POST" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <label for="training_pic" class="btn btn-outline w-100 text-truncate" id="fileLabel" style="border-color: rgba(255,255,255,0.1); cursor: pointer;">
-                            <i class="fa-solid fa-cloud-arrow-up me-2"></i> Choose Photo
-                        </label>
-                        <input type="file" id="training_pic" name="training_pic" accept="image/*" style="display: none;" required>
+                    <div class="form-group mb-3">
+                        <input class="form-control" type="file" id="training_pic" name="training_pic" accept="image/*" required style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white;">
                     </div>
-                    
-                    <div id="filenameDisplay" class="text-muted small mb-3 text-truncate d-none" style="font-size: 0.8rem;"></div>
                     
                     <div class="progress mb-3 d-none" style="height: 6px; background-color: rgba(255,255,255,0.05); border-radius: 3px;">
                         <div id="uploadProgressBar" class="progress-bar bg-success" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
@@ -271,26 +266,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Upload album picture progress tracking
     const uploadForm = document.getElementById('uploadPhotoForm');
     const fileInput = document.getElementById('training_pic');
-    const fileLabel = document.getElementById('fileLabel');
-    const filenameDisplay = document.getElementById('filenameDisplay');
     const progressBarContainer = document.querySelector('.progress');
     const progressBar = document.getElementById('uploadProgressBar');
     const submitBtn = document.getElementById('uploadSubmitBtn');
 
     if (fileInput && uploadForm) {
-        fileInput.addEventListener('change', () => {
-            if (fileInput.files && fileInput.files.length > 0) {
-                const fileName = fileInput.files[0].name;
-                fileLabel.innerHTML = `<i class="fa-solid fa-image me-2"></i> Change Photo`;
-                filenameDisplay.textContent = fileName;
-                filenameDisplay.classList.remove('d-none');
-            } else {
-                fileLabel.innerHTML = `<i class="fa-solid fa-cloud-arrow-up me-2"></i> Choose Photo`;
-                filenameDisplay.textContent = '';
-                filenameDisplay.classList.add('d-none');
-            }
-        });
-
         uploadForm.addEventListener('submit', (e) => {
             e.preventDefault();
             if (!fileInput.files || fileInput.files.length === 0) return;
