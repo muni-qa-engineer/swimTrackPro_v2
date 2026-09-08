@@ -376,6 +376,7 @@
                                         {% if (session.get('role') == 'admin' and n.author_type == 'admin') or (session.get('role') == 'trainer' and n.author_type == 'trainer' and n.author_id == session.get('trainer_username')) %}
                                             <button class="btn btn-sm btn-link text-danger ms-2 p-0" onclick="deleteNotice({{ n.id }}, this)" title="Delete Announcement"><i class="fa-solid fa-trash-can"></i></button>
                                         {% endif %}
+                                        <button class="btn btn-sm btn-link text-secondary ms-2 p-0" onclick="dismissNotice({{ n.id }}, this)" title="Dismiss Notification"><i class="fa-solid fa-xmark"></i></button>
                                     </div>
                                 </div>
                                 <div class="text-secondary" style="font-size: 0.85rem; line-height: 1.5; white-space: pre-line;">{{ n.message }}</div>
@@ -594,6 +595,34 @@
                 btnElem.innerHTML = btnElem.dataset.originalHtml;
                 btnElem.classList.remove('text-warning');
                 btnElem.classList.add('text-danger');
+            });
+        }
+        
+        function dismissNotice(noticeId, btnElem) {
+            btnElem.disabled = true;
+            btnElem.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            
+            fetch('/api/notices/' + noticeId + '/dismiss', {
+                method: 'POST'
+            }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const card = btnElem.closest('.notice-card');
+                    if (card) {
+                        card.style.transition = 'all 0.3s ease';
+                        card.style.opacity = '0';
+                        card.style.transform = 'scale(0.95)';
+                        setTimeout(() => card.remove(), 300);
+                    }
+                } else {
+                    alert('Failed to dismiss notice: ' + data.error);
+                    btnElem.disabled = false;
+                    btnElem.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                }
+            }).catch(err => {
+                console.error('Error dismissing notice:', err);
+                btnElem.disabled = false;
+                btnElem.innerHTML = '<i class="fa-solid fa-xmark"></i>';
             });
         }
         

@@ -374,6 +374,7 @@ def ensure_database_tables():
         UNIQUE(notice_id, user_type, user_id)
     )
     """)
+    cursor.execute("ALTER TABLE notice_reads ADD COLUMN IF NOT EXISTS is_dismissed BOOLEAN DEFAULT FALSE")
     
     try:
         cursor.execute("ALTER TABLE notice_reads ALTER COLUMN user_id TYPE TEXT")
@@ -761,7 +762,7 @@ def inject_unread_notices():
         
         elif user_type == 'trainer':
             cursor.execute("""
-                SELECT n.id, n.author_type, n.author_name, n.message, n.created_at, r.id, n.author_id
+                SELECT n.id, n.author_type, n.author_name, n.message, n.created_at, r.id, n.author_id, r.is_dismissed
                 FROM notices n
                 LEFT JOIN notice_reads r ON n.id = r.notice_id AND r.user_type = 'trainer' AND r.user_id = %s
                 WHERE n.author_type = 'admin' OR (n.author_type = 'trainer' AND n.author_id = %s)
@@ -769,6 +770,8 @@ def inject_unread_notices():
             """, (user_identifier, user_identifier))
             rows = cursor.fetchall()
             for r in rows:
+                if len(r) > 7 and r[7]:  # If is_dismissed is true
+                    continue
                 # Don't increment unread count for their own notices
                 if r[5] is None and r[1] != 'trainer':
                     unread_count += 1
@@ -780,19 +783,19 @@ def inject_unread_notices():
             cursor.execute("""
                 SELECT DISTINCT trainer_username FROM bookings WHERE LOWER(owner_name) = LOWER(%s) AND LOWER(status) IN ('active', 'confirmed', 'paid')
             """, (user_identifier,))
-            trainers = [row[0] for row in cursor.fetchall() if row[0]]
+            trainers = [str(row[0]).lower() for row in cursor.fetchall() if row[0]]
             
             if trainers:
                 cursor.execute("""
-                    SELECT n.id, n.author_type, n.author_name, n.message, n.created_at, r.id, n.author_id 
+                    SELECT n.id, n.author_type, n.author_name, n.message, n.created_at, r.id, n.author_id, r.is_dismissed
                     FROM notices n
                     LEFT JOIN notice_reads r ON n.id = r.notice_id AND r.user_type = 'student' AND r.user_id = %s
-                    WHERE n.author_type = 'admin' OR (n.author_type = 'trainer' AND n.author_id = ANY(%s))
+                    WHERE n.author_type = 'admin' OR (n.author_type = 'trainer' AND LOWER(n.author_id) = ANY(%s))
                     ORDER BY n.created_at DESC
                 """, (user_identifier, trainers))
             else:
                 cursor.execute("""
-                    SELECT n.id, n.author_type, n.author_name, n.message, n.created_at, r.id, n.author_id
+                    SELECT n.id, n.author_type, n.author_name, n.message, n.created_at, r.id, n.author_id, r.is_dismissed
                     FROM notices n
                     LEFT JOIN notice_reads r ON n.id = r.notice_id AND r.user_type = 'student' AND r.user_id = %s
                     WHERE n.author_type = 'admin' OR n.author_type = 'trainer'
@@ -801,6 +804,8 @@ def inject_unread_notices():
                 
             rows = cursor.fetchall()
             for r in rows:
+                if len(r) > 7 and r[7]:  # If is_dismissed is true
+                    continue
                 if r[5] is None:
                     unread_count += 1
                 notices.append({
@@ -879,6 +884,39 @@ def mark_notices_read():
                 VALUES (%s, %s, %s)
                 ON CONFLICT (notice_id, user_type, user_id) DO NOTHING
             """, (nid, db_user_type, user_identifier))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+        
+    return jsonify({'success': True})
+
+@app.route('/api/notices/<int:notice_id>/dismiss', methods=['POST'])
+def dismiss_notice(notice_id):
+    user_type = session.get('role')
+    if user_type == 'trainer':
+        user_identifier = session.get('trainer_username')
+    elif user_type == 'admin':
+        user_identifier = session.get('admin_username', 'admin')
+    else:
+        user_identifier = session.get('user_name')
+        
+    if not user_type or not user_identifier:
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    db_user_type = 'student' if user_type == 'guest' else user_type
+    
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            INSERT INTO notice_reads (notice_id, user_type, user_id, is_dismissed)
+            VALUES (%s, %s, %s, TRUE)
+            ON CONFLICT (notice_id, user_type, user_id) 
+            DO UPDATE SET is_dismissed = TRUE
+        """, (notice_id, db_user_type, user_identifier))
         conn.commit()
     except Exception as e:
         conn.rollback()
