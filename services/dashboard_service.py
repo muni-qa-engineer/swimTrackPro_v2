@@ -289,16 +289,18 @@ def get_trainer_dashboard_data(trainer_username, data):
 
 def get_guest_dashboard_data(current_user, current_phone, data):
     """Fetch and process data specifically for the Guest dashboard."""
+    current_user_lower = (current_user or '').strip().lower()
+    
     user_bookings = [
         b for b in data.get('bookings', [])
-        if (b.get('owner_name') or '').strip().lower() == current_user
+        if (b.get('owner_name') or '').strip().lower() == current_user_lower
         and b.get('owner_phone') == current_phone
         and b.get('payment_request') != 'unconfirmed'
     ]
     user_students = [
         s for s in data.get('students', [])
         if isinstance(s, dict)
-        and (s.get('owner_name') or '').strip().lower() == current_user
+        and (s.get('owner_name') or '').strip().lower() == current_user_lower
         and s.get('owner_phone') == current_phone
     ]
     result = _process_common_dashboard_data(user_bookings, user_students, 'guest', current_user)
@@ -581,8 +583,15 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
         ]))
         
         if in_progress_trainers:
-            if 'admin' not in in_progress_trainers:
-                in_progress_trainers.append('admin')
+            import os
+            try:
+                from config import ADMIN_USERNAME
+            except ImportError:
+                ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
+                
+            if ADMIN_USERNAME not in in_progress_trainers:
+                in_progress_trainers.append(ADMIN_USERNAME)
+                
             placeholders = ", ".join(["%s"] * len(in_progress_trainers))
             cursor.execute(f"SELECT name, notice FROM trainers WHERE username IN ({placeholders}) AND is_approved = TRUE", tuple(in_progress_trainers))
         else:
