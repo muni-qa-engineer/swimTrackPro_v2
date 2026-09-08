@@ -573,11 +573,21 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
                 if req.get('status') == 'pending':
                     notification_list.append(f"⏳ Pending Make-up request for {b.get('student', 'Swimmer')} on {req.get('requested_date')}.")
     else:
-        assigned_usernames = list(set([b.get("trainer_username", "asdf") for b in user_bookings if b.get("trainer_username")]))
-        if not assigned_usernames:
-            assigned_usernames = ["asdf"]
-        placeholders = ", ".join(["%s"] * len(assigned_usernames))
-        cursor.execute(f"SELECT name, notice FROM trainers WHERE username IN ({placeholders})", tuple(assigned_usernames))
+        # Determine assigned trainers from in-progress bookings
+        in_progress_trainers = list(set([
+            b.get("trainer_username") 
+            for b in user_bookings 
+            if b.get("trainer_username") and str(b.get("status", "")).strip().lower() in ('active', 'confirmed', 'paid')
+        ]))
+        
+        if in_progress_trainers:
+            if 'admin' not in in_progress_trainers:
+                in_progress_trainers.append('admin')
+            placeholders = ", ".join(["%s"] * len(in_progress_trainers))
+            cursor.execute(f"SELECT name, notice FROM trainers WHERE username IN ({placeholders}) AND is_approved = TRUE", tuple(in_progress_trainers))
+        else:
+            cursor.execute("SELECT name, notice FROM trainers WHERE is_approved = TRUE")
+            
         rows_notice = cursor.fetchall()
         announcements_list = []
         for name, notice in rows_notice:
@@ -585,7 +595,8 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
                 for ann in notice.split("•"):
                     ann_text = ann.strip()
                     if ann_text:
-                        announcements_list.append(f"Coach {name.title()}: {ann_text}")
+                        prefix = "Admin" if str(name).lower() == "admin" else f"Coach {name.title()}"
+                        announcements_list.append(f"{prefix}: {ann_text}")
         if announcements_list:
             notice_message = " • ".join(announcements_list)
             for ann in announcements_list:
