@@ -3,7 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}SwimTrackPro v3{% endblock %}</title>
+        <title>{% block title %}SwimTrackPro v3{% endblock %}</title>
+    
+    {% block seo_meta %}
+    <meta name="description" content="Find swimming coaches and private swimming lessons. Book swimming sessions with SwimTrackPro.">
+    <link rel="canonical" href="https://swimtrackpro.onrender.com{{ request.path }}">
+    <meta property="og:title" content="SwimTrackPro - Swimming Coaches">
+    <meta property="og:description" content="Find swimming coaches and private swimming lessons.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://swimtrackpro.onrender.com{{ request.path }}">
+    <meta property="og:image" content="https://swimtrackpro.onrender.com/static/images/about_swimming_hero.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    {% endblock %}
+
 
     <!-- PWA Metadata & Manifest -->
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">

@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_data.title }}{% endblock %}
+
+{% block seo_meta %}
+<meta name="description" content="{{ page_data.description }}">
+<link rel="canonical" href="https://swimtrackpro.onrender.com/{{ page_slug }}">
+<meta property="og:title" content="{{ page_data.title }}">
+<meta property="og:description" content="{{ page_data.description }}">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://swimtrackpro.onrender.com/{{ page_slug }}">
+<meta property="og:image" content="https://swimtrackpro.onrender.com/static/images/about_swimming_hero.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "{{ page_data.h1 }}",
+  "provider": {
+    "@type": "Organization",
+    "name": "SwimTrackPro",
+    "url": "https://swimtrackpro.onrender.com/"
+  },
+  "areaServed": {
+    "@type": "City",
+    "name": "Hyderabad"
+  },
+  "description": "{{ page_data.description }}"
+}
+</script>
+{% endblock %}
+
+{% block header %}
+<header class="site-header" style="background: rgba(9, 9, 11, 0.95);">
+    <div class="container nav-container">
+        <a href="/" class="logo animate-fade-in text-decoration-none">
+            <span class="logo-icon">🏊🏼‍♂️</span> <span class="text-white fw-bold">SwimTrackPro</span>
+        </a>
+        <nav class="nav-links animate-fade-in d-none d-lg-flex gap-4">
+            <a href="/" class="nav-link text-white text-decoration-none">Home</a>
+            <a href="/about-swimming" class="nav-link text-white text-decoration-none">About Swimming</a>
+        </nav>
+        <button class="btn btn-primary btn-sm" onclick="window.location.href='/'">Book Now</button>
+    </div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5 mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Breadcrumbs -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/" class="text-muted text-decoration-none">Home</a></li>
+                    <li class="breadcrumb-item active text-white" aria-current="page">{{ page_data.h1 }}</li>
+                </ol>
+            </nav>
+
+            <!-- SEO Content -->
+            <div class="p-4 p-md-5 rounded" style="background: rgba(24, 24, 27, 0.6); border: 1px solid rgba(255, 255, 255, 0.05);">
+                <h1 class="font-display text-white mb-4" style="font-weight: 800; font-size: 2.5rem;">{{ page_data.h1 }}</h1>
+                
+                <div class="text-muted" style="font-size: 1.1rem; line-height: 1.8;">
+                    {{ page_data.content_html | safe }}
+                </div>
+                
+                <div class="mt-5 pt-4 border-top" style="border-color: rgba(255, 255, 255, 0.1) !important;">
+                    <h2 class="text-white h4 mb-3">Ready to start?</h2>
+                    <p class="text-muted mb-4">Join hundreds of learners in Hyderabad who have transformed their swimming journey with SwimTrackPro's private coaches.</p>
+                    <a href="/" class="btn btn-primary px-4 py-2 fw-bold">Find a Coach Today</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

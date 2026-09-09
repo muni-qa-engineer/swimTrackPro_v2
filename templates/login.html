@@ -1,6 +1,33 @@
 {% extends 'base.html' %}
 
-{% block title %}Personal Swimming Coaches for Your Pool | SwimTrackPro{% endblock %}
+{% block title %}SwimTrackPro - Swimming Coaches & Private Swimming Lessons in Hyderabad{% endblock %}
+
+{% block seo_meta %}
+<meta name="description" content="Find swimming coaches and private swimming lessons in Hyderabad. Discover coaches, compare options and book swimming sessions with SwimTrackPro at your apartment or community pool.">
+<link rel="canonical" href="https://swimtrackpro.onrender.com/">
+<meta property="og:title" content="SwimTrackPro - Swimming Coaches & Private Swimming Lessons in Hyderabad">
+<meta property="og:description" content="Find swimming coaches and private swimming lessons in Hyderabad. Discover coaches, compare options and book swimming sessions with SwimTrackPro at your apartment or community pool.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://swimtrackpro.onrender.com/">
+<meta property="og:image" content="https://swimtrackpro.onrender.com/static/images/about_swimming_hero.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SportsActivityLocation",
+  "name": "SwimTrackPro",
+  "description": "Premium platform connecting learners with verified, elite swimming coaches for doorstep training in Hyderabad.",
+  "url": "https://swimtrackpro.onrender.com/",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Hyderabad",
+    "addressRegion": "Telangana",
+    "addressCountry": "IN"
+  }
+}
+</script>
+{% endblock %}
+
 
 {% block header %}
 <header class="site-header">
@@ -251,15 +278,17 @@
     
     <div class="container">
         <div class="hero-content animate-slide-up">
-            <span class="badge badge-success mb-3" style="font-size: 0.85rem; padding: 0.4rem 1rem;">DOORSTEP SWIMMING COACHES</span>
-            <h1 class="font-display text-white mb-3" style="font-size: 3.5rem; font-weight: 800; line-height: 1.15;">Your Pool.<br>Our Coaches.</h1>
-            <p class="text-muted mb-5" style="font-size: 1.1rem; line-height: 1.6;">Have access to a swimming pool in your apartment complex, community club, or villa? We match you with verified, elite coaches who travel to your location. Learn swimming in the comfort of your own facility.</p>
+            <span class="badge badge-success mb-3" style="font-size: 0.85rem; padding: 0.4rem 1rem;">DOORSTEP SWIMMING COACHES IN HYDERABAD</span>
+            <h1 class="font-display text-white mb-3" style="font-size: 3.5rem; font-weight: 800; line-height: 1.15;">Private Swimming Coaches at Your Pool</h1>
+            <p class="text-white fw-bold mb-2" style="font-size: 1.4rem;">Your Pool. Our Coaches.</p>
+            <p class="text-muted mb-5" style="font-size: 1.1rem; line-height: 1.6;">Have access to a swimming pool in your apartment complex, community club, or villa in Hyderabad? We match you with verified, elite swimming coaches who travel to your location. Discover private swimming classes in Gachibowli and surrounding areas in the comfort of your own facility.</p>
             <div class="d-flex flex-column flex-sm-row gap-3 mt-4">
-                <button type="button" class="btn btn-primary px-5 py-3 w-100" onclick="document.getElementById('coaches').scrollIntoView({ behavior: 'smooth' })">Choose a Coach</button>
+                <button type="button" class="btn btn-primary px-5 py-3 w-100" onclick="document.getElementById('coaches').scrollIntoView({ behavior: 'smooth' })">Find a Swimming Coach</button>
                 <button type="button" class="btn btn-secondary px-5 py-3 w-100" onclick="openLoginModal()">Track Progress</button>
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <!-- Concept Section -->
