@@ -7,7 +7,7 @@
     .hero-section {
         position: relative;
         height: 250px;
-        background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(6, 182, 212, 0.3)), url("{{ url_for('static', filename='images/swimming_hero.jpg') }}") no-repeat center center;
+        background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(6, 182, 212, 0.3)), url("{{ url_for('static', filename='images/about_about_swimming_hero.jpg') }}") no-repeat center center;
         background-size: cover;
         border-radius: var(--radius-md);
         margin-bottom: 2rem;
@@ -156,16 +156,29 @@
                 <!-- What is Swimming -->
                 <div class="tab-pane fade show active content-pane" id="pill-intro" role="tabpanel" tabindex="0">
                     <h3>🏊🏼‍♂️ What is Swimming?</h3>
-                    <p><strong>Swimming</strong> is the self-propulsion of a person through water, usually for recreation, sport, exercise, or survival. Locomotion is achieved through coordinated movement of the limbs and the body to achieve hydrodynamic thrust which results in directional motion.</p>
+                    <p class="lead" style="color: var(--color-text-primary); font-size: 1.1rem; font-weight: 500;"><strong>Swimming</strong> is the self-propulsion of a person through water, usually for recreation, sport, exercise, or survival.</p>
+                    <p>Locomotion is achieved through coordinated movement of the limbs and the body to achieve hydrodynamic thrust which results in directional motion.</p>
                     
-                    <h5 class="fw-bold text-white mt-4">Why Swimming?</h5>
-                    <p>Unlike many other exercises, swimming is a full-body workout that engages almost every major muscle group while keeping the heart rate up. It is completely low-impact, meaning it takes the stress off your joints, making it sustainable for a lifetime. Whether you want to build strength, lose weight, or find a moving meditation, swimming offers unmatched versatility.</p>
+                    <div class="row g-4 mt-2">
+                        <div class="col-md-6">
+                            <div class="info-card h-100" style="border-left-color: var(--color-primary); background: rgba(6, 182, 212, 0.05);">
+                                <h5 class="fw-bold text-white"><i class="fa-solid fa-heart-pulse text-primary me-2"></i> Unmatched Versatility</h5>
+                                <p class="mb-0 text-muted small mt-2">Whether you want to build strength, lose weight, or find a moving meditation, swimming offers something for everyone.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card h-100" style="border-left-color: var(--color-success); background: rgba(16, 185, 129, 0.05);">
+                                <h5 class="fw-bold text-white"><i class="fa-solid fa-leaf text-success me-2"></i> Low Impact</h5>
+                                <p class="mb-0 text-muted small mt-2">Unlike many other exercises, swimming is completely low-impact, taking stress off your joints for a sustainable lifetime workout.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Types & Strokes -->
                 <div class="tab-pane fade content-pane" id="pill-types" role="tabpanel" tabindex="0">
                     <h3><i class="fa-solid fa-person-swimming"></i> Types of Swimming</h3>
-                    <img src="{{ url_for('static', filename='images/swimming_styles.jpg') }}" alt="Swimming Strokes" class="therapy-img">
+                    <img src="{{ url_for('static', filename='images/about_swimming_strokes.jpg') }}" alt="Swimming Strokes" class="therapy-img">
                     <p>Competitive swimming centers around four primary strokes, each with unique mechanics and benefits:</p>
                     <div class="row g-3 mt-2">
                         <div class="col-md-6">
@@ -244,19 +257,50 @@
                 <div class="tab-pane fade content-pane" id="pill-benefits" role="tabpanel" tabindex="0">
                     <h3><i class="fa-solid fa-heart-pulse"></i> Health Benefits</h3>
                     <p>Swimming is one of the most complete forms of exercise available, offering benefits across all age groups.</p>
-                    <ul class="d-flex flex-column gap-2 mt-3">
-                        <li><strong>Cardiovascular Fitness:</strong> Strengthens the heart and improves circulation.</li>
-                        <li><strong>Weight Management:</strong> Burns 400-700 calories per hour depending on intensity.</li>
-                        <li><strong>Muscle Toning:</strong> Engages all major muscle groups simultaneously.</li>
-                        <li><strong>Joint-Friendly:</strong> Low-impact exercise perfect for arthritis sufferers.</li>
-                        <li><strong>Mental Health:</strong> The rhythmic nature of swimming reduces stress, anxiety, and depression.</li>
-                        <li><strong>Lung Capacity:</strong> Regular swimming significantly improves breathing efficiency.</li>
-                    </ul>
+                    <div class="row g-3 mt-3">
+                        <div class="col-md-6 col-lg-4">
+                            <div class="info-card h-100" style="border-left-color: #ef4444; background: rgba(239, 68, 68, 0.05); margin-bottom: 0;">
+                                <h6 class="fw-bold text-white mb-2"><i class="fa-solid fa-heart text-danger me-2"></i> Cardio Fitness</h6>
+                                <p class="mb-0 text-muted" style="font-size: 0.85rem;">Strengthens the heart and vastly improves overall blood circulation.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="info-card h-100" style="border-left-color: #f59e0b; background: rgba(245, 158, 11, 0.05); margin-bottom: 0;">
+                                <h6 class="fw-bold text-white mb-2"><i class="fa-solid fa-fire text-warning me-2"></i> Burn Calories</h6>
+                                <p class="mb-0 text-muted" style="font-size: 0.85rem;">Burns anywhere from 400 to over 700 calories per hour based on intensity.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="info-card h-100" style="border-left-color: #3b82f6; background: rgba(59, 130, 246, 0.05); margin-bottom: 0;">
+                                <h6 class="fw-bold text-white mb-2"><i class="fa-solid fa-dumbbell text-primary me-2"></i> Muscle Toning</h6>
+                                <p class="mb-0 text-muted" style="font-size: 0.85rem;">Water provides 44x more resistance than air, engaging all major muscle groups.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="info-card h-100" style="border-left-color: #10b981; background: rgba(16, 185, 129, 0.05); margin-bottom: 0;">
+                                <h6 class="fw-bold text-white mb-2"><i class="fa-solid fa-child text-success me-2"></i> Joint-Friendly</h6>
+                                <p class="mb-0 text-muted" style="font-size: 0.85rem;">Buoyancy supports 90% of your body weight, perfect for aging or arthritis.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="info-card h-100" style="border-left-color: #8b5cf6; background: rgba(139, 92, 246, 0.05); margin-bottom: 0;">
+                                <h6 class="fw-bold text-white mb-2"><i class="fa-solid fa-brain text-purple me-2" style="color: #8b5cf6;"></i> Mental Wellness</h6>
+                                <p class="mb-0 text-muted" style="font-size: 0.85rem;">The rhythmic and sensory experience of swimming reduces stress and anxiety.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="info-card h-100" style="border-left-color: #06b6d4; background: rgba(6, 182, 212, 0.05); margin-bottom: 0;">
+                                <h6 class="fw-bold text-white mb-2"><i class="fa-solid fa-lungs text-info me-2"></i> Lung Capacity</h6>
+                                <p class="mb-0 text-muted" style="font-size: 0.85rem;">Regular practice teaches breath control and improves breathing efficiency.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Rehab & Therapy -->
                 <div class="tab-pane fade content-pane" id="pill-rehab" role="tabpanel" tabindex="0">
                     <h3><i class="fa-solid fa-hand-holding-medical"></i> Rehab & Therapy</h3>
+                    <img src="{{ url_for('static', filename='images/about_swimming_rehab.jpg') }}" alt="Aquatic Therapy" class="therapy-img">
                     <p>Aquatic therapy uses the unique properties of water—buoyancy, resistance, and hydrostatic pressure—for rehabilitation.</p>
                     <div class="info-card" style="border-left-color: var(--color-info);">
                         <ul class="mb-0 d-flex flex-column gap-2 text-white">
@@ -271,6 +315,7 @@
                 <!-- Training & Endurance -->
                 <div class="tab-pane fade content-pane" id="pill-training" role="tabpanel" tabindex="0">
                     <h3><i class="fa-solid fa-dumbbell"></i> Training & Endurance</h3>
+                    <img src="{{ url_for('static', filename='images/about_swimming_training.jpg') }}" alt="Swimming Training Gear" class="therapy-img">
                     <p>Building swimming endurance requires a structured approach to training.</p>
                     <ul class="d-flex flex-column gap-2 mt-3">
                         <li><strong>Interval Training:</strong> Instead of swimming continuously, break it down (e.g., 10 x 50m).</li>
