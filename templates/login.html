@@ -113,14 +113,18 @@
     
     /* Features */
     .features-section {
-        padding: 5rem 1rem;
+        padding: 3rem 1rem;
         background: rgba(24, 24, 27, 0.3);
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
     
+    .what-you-get-section {
+        padding: 3rem 1rem;
+    }
+    
     /* Comparison Table / Column Layout */
     .plans-section {
-        padding: 5rem 1rem;
+        padding: 3rem 1rem;
     }
     
     .comparison-wrapper {
@@ -327,7 +331,7 @@
             <p class="text-muted">Explore the outcomes for your specific skill level.</p>
         </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-5">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- Beginner Card -->
             <div class="level-card" onclick="openLevelModal('beginner')">
                 <div class="level-icon">🏊🏼‍♂️</div>
@@ -616,7 +620,7 @@
         
         <!-- INDIVIDUAL VIEW -->
         <div id="view-individual">
-            <div class="comparison-wrapper mb-5">
+            <div class="comparison-wrapper">
                 <div style="overflow-x: auto;">
                     <table class="comparison-table">
                         <thead>
@@ -761,7 +765,7 @@
         
         <!-- GROUP VIEW -->
         <div id="view-group" style="display: none;">
-            <div class="comparison-wrapper mb-5">
+            <div class="comparison-wrapper">
                 <div style="overflow-x: auto;">
                     <table class="comparison-table">
                         <thead>
