@@ -713,7 +713,11 @@
 
     function viewCoachProfile(coach) {
         document.getElementById('modalCoachName').innerText = coach.name;
-        document.getElementById('modalCoachRating').innerHTML = `<i class="fa-solid fa-star"></i> ${parseFloat(coach.rating).toFixed(1)} Rating`;
+        if (parseFloat(coach.rating) > 0) {
+            document.getElementById('modalCoachRating').innerHTML = `<i class="fa-solid fa-star"></i> ${parseFloat(coach.rating).toFixed(1)} Rating`;
+        } else {
+            document.getElementById('modalCoachRating').innerHTML = `<span class="text-muted small">No ratings yet</span>`;
+        }
         document.getElementById('modalCoachBio').innerText = coach.bio || "No bio provided.";
         document.getElementById('modalCoachExp').innerText = coach.experience || "N/A";
         document.getElementById('modalCoachLoc').innerText = coach.residence_location || "N/A";

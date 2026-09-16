@@ -26,7 +26,8 @@ def index():
             
             cursor.execute("""
                 SELECT t.username, t.name, t.experience, t.qualification, t.currently_working, t.residence_location, t.rating,
-                       (SELECT COUNT(DISTINCT b.student_name) FROM bookings b WHERE LOWER(b.trainer_username) = LOWER(t.username)) as student_count
+                       (SELECT COUNT(DISTINCT b.student_name) FROM bookings b WHERE LOWER(b.trainer_username) = LOWER(t.username)) as student_count,
+                       (SELECT COUNT(*) FROM coach_feedback c WHERE c.trainer_username = t.username) as review_count
                 FROM trainers t
                 WHERE t.is_approved = TRUE
                 ORDER BY t.rating DESC, t.name
@@ -39,13 +40,31 @@ def index():
                     'qualification': row[3],
                     'currently_working': row[4],
                     'residence_location': row[5],
-                    'rating': float(row[6]) if row[6] is not None else 5.0,
-                    'student_count': row[7]
+                    'rating': float(row[6]) if row[6] is not None else 0.0,
+                    'student_count': row[7],
+                    'review_count': row[8] or 0
+                })
+
+            recent_reviews = []
+            cursor.execute("""
+                SELECT c.guest_name, c.rating, c.comment, t.name 
+                FROM coach_feedback c
+                JOIN trainers t ON c.trainer_username = t.username
+                WHERE c.rating >= 4 AND c.comment IS NOT NULL AND c.comment != ''
+                ORDER BY c.created_at DESC
+                LIMIT 10
+            """)
+            for row in cursor.fetchall():
+                recent_reviews.append({
+                    'guest_name': (row[0] or "Swimmer").strip().split(" ")[0],
+                    'rating': row[1],
+                    'comment': row[2],
+                    'coach_name': row[3]
                 })
             conn.close()
         except Exception as e:
             print("Error loading data for landing page:", e)
-        return render_template('login.html', pkg=packages, coaches=coaches_list, carousel_images=carousel_images)
+        return render_template('login.html', pkg=packages, coaches=coaches_list, carousel_images=carousel_images, recent_reviews=recent_reviews)
 
     
     check_and_perform_auto_resumes()

@@ -81,19 +81,19 @@ def about_trainer():
                 profile_pic = pic_row[0]
 
         cursor.execute("""
-            SELECT guest_name, rating, pros, cons, created_at 
+            SELECT guest_name, rating, comment, created_at 
             FROM coach_feedback 
             WHERE trainer_username = %s 
             ORDER BY created_at DESC
         """, (username,))
         feedbacks = []
         for f in cursor.fetchall():
+            display_name = (f[0] or "Swimmer").strip().split(" ")[0]
             feedbacks.append({
-                "guest_name": f[0],
+                "guest_name": display_name,
                 "rating": f[1],
-                "pros": f[2] or "",
-                "cons": f[3] or "",
-                "created_at": f[4].strftime('%Y-%m-%d') if f[4] else '--'
+                "comment": f[2] or "",
+                "created_at": f[3].strftime('%Y-%m-%d') if f[3] else '--'
             })
 
         coaches_list.append({
@@ -336,15 +336,14 @@ def submit_coach_feedback(trainer_username):
     current_role = session.get("role", "guest")
     if current_role != "guest":
         flash("Only guests/swimmers can leave feedback.", "error")
-        return redirect(url_for("about_trainer"))
+        return redirect(request.referrer or url_for("index"))
 
     rating = request.form.get("rating")
-    pros = request.form.get("pros", "").strip()
-    cons = request.form.get("cons", "").strip()
+    comment = request.form.get("comment", "").strip()
 
     if not rating:
         flash("Please provide a rating.", "warning")
-        return redirect(url_for("about_trainer"))
+        return redirect(request.referrer or url_for("index"))
 
     try:
         rating_val = int(rating)
@@ -352,22 +351,29 @@ def submit_coach_feedback(trainer_username):
             raise ValueError()
     except ValueError:
         flash("Rating must be an integer between 1 and 5.", "warning")
-        return redirect(url_for("about_trainer"))
+        return redirect(request.referrer or url_for("index"))
 
     guest_name = session.get("user_name")
     guest_phone = session.get("phone")
 
-    # Verify that the coach is assigned to the guest via active bookings
+    # Verify that the coach is assigned to the guest via active or completed bookings
     data = load_data()
     bookings = [
         b for b in data.get("bookings", [])
-        if (b.get("owner_name") or "").strip().lower() == guest_name.lower()
-        and b.get("owner_phone") == guest_phone
+        if b.get("owner_phone") == guest_phone
     ]
-    assigned_usernames = [b.get("trainer_username") for b in bookings if b.get("trainer_username")]
-    if trainer_username not in assigned_usernames:
-        flash("You can only submit feedback for a coach assigned to you.", "error")
-        return redirect(url_for("about_trainer"))
+    
+    # User must have at least one Active (completed_classes > 0) or Completed (is_completed) session with this coach
+    eligible = False
+    for b in bookings:
+        if b.get("trainer_username") == trainer_username:
+            if b.get("completed_classes", 0) > 0 or b.get("is_completed", False):
+                eligible = True
+                break
+
+    if not eligible:
+        flash("You can only submit a review for an active or completed session with this coach.", "error")
+        return redirect(request.referrer or url_for("index"))
 
     conn = get_pg_connection()
     cursor = conn.cursor()
@@ -377,26 +383,26 @@ def submit_coach_feedback(trainer_username):
     if not cursor.fetchone():
         conn.close()
         flash("Coach not found or not approved.", "error")
-        return redirect(url_for("about_trainer"))
+        return redirect(request.referrer or url_for("index"))
 
     # Check if guest already submitted feedback for this trainer
     cursor.execute("""
         SELECT id FROM coach_feedback 
-        WHERE trainer_username = %s AND LOWER(guest_name) = LOWER(%s) AND guest_phone = %s
-    """, (trainer_username, guest_name.lower(), guest_phone))
+        WHERE trainer_username = %s AND guest_phone = %s
+    """, (trainer_username, guest_phone))
     existing = cursor.fetchone()
 
     if existing:
         cursor.execute("""
             UPDATE coach_feedback 
-            SET rating = %s, pros = %s, cons = %s, created_at = CURRENT_TIMESTAMP
+            SET rating = %s, comment = %s, created_at = CURRENT_TIMESTAMP
             WHERE id = %s
-        """, (rating_val, pros, cons, existing[0]))
+        """, (rating_val, comment, existing[0]))
     else:
         cursor.execute("""
-            INSERT INTO coach_feedback (trainer_username, guest_name, guest_phone, rating, pros, cons)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """, (trainer_username, guest_name, guest_phone, rating_val, pros, cons))
+            INSERT INTO coach_feedback (trainer_username, guest_name, guest_phone, rating, comment)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (trainer_username, guest_name, guest_phone, rating_val, comment))
 
     conn.commit()
 
@@ -414,7 +420,7 @@ def submit_coach_feedback(trainer_username):
 
     conn.close()
     flash("Feedback submitted successfully!", "success")
-    return redirect(url_for("about_trainer"))
+    return redirect(request.referrer or url_for("index"))
 
 
 @admin_required("Only admin can block trainers.")

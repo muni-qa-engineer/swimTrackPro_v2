@@ -187,8 +187,10 @@
                 </div>
                 <div>
                     <i class="fa-solid fa-star fs-3 text-warning mb-2"></i>
-                    <h3 class="fw-bold text-white mb-0" style="font-size: 1.6rem;">{{ c.rating }}</h3>
-                    <span class="text-muted small">Coach Rating</span>
+                    <h3 class="fw-bold text-white mb-0" style="font-size: 1.6rem;">
+                        {% if c.rating > 0 %}{{ c.rating }}{% else %}-{% endif %}
+                    </h3>
+                    <span class="text-muted small">{% if c.rating > 0 %}Coach Rating{% else %}No Ratings Yet{% endif %}</span>
                 </div>
                 <div>
                     <i class="fa-solid fa-shield-heart fs-3 text-primary mb-2"></i>
@@ -262,7 +264,13 @@
             <div class="info-card-light">
                 <i class="fa-solid fa-star-half-stroke fs-2 text-primary mb-3"></i>
                 <h5 class="fw-bold text-white mb-2">Feedback Rating</h5>
-                <p class="text-muted mb-0" style="font-size: 0.9rem;">Maintains a premium star rating of {{ c.rating }} / 5.0.</p>
+                <p class="text-muted mb-0" style="font-size: 0.9rem;">
+                    {% if c.rating > 0 %}
+                    Maintains a premium star rating of {{ c.rating }} / 5.0.
+                    {% else %}
+                    No reviews yet. Be the first to share your experience!
+                    {% endif %}
+                </p>
             </div>
         </div>
 
@@ -284,15 +292,9 @@
                                     <div class="small text-muted mb-3" style="font-size: 0.75rem;"><i class="fa-regular fa-clock me-1"></i> {{ f.created_at }}</div>
                                     
                                     <div class="text-start" style="font-size: 0.85rem; line-height: 1.5;">
-                                        {% if f.pros %}
-                                        <p class="mb-2">
-                                            <strong class="text-success"><i class="fa-solid fa-circle-plus me-1"></i> PROs:</strong> {{ f.pros }}
-                                        </p>
-                                        {% endif %}
-                                        
-                                        {% if f.cons %}
+                                        {% if f.comment %}
                                         <p class="mb-0">
-                                            <strong class="text-danger"><i class="fa-solid fa-circle-minus me-1"></i> CONs:</strong> {{ f.cons }}
+                                            {{ f.comment }}
                                         </p>
                                         {% endif %}
                                     </div>
@@ -302,62 +304,11 @@
                     {% else %}
                         <div class="text-center py-5 text-muted" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-sm);">
                             <div class="fs-1 mb-2"><i class="fa-solid fa-comment"></i></div>
-                            <p class="mb-0 fw-semibold text-secondary">No feedback submitted yet for this coach.</p>
+                            <p class="mb-0 fw-semibold text-secondary">No reviews submitted yet for this coach.</p>
                             <small class="text-secondary opacity-50">Be the first to share your experience!</small>
                         </div>
                     {% endif %}
                 </div>
-
-                <!-- Submit Feedback Form (Guests only if the coach is assigned to them) -->
-                {% if role == 'guest' and c.username in assigned_usernames %}
-                <div>
-                    <div class="glass-panel" style="padding: 1.5rem; background: rgba(0,0,0,0.3); border-color: rgba(6,182,212,0.15);">
-                        <h5 class="font-display mb-3" style="font-size: 1.15rem;"><i class="fa-solid fa-pen-to-square text-primary me-2"></i> Write a Review</h5>
-                        <p class="text-muted small mb-4">Provide rating, pros, and cons. Your submission updates the coach's public overall rating score.</p>
-                        
-                        <form action="/coach/feedback/{{ c.username }}" method="POST" onsubmit="return validateFeedback(this, '{{ c.username }}')">
-                            
-                            <!-- Star Rating -->
-                            <div class="form-group">
-                                <label class="form-label">Overall Rating</label>
-                                <div class="flex gap-3 items-center mb-2">
-                                    <div class="stars flex gap-1" id="star-selector-{{ c.username }}" style="cursor: pointer; font-size: 1.5rem;">
-                                        <i class="fa-regular fa-star star-item text-warning" data-value="1"></i>
-                                        <i class="fa-regular fa-star star-item text-warning" data-value="2"></i>
-                                        <i class="fa-regular fa-star star-item text-warning" data-value="3"></i>
-                                        <i class="fa-regular fa-star star-item text-warning" data-value="4"></i>
-                                        <i class="fa-regular fa-star star-item text-warning" data-value="5"></i>
-                                    </div>
-                                    <span class="text-muted small" id="star-label-{{ c.username }}">Select Rating</span>
-                                </div>
-                                <input type="hidden" id="rating-{{ c.username }}" name="rating" value="">
-                            </div>
-                            
-                            <!-- PROs -->
-                            <div class="form-group">
-                                <label for="pros-{{ c.username }}" class="form-label text-success"><i class="fa-solid fa-circle-plus me-1"></i> PROs</label>
-                                <textarea class="form-control" id="pros-{{ c.username }}" name="pros" rows="3" placeholder="What does this coach do best?" style="background: rgba(0,0,0,0.4); color: white;" required></textarea>
-                            </div>
-
-                            <!-- CONs -->
-                            <div class="form-group">
-                                <label for="cons-{{ c.username }}" class="form-label text-danger"><i class="fa-solid fa-circle-minus me-1"></i> CONs</label>
-                                <textarea class="form-control" id="cons-{{ c.username }}" name="cons" rows="3" placeholder="What could be improved?" style="background: rgba(0,0,0,0.4); color: white;" required></textarea>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary w-100 py-3 mt-2">Submit Feedback</button>
-                        </form>
-                    </div>
-                </div>
-                {% elif role == 'guest' %}
-                <div>
-                    <div class="text-center py-5" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-sm); color: var(--color-text-secondary);">
-                        <div class="fs-1 mb-2"><i class="fa-solid fa-lock text-muted"></i></div>
-                        <h5 class="fw-bold mb-2">Feedback Disabled</h5>
-                        <p class="small text-muted" style="max-width: 320px; margin: 0 auto;">You can only submit feedback for a coach assigned to you. Once a session is booked with this coach, feedback options will unlock.</p>
-                    </div>
-                </div>
-                {% endif %}
 
             </div>
         </div>

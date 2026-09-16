@@ -188,11 +188,41 @@ def ensure_database_tables():
         guest_name TEXT NOT NULL,
         guest_phone TEXT NOT NULL,
         rating INTEGER NOT NULL,
-        pros TEXT,
-        cons TEXT,
+        comment TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
+    
+    # Safely migrate existing table
+    try:
+        cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name='coach_feedback' AND column_name='pros'")
+        if cursor.fetchone():
+            cursor.execute("ALTER TABLE coach_feedback RENAME COLUMN pros TO comment")
+            cursor.execute("ALTER TABLE coach_feedback DROP COLUMN cons")
+            conn.commit()
+    except Exception:
+        conn.rollback()
+
+    try:
+        cursor.execute("ALTER TABLE coach_feedback ADD CONSTRAINT unique_user_coach UNIQUE (trainer_username, guest_phone)")
+        conn.commit()
+    except psycopg2.Error:
+        conn.rollback()
+        # Delete duplicates and try again
+        try:
+            cursor.execute("""
+                DELETE FROM coach_feedback 
+                WHERE id NOT IN (
+                    SELECT MAX(id) 
+                    FROM coach_feedback 
+                    GROUP BY trainer_username, guest_phone
+                )
+            """)
+            cursor.execute("ALTER TABLE coach_feedback ADD CONSTRAINT unique_user_coach UNIQUE (trainer_username, guest_phone)")
+            conn.commit()
+        except Exception:
+            conn.rollback()
+
 
     # Ensure columns exist if the table was created earlier without them
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS experience TEXT")

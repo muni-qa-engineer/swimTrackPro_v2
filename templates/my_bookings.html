@@ -141,6 +141,18 @@
                                                         <li><a class="dropdown-item py-2 text-white" href="#" onclick="downloadBooking(this, 'pdf', '{{ b.id }}'); return false;"><i class="fa-solid fa-file-pdf text-danger me-2"></i> PDF Document</a></li>
                                                     </ul>
                                                 </div>
+                                                {% if role == 'guest' and ((b.completed_classes or 0) > 0 or b.is_completed) %}
+                                                    {% set t_username = b.trainer_username %}
+                                                    {% if t_username in guest_reviews %}
+                                                        <button class="btn btn-outline-warning p-2 d-flex align-items-center justify-content-center text-nowrap" type="button" onclick="openReviewModal('{{ t_username }}', {{ guest_reviews[t_username].rating }}, '{{ guest_reviews[t_username].comment|replace('\n', '\\n')|replace('\'', '\\\'')|replace('\"', '&quot;') }}')" title="Edit Review" style="height: 32px; border-radius: 16px; padding-left: 0.75rem !important; padding-right: 0.75rem !important;">
+                                                            <span style="font-size: 0.85rem; font-weight: 600;" class="me-1">{{ guest_reviews[t_username].rating }}</span> <i class="fa-solid fa-star" style="font-size: 0.75rem;"></i>
+                                                        </button>
+                                                    {% else %}
+                                                        <button class="btn btn-outline-warning p-2 d-flex align-items-center justify-content-center text-nowrap" type="button" onclick="openReviewModal('{{ t_username }}', 0, '')" title="Review Coach" style="height: 32px; border-radius: 16px; padding-left: 0.75rem !important; padding-right: 0.75rem !important;">
+                                                            <i class="fa-regular fa-star me-1" style="font-size: 0.85rem;"></i> <span style="font-size: 0.85rem; font-weight: 600;">Review</span>
+                                                        </button>
+                                                    {% endif %}
+                                                {% endif %}
                                             </div>
                                         </div>
 
@@ -865,7 +877,87 @@ window.openRenewModal = function(bookingId, defaultStartDate) {
     
     renewModalObj.show();
 };
+
+let reviewModalObj = null;
+document.addEventListener('DOMContentLoaded', () => {
+    const el = document.getElementById('sessionReviewModal');
+    if (el) {
+        reviewModalObj = new bootstrap.Modal(el);
+    }
+});
+
+function openReviewModal(coachUsername, currentRating, currentComment) {
+    document.getElementById('sessionReviewForm').action = '/coach/feedback/' + coachUsername;
+    document.getElementById('reviewCoachUsername').value = coachUsername;
+    document.getElementById('reviewComment').value = currentComment || '';
+    
+    // Reset stars
+    for(let i=1; i<=5; i++) {
+        const star = document.getElementById('star' + i);
+        if(i <= currentRating) {
+            star.classList.remove('fa-regular');
+            star.classList.add('fa-solid', 'text-warning');
+        } else {
+            star.classList.add('fa-regular');
+            star.classList.remove('fa-solid', 'text-warning');
+        }
+    }
+    document.getElementById('reviewRating').value = currentRating || 0;
+    
+    reviewModalObj.show();
+}
+
+function rateStar(rating) {
+    document.getElementById('reviewRating').value = rating;
+    for(let i=1; i<=5; i++) {
+        const star = document.getElementById('star' + i);
+        if(i <= rating) {
+            star.classList.remove('fa-regular');
+            star.classList.add('fa-solid', 'text-warning');
+        } else {
+            star.classList.add('fa-regular');
+            star.classList.remove('fa-solid', 'text-warning');
+        }
+    }
+}
 </script>
+
+<!-- Session Review Modal -->
+<div class="modal fade" id="sessionReviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: rgba(15, 15, 18, 0.98); border: 1px solid rgba(255,255,255,0.1);">
+            <form id="sessionReviewForm" method="POST">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title font-display text-white">Rate your session</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="trainer_username" id="reviewCoachUsername" value="">
+                    <input type="hidden" name="rating" id="reviewRating" value="0">
+                    
+                    <div class="text-center mb-4">
+                        <div class="d-flex justify-content-center gap-2" style="font-size: 2rem; cursor: pointer;">
+                            <i class="fa-regular fa-star" id="star1" onclick="rateStar(1)"></i>
+                            <i class="fa-regular fa-star" id="star2" onclick="rateStar(2)"></i>
+                            <i class="fa-regular fa-star" id="star3" onclick="rateStar(3)"></i>
+                            <i class="fa-regular fa-star" id="star4" onclick="rateStar(4)"></i>
+                            <i class="fa-regular fa-star" id="star5" onclick="rateStar(5)"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Tell us about your experience</label>
+                        <textarea class="form-control" name="comment" id="reviewComment" rows="3" style="background: rgba(0,0,0,0.4); color: white; border: 1px solid rgba(255,255,255,0.1);" placeholder="What went well?"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit Review</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <script src="{{ url_for('static', filename='common.js') }}"></script>
 

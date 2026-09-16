@@ -553,7 +553,13 @@
                                 </div>
                                 <div class="d-flex justify-content-between mb-2">
                                     <span><i class="fa-solid fa-star text-warning me-2"></i> Rating</span>
-                                    <span class="text-white fw-semibold"><i class="fa-solid fa-star text-warning me-1 small"></i>{{ '%.2f' | format(coach.rating | float) }} / 5.00</span>
+                                    <span class="text-white fw-semibold">
+                                        {% if coach.review_count > 0 %}
+                                            <i class="fa-solid fa-star text-warning me-1 small"></i>{{ '%.1f' | format(coach.rating | float) }} <span class="text-muted" style="font-size: 0.75rem;">({{ coach.review_count }})</span>
+                                        {% else %}
+                                            <span class="text-muted small">No ratings yet</span>
+                                        {% endif %}
+                                    </span>
                                 </div>
                                 <div class="d-flex justify-content-between mb-2">
                                     <span><i class="fa-solid fa-users text-primary me-2"></i> Swimmers Trained</span>
@@ -983,6 +989,39 @@
         document.getElementById('view-' + view).style.display = 'block';
     }
 </script>
+
+{% if recent_reviews %}
+<div class="reviews-section py-5" style="background: rgba(10, 10, 10, 0.4); border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05);">
+    <div class="container overflow-hidden">
+        <div class="text-center mb-5">
+            <h2 class="font-display text-white" style="font-weight: 800; font-size: 2.2rem; margin-bottom: 0.5rem;">What Our Swimmers Say</h2>
+            <p class="text-muted">Real experiences from our SwimTrackPro community.</p>
+        </div>
+        
+        <div style="position: relative; width: 100%;">
+            <div class="d-flex overflow-auto pb-4 gap-4 pe-4" style="scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none;">
+                <style>
+                    .reviews-section .d-flex::-webkit-scrollbar { display: none; }
+                </style>
+                {% for review in recent_reviews %}
+                <div class="glass-panel p-4" style="min-width: 300px; max-width: 300px; scroll-snap-align: start; flex: 0 0 auto;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0 text-white font-display">{{ review.guest_name }}</h5>
+                        <div class="badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">
+                            {{ review.rating }} <i class="fa-solid fa-star"></i>
+                        </div>
+                    </div>
+                    <p class="text-muted small mb-3" style="line-height: 1.6; min-height: 60px;">"{{ review.comment }}"</p>
+                    <div class="text-end text-primary" style="font-size: 0.75rem; font-weight: 600;">
+                        Trained with {{ review.coach_name }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <!-- Modal login overlay -->
 <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">

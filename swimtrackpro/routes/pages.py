@@ -165,6 +165,18 @@ def register_page_routes(app, *, get_pg_connection, load_data):
         cursor = conn.cursor()
         cursor.execute("SELECT username, name FROM trainers")
         trainer_map = {row[0].lower().strip(): row[1] for row in cursor.fetchall() if row[0]}
+        
+        guest_reviews = {}
+        if session.get("role") == "guest" and session.get("phone"):
+            cursor.execute(
+                "SELECT trainer_username, rating, comment FROM coach_feedback WHERE guest_phone = %s",
+                (session.get("phone"),)
+            )
+            for r in cursor.fetchall():
+                guest_reviews[r[0]] = {
+                    "rating": r[1],
+                    "comment": r[2] or ""
+                }
         conn.close()
 
         return render_template(
@@ -176,6 +188,7 @@ def register_page_routes(app, *, get_pg_connection, load_data):
             trainer_phone=get_setting("trainer_phone", ""),
             upi_id=get_setting("upi_id", ""),
             trainer_map=trainer_map,
+            guest_reviews=guest_reviews,
         )
 
     @login_required
