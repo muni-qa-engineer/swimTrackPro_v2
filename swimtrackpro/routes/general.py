@@ -356,20 +356,42 @@ def submit_coach_feedback(trainer_username):
     guest_name = session.get("user_name")
     guest_phone = session.get("phone")
 
+    import re
+    def clean_phone(p):
+        return re.sub(r"\D", "", str(p)) if p else ""
+        
+    user_clean_phone = clean_phone(guest_phone)
+    t_target = trainer_username.strip().lower()
+
     # Verify that the coach is assigned to the guest via active or completed bookings
     data = load_data()
-    bookings = [
-        b for b in data.get("bookings", [])
-        if b.get("owner_phone") == guest_phone
-    ]
-    
-    # User must have at least one Active (completed_classes > 0) or Completed (is_completed) session with this coach
     eligible = False
-    for b in bookings:
-        if b.get("trainer_username") == trainer_username:
-            if b.get("completed_classes", 0) > 0 or b.get("is_completed", False):
-                eligible = True
-                break
+    
+    for b in data.get("bookings", []):
+        b_owner_phone = clean_phone(b.get("owner_phone"))
+        b_owner_name = (b.get("owner_name") or "").strip().lower()
+        b_student = (b.get("student") or "").strip().lower()
+        b_created_by = (b.get("created_by") or "").strip().lower()
+        
+        name_match = (
+            (bool(guest_name) and b_owner_name == guest_name.lower()) or
+            (bool(guest_name) and b_created_by == guest_name.lower()) or
+            (bool(guest_name) and b_student == guest_name.lower())
+        )
+        phone_match = (
+            bool(user_clean_phone) and bool(b_owner_phone) and (
+                user_clean_phone == b_owner_phone or
+                user_clean_phone.endswith(b_owner_phone) or
+                b_owner_phone.endswith(user_clean_phone)
+            )
+        )
+        
+        if name_match or phone_match:
+            b_trainer = (b.get("trainer_username") or "").strip().lower()
+            if b_trainer == t_target:
+                if b.get("completed_classes", 0) > 0 or b.get("is_completed", False):
+                    eligible = True
+                    break
 
     if not eligible:
         flash("You can only submit a review for an active or completed session with this coach.", "error")
@@ -379,17 +401,20 @@ def submit_coach_feedback(trainer_username):
     cursor = conn.cursor()
 
     # Check if trainer exists and is approved
-    cursor.execute("SELECT username FROM trainers WHERE username = %s AND is_approved = TRUE", (trainer_username,))
-    if not cursor.fetchone():
+    cursor.execute("SELECT username FROM trainers WHERE LOWER(username) = LOWER(%s) AND is_approved = TRUE", (trainer_username,))
+    trainer_row = cursor.fetchone()
+    if not trainer_row:
         conn.close()
         flash("Coach not found or not approved.", "error")
         return redirect(request.referrer or url_for("index"))
+        
+    actual_trainer_username = trainer_row[0]
 
     # Check if guest already submitted feedback for this trainer
     cursor.execute("""
         SELECT id FROM coach_feedback 
         WHERE trainer_username = %s AND guest_phone = %s
-    """, (trainer_username, guest_phone))
+    """, (actual_trainer_username, guest_phone))
     existing = cursor.fetchone()
 
     if existing:
@@ -402,20 +427,20 @@ def submit_coach_feedback(trainer_username):
         cursor.execute("""
             INSERT INTO coach_feedback (trainer_username, guest_name, guest_phone, rating, comment)
             VALUES (%s, %s, %s, %s, %s)
-        """, (trainer_username, guest_name, guest_phone, rating_val, comment))
+        """, (actual_trainer_username, guest_name, guest_phone, rating_val, comment))
 
     conn.commit()
 
     # Recalculate and update the trainer's overall rating
     cursor.execute("""
         SELECT AVG(rating) FROM coach_feedback WHERE trainer_username = %s
-    """, (trainer_username,))
+    """, (actual_trainer_username,))
     avg_rating_row = cursor.fetchone()
     if avg_rating_row and avg_rating_row[0] is not None:
         new_rating = round(float(avg_rating_row[0]), 2)
         cursor.execute("""
             UPDATE trainers SET rating = %s WHERE username = %s
-        """, (new_rating, trainer_username))
+        """, (new_rating, actual_trainer_username))
         conn.commit()
 
     conn.close()
