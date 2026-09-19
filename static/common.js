@@ -70,3 +70,36 @@ function saveScrollPosition() {
 function restoreScrollPosition() {
   window.scrollTo(0, 0);
 }
+
+// ---------- UX / FORM IMPROVEMENTS ----------
+// Globally prevent accidental duplicate form submissions
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            // Check if form is valid before disabling button (if HTML5 validation is used)
+            if (this.checkValidity && !this.checkValidity()) {
+                return;
+            }
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                // If it already has loading state, don't submit again
+                if (submitBtn.dataset.isSubmitting === 'true') {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Add loading state
+                submitBtn.dataset.isSubmitting = 'true';
+                submitBtn.dataset.originalText = submitBtn.innerHTML;
+                
+                // Set fixed width so button doesn't shrink when text changes to spinner
+                const width = submitBtn.offsetWidth;
+                if (width > 0) submitBtn.style.width = width + 'px';
+                
+                submitBtn.style.opacity = '0.8';
+                submitBtn.style.pointerEvents = 'none';
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Loading...';
+            }
+        });
+    });
+});

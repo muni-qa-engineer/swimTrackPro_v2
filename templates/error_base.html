@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+    <div class="text-center p-5 glass-panel" style="background: rgba(24, 24, 27, 0.7); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-md); max-width: 500px;">
+        <h1 class="display-1 fw-bold text-primary mb-3">{% block error_code %}Error{% endblock %}</h1>
+        <h3 class="font-display text-white mb-3">{% block error_title %}Something went wrong{% endblock %}</h3>
+        <p class="text-muted mb-4">{% block error_message %}We experienced an unexpected issue.{% endblock %}</p>
+        <a href="/" class="btn btn-primary px-4 py-2" style="border-radius: var(--radius-sm);"><i class="fa-solid fa-house me-2"></i> Return Home</a>
+    </div>
+</div>
+{% endblock %}

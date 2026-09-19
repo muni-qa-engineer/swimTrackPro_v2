@@ -2,7 +2,7 @@
 
 from flask import flash, redirect, render_template, request, session, url_for, jsonify
 
-from services.settings_service import get_setting, set_setting
+from services.settings_service import get_setting
 from swimtrackpro.auth import login_required, trainer_required, admin_required
 from swimtrackpro.runtime import get_pg_connection, load_data
 

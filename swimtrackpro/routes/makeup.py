@@ -85,7 +85,6 @@ def skip_session(booking_id, session_date):
         from zoneinfo import ZoneInfo
     except ImportError:
         from backports.zoneinfo import ZoneInfo
-    from datetime import timedelta
         
     # Enforce 6-hour rule
     try:
@@ -435,12 +434,40 @@ def reject_makeup_request(request_id):
     - Delete the pending record from makeup_requests.
     - Restore the related makeup_credits row to status = 'available'.
     """
+
     if session.get('role') not in ('trainer', 'guest'):
         flash('Unauthorized action')
         return redirect(url_for('index'))
 
     conn = get_pg_connection()
     cursor = conn.cursor()
+
+    # If guest, verify ownership of the booking
+    if session.get('role') == 'guest':
+        cursor.execute('''
+            SELECT b.owner_name, b.owner_phone 
+            FROM makeup_requests r
+            JOIN bookings b ON r.booking_id = b.id
+            WHERE r.id = %s
+        ''', (request_id,))
+        booking_row = cursor.fetchone()
+        if not booking_row:
+            conn.close()
+            flash('Request not found')
+            return redirect(url_for('index'))
+            
+        session_phone = session.get('user_phone')
+        session_name = session.get('user_name')
+        
+        if session_phone and booking_row[1] != session_phone:
+            conn.close()
+            flash('Unauthorized action')
+            return redirect(url_for('index'))
+        elif session_name and booking_row[0].strip().lower() != session_name.strip().lower():
+            conn.close()
+            flash('Unauthorized action')
+            return redirect(url_for('index'))
+
 
     # Load the pending request and related credit.
     cursor.execute("""
