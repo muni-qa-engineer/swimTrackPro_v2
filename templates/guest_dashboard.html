@@ -137,9 +137,8 @@
                                 <div class="progress mt-2" style="height: 6px; background: rgba(255,255,255,0.1);">
                                     <div class="progress-bar bg-success" role="progressbar" style="width: {{ pct }}%;" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100"></div>
                                 </div>
-                                <div class="d-flex justify-content-between text-muted mt-1" style="font-size: 0.75rem;">
-                                    <span>{{ s.completed_sessions }} Completed</span>
-                                    <span>{{ s.total_sessions }} Total</span>
+                                <div class="text-end text-muted mt-1" style="font-size: 0.8rem; font-weight: 500;">
+                                    {{ s.completed_sessions }} / {{ s.total_sessions }} Sessions
                                 </div>
                                 {% else %}
                                 <div class="text-muted small mt-1"><i class="fa-solid fa-person-swimming text-primary"></i> Active & Learning</div>

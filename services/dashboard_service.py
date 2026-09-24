@@ -293,20 +293,38 @@ def get_trainer_dashboard_data(trainer_username, data):
 
 def get_guest_dashboard_data(current_user, current_phone, data):
     """Fetch and process data specifically for the Guest dashboard."""
+    import re
+    def clean_phone(p):
+        if not p: return ""
+        return re.sub(r"\D", "", str(p))
+        
     current_user_lower = (current_user or '').strip().lower()
+    current_phone_clean = clean_phone(current_phone)
     
-    user_bookings = [
-        b for b in data.get('bookings', [])
-        if (b.get('owner_name') or '').strip().lower() == current_user_lower
-        and b.get('owner_phone') == current_phone
-        and b.get('payment_request') != 'unconfirmed'
-    ]
-    user_students = [
-        s for s in data.get('students', [])
-        if isinstance(s, dict)
-        and (s.get('owner_name') or '').strip().lower() == current_user_lower
-        and s.get('owner_phone') == current_phone
-    ]
+    user_bookings = []
+    for b in data.get('bookings', []):
+        b_phone_clean = clean_phone(b.get('owner_phone'))
+        phone_match = False
+        if current_phone_clean and b_phone_clean:
+            phone_match = (current_phone_clean == b_phone_clean or 
+                           current_phone_clean.endswith(b_phone_clean) or 
+                           b_phone_clean.endswith(current_phone_clean))
+        
+        if (b.get('owner_name') or '').strip().lower() == current_user_lower and phone_match and b.get('payment_request') != 'unconfirmed':
+            user_bookings.append(b)
+
+    user_students = []
+    for s in data.get('students', []):
+        if isinstance(s, dict):
+            s_phone_clean = clean_phone(s.get('owner_phone'))
+            phone_match = False
+            if current_phone_clean and s_phone_clean:
+                phone_match = (current_phone_clean == s_phone_clean or 
+                               current_phone_clean.endswith(s_phone_clean) or 
+                               s_phone_clean.endswith(current_phone_clean))
+            
+            if (s.get('owner_name') or '').strip().lower() == current_user_lower and phone_match:
+                user_students.append(s)
     result = _process_common_dashboard_data(user_bookings, user_students, 'guest', current_user)
     
     from swimtrackpro.runtime import get_pg_connection
