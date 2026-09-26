@@ -33,10 +33,18 @@
                         <div id="nextSessionCarousel">
                             {% for session in guest_upcoming_sessions %}
                             <div class="next-session-slide" {% if not loop.first %}style="display:none;"{% endif %}>
-                                <div style="font-weight: 700; font-size: 1rem; margin-top: 0.25rem;">🏊 {{ session.name }}</div>
+                                <div style="font-weight: 700; font-size: 1rem; margin-top: 0.25rem;">
+                                    🏊 <span style="background: linear-gradient(135deg, {{ session.color_code }}, {{ session.color_code }}aa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{{ session.name }}</span>
+                                </div>
+                                {% if session.completed_classes == 0 %}
+                                <div class="text-secondary" style="font-size: 0.85rem; margin-top: 0.1rem;">
+                                    Your first session will be on {{ session.date }}
+                                </div>
+                                {% else %}
                                 <div class="text-secondary" style="font-size: 0.85rem; margin-top: 0.1rem;">
                                     {{ session.date }} {% if session.time %}• {{ session.time }}{% endif %}
                                 </div>
+                                {% endif %}
                             </div>
                             {% endfor %}
                         </div>
@@ -127,7 +135,7 @@
                             {% set pct = ((s.completed_sessions / s.total_sessions) * 100) if s.total_sessions and s.total_sessions > 0 else 0 %}
                             <div class="swimmer-row mb-3 d-flex align-items-center" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 1rem; border-radius: var(--radius-md); transition: transform 0.2s;" onmouseover="this.style.transform='translateX(5px)'" onmouseout="this.style.transform='translateX(0)'">
                                 <div class="d-flex align-items-center gap-3">
-                                    <div class="swimmer-avatar flex-shrink-0" style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: bold; color: white;">{{ s.name[:1]|upper }}</div>
+                                    <div class="swimmer-avatar flex-shrink-0" style="width: 40px; height: 40px; background: linear-gradient(135deg, {{ s.color_code|default('#06b6d4') }}, {{ s.color_code|default('#06b6d4') }}aa); display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: bold; color: white;">{{ s.name[:1]|upper }}</div>
                                     <div class="d-flex align-items-center gap-2">
                                         <span style="font-weight: 700; font-size: 1rem; white-space: nowrap;">{{ s.name }}</span>
                                         <span class="badge" style="background: rgba(16,185,129,0.1); color: #10b981;">{{ s.skill_level if s.skill_level else 'Beginner' }}</span>

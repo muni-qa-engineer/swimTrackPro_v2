@@ -463,19 +463,50 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
     upcoming_sessions = []
     all_future_sessions = []
 
+    student_colors = {}
+    color_classes = ['#06b6d4', '#f59e0b', '#10b981', '#8b5cf6', '#ec4899', '#f43f5e', '#3b82f6']
+    color_idx = 0
+
+    guest_upcoming_raw = []
+
     for booking in user_bookings:
         booking_time = (booking.get('time') or '').strip()
+        student_name = booking.get('student', '--')
+        completed_classes = int(booking.get('completed_classes', 0) or 0)
+        
+        if student_name not in student_colors:
+            student_colors[student_name] = color_classes[color_idx % len(color_classes)]
+            color_idx += 1
+            
+        booking_future = []
         for session_date in booking.get('calendar_dates', []):
             try:
                 session_datetime = datetime.strptime(f"{session_date} {booking_time}", '%Y-%m-%d %I:%M %p')
                 current_time = ist_now.replace(tzinfo=None)
                 if session_datetime >= current_time:
-                    session_info = {'datetime': session_datetime, 'student': booking.get('student', '--'), 'time': booking_time, 'booking_id': booking.get('id'), 'raw_date': session_date}
-                    all_future_sessions.append(session_info)
+                    session_info = {
+                        'datetime': session_datetime,
+                        'student': student_name,
+                        'time': booking_time,
+                        'booking_id': booking.get('id'),
+                        'raw_date': session_date,
+                        'completed_classes': completed_classes,
+                        'color_code': student_colors[student_name]
+                    }
+                    booking_future.append(session_info)
             except Exception:
                 continue
+                
+        booking_future.sort(key=lambda x: x['datetime'])
+        all_future_sessions.extend(booking_future)
+        
+        if completed_classes == 0:
+            guest_upcoming_raw.extend(booking_future[:1])
+        else:
+            guest_upcoming_raw.extend(booking_future[:3])
 
     all_future_sessions.sort(key=lambda x: x['datetime'])
+    guest_upcoming_raw.sort(key=lambda x: x['datetime'])
     upcoming_sessions = all_future_sessions
 
     if current_role == 'trainer':
@@ -500,10 +531,20 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
             }
             for (date_text, time_text), slot_data in sorted_slots[:3]
         ]
-    elif upcoming_sessions:
-        sorted_sessions = sorted(upcoming_sessions, key=lambda x: x['datetime'])
-        guest_upcoming_sessions = [{'name': s['student'], 'date': s['datetime'].strftime('%d %b'), 'time': s['time'], 'booking_id': s['booking_id'], 'raw_date': s['raw_date']} for s in sorted_sessions[:5]]
-        next_session = sorted_sessions[0]
+    elif guest_upcoming_raw:
+        guest_upcoming_sessions = [
+            {
+                'name': s['student'],
+                'date': s['datetime'].strftime('%d %b'),
+                'time': s['time'],
+                'booking_id': s['booking_id'],
+                'raw_date': s['raw_date'],
+                'completed_classes': s['completed_classes'],
+                'color_code': s['color_code']
+            }
+            for s in guest_upcoming_raw
+        ]
+        next_session = guest_upcoming_raw[0]
         next_session_name = next_session['student']
         next_session_date = next_session['datetime'].strftime('%d %b')
         next_session_time = next_session['time']
@@ -573,6 +614,7 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
         swimmer_copy['total_sessions'] = sessions_total
         swimmer_copy['next_session'] = next_session_dt
         swimmer_copy['package'] = active_pkg
+        swimmer_copy['color_code'] = student_colors.get(swimmer_name, '#06b6d4')
         enriched_students.append(swimmer_copy)
         
     user_students = enriched_students
