@@ -1165,3 +1165,31 @@ def register_general_routes(app):
         view_func=delete_carousel_image,
         methods=["POST"]
     )
+
+    @app.route('/api/assessment', methods=['POST'])
+    def submit_assessment():
+        from flask import request, jsonify
+        try:
+            conn = get_pg_connection()
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO leads (name, phone, swimmer_age, swimming_level, goal, location, preferred_days, preferred_time, session_type)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ''', (
+                request.form.get('name', '').strip(),
+                request.form.get('phone', '').strip(),
+                request.form.get('swimmer_age', '').strip(),
+                request.form.get('swimming_level', ''),
+                request.form.get('goal', ''),
+                request.form.get('location', '').strip(),
+                request.form.get('preferred_days', ''),
+                request.form.get('preferred_time', ''),
+                request.form.get('session_type', 'individual')
+            ))
+            conn.commit()
+            conn.close()
+            return jsonify({'success': True, 'message': 'Assessment request submitted successfully'})
+        except Exception as e:
+            print(f'Error saving lead: {e}')
+            return jsonify({'success': False, 'message': 'Something went wrong. Please try again.'}), 500
+

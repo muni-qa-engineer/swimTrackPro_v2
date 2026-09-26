@@ -421,6 +421,23 @@ def ensure_database_tables():
     else:
         conn.commit()
 
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS leads (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        swimmer_age TEXT,
+        swimming_level TEXT,
+        goal TEXT,
+        location TEXT,
+        preferred_days TEXT,
+        preferred_time TEXT,
+        session_type TEXT,
+        status TEXT DEFAULT 'new',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
     conn.commit()
     conn.close()
 
