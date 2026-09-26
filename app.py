@@ -431,15 +431,18 @@ def load_data():
 
     # Load students
     cursor.execute('SELECT * FROM students')
+    student_colnames = [desc[0].lower() for desc in cursor.description]
     student_rows = cursor.fetchall()
 
     students = []
     for s in student_rows:
+        student_dict = dict(zip(student_colnames, s))
         students.append({
-            'name': s[1],
-            'owner_name': s[2],
-            'owner_phone': s[3],
-            'is_blocked': s[4] if len(s) > 4 else False
+            'name': student_dict.get('student_name', ''),
+            'owner_name': student_dict.get('owner_name', ''),
+            'owner_phone': student_dict.get('owner_phone', ''),
+            'skill_level': student_dict.get('skill_level', 'Beginner'),
+            'is_blocked': student_dict.get('is_blocked', False)
         })
 
     # Load bookings
