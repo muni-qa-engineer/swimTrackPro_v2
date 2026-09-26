@@ -373,7 +373,28 @@
             <!-- SECTION: Bookings Management -->
             <div id="section-bookings" class="dashboard-section d-none">
                 <div class="glass-panel" style="padding: 1.5rem;">
-                    <h3 class="font-display" style="font-size: 1.25rem; margin-bottom: 1.5rem;">Manage Bookings</h3>
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+                        <h3 class="font-display mb-3 mb-md-0" style="font-size: 1.25rem;">Manage Bookings</h3>
+                        {% set active_all = [] %}
+                        {% set booked_all = [] %}
+                        {% set completed_all = [] %}
+                        {% for b in bookings %}
+                            {% if b.is_completed %}
+                                {% set _ = completed_all.append(b) %}
+                            {% elif (b.completed_classes or 0) > 0 %}
+                                {% set _ = active_all.append(b) %}
+                            {% else %}
+                                {% set _ = booked_all.append(b) %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        <div class="d-inline-flex" style="background: rgba(0,0,0,0.2); padding: 0.25rem; border-radius: 50px; border: 1px solid rgba(255,255,255,0.05);">
+                            <button class="btn btn-outline-primary border-0 rounded-pill px-3 py-1 admin-filter-btn active" data-filter="booked" type="button" style="font-weight: 600; font-size: 0.85rem; transition: all 0.3s ease;">Booked <span class="badge bg-light text-dark ms-1 rounded-pill">{{booked_all|length}}</span></button>
+                            <button class="btn btn-outline-info border-0 rounded-pill px-3 py-1 admin-filter-btn mx-1" data-filter="active" type="button" style="font-weight: 600; font-size: 0.85rem; transition: all 0.3s ease;">Active <span class="badge bg-light text-dark ms-1 rounded-pill">{{active_all|length}}</span></button>
+                            <button class="btn btn-outline-secondary border-0 rounded-pill px-3 py-1 admin-filter-btn" data-filter="completed" type="button" style="font-weight: 600; font-size: 0.85rem; transition: all 0.3s ease;">Completed <span class="badge bg-light text-dark ms-1 rounded-pill">{{completed_all|length}}</span></button>
+                        </div>
+                    </div>
+                    
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead>
@@ -387,7 +408,8 @@
                             </thead>
                             <tbody>
                                 {% for booking in bookings %}
-                                <tr>
+                                {% set b_status = 'completed' if booking.is_completed else ('active' if (booking.completed_classes or 0) > 0 else 'booked') %}
+                                <tr class="admin-booking-row" data-status="{{ b_status }}">
                                     <td>
                                         <div style="font-weight: 700; color: white;">{{ booking.student|title }}</div>
                                         <div class="text-muted" style="font-size: 0.8rem;"><i class="fa-solid fa-phone"></i> {{ booking.owner_phone or '--' }}</div>
@@ -1397,6 +1419,53 @@
                 }, 700);
             });
         });
+        // Admin Bookings Filter logic
+        const filterBtns = document.querySelectorAll('.admin-filter-btn');
+        const bookingRows = document.querySelectorAll('.admin-booking-row');
+        
+        // Initial setup - default to 'active' or 'booked' or first available
+        // Let's explicitly trigger click on the 'active' button if it exists and has items, otherwise 'booked'
+        let initialBtn = Array.from(filterBtns).find(btn => btn.dataset.filter === 'booked');
+        
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Update active state of buttons
+                filterBtns.forEach(b => {
+                    b.classList.remove('active', 'btn-primary', 'btn-info', 'btn-secondary');
+                    if (b.dataset.filter === 'booked') b.classList.add('btn-outline-primary');
+                    if (b.dataset.filter === 'active') b.classList.add('btn-outline-info');
+                    if (b.dataset.filter === 'completed') b.classList.add('btn-outline-secondary');
+                });
+                
+                // Add filled styles to clicked button
+                const filter = this.dataset.filter;
+                if (filter === 'booked') {
+                    this.classList.remove('btn-outline-primary');
+                    this.classList.add('btn-primary', 'active');
+                } else if (filter === 'active') {
+                    this.classList.remove('btn-outline-info');
+                    this.classList.add('btn-info', 'active');
+                } else if (filter === 'completed') {
+                    this.classList.remove('btn-outline-secondary');
+                    this.classList.add('btn-secondary', 'active');
+                }
+                
+                // Filter rows
+                bookingRows.forEach(row => {
+                    if (row.dataset.status === filter) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        });
+        
+        // Trigger initial filter
+        if (initialBtn) {
+            initialBtn.click();
+        }
+
     });
 </script>
 {% endblock %}
