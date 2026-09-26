@@ -368,7 +368,7 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <div class="grid grid-cols-2 gap-3 mb-3">
+        <div id="initialLocationOptions" class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
             <button type="button" id="modalCurrentLocationBtn" class="btn btn-secondary py-3 flex items-center justify-center gap-2">
                 <i class="fa-solid fa-location-crosshairs"></i> Use Current Location
             </button>
@@ -377,11 +377,11 @@
             </button>
         </div>
         <div id="mapPickerContainer" style="display:none;">
-            <div id="mapPicker" style="height:380px; width: 100%;"></div>
+            <div id="mapPicker" style="height:380px; width: 100%; border-radius: var(--radius-md);"></div>
         </div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      <div class="modal-footer" id="mapModalFooter" style="display:none;">
+        <button type="button" id="mapCancelBtn" class="btn btn-secondary">Cancel</button>
         <button type="button" id="useSelectedLocationBtn" class="btn btn-primary">Use Selected Location</button>
       </div>
     </div>
@@ -645,8 +645,19 @@
         if (locationPickerBtn) {
             locationPickerBtn.addEventListener('click', function() {
                 const modal = new bootstrap.Modal(document.getElementById('mapPickerModal'));
-                mapPickerContainer.style.display = 'none';
+                document.getElementById('initialLocationOptions').style.display = 'grid';
+                document.getElementById('mapPickerContainer').style.display = 'none';
+                document.getElementById('mapModalFooter').style.display = 'none';
                 modal.show();
+            });
+        }
+        
+        const mapCancelBtn = document.getElementById('mapCancelBtn');
+        if (mapCancelBtn) {
+            mapCancelBtn.addEventListener('click', function() {
+                document.getElementById('initialLocationOptions').style.display = 'grid';
+                document.getElementById('mapPickerContainer').style.display = 'none';
+                document.getElementById('mapModalFooter').style.display = 'none';
             });
         }
 
@@ -654,7 +665,9 @@
 
         if (modalChooseOnMapBtn) {
             modalChooseOnMapBtn.addEventListener('click', function() {
-                mapPickerContainer.style.display = 'block';
+                document.getElementById('initialLocationOptions').style.display = 'none';
+                document.getElementById('mapPickerContainer').style.display = 'block';
+                document.getElementById('mapModalFooter').style.display = 'flex';
                 const mapPickerEl = document.getElementById('mapPicker');
                 
                 function initMapWithCoords(lat, lng, isCurrentLocation = false) {
