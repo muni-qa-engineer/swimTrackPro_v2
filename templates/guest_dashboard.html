@@ -125,25 +125,23 @@
                         {% if students and students|length > 0 %}
                             {% for s in students %}
                             {% set pct = ((s.completed_sessions / s.total_sessions) * 100) if s.total_sessions and s.total_sessions > 0 else 0 %}
-                            <div class="swimmer-row mb-3" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 1rem; border-radius: var(--radius-md); transition: transform 0.2s;" onmouseover="this.style.transform='translateX(5px)'" onmouseout="this.style.transform='translateX(0)'">
-                                <div class="flex items-center gap-3 mb-2">
-                                    <div class="swimmer-avatar" style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: bold; color: white;">{{ s.name[:1]|upper }}</div>
-                                    <div style="flex: 1;">
-                                        <div style="font-weight: 700; font-size: 1rem; display: flex; justify-content: space-between;">
-                                            {{ s.name }}
-                                            <span class="badge" style="background: rgba(16,185,129,0.1); color: #10b981;">{{ s.skill_level if s.skill_level else 'Beginner' }}</span>
-                                        </div>
+                            <div class="swimmer-row mb-3 d-flex align-items-center" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 1rem; border-radius: var(--radius-md); transition: transform 0.2s;" onmouseover="this.style.transform='translateX(5px)'" onmouseout="this.style.transform='translateX(0)'">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="swimmer-avatar flex-shrink-0" style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: bold; color: white;">{{ s.name[:1]|upper }}</div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span style="font-weight: 700; font-size: 1rem; white-space: nowrap;">{{ s.name }}</span>
+                                        <span class="badge" style="background: rgba(16,185,129,0.1); color: #10b981;">{{ s.skill_level if s.skill_level else 'Beginner' }}</span>
                                     </div>
                                 </div>
                                 {% if s.total_sessions is defined and s.total_sessions > 0 %}
-                                <div class="progress mt-2" style="height: 6px; background: rgba(255,255,255,0.1);">
+                                <div class="progress flex-grow-1 mx-3 d-none d-md-flex" style="height: 6px; background: rgba(255,255,255,0.1);">
                                     <div class="progress-bar bg-success" role="progressbar" style="width: {{ pct }}%;" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100"></div>
                                 </div>
-                                <div class="text-end text-muted mt-1" style="font-size: 0.8rem; font-weight: 500;">
+                                <div class="text-end text-muted ms-auto text-nowrap" style="font-size: 0.8rem; font-weight: 500;">
                                     {{ s.completed_sessions }} / {{ s.total_sessions }} Sessions
                                 </div>
                                 {% else %}
-                                <div class="text-muted small mt-1"><i class="fa-solid fa-person-swimming text-primary"></i> Active & Learning</div>
+                                <div class="text-muted small ms-auto text-nowrap"><i class="fa-solid fa-person-swimming text-primary"></i> Active & Learning</div>
                                 {% endif %}
                             </div>
                             {% endfor %}
