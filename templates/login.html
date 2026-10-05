@@ -614,6 +614,9 @@
         
         <!-- INDIVIDUAL VIEW -->
         <div id="view-individual">
+            <div class="d-md-none text-center text-muted small mb-3">
+                <i class="fa-solid fa-arrows-left-right me-1" style="color: var(--color-primary);"></i> Swipe to view all plans
+            </div>
             <div class="cg-pricing-grid mb-5">
                 <!-- Free / Demo -->
                 <div class="cg-pricing-card">
@@ -625,7 +628,7 @@
                         <span class="cg-currency">₹</span><span class="cg-amount">0</span><span class="cg-period">/ session</span>
                     </div>
                     
-                    <button type="button" class="cg-btn cg-btn-outline" onclick="openLoginModal()">Book Demo</button>
+                    <a href="/booking?package=Demo" class="cg-btn cg-btn-outline btn-book-session">Book Demo</a>
                     
                     <div class="cg-features-heading">Start with the basics:</div>
                     <ul class="cg-features-list">
@@ -658,7 +661,7 @@
                         <span class="cg-currency">₹</span><span class="cg-amount">{{ '{:,}'.format(pkg['individual']['single'].final_price) }}</span><span class="cg-period">/ session</span>
                     </div>
                     
-                    <button type="button" class="cg-btn cg-btn-dark" onclick="openLoginModal()">Buy now</button>
+                    <a href="/booking?package=Single" class="cg-btn cg-btn-dark btn-book-session">Buy now</a>
                     
                     <div class="cg-features-heading">Includes:</div>
                     <ul class="cg-features-list">
@@ -698,9 +701,9 @@
                         <span class="cg-currency">₹</span><span class="cg-amount">{{ '{:,}'.format(pkg['individual']['monthly'].final_price) }}</span><span class="cg-period">/ month</span>
                     </div>
                     
-                    <button type="button" class="cg-btn cg-btn-primary" onclick="openLoginModal()">
+                    <a href="/booking?package=Monthly" class="cg-btn cg-btn-primary btn-book-session">
                         <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Buy now
-                    </button>
+                    </a>
                     
                     <div class="cg-features-heading">Everything in Single, plus:</div>
                     <ul class="cg-features-list">
@@ -741,7 +744,7 @@
                         <span class="cg-amount" style="font-size: 1.8rem;">Dynamic</span><span class="cg-period">/ flexible</span>
                     </div>
                     
-                    <button type="button" class="cg-btn cg-btn-dark" onclick="openLoginModal()">Configure</button>
+                    <a href="/booking?package=Custom" class="cg-btn cg-btn-dark btn-book-session">Configure</a>
                     
                     <div class="cg-features-heading">Full customization:</div>
                     <ul class="cg-features-list">
@@ -836,6 +839,9 @@
         
         <!-- GROUP VIEW -->
         <div id="view-group" style="display: none;">
+            <div class="d-md-none text-center text-muted small mb-3">
+                <i class="fa-solid fa-arrows-left-right me-1" style="color: var(--color-primary);"></i> Swipe to view all plans
+            </div>
             <div class="cg-pricing-grid mb-5">
                 <!-- Group Demo -->
                 <div class="cg-pricing-card">
@@ -847,7 +853,7 @@
                         <span class="cg-currency">₹</span><span class="cg-amount">0</span><span class="cg-period">/ session</span>
                     </div>
                     
-                    <button type="button" class="cg-btn cg-btn-outline" onclick="openLoginModal()">Book Demo</button>
+                    <a href="/booking?package=Demo" class="cg-btn cg-btn-outline btn-book-session">Book Demo</a>
                     
                     <div class="cg-features-heading">Start with the basics:</div>
                     <ul class="cg-features-list">
@@ -880,7 +886,7 @@
                         <span class="cg-currency">₹</span><span class="cg-amount">{{ '{:,}'.format(pkg['group']['single'].final_price) }}</span><span class="cg-period">/ session</span>
                     </div>
                     
-                    <button type="button" class="cg-btn cg-btn-dark" onclick="openLoginModal()">Buy now</button>
+                    <a href="/booking?package=Single" class="cg-btn cg-btn-dark btn-book-session">Buy now</a>
                     
                     <div class="cg-features-heading">Includes:</div>
                     <ul class="cg-features-list">
@@ -920,9 +926,9 @@
                         <span class="cg-currency">₹</span><span class="cg-amount">{{ '{:,}'.format(pkg['group']['monthly'].final_price) }}</span><span class="cg-period">/ month</span>
                     </div>
                     
-                    <button type="button" class="cg-btn cg-btn-primary" onclick="openLoginModal()">
+                    <a href="/booking?package=Monthly" class="cg-btn cg-btn-primary btn-book-session">
                         <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Buy now
-                    </button>
+                    </a>
                     
                     <div class="cg-features-heading">Everything in Single, plus:</div>
                     <ul class="cg-features-list">
@@ -959,7 +965,7 @@
                         <span class="cg-amount" style="font-size: 1.8rem;">Dynamic</span><span class="cg-period">/ flexible</span>
                     </div>
                     
-                    <button type="button" class="cg-btn cg-btn-dark" onclick="openLoginModal()">Configure</button>
+                    <a href="/booking?package=Custom" class="cg-btn cg-btn-dark btn-book-session">Configure</a>
                     
                     <div class="cg-features-heading">Full customization:</div>
                     <ul class="cg-features-list">
@@ -1097,8 +1103,34 @@
     }
     @media (max-width: 767.98px) {
         .cg-pricing-grid {
-            grid-template-columns: 1fr;
-            gap: 1rem;
+            display: flex !important;
+            overflow-x: auto !important;
+            scroll-snap-type: x mandatory !important;
+            -webkit-overflow-scrolling: touch !important;
+            gap: 1rem !important;
+            padding-bottom: 1.25rem !important;
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+            margin-left: -12px !important;
+            margin-right: -12px !important;
+            scrollbar-width: thin !important;
+            scrollbar-color: rgba(6, 182, 212, 0.4) transparent !important;
+        }
+        .cg-pricing-grid::-webkit-scrollbar {
+            height: 5px;
+        }
+        .cg-pricing-grid::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        .cg-pricing-grid::-webkit-scrollbar-thumb {
+            background: rgba(6, 182, 212, 0.4);
+            border-radius: 10px;
+        }
+        .cg-pricing-card {
+            flex: 0 0 85% !important;
+            max-width: 320px !important;
+            scroll-snap-align: center !important;
         }
     }
 
@@ -1204,38 +1236,38 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        text-decoration: none;
+        text-decoration: none !important;
         border: none;
         margin-bottom: 0.5rem;
     }
     .cg-btn-outline {
         background: rgba(255, 255, 255, 0.05);
-        color: #ffffff;
+        color: #ffffff !important;
         border: 1px solid rgba(255, 255, 255, 0.15);
     }
     .cg-btn-outline:hover {
         background: rgba(255, 255, 255, 0.12);
-        color: #ffffff;
+        color: #ffffff !important;
     }
     .cg-btn-dark {
         background: #ffffff;
-        color: #09090b;
+        color: #09090b !important;
         border: 1px solid #ffffff;
     }
     .cg-btn-dark:hover {
         background: #e4e4e7;
-        color: #09090b;
+        color: #09090b !important;
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15);
     }
     .cg-btn-primary {
         background: linear-gradient(135deg, #06b6d4, #0284c7);
-        color: #ffffff;
+        color: #ffffff !important;
         box-shadow: 0 4px 16px rgba(6, 182, 212, 0.35);
     }
     .cg-btn-primary:hover {
         background: linear-gradient(135deg, #22d3ee, #06b6d4);
-        color: #ffffff;
+        color: #ffffff !important;
         box-shadow: 0 6px 22px rgba(6, 182, 212, 0.5);
         transform: translateY(-1px);
     }
@@ -1309,7 +1341,6 @@
         font-weight: 800;
         margin-bottom: 0.25rem;
         font-family: var(--font-display, 'Outfit', sans-serif);
-    }
 </style>
 <script>
     function togglePlanView(view) {
