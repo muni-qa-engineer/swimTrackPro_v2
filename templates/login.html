@@ -592,118 +592,189 @@
     </div>
 </div>
 
-<!-- Comparison Layout Section -->
+<!-- ChatGPT-Style Pricing Plan Section -->
 <div class="plans-section" id="plans">
     <div class="container">
-        <div class="text-center mb-5">
+        <div class="text-center mb-4">
             <h2 class="font-display text-white" style="font-weight: 800; font-size: 2.2rem; margin-bottom: 0.5rem;">Choose Your Training Plan</h2>
             <p class="text-muted">Private training plans tailored to your personal pool schedule.</p>
         </div>
         
-        <!-- Toggle Cards -->
-        <div class="row justify-content-center px-2 mb-4 plans-toggle-row" style="position: sticky; top: 60px; z-index: 50; background: rgba(10, 10, 10, 0.9); backdrop-filter: blur(12px); padding-top: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); margin-left: -15px; margin-right: -15px;">
-            <div class="col-6 col-md-3 mb-2 mb-md-3">
-                <div class="plan-toggle-card active" id="toggle-individual" onclick="togglePlanView('individual')">
-                    <div class="icon-wrap"><i class="fa-solid fa-person-swimming"></i></div>
-                    <h3>Individual Training</h3>
-                    <p>1-on-1 personalized coaching</p>
-                </div>
-            </div>
-            <div class="col-6 col-md-3 mb-2 mb-md-3">
-                <div class="plan-toggle-card" id="toggle-group" onclick="togglePlanView('group')">
-                    <div class="icon-wrap"><i class="fa-solid fa-people-group"></i></div>
-                    <h3>Group Coaching</h3>
-                    <p>Up to 5 members (Expandable)</p>
-                </div>
+        <!-- ChatGPT-Style Segmented Pill Toggle -->
+        <div class="d-flex justify-content-center mb-5">
+            <div class="cg-toggle-container">
+                <button type="button" class="cg-toggle-btn active" id="toggle-individual" onclick="togglePlanView('individual')">
+                    Individual
+                </button>
+                <button type="button" class="cg-toggle-btn" id="toggle-group" onclick="togglePlanView('group')">
+                    Group
+                </button>
             </div>
         </div>
         
         <!-- INDIVIDUAL VIEW -->
         <div id="view-individual">
-            <div class="comparison-wrapper">
-                <div style="overflow-x: auto;">
-                    <table class="comparison-table">
-                        <thead>
-                            <tr>
-                                <th style="text-align: left; padding-left: 1.5rem; width: 25%;">Coaching Feature</th>
-                                <th style="width: 18.75%;">Demo</th>
-                                <th style="width: 18.75%;">Single Day</th>
-                                <th style="width: 18.75%; color: var(--color-primary);">Monthly Package</th>
-                                <th style="width: 18.75%;">Customize</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="feature-name">Pool Facility</td>
-                                <td colspan="4" class="text-white text-center">Provided by Swimmer (At Your Villa, Apartment, or Club)</td>
-                            </tr>
-                            <tr>
-                                <td class="feature-name">Coaching Staff</td>
-                                <td>Assigned Trainer</td>
-                                <td>Selectable Coach</td>
-                                <td class="text-white">Preferred Coach</td>
-                                <td>Flexible selection</td>
-                            </tr>
-                            <tr>
-                                <td class="feature-name">Class Duration</td>
-                                <td>1hr / Session</td>
-                                <td>1hr / Session</td>
-                                <td class="text-white">1hr/day - Month Recurring</td>
-                                <td>Up to 60 Days Max</td>
-                            </tr>
-                            <tr>
-                                <td class="feature-name">Weekly Frequency</td>
-                                <td>Fixed 1 Class</td>
-                                <td>1 Class Booking</td>
-                                <td class="text-white">2 or 3 Days / week</td>
-                                <td>Up to 5 Days / week</td>
-                            </tr>
-                            <tr>
-                                <td class="feature-name">Skip & Makeup Credits</td>
-                                <td><i class="fa-solid fa-circle-xmark text-danger"></i></td>
-                                <td><i class="fa-solid fa-circle-xmark text-danger"></i></td>
-                                <td><i class="fa-solid fa-circle-check text-success"></i> Yes</td>
-                                <td><i class="fa-solid fa-circle-check text-success"></i> Yes</td>
-                            </tr>
-                            <tr>
-                                <td class="feature-name">Pause Subscription</td>
-                                <td><i class="fa-solid fa-circle-xmark text-danger"></i></td>
-                                <td><i class="fa-solid fa-circle-xmark text-danger"></i></td>
-                                <td><i class="fa-solid fa-circle-check text-success"></i> Yes (1 time)</td>
-                                <td><i class="fa-solid fa-circle-xmark text-danger"></i></td>
-                            </tr>
-                            <tr>
-                                <td class="feature-name">Multi-Person Discounts</td>
-                                <td><i class="fa-solid fa-circle-xmark text-danger"></i></td>
-                                <td><i class="fa-solid fa-circle-xmark text-danger"></i></td>
-                                <td class="text-white">Up to 21% off</td>
-                                <td>Up to 21% off</td>
-                            </tr>
-                            <tr>
-                                <td class="feature-name">Coaching Fee</td>
-                                <td>₹{{ '{:,}'.format(pkg['individual']['demo'].final_price) }} {% if pkg['individual']['demo'].final_price == 0 %}(Free){% endif %} <span class="small text-muted">/ session</span></td>
-                                <td>₹{{ '{:,}'.format(pkg['individual']['single'].final_price) }} <span class="small text-muted">/ session</span></td>
-                                <td class="text-white fw-bold">₹{{ '{:,}'.format(pkg['individual']['monthly'].final_price) }} <span class="small text-muted">/ month</span></td>
-                                <td>Dynamic pricing</td>
-                            </tr> 
-                            <tr>
-                                <td></td>
-                                <td><button class="btn btn-secondary btn-sm px-4" onclick="openLoginModal()">Book Demo</button></td>
-                                <td><button class="btn btn-secondary btn-sm px-4" onclick="openLoginModal()">Book Single</button></td>
-                                <td><button class="btn btn-primary btn-sm px-4" onclick="openLoginModal()">Book Monthly</button></td>
-                                <td><button class="btn btn-secondary btn-sm px-4" onclick="openLoginModal()">Configure</button></td>
-                            </tr>                                                       
-                        </tbody>
-                    </table>
+            <div class="cg-pricing-grid mb-5">
+                <!-- Free / Demo -->
+                <div class="cg-pricing-card">
+                    <div class="cg-plan-tier">Free</div>
+                    <div class="cg-plan-headline">Try SwimTrackPro</div>
+                    <p class="cg-plan-desc">Experience 1-on-1 personalized private coaching at your pool with zero commitment.</p>
+                    
+                    <div class="cg-price-wrap">
+                        <span class="cg-currency">₹</span><span class="cg-amount">0</span><span class="cg-period">/ session</span>
+                    </div>
+                    
+                    <button type="button" class="cg-btn cg-btn-outline" onclick="openLoginModal()">Book Demo</button>
+                    
+                    <div class="cg-features-heading">Start with the basics:</div>
+                    <ul class="cg-features-list">
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-water cg-feature-icon"></i>
+                            <span>At your villa, apartment, or club pool</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-user-check cg-feature-icon"></i>
+                            <span>Assigned certified trainer</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-clock cg-feature-icon"></i>
+                            <span>1hr dedicated trial session</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-calendar-day cg-feature-icon"></i>
+                            <span>Fixed 1-class trial booking</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Single Day -->
+                <div class="cg-pricing-card">
+                    <div class="cg-plan-tier">Single Day</div>
+                    <div class="cg-plan-headline">Flexible access</div>
+                    <p class="cg-plan-desc">Book individual sessions whenever you need without recurring commitments.</p>
+                    
+                    <div class="cg-price-wrap">
+                        <span class="cg-currency">₹</span><span class="cg-amount">{{ '{:,}'.format(pkg['individual']['single'].final_price) }}</span><span class="cg-period">/ session</span>
+                    </div>
+                    
+                    <button type="button" class="cg-btn cg-btn-dark" onclick="openLoginModal()">Buy now</button>
+                    
+                    <div class="cg-features-heading">Includes:</div>
+                    <ul class="cg-features-list">
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-user-plus cg-feature-icon"></i>
+                            <span>Selectable coach of your choice</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-clock cg-feature-icon"></i>
+                            <span>1hr dedicated session per booking</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-water cg-feature-icon"></i>
+                            <span>At your villa, apartment, or club pool</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-calendar-check cg-feature-icon"></i>
+                            <span>Flexible schedule & slot selection</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-bolt cg-feature-icon"></i>
+                            <span>Instant session confirmation</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Monthly Package (RECOMMENDED) -->
+                <div class="cg-pricing-card recommended">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="cg-plan-tier">Monthly Package</div>
+                        <span class="cg-badge-recommended">RECOMMENDED</span>
+                    </div>
+                    <div class="cg-plan-headline">Your coaching plan</div>
+                    <p class="cg-plan-desc">Structured recurring training with your preferred coach to build stamina and master technique.</p>
+                    
+                    <div class="cg-price-wrap">
+                        <span class="cg-currency">₹</span><span class="cg-amount">{{ '{:,}'.format(pkg['individual']['monthly'].final_price) }}</span><span class="cg-period">/ month</span>
+                    </div>
+                    
+                    <button type="button" class="cg-btn cg-btn-primary" onclick="openLoginModal()">
+                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Buy now
+                    </button>
+                    
+                    <div class="cg-features-heading">Everything in Single, plus:</div>
+                    <ul class="cg-features-list">
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-calendar-week cg-feature-icon"></i>
+                            <span>2 or 3 days / week structured training</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-award cg-feature-icon"></i>
+                            <span>Preferred coach priority booking</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-clock-rotate-left cg-feature-icon"></i>
+                            <span>Skip & Makeup credits included</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-circle-pause cg-feature-icon"></i>
+                            <span>Pause subscription allowed (1 time)</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-users cg-feature-icon"></i>
+                            <span>Multi-person discounts up to 21% off</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-person-swimming cg-feature-icon"></i>
+                            <span>1hr/day month-recurring training</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Customize -->
+                <div class="cg-pricing-card">
+                    <div class="cg-plan-tier">Customize</div>
+                    <div class="cg-plan-headline">Maximum control</div>
+                    <p class="cg-plan-desc">Design a customized schedule up to 60 days to match your personal routine and fitness goals.</p>
+                    
+                    <div class="cg-price-wrap">
+                        <span class="cg-amount" style="font-size: 1.8rem;">Dynamic</span><span class="cg-period">/ flexible</span>
+                    </div>
+                    
+                    <button type="button" class="cg-btn cg-btn-dark" onclick="openLoginModal()">Configure</button>
+                    
+                    <div class="cg-features-heading">Full customization:</div>
+                    <ul class="cg-features-list">
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-sliders cg-feature-icon"></i>
+                            <span>Up to 5 days / week custom schedule</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-calendar-days cg-feature-icon"></i>
+                            <span>Flexible duration up to 60 days max</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-user-gear cg-feature-icon"></i>
+                            <span>Flexible coach selection</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-clock-rotate-left cg-feature-icon"></i>
+                            <span>Skip & Makeup credits enabled</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-users cg-feature-icon"></i>
+                            <span>Multi-person discounts up to 21% off</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
             
-            <div class="text-center mb-4">
+            <div class="text-center mb-4 pt-2">
                 <h3 class="font-display text-white" style="font-weight: 700;">Long Term Coaching (Individual)</h3>
                 <p class="text-muted">Commit longer, save more.</p>
             </div>
             
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4">
                 <!-- 3 Months -->
                 <a href="/booking?package=3_months" class="text-decoration-none d-block">
                     <div class="long-term-card">
@@ -765,63 +836,160 @@
         
         <!-- GROUP VIEW -->
         <div id="view-group" style="display: none;">
-            <div class="comparison-wrapper">
-                <div style="overflow-x: auto;">
-                    <table class="comparison-table">
-                        <thead>
-                            <tr>
-                                <th style="text-align: left; padding-left: 1.5rem; width: 25%;">Coaching Feature</th>
-                                <th style="width: 18.75%;">Demo (Group)</th>
-                                <th style="width: 18.75%;">Single Day (Group)</th>
-                                <th style="width: 18.75%; color: var(--color-primary);">Monthly Package (Group)</th>
-                                <th style="width: 18.75%;">Customize (Group)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="feature-name">Coaching Fee</td>
-                                <td>₹{{ '{:,}'.format(pkg['group']['demo'].final_price) }} {% if pkg['group']['demo'].final_price == 0 %}(Free){% endif %} <span class="small text-muted">/ session</span></td>
-                                <td>₹{{ '{:,}'.format(pkg['group']['single'].final_price) }} <span class="small text-muted">/ session</span></td>
-                                <td class="text-white fw-bold">₹{{ '{:,}'.format(pkg['group']['monthly'].final_price) }} <span class="small text-muted">/ month</span></td>
-                                <td>Dynamic pricing</td>
-                            </tr>
-                            <tr>
-                                <td class="feature-name">Max Members</td>
-                                <td>Up to 5 (Add more for extra fee)</td>
-                                <td>Up to 5 (Add more for extra fee)</td>
-                                <td class="text-white">Up to 5 (Add more for extra fee)</td>
-                                <td>Flexible selection</td>
-                            </tr>
-                            <tr>
-                                <td class="feature-name">Pool Facility</td>
-                                <td colspan="4" class="text-white text-center">Provided by Swimmers (At Your Villa, Apartment, or Club)</td>
-                            </tr>
-                            <tr>
-                                <td class="feature-name">Coaching Staff</td>
-                                <td>Assigned Trainer</td>
-                                <td>Selectable Coach</td>
-                                <td class="text-white">Preferred Coach</td>
-                                <td>Flexible selection</td>
-                            </tr>
-                            <tr>
-                                <td></td>
-                                <td><button class="btn btn-secondary btn-sm px-4" onclick="openLoginModal()">Book Demo</button></td>
-                                <td><button class="btn btn-secondary btn-sm px-4" onclick="openLoginModal()">Book Single</button></td>
-                                <td><button class="btn btn-primary btn-sm px-4" onclick="openLoginModal()">Book Monthly</button></td>
-                                <td><button class="btn btn-secondary btn-sm px-4" onclick="openLoginModal()">Configure</button></td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <div class="cg-pricing-grid mb-5">
+                <!-- Group Demo -->
+                <div class="cg-pricing-card">
+                    <div class="cg-plan-tier">Free</div>
+                    <div class="cg-plan-headline">Try Group Session</div>
+                    <p class="cg-plan-desc">Experience group coaching with family or friends at your pool facility.</p>
+                    
+                    <div class="cg-price-wrap">
+                        <span class="cg-currency">₹</span><span class="cg-amount">0</span><span class="cg-period">/ session</span>
+                    </div>
+                    
+                    <button type="button" class="cg-btn cg-btn-outline" onclick="openLoginModal()">Book Demo</button>
+                    
+                    <div class="cg-features-heading">Start with the basics:</div>
+                    <ul class="cg-features-list">
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-users cg-feature-icon"></i>
+                            <span>Up to 5 members included</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-water cg-feature-icon"></i>
+                            <span>At your villa, apartment, or club pool</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-user-check cg-feature-icon"></i>
+                            <span>Assigned certified trainer</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-clock cg-feature-icon"></i>
+                            <span>1hr dedicated group trial session</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Group Single Day -->
+                <div class="cg-pricing-card">
+                    <div class="cg-plan-tier">Single Day (Group)</div>
+                    <div class="cg-plan-headline">Flexible group access</div>
+                    <p class="cg-plan-desc">Book a one-off group session for family or friends with no ongoing commitment.</p>
+                    
+                    <div class="cg-price-wrap">
+                        <span class="cg-currency">₹</span><span class="cg-amount">{{ '{:,}'.format(pkg['group']['single'].final_price) }}</span><span class="cg-period">/ session</span>
+                    </div>
+                    
+                    <button type="button" class="cg-btn cg-btn-dark" onclick="openLoginModal()">Buy now</button>
+                    
+                    <div class="cg-features-heading">Includes:</div>
+                    <ul class="cg-features-list">
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-users cg-feature-icon"></i>
+                            <span>Up to 5 swimmers included</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-user-plus cg-feature-icon"></i>
+                            <span>Selectable coach of your choice</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-clock cg-feature-icon"></i>
+                            <span>1hr dedicated group training session</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-water cg-feature-icon"></i>
+                            <span>At your villa, apartment, or club pool</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-user-group cg-feature-icon"></i>
+                            <span>Expandable for additional members</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Group Monthly (RECOMMENDED) -->
+                <div class="cg-pricing-card recommended">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="cg-plan-tier">Monthly Package (Group)</div>
+                        <span class="cg-badge-recommended">RECOMMENDED</span>
+                    </div>
+                    <div class="cg-plan-headline">Group mastery</div>
+                    <p class="cg-plan-desc">Structured recurring coaching for your family or apartment community group.</p>
+                    
+                    <div class="cg-price-wrap">
+                        <span class="cg-currency">₹</span><span class="cg-amount">{{ '{:,}'.format(pkg['group']['monthly'].final_price) }}</span><span class="cg-period">/ month</span>
+                    </div>
+                    
+                    <button type="button" class="cg-btn cg-btn-primary" onclick="openLoginModal()">
+                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Buy now
+                    </button>
+                    
+                    <div class="cg-features-heading">Everything in Single, plus:</div>
+                    <ul class="cg-features-list">
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-users cg-feature-icon"></i>
+                            <span>Up to 5 swimmers included</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-award cg-feature-icon"></i>
+                            <span>Preferred coach priority reservation</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-calendar-week cg-feature-icon"></i>
+                            <span>2 or 3 days / week structured training</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-clock-rotate-left cg-feature-icon"></i>
+                            <span>Skip & Makeup credits included</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-circle-pause cg-feature-icon"></i>
+                            <span>Pause subscription enabled (1 time)</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Group Customize -->
+                <div class="cg-pricing-card">
+                    <div class="cg-plan-tier">Customize (Group)</div>
+                    <div class="cg-plan-headline">Tailored group plan</div>
+                    <p class="cg-plan-desc">Custom schedule and group duration tailored for your residential community or society.</p>
+                    
+                    <div class="cg-price-wrap">
+                        <span class="cg-amount" style="font-size: 1.8rem;">Dynamic</span><span class="cg-period">/ flexible</span>
+                    </div>
+                    
+                    <button type="button" class="cg-btn cg-btn-dark" onclick="openLoginModal()">Configure</button>
+                    
+                    <div class="cg-features-heading">Full customization:</div>
+                    <ul class="cg-features-list">
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-users-gear cg-feature-icon"></i>
+                            <span>Flexible member count (5+ swimmers)</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-sliders cg-feature-icon"></i>
+                            <span>Up to 5 days / week custom schedule</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-calendar-days cg-feature-icon"></i>
+                            <span>Duration up to 60 days max</span>
+                        </li>
+                        <li class="cg-feature-item">
+                            <i class="fa-solid fa-clock-rotate-left cg-feature-icon"></i>
+                            <span>Skip & Makeup credits enabled</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
             
-            <div class="text-center mb-4">
+            <div class="text-center mb-4 pt-2">
                 <h3 class="font-display text-white" style="font-weight: 700;">Long Term Coaching (Group)</h3>
                 <p class="text-muted">Commit longer, save more as a group.</p>
                 <p class="text-warning small mb-0">*Note: Prices shown are placeholders pending confirmation.</p>
             </div>
             
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4">
                 <!-- 3 Months -->
                 <a href="/booking?package=3_months" class="text-decoration-none d-block">
                     <div class="long-term-card">
@@ -884,102 +1052,263 @@
 </div>
 
 <style>
-    .plan-toggle-card {
-        background: rgba(255,255,255,0.02);
-        border: 2px solid rgba(255,255,255,0.05);
-        border-radius: var(--radius-md);
-        padding: 1rem;
-        text-align: center;
+    /* ChatGPT-Style Segmented Pill Toggle */
+    .cg-toggle-container {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 9999px;
+        padding: 5px;
+        display: inline-flex;
+        gap: 4px;
+        backdrop-filter: blur(12px);
+    }
+    .cg-toggle-btn {
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.65);
+        padding: 0.5rem 2rem;
+        border-radius: 9999px;
+        font-size: 0.95rem;
+        font-weight: 600;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .cg-toggle-btn.active {
+        background: #ffffff;
+        color: #09090b;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    .cg-toggle-btn:not(.active):hover {
+        color: #ffffff;
+    }
+
+    /* ChatGPT-Style Pricing Grid */
+    .cg-pricing-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.25rem;
+        align-items: stretch;
+    }
+    
+    @media (max-width: 1199.98px) {
+        .cg-pricing-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    @media (max-width: 767.98px) {
+        .cg-pricing-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+    }
+
+    /* Card Styling */
+    .cg-pricing-card {
+        background: #18181b;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 2rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
         height: 100%;
+        position: relative;
     }
-    .plan-toggle-card:hover {
-        background: rgba(255,255,255,0.05);
-        transform: translateY(-5px);
+    .cg-pricing-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+        border-color: rgba(255, 255, 255, 0.2);
     }
-    .plan-toggle-card.active {
-        border-color: var(--color-primary);
-        background: rgba(6, 182, 212, 0.1);
-        box-shadow: 0 10px 30px rgba(6, 182, 212, 0.15);
+    .cg-pricing-card.recommended {
+        border: 2px solid #06b6d4;
+        background: #161a20;
+        box-shadow: 0 12px 36px rgba(6, 182, 212, 0.15);
     }
-    .plan-toggle-card .icon-wrap {
-        font-size: 1.5rem;
-        color: var(--color-primary);
+    .cg-pricing-card.recommended:hover {
+        border-color: #22d3ee;
+        box-shadow: 0 16px 44px rgba(6, 182, 212, 0.25);
+    }
+
+    /* Card Typography & Elements */
+    .cg-plan-tier {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #ffffff;
+    }
+    .cg-badge-recommended {
+        background: rgba(6, 182, 212, 0.15);
+        color: #22d3ee;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        padding: 3px 10px;
+        border-radius: 9999px;
+        text-transform: uppercase;
+        border: 1px solid rgba(6, 182, 212, 0.35);
+    }
+    .cg-plan-headline {
+        font-family: var(--font-display, 'Outfit', sans-serif);
+        font-size: 1.55rem;
+        font-weight: 800;
+        color: #ffffff;
+        margin-top: 0.85rem;
+        margin-bottom: 0.4rem;
+        line-height: 1.2;
+    }
+    .cg-plan-desc {
+        color: rgba(255, 255, 255, 0.65);
+        font-size: 0.88rem;
+        line-height: 1.5;
+        min-height: 48px;
+        margin-bottom: 1.25rem;
+    }
+
+    /* Price Section */
+    .cg-price-wrap {
+        display: flex;
+        align-items: baseline;
+        gap: 3px;
+        margin-bottom: 1.4rem;
+    }
+    .cg-currency {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #ffffff;
+        vertical-align: top;
+    }
+    .cg-amount {
+        font-family: var(--font-display, 'Outfit', sans-serif);
+        font-size: 2.35rem;
+        font-weight: 800;
+        color: #ffffff;
+        line-height: 1;
+        letter-spacing: -0.02em;
+    }
+    .cg-period {
+        font-size: 0.88rem;
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: 500;
+        margin-left: 2px;
+    }
+
+    /* Buttons */
+    .cg-btn {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        text-align: center;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        border: none;
         margin-bottom: 0.5rem;
     }
-    .plan-toggle-card h3 {
-        color: white;
-        font-family: var(--font-display);
+    .cg-btn-outline {
+        background: rgba(255, 255, 255, 0.05);
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .cg-btn-outline:hover {
+        background: rgba(255, 255, 255, 0.12);
+        color: #ffffff;
+    }
+    .cg-btn-dark {
+        background: #ffffff;
+        color: #09090b;
+        border: 1px solid #ffffff;
+    }
+    .cg-btn-dark:hover {
+        background: #e4e4e7;
+        color: #09090b;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15);
+    }
+    .cg-btn-primary {
+        background: linear-gradient(135deg, #06b6d4, #0284c7);
+        color: #ffffff;
+        box-shadow: 0 4px 16px rgba(6, 182, 212, 0.35);
+    }
+    .cg-btn-primary:hover {
+        background: linear-gradient(135deg, #22d3ee, #06b6d4);
+        color: #ffffff;
+        box-shadow: 0 6px 22px rgba(6, 182, 212, 0.5);
+        transform: translateY(-1px);
+    }
+
+    /* Feature Lists */
+    .cg-features-heading {
+        font-size: 0.85rem;
         font-weight: 700;
-        font-size: 1.1rem;
-        margin-bottom: 0.25rem;
+        color: rgba(255, 255, 255, 0.95);
+        margin-top: 1.25rem;
+        margin-bottom: 0.85rem;
     }
-    .plan-toggle-card p {
-        color: rgba(255,255,255,0.6);
-        font-size: 0.8rem;
-        margin-bottom: 0;
+    .cg-features-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        flex: 1;
     }
-    
-    @media (max-width: 767.98px) {
-        .plans-toggle-row {
-            padding-top: 0.5rem !important;
-            padding-bottom: 0.5rem !important;
-        }
-        .plan-toggle-card {
-            padding: 0.5rem 0.25rem !important;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.4rem;
-            border-radius: var(--radius-sm) !important;
-            height: 44px !important;
-            border-width: 1px !important;
-        }
-        .plan-toggle-card:hover {
-            transform: none !important;
-        }
-        .plan-toggle-card .icon-wrap {
-            font-size: 0.9rem !important;
-            margin-bottom: 0 !important;
-        }
-        .plan-toggle-card h3 {
-            font-size: 0.8rem !important;
-            margin-bottom: 0 !important;
-            white-space: nowrap;
-        }
-        .plan-toggle-card p {
-            display: none !important;
-        }
+    .cg-feature-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.7);
+        line-height: 1.45;
     }
-    
-    .long-term-card {
-        background: rgba(255,255,255,0.02);
-        border: 1px solid rgba(255,255,255,0.05);
-        border-radius: var(--radius-sm);
-        padding: 1.5rem;
+    .cg-feature-icon {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.85);
+        margin-top: 3px;
+        flex-shrink: 0;
+        width: 16px;
         text-align: center;
-        transition: all 0.3s ease;
+    }
+    .cg-pricing-card.recommended .cg-feature-icon {
+        color: #22d3ee;
+    }
+
+    /* Long-term Cards */
+    .long-term-card {
+        background: #18181b;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 1.25rem;
+        text-align: center;
+        transition: all 0.25s ease;
     }
     .long-term-card:hover {
-        border-color: rgba(255,255,255,0.2);
-        background: rgba(255,255,255,0.05);
+        border-color: rgba(6, 182, 212, 0.4);
+        background: #1e2025;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     }
     .long-term-card h4 {
         color: white;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
+        font-weight: 700;
+        font-size: 1.05rem;
+        margin-bottom: 0.4rem;
     }
     .long-term-card .price-strike {
         text-decoration: line-through;
         color: var(--color-text-secondary);
-        font-size: 1rem;
+        font-size: 0.9rem;
     }
     .long-term-card .price-actual {
         color: var(--color-primary);
-        font-size: 1.8rem;
-        font-weight: 700;
+        font-size: 1.6rem;
+        font-weight: 800;
         margin-bottom: 0.25rem;
+        font-family: var(--font-display, 'Outfit', sans-serif);
     }
 </style>
 <script>
