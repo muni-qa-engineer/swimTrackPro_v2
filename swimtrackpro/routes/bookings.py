@@ -41,25 +41,54 @@ def book():
     end_date = request.form.get('end_date') or date_str
     persons = int(request.form.get('persons') or 1)
 
+    is_ajax = (request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 
+               request.is_json or 
+               request.form.get('is_ajax') == 'true')
+
     # Default fee based on package and group discount.
     session_count = None
 
     if package == 'Monthly':
         selected_days = request.form.get('selected_days', '')
-        session_count = len([
+        selected_days_list = [
             day.strip()
             for day in selected_days.split(',')
             if day.strip()
-        ])
+        ]
+        session_count = len(selected_days_list)
+        if session_count not in (2, 3):
+            err_msg = 'Please select 2 or 3 weekly days for Monthly package.'
+            if is_ajax:
+                return jsonify({'success': False, 'error': err_msg}), 400
+            flash(err_msg, 'danger')
+            return redirect(url_for('index'))
 
     elif package == 'Custom':
+        selected_days = request.form.get('selected_days', '')
+        selected_days_list = [
+            day.strip()
+            for day in selected_days.split(',')
+            if day.strip()
+        ]
+        if not selected_days_list:
+            err_msg = 'Please select weekly training days for Custom package.'
+            if is_ajax:
+                return jsonify({'success': False, 'error': err_msg}), 400
+            flash(err_msg, 'danger')
+            return redirect(url_for('index'))
         session_count = len(
             generate_recurring_dates(
                 date_str,
                 end_date,
-                request.form.get('selected_days', '')
+                selected_days
             )
         )
+        if session_count < 1:
+            err_msg = 'No session dates matched your selected days and date range.'
+            if is_ajax:
+                return jsonify({'success': False, 'error': err_msg}), 400
+            flash(err_msg, 'danger')
+            return redirect(url_for('index'))
 
     fee = calculate_discounted_fee(package, persons, session_count)
 
@@ -82,10 +111,6 @@ def book():
                 fee = int(float(manual_fee))
             except ValueError:
                 pass
-
-    is_ajax = (request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 
-               request.is_json or 
-               request.form.get('is_ajax') == 'true')
 
     raw_phone = (request.form.get('phone') or request.form.get('owner_phone') or session.get('phone') or '').strip()
     owner_phone = "".join(character for character in raw_phone if character.isdigit())
@@ -178,6 +203,8 @@ def book():
     # 1. Duplicate Booking Check (same student, same time)
     for b in data['bookings']:
         try:
+            if b.get('payment_request') == 'unconfirmed' or b.get('status') == 'unconfirmed':
+                continue
             b_owner = (b.get('owner_name') or '').strip().lower()
             same_student = (b.get('student', '').strip().lower() == student.strip().lower() and 
                             b_owner == current_user_lower)
@@ -212,6 +239,8 @@ def book():
     group_swimmers = set()
     for b in data['bookings']:
         try:
+            if b.get('payment_request') == 'unconfirmed' or b.get('status') == 'unconfirmed':
+                continue
             if b.get('trainer_username', '').strip().lower() != trainer_username:
                 continue
                 
@@ -447,7 +476,8 @@ def book():
         return jsonify({
             'success': True,
             'booking_id': booking_id,
-            'redirect_url': redirect_url
+            'redirect_url': redirect_url,
+            'co_swimmers': list(group_swimmers)
         })
 
     return redirect(redirect_url)
@@ -1274,6 +1304,7 @@ def register_bookings_routes(app):
     app.add_url_rule('/booking/approve_pause', endpoint='approve_pause', view_func=approve_pause, methods=['POST'])
     app.add_url_rule('/booking/reject_pause', endpoint='reject_pause', view_func=reject_pause, methods=['POST'])
     app.add_url_rule('/booking/confirm_paylater/<booking_id>', endpoint='confirm_paylater', view_func=confirm_paylater, methods=['POST'])
+    app.add_url_rule('/booking/cancel/<booking_id>', endpoint='cancel_booking', view_func=cancel_booking, methods=['GET', 'POST'])
     app.add_url_rule('/booking/renew', endpoint='renew_booking', view_func=renew_booking, methods=['POST'])
 
 def confirm_paylater(booking_id):
@@ -1309,6 +1340,22 @@ def confirm_paylater(booking_id):
     send_booking_confirmation_email(booking)
     
     return redirect('/my-bookings?booking_success=true')
+
+def cancel_booking(booking_id):
+    """Deletes an unconfirmed or abandoned booking."""
+    try:
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "DELETE FROM bookings WHERE id = %s AND (status = 'unconfirmed' OR payment_request = 'unconfirmed')",
+            (booking_id,)
+        )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print("Cancel booking error:", e)
+    flash("Your pending booking was cancelled.", "info")
+    return redirect(url_for('index'))
 
 @login_required
 def approve_pause():

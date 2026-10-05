@@ -56,6 +56,8 @@ def _bookings_for_session(data):
         )
 
         if name_match or phone_match:
+            if booking.get('payment_request') == 'unconfirmed' or booking.get('status') == 'unconfirmed':
+                continue
             result.append(booking)
 
     return result

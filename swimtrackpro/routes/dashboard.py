@@ -66,7 +66,26 @@ def index():
             conn.close()
         except Exception as e:
             print("Error loading data for landing page:", e)
-        return render_template('login.html', pkg=packages, coaches=coaches_list, carousel_images=carousel_images, recent_reviews=recent_reviews)
+
+        data = load_data()
+        active_bookings = [
+            {
+                'student': b.get('student', ''),
+                'trainer_username': (b.get('trainer_username') or '').strip().lower(),
+                'location': b.get('location', ''),
+                'time': b.get('time', ''),
+                'calendar_dates': b.get('calendar_dates', []),
+                'start_date': str(b.get('start_date', '')),
+                'end_date': str(b.get('end_date', '')),
+                'selected_days': b.get('selected_days', ''),
+                'status': b.get('status'),
+                'payment_request': b.get('payment_request')
+            }
+            for b in data.get('bookings', [])
+            if b.get('payment_request') != 'unconfirmed' and b.get('status') != 'unconfirmed'
+        ]
+
+        return render_template('login.html', pkg=packages, coaches=coaches_list, carousel_images=carousel_images, recent_reviews=recent_reviews, all_bookings=active_bookings)
 
     
     check_and_perform_auto_resumes()

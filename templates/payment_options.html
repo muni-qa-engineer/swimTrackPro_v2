@@ -120,6 +120,12 @@
                         <span id="payLaterText">Confirm & Pay Later</span>
                     </button>
                 </form>
+
+                <form action="/booking/cancel/{{ booking.id }}" method="POST" class="w-100" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
+                    <button type="submit" class="btn btn-outline text-danger border-danger-subtle w-100 py-2.5" style="border-radius: var(--radius-sm); font-size: 0.9rem; background: rgba(239, 68, 68, 0.05);">
+                        <i class="fa-solid fa-xmark me-2"></i> Cancel & Discard Booking
+                    </button>
+                </form>
             </div>
             
         </div>
