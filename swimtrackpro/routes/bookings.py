@@ -24,18 +24,22 @@ def book():
         return redirect(url_for('index'))
     data = load_data()
     # Enhanced validation and logic for booking
-    student = request.form['student']
-    date_str = request.form['date']
+    student = (request.form.get('student') or request.form.get('name') or request.form.get('owner_name') or '').strip()
+    if not student:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json or request.form.get('is_ajax') == 'true':
+            return jsonify({'success': False, 'error': 'Please enter the swimmer / full name.'}), 400
+        flash('Please enter your name.', 'warning')
+        return redirect('/booking')
+
+    date_str = (request.form.get('date') or request.form.get('start_date') or datetime.today().strftime('%Y-%m-%d')).strip()
     time_str = (request.form.get('time') or '').strip()
 
     if not time_str:
-        print('DEBUG BOOK FORM KEYS:', list(request.form.keys()))
-        flash('Please select a valid time slot before confirming booking.', 'warning')
-        return redirect('/booking')
+        time_str = '06:00 AM'
     email = (request.form.get('email') or '').strip()
     package = request.form.get('package', 'Single')
-    end_date = request.form.get('end_date', date_str)
-    persons = request.form.get('persons', 1)
+    end_date = request.form.get('end_date') or date_str
+    persons = int(request.form.get('persons') or 1)
 
     # Default fee based on package and group discount.
     session_count = None
@@ -79,6 +83,25 @@ def book():
             except ValueError:
                 pass
 
+    is_ajax = (request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 
+               request.is_json or 
+               request.form.get('is_ajax') == 'true')
+
+    raw_phone = (request.form.get('phone') or request.form.get('owner_phone') or session.get('phone') or '').strip()
+    owner_phone = "".join(character for character in raw_phone if character.isdigit())
+    
+    # Validate contact number if guest or provided
+    if not session.get('user_name') or owner_phone:
+        from services.validation_service import validate_contact_number
+        is_valid_phone, phone_err = validate_contact_number(owner_phone)
+        if not is_valid_phone:
+            if is_ajax:
+                return jsonify({'success': False, 'error': phone_err}), 400
+            flash(phone_err, 'danger')
+            return redirect(url_for('index'))
+    else:
+        owner_phone = session.get('phone') or 'unconfirmed'
+
     # Normalize end date based on package
     if package in ('Single', 'Demo'):
         end_date = date_str
@@ -92,20 +115,32 @@ def book():
         end_dt = datetime.strptime(end_date, '%Y-%m-%d').date()
 
         if end_dt < start_dt:
-            flash('End date cannot be earlier than start date')
+            err_msg = 'End date cannot be earlier than start date'
+            if is_ajax:
+                return jsonify({'success': False, 'error': err_msg}), 400
+            flash(err_msg)
             return redirect(url_for('index'))
     except Exception:
-        flash('Invalid start or end date')
+        err_msg = 'Invalid start or end date'
+        if is_ajax:
+            return jsonify({'success': False, 'error': err_msg}), 400
+        flash(err_msg)
         return redirect(url_for('index'))
 
     # Validate past date
     try:
         selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
         if selected_date < datetime.today().date():
-            flash("Cannot book past dates")
+            err_msg = 'Cannot book past dates'
+            if is_ajax:
+                return jsonify({'success': False, 'error': err_msg}), 400
+            flash(err_msg)
             return redirect(url_for('index'))
-    except:
-        flash("Invalid date")
+    except Exception:
+        err_msg = 'Invalid date'
+        if is_ajax:
+            return jsonify({'success': False, 'error': err_msg}), 400
+        flash(err_msg)
         return redirect(url_for('index'))
 
     booking_id = generate_booking_id(student, date_str, time_str)
@@ -117,9 +152,12 @@ def book():
 
     # Prevent overlapping bookings within 1 hour
     try:
-        booking_time = datetime.strptime(time_str, '%I:%M %p')
+        booking_time = datetime.strptime(time_str.split('-')[0].strip(), '%I:%M %p')
     except Exception:
-        flash('Invalid time format')
+        err_msg = 'Invalid time format'
+        if is_ajax:
+            return jsonify({'success': False, 'error': err_msg}), 400
+        flash(err_msg)
         return redirect(url_for('index'))
 
     new_booking_dates = generate_recurring_dates(
@@ -135,8 +173,7 @@ def book():
     trainer_username = (request.form.get('trainer_username') or 'asdf').strip().lower()
     new_location = (request.form.get('location') or '').strip().lower()
     owner_name = session.get('user_name') or (request.form.get('owner_name') or '').strip() or student.strip()
-    owner_phone = session.get('phone') or 'unconfirmed'
-    current_user_lower = (session.get('user_name') or '').strip().lower()
+    current_user_lower = (session.get('user_name') or owner_name).strip().lower()
 
     # 1. Duplicate Booking Check (same student, same time)
     for b in data['bookings']:
@@ -163,7 +200,10 @@ def book():
             time_diff = abs((booking_time - existing_time).total_seconds()) / 60
             
             if time_diff < 60:
-                flash('Duplicate booking already exists.', 'warning')
+                err_msg = 'Duplicate booking already exists for this swimmer and time slot.'
+                if is_ajax:
+                    return jsonify({'success': False, 'error': err_msg}), 400
+                flash(err_msg, 'warning')
                 return redirect('/booking?booking_conflict=true')
         except Exception:
             continue
@@ -194,6 +234,9 @@ def book():
                 existing_location = b.get('location', '').strip().lower()
                 if existing_location != new_location:
                     suggested_time = (existing_time + timedelta(hours=1)).strftime('%I:%M %p')
+                    err_msg = f'The slot is already booked in another location. Suggested time for this coach: {suggested_time}'
+                    if is_ajax:
+                        return jsonify({'success': False, 'error': err_msg}), 400
                     flash(f'The slot is already booked in other location. Please change timing, coach or location. Suggested time for this coach: {suggested_time}', 'warning')
                     return redirect('/booking?location_conflict=true')
                 else:
@@ -328,12 +371,86 @@ def book():
     conn.commit()
     conn.close()
 
+    # Automatically create user account / session if not logged in
     if not session.get('user_name'):
-        from flask import url_for
-        return redirect(url_for('index', login='true', role='guest', booking_id=booking_id, prefill_name=owner_name))
+        session['role'] = 'guest'
+        session['user_name'] = owner_name
+        session['phone'] = owner_phone
 
-    # The confirmation email will be sent after payment options are confirmed.
-    return redirect(f'/payment_options/{booking_id}')
+        try:
+            act_conn = get_pg_connection()
+            act_cursor = act_conn.cursor()
+            act_cursor.execute(
+                "SELECT id, current_login, id_number FROM user_activity WHERE LOWER(user_name) = LOWER(%s) AND role = %s ORDER BY current_login DESC",
+                (owner_name.lower(), "guest")
+            )
+            act_rows = act_cursor.fetchall()
+            if act_rows:
+                act_row = act_rows[0]
+                session["id_number"] = act_row[2] or "STPS0000"
+                act_cursor.execute(
+                    "UPDATE user_activity SET previous_login = %s, current_login = CURRENT_TIMESTAMP, phone = %s WHERE id = %s",
+                    (act_row[1], owner_phone, act_row[0])
+                )
+            else:
+                act_cursor.execute("SELECT MAX(CAST(SUBSTRING(id_number FROM 5) AS INTEGER)) FROM user_activity WHERE id_number LIKE 'STPS%'")
+                max_guest_val = act_cursor.fetchone()[0] or 0
+                new_id_number = f"STPS{max_guest_val + 1:04d}"
+                session["id_number"] = new_id_number
+
+                act_cursor.execute(
+                    "INSERT INTO user_activity (user_name, phone, role, current_login, previous_login, id_number) VALUES (%s, %s, %s, CURRENT_TIMESTAMP, NULL, %s)",
+                    (owner_name, owner_phone, "guest", new_id_number)
+                )
+            act_conn.commit()
+            act_conn.close()
+        except Exception as e:
+            print("Auto-login user activity error:", e)
+
+    # If demo class or 0 fee, auto-confirm booking
+    if int(fee) == 0 or package == 'Demo':
+        try:
+            cf_conn = get_pg_connection()
+            cf_cur = cf_conn.cursor()
+            cf_cur.execute(
+                "UPDATE bookings SET status = 'confirmed', payment_request = 'paid' WHERE id = %s",
+                (booking_id,)
+            )
+            cf_conn.commit()
+            cf_conn.close()
+
+            # Send confirmation email
+            send_booking_confirmation_email({
+                'id': booking_id,
+                'booking_code': booking_code,
+                'student': student,
+                'date': date_str,
+                'time': time_str,
+                'fee': 0,
+                'persons': persons,
+                'package': package,
+                'location': request.form.get('location', '').strip(),
+                'email': email,
+                'owner_name': owner_name,
+                'owner_phone': owner_phone,
+                'trainer_username': trainer_username
+            })
+        except Exception as cf_err:
+            print("Auto-confirm demo error:", cf_err)
+
+        flash('Your Demo booking has been confirmed! Welcome to SwimTrackPro.', 'success')
+        redirect_url = url_for('index')
+    else:
+        redirect_url = f'/payment_options/{booking_id}'
+
+    if is_ajax:
+        return jsonify({
+            'success': True,
+            'booking_id': booking_id,
+            'redirect_url': redirect_url
+        })
+
+    return redirect(redirect_url)
 
 def edit_booking(booking_id):
     data = load_data()

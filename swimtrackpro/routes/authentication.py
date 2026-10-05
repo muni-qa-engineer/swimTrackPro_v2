@@ -146,8 +146,10 @@ def register_authentication_routes(
             normalized_name = name.lower()
             phone = "".join(character for character in phone if character.isdigit())
 
-            if len(phone) != 10:
-                flash("Please enter a valid 10-digit mobile number.")
+            from services.validation_service import validate_contact_number
+            is_valid_phone, phone_err = validate_contact_number(phone)
+            if not is_valid_phone:
+                flash(phone_err, "danger")
                 return redirect(url_for("index"))
 
             try:

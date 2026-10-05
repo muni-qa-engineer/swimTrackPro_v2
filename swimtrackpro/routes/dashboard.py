@@ -27,7 +27,8 @@ def index():
             cursor.execute("""
                 SELECT t.username, t.name, t.experience, t.qualification, t.currently_working, t.residence_location, t.rating,
                        (SELECT COUNT(DISTINCT b.student_name) FROM bookings b WHERE LOWER(b.trainer_username) = LOWER(t.username)) as student_count,
-                       (SELECT COUNT(*) FROM coach_feedback c WHERE c.trainer_username = t.username) as review_count
+                       (SELECT COUNT(*) FROM coach_feedback c WHERE c.trainer_username = t.username) as review_count,
+                       t.available_slots
                 FROM trainers t
                 WHERE t.is_approved = TRUE
                 ORDER BY t.rating DESC, t.name
@@ -42,7 +43,8 @@ def index():
                     'residence_location': row[5],
                     'rating': float(row[6]) if row[6] is not None else 0.0,
                     'student_count': row[7],
-                    'review_count': row[8] or 0
+                    'review_count': row[8] or 0,
+                    'available_slots': row[9] or "[]"
                 })
 
             recent_reviews = []

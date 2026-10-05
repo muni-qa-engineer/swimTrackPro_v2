@@ -289,10 +289,22 @@
                         </select>
                     </div>
 
+                    {% if not session.get('user_name') %}
+                    <div class="form-group">
+                        <label for="bookingPhoneInput" class="form-label">Contact Number (Password) <span class="text-danger">*</span></label>
+                        <input type="tel" id="bookingPhoneInput" name="phone" class="form-control" placeholder="10-digit mobile number" maxlength="10" required autocomplete="tel">
+                        <small class="text-muted" style="font-size: 0.75rem;">Your account will be auto-created with this number.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="emailInput" class="form-label">Email Address <span class="text-muted small fw-normal">(Optional)</span></label>
+                        <input type="email" id="emailInput" name="email" class="form-control" placeholder="parent@example.com - for alerts" autocomplete="email">
+                    </div>
+                    {% else %}
                     <div class="form-group md:col-span-2">
                         <label for="emailInput" class="form-label">Email Address <span class="text-muted small fw-normal">(Optional)</span></label>
                         <input type="email" id="emailInput" name="email" class="form-control" placeholder="parent@example.com - for alerts" autocomplete="email">
                     </div>
+                    {% endif %}
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -347,7 +359,7 @@
                             {% if session.get('user_name') %}
                                 Proceed to Pay <i class="fa-solid fa-arrow-right ms-2"></i>
                             {% else %}
-                                Login to Confirm <i class="fa-solid fa-arrow-right ms-2"></i>
+                                Confirm & Book <i class="fa-solid fa-calendar-check ms-2"></i>
                             {% endif %}
                         </span>
                     </button>

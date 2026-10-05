@@ -1552,6 +1552,225 @@
     </div>
   </div>
 </div>
+
+<!-- ========================================== -->
+<!-- QUICK BOOKING MODAL (Trial Feature)        -->
+<!-- All options at one single glance           -->
+<!-- ========================================== -->
+<div class="modal fade" id="quickBookingModal" tabindex="-1" aria-labelledby="quickBookingModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content" style="background: rgba(18, 18, 22, 0.98); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-lg); box-shadow: 0 20px 50px rgba(0,0,0,0.8); color: white;">
+      <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding: 1.25rem 1.75rem;">
+        <div class="d-flex align-items-center gap-2">
+            <span style="font-size: 1.5rem;">🏊🏼‍♂️</span>
+            <div>
+                <h4 class="modal-title font-display text-white mb-0" id="quickBookingModalLabel" style="font-weight: 700; font-size: 1.25rem;">Quick Poolside Booking</h4>
+                <p class="text-muted small mb-0">Book your coaching session in 60 seconds — all options at a glance</p>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body" style="padding: 1.5rem 1.75rem; max-height: calc(85vh - 120px); overflow-y: auto;">
+        <div id="qbAlert" class="alert alert-danger d-none" role="alert" style="border-radius: var(--radius-sm); font-size: 0.9rem;"></div>
+
+        <form id="quickBookingForm" method="POST" action="/book">
+            <input type="hidden" name="is_ajax" value="true">
+            <input type="hidden" name="active_tab" value="book_slot">
+
+            <!-- Section 1: Swimmer & Contact (Acts as user registration / credentials) -->
+            <div class="mb-4">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="badge bg-primary text-black fw-bold" style="font-size: 0.75rem; border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;">1</span>
+                    <h6 class="text-white fw-bold mb-0" style="letter-spacing: 0.5px;">SWIMMER & CONTACT INFO</h6>
+                    <span class="text-muted small ms-auto"><i class="fa-solid fa-lock text-primary fa-xs me-1"></i> Account auto-created with your phone</span>
+                </div>
+                
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted small fw-semibold">Full / Swimmer Name <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text" style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: var(--color-primary);"><i class="fa-solid fa-user"></i></span>
+                            <input type="text" name="student" id="qbStudent" class="form-control" placeholder="e.g. Rahul Sharma" required style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: white;">
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted small fw-semibold">Contact Number (Your Password) <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text" style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: var(--color-primary);"><i class="fa-solid fa-phone"></i></span>
+                            <input type="tel" name="phone" id="qbPhone" class="form-control" placeholder="10-digit mobile number" maxlength="10" required autocomplete="tel" style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: white;">
+                        </div>
+                        
+                        <!-- Live Password / Contact Number Validation Checklist -->
+                        <div id="qbPhoneRules" class="p-2 mt-2" style="background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: var(--radius-sm); font-size: 0.75rem;">
+                            <div class="text-muted fw-semibold mb-1" style="font-size: 0.72rem;">Security & Phone Requirements:</div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span id="rule-len" class="text-muted"><i class="fa-regular fa-circle me-1"></i>Exactly 10 digits</span>
+                                <span id="rule-start" class="text-muted"><i class="fa-regular fa-circle me-1"></i>Starts with 6, 7, 8, or 9</span>
+                                <span id="rule-prefix" class="text-muted"><i class="fa-regular fa-circle me-1"></i>No 00, 11, 22, 33, 44, 55</span>
+                                <span id="rule-consec" class="text-muted"><i class="fa-regular fa-circle me-1"></i>No sequential > 6 (e.g. 1234567)</span>
+                                <span id="rule-rep" class="text-muted"><i class="fa-regular fa-circle me-1"></i>No repeat digits > 6</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted small fw-semibold">Email Address <span class="text-muted fw-normal">(Optional for confirmation)</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text" style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: var(--color-primary);"><i class="fa-solid fa-envelope"></i></span>
+                            <input type="email" name="email" id="qbEmail" class="form-control" placeholder="parent@example.com" style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: white;">
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted small fw-semibold">Skill Level <span class="text-danger">*</span></label>
+                        <select name="skill_level" id="qbSkillLevel" class="form-select" style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: white;">
+                            <option value="Beginner" selected>Beginner (Water familiarity / safety)</option>
+                            <option value="Intermediate">Intermediate (Basic strokes & breath control)</option>
+                            <option value="Regular">Regular (Refining technique & stamina)</option>
+                            <option value="Competitor">Competitor (Advanced drill & timing)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Package & Coach Selection -->
+            <div class="mb-4">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="badge bg-primary text-black fw-bold" style="font-size: 0.75rem; border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;">2</span>
+                    <h6 class="text-white fw-bold mb-0" style="letter-spacing: 0.5px;">PACKAGE & COACH</h6>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted small fw-semibold">Training Package <span class="text-danger">*</span></label>
+                        <select name="package" id="qbPackage" class="form-select" required style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: white;">
+                            <option value="Demo">Free Demo Trial (₹0)</option>
+                            <option value="Single">Single Session (Flexible)</option>
+                            <option value="Monthly" selected>Monthly Package (Recommended)</option>
+                            <option value="Custom">Custom Duration (Flexible)</option>
+                            <option value="3_months">Long Term (3 Months)</option>
+                            <option value="6_months">Long Term (6 Months)</option>
+                            <option value="9_months">Long Term (9 Months)</option>
+                            <option value="12_months">Long Term (1 Year)</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted small fw-semibold">Assigned Coach <span class="text-danger">*</span></label>
+                        <select name="trainer_username" id="qbCoach" class="form-select" required style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: white;">
+                            <option value="">-- Choose Coach --</option>
+                            {% if coaches %}
+                                {% for coach in coaches %}
+                                    <option value="{{ coach.username }}" data-slots='{{ coach.available_slots or "[]" }}'>{{ coach.name }} (★ {{ '%.1f' | format(coach.rating | float) }})</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted small fw-semibold">Swimmers / Persons</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="input-group" style="max-width: 130px;">
+                                <button type="button" class="btn btn-outline-secondary" id="qbBtnMinus" style="border-color: rgba(255,255,255,0.1); color: white;">-</button>
+                                <input type="text" name="persons" id="qbPersons" class="form-control text-center fw-bold" value="1" readonly style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: white;">
+                                <button type="button" class="btn btn-outline-secondary" id="qbBtnPlus" style="border-color: rgba(255,255,255,0.1); color: white;">+</button>
+                            </div>
+                            <span class="text-muted small" id="qbGroupHint">(1-5 persons, group discounts up to 21%)</span>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted small fw-semibold">Estimated Fee</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="p-2 px-3 rounded" style="background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.3); font-size: 1.25rem; font-weight: 800; color: var(--color-primary);">
+                                <span id="qbFeeDisplay">₹9,000</span>
+                            </div>
+                            <span class="text-muted small" id="qbFeeNote">Inclusive of all pool sessions</span>
+                        </div>
+                        <input type="hidden" name="fee" id="qbFeeInput" value="9000">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Schedule, Time & Dates -->
+            <div class="mb-4">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="badge bg-primary text-black fw-bold" style="font-size: 0.75rem; border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;">3</span>
+                    <h6 class="text-white fw-bold mb-0" style="letter-spacing: 0.5px;">SCHEDULE & LOCATION</h6>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label text-muted small fw-semibold">Start Date <span class="text-danger">*</span></label>
+                        <input type="date" name="date" id="qbStartDate" class="form-control" required style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: white; color-scheme: dark;">
+                    </div>
+
+                    <div class="col-12 col-md-4" id="qbEndDateCol">
+                        <label class="form-label text-muted small fw-semibold">End Date</label>
+                        <input type="date" name="end_date" id="qbEndDate" class="form-control" style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: white; color-scheme: dark;">
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <label class="form-label text-muted small fw-semibold">Preferred Time <span class="text-danger">*</span></label>
+                        <select name="time" id="qbTime" class="form-select" required style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: white;">
+                            <option value="06:00 AM">06:00 AM - 07:00 AM</option>
+                            <option value="07:00 AM">07:00 AM - 08:00 AM</option>
+                            <option value="08:00 AM">08:00 AM - 09:00 AM</option>
+                            <option value="09:00 AM">09:00 AM - 10:00 AM</option>
+                            <option value="04:00 PM">04:00 PM - 05:00 PM</option>
+                            <option value="05:00 PM">05:00 PM - 06:00 PM</option>
+                            <option value="06:00 PM">06:00 PM - 07:00 PM</option>
+                            <option value="07:00 PM">07:00 PM - 08:00 PM</option>
+                        </select>
+                    </div>
+
+                    <!-- Selected Days for recurring packages -->
+                    <div class="col-12" id="qbDaysRow">
+                        <label class="form-label text-muted small fw-semibold d-flex justify-content-between">
+                            <span>Weekly Training Days <span id="qbDaysHint" class="text-primary">(Pick 2 or 3 days)</span></span>
+                        </label>
+                        <div class="d-flex flex-wrap gap-2" id="qbDayPills">
+                            {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
+                                <label class="btn btn-sm btn-outline-secondary qb-day-label" style="border-color: rgba(255,255,255,0.1); color: #e4e4e7; border-radius: var(--radius-sm); font-size: 0.8rem; padding: 0.35rem 0.8rem;">
+                                    <input type="checkbox" class="qb-day-cb d-none" value="{{ day }}" {% if day in ['Monday', 'Wednesday', 'Friday'] %}checked{% endif %}>
+                                    <span>{{ day[:3] }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                        <input type="hidden" name="selected_days" id="qbSelectedDays" value="Monday, Wednesday, Friday">
+                    </div>
+
+                    <!-- Pool Location -->
+                    <div class="col-12">
+                        <label class="form-label text-muted small fw-semibold">Pool Location / Society / Villa Address <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text" style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: var(--color-primary);"><i class="fa-solid fa-location-dot"></i></span>
+                            <input type="text" name="location" id="qbLocation" class="form-control" placeholder="e.g. My Home Bhooja, Gachibowli, Hyderabad" required style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: white;">
+                            <button type="button" class="btn btn-outline-primary" id="qbLocateBtn" title="Detect Current Location" style="border-color: rgba(6,182,212,0.4);">
+                                <i class="fa-solid fa-location-crosshairs me-1"></i> Detect
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button & Disclaimer -->
+            <div class="d-flex flex-column gap-2 pt-2" style="border-top: 1px solid rgba(255,255,255,0.08);">
+                <button type="submit" class="btn btn-primary w-100 py-3 fw-bold" id="qbSubmitBtn" style="border-radius: var(--radius-sm); font-size: 1rem; letter-spacing: 0.5px;">
+                    <span id="qbSubmitText"><i class="fa-solid fa-calendar-check me-2"></i> Confirm Booking</span>
+                    <span id="qbSubmitSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
+                </button>
+                <div class="text-center text-muted small" style="font-size: 0.75rem;">
+                    <i class="fa-solid fa-shield-halved text-success me-1"></i> No upfront payment required for Demo class. You will be logged into your account immediately.
+                </div>
+            </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -1610,20 +1829,32 @@
             }
         }
 
-        // Intercept Book Session click to animate first
-        document.querySelectorAll('.btn-book-session').forEach(btn => {
+        // Intercept Book Session clicks to open the single-glance Quick Booking Modal
+        document.querySelectorAll('.btn-book-session, .long-term-card').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
-                const targetUrl = this.getAttribute('href');
+                e.stopPropagation();
                 
-                this.classList.add('btn-action-loading');
-                this.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Booking...';
-                this.style.opacity = '0.8';
-                this.style.pointerEvents = 'none';
-                
-                setTimeout(() => {
-                    window.location.href = targetUrl;
-                }, 400);
+                let targetUrl = this.getAttribute('href');
+                if (!targetUrl) {
+                    const parentA = this.closest('a');
+                    if (parentA) targetUrl = parentA.getAttribute('href');
+                }
+
+                let pkgParam = 'Monthly';
+                let coachParam = '';
+
+                if (targetUrl) {
+                    const parsedUrl = new URL(targetUrl, window.location.origin);
+                    if (parsedUrl.searchParams.get('package')) {
+                        pkgParam = parsedUrl.searchParams.get('package');
+                    }
+                    if (parsedUrl.searchParams.get('coach')) {
+                        coachParam = parsedUrl.searchParams.get('coach');
+                    }
+                }
+
+                openQuickBookingModal(pkgParam, coachParam);
             });
         });
     });
@@ -1788,18 +2019,318 @@
         }
     });
 
-    const togglePasswordBtn = document.getElementById('togglePasswordBtn');
-    const togglePasswordIcon = document.getElementById('togglePasswordIcon');
-    if (togglePasswordBtn && passwordInput) {
-        togglePasswordBtn.addEventListener('click', function() {
-            const type = passwordInput.type === 'password' ? 'text' : 'password';
-            passwordInput.type = type;
-            if (type === 'text') {
-                togglePasswordIcon.classList.remove('fa-eye');
-                togglePasswordIcon.classList.add('fa-eye-slash');
+    // ==========================================
+    // Quick Booking Modal Logic & Validation
+    // ==========================================
+    let qbModalInstance;
+
+    function openQuickBookingModal(preferredPackage = 'Monthly', preferredCoach = '') {
+        const modalEl = document.getElementById('quickBookingModal');
+        if (!modalEl) return;
+        qbModalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+        const pkgSelect = document.getElementById('qbPackage');
+        const coachSelect = document.getElementById('qbCoach');
+        const startDateInput = document.getElementById('qbStartDate');
+
+        if (pkgSelect && preferredPackage) {
+            pkgSelect.value = preferredPackage;
+        }
+
+        if (coachSelect && preferredCoach) {
+            coachSelect.value = preferredCoach;
+        }
+
+        // Default start date to tomorrow if not set
+        if (startDateInput && !startDateInput.value) {
+            const tmrw = new Date();
+            tmrw.setDate(tmrw.getDate() + 1);
+            const yyyy = tmrw.getFullYear();
+            const mm = String(tmrw.getMonth() + 1).padStart(2, '0');
+            const dd = String(tmrw.getDate()).padStart(2, '0');
+            startDateInput.min = `${yyyy}-${mm}-${dd}`;
+            startDateInput.value = `${yyyy}-${mm}-${dd}`;
+        }
+
+        updateQbScheduleAndFee();
+        qbModalInstance.show();
+    }
+
+    // Live Contact Number & Password Validation
+    const qbPhone = document.getElementById('qbPhone');
+    function validateQbPhone(val) {
+        const cleaned = (val || '').replace(/\D/g, '');
+        const rules = {
+            len: cleaned.length === 10,
+            start: cleaned.length > 0 && ['6', '7', '8', '9'].includes(cleaned[0]),
+            prefix: !(['00', '11', '22', '33', '44', '55'].includes(cleaned.slice(0, 2))),
+            consec: true,
+            rep: true
+        };
+
+        // Check consecutive > 6
+        let inc = 1, dec = 1;
+        for (let i = 0; i < cleaned.length - 1; i++) {
+            const curr = parseInt(cleaned[i], 10);
+            const next = parseInt(cleaned[i+1], 10);
+            if (next === curr + 1) { inc++; if (inc > 6) rules.consec = false; } else { inc = 1; }
+            if (next === curr - 1) { dec++; if (dec > 6) rules.consec = false; } else { dec = 1; }
+        }
+
+        // Check repetition > 6
+        if (/(\d)\1{6,}/.test(cleaned)) rules.rep = false;
+        const counts = {};
+        for (const ch of cleaned) {
+            counts[ch] = (counts[ch] || 0) + 1;
+            if (counts[ch] > 6) rules.rep = false;
+        }
+
+        function updateRuleBadge(id, isPass) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (isPass) {
+                el.className = 'text-success fw-bold';
+                el.querySelector('i').className = 'fa-solid fa-circle-check me-1';
             } else {
-                togglePasswordIcon.classList.remove('fa-eye-slash');
-                togglePasswordIcon.classList.add('fa-eye');
+                el.className = 'text-muted';
+                el.querySelector('i').className = 'fa-regular fa-circle me-1';
+            }
+        }
+
+        updateRuleBadge('rule-len', rules.len);
+        updateRuleBadge('rule-start', rules.start);
+        updateRuleBadge('rule-prefix', rules.prefix);
+        updateRuleBadge('rule-consec', rules.consec);
+        updateRuleBadge('rule-rep', rules.rep);
+
+        return rules.len && rules.start && rules.prefix && rules.consec && rules.rep;
+    }
+
+    if (qbPhone) {
+        qbPhone.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '').slice(0, 10);
+            validateQbPhone(this.value);
+        });
+    }
+
+    // Schedule, Persons and Fee Calculation
+    const qbPackage = document.getElementById('qbPackage');
+    const qbPersons = document.getElementById('qbPersons');
+    const qbStartDate = document.getElementById('qbStartDate');
+    const qbEndDate = document.getElementById('qbEndDate');
+    const qbEndDateCol = document.getElementById('qbEndDateCol');
+    const qbDaysRow = document.getElementById('qbDaysRow');
+    const qbFeeDisplay = document.getElementById('qbFeeDisplay');
+    const qbFeeInput = document.getElementById('qbFeeInput');
+    const qbSelectedDays = document.getElementById('qbSelectedDays');
+    const qbBtnMinus = document.getElementById('qbBtnMinus');
+    const qbBtnPlus = document.getElementById('qbBtnPlus');
+
+    if (qbBtnMinus) {
+        qbBtnMinus.addEventListener('click', () => {
+            let p = parseInt(qbPersons.value, 10) || 1;
+            if (p > 1) {
+                qbPersons.value = p - 1;
+                updateQbScheduleAndFee();
+            }
+        });
+    }
+
+    if (qbBtnPlus) {
+        qbBtnPlus.addEventListener('click', () => {
+            let p = parseInt(qbPersons.value, 10) || 1;
+            if (p < 5) {
+                qbPersons.value = p + 1;
+                updateQbScheduleAndFee();
+            }
+        });
+    }
+
+    // Day Checkboxes toggle
+    document.querySelectorAll('.qb-day-cb').forEach(cb => {
+        cb.addEventListener('change', function() {
+            const label = this.closest('.qb-day-label');
+            if (this.checked) {
+                label.style.background = 'var(--gradient-primary)';
+                label.style.color = '#fff';
+                label.style.borderColor = 'transparent';
+            } else {
+                label.style.background = 'transparent';
+                label.style.color = '#e4e4e7';
+                label.style.borderColor = 'rgba(255,255,255,0.1)';
+            }
+            updateQbSelectedDaysString();
+            updateQbScheduleAndFee();
+        });
+    });
+
+    function updateQbSelectedDaysString() {
+        const checked = [];
+        document.querySelectorAll('.qb-day-cb:checked').forEach(c => checked.push(c.value));
+        if (qbSelectedDays) {
+            qbSelectedDays.value = checked.join(', ');
+        }
+        return checked;
+    }
+
+    function updateQbScheduleAndFee() {
+        if (!qbPackage) return;
+        const pkg = qbPackage.value;
+        const persons = parseInt(qbPersons?.value || 1, 10);
+        const discountMap = { 1: 0, 2: 6, 3: 11, 4: 16, 5: 21 };
+        const discountPercent = discountMap[persons] || 0;
+
+        // Visibility & Date calculation
+        if (pkg === 'Demo' || pkg === 'Single') {
+            if (qbEndDateCol) qbEndDateCol.style.display = 'none';
+            if (qbDaysRow) qbDaysRow.style.display = 'none';
+            if (qbEndDate && qbStartDate) qbEndDate.value = qbStartDate.value;
+        } else {
+            if (qbEndDateCol) qbEndDateCol.style.display = 'block';
+            if (qbDaysRow) qbDaysRow.style.display = 'block';
+
+            if (qbStartDate && qbStartDate.value) {
+                const sDate = new Date(qbStartDate.value);
+                let monthsToAdd = 1;
+                if (pkg === '3_months') monthsToAdd = 3;
+                if (pkg === '6_months') monthsToAdd = 6;
+                if (pkg === '9_months') monthsToAdd = 9;
+                if (pkg === '12_months') monthsToAdd = 12;
+
+                const eDate = new Date(sDate);
+                eDate.setMonth(eDate.getMonth() + monthsToAdd);
+                eDate.setDate(eDate.getDate() - 1);
+
+                const yyyy = eDate.getFullYear();
+                const mm = String(eDate.getMonth() + 1).padStart(2, '0');
+                const dd = String(eDate.getDate()).padStart(2, '0');
+                if (qbEndDate) qbEndDate.value = `${yyyy}-${mm}-${dd}`;
+            }
+        }
+
+        // Fee calculation
+        let fee = 0;
+        const selectedDays = updateQbSelectedDaysString();
+
+        if (pkg === 'Demo') {
+            fee = 0;
+        } else if (pkg === 'Single') {
+            fee = Math.round((750 * persons) * (1 - discountPercent / 100));
+        } else if (pkg === 'Monthly') {
+            const baseMonth = selectedDays.length === 2 ? 6000 : 9000;
+            fee = Math.round((baseMonth * persons) * (1 - discountPercent / 100));
+        } else if (pkg === 'Custom') {
+            fee = Math.round((9000 * persons) * (1 - discountPercent / 100));
+        } else if (['3_months', '6_months', '9_months', '12_months'].includes(pkg)) {
+            const monthMap = { '3_months': 22950, '6_months': 43200, '9_months': 60750, '12_months': 75600 };
+            const baseLt = monthMap[pkg] || 25000;
+            fee = Math.round((baseLt * persons) * (1 - discountPercent / 100));
+        }
+
+        if (qbFeeDisplay) qbFeeDisplay.innerText = '₹' + fee.toLocaleString('en-IN');
+        if (qbFeeInput) qbFeeInput.value = fee;
+    }
+
+    if (qbPackage) qbPackage.addEventListener('change', updateQbScheduleAndFee);
+    if (qbStartDate) qbStartDate.addEventListener('change', updateQbScheduleAndFee);
+
+    // Current Location Geolocation
+    const qbLocateBtn = document.getElementById('qbLocateBtn');
+    const qbLocation = document.getElementById('qbLocation');
+    if (qbLocateBtn && qbLocation) {
+        qbLocateBtn.addEventListener('click', function() {
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by your browser.');
+                return;
+            }
+            qbLocateBtn.disabled = true;
+            qbLocateBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            navigator.geolocation.getCurrentPosition(
+                async function(pos) {
+                    try {
+                        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
+                        const data = await res.json();
+                        qbLocation.value = data.display_name || `${pos.coords.latitude}, ${pos.coords.longitude}`;
+                    } catch (e) {
+                        qbLocation.value = `${pos.coords.latitude}, ${pos.coords.longitude}`;
+                    }
+                    qbLocateBtn.disabled = false;
+                    qbLocateBtn.innerHTML = '<i class="fa-solid fa-check text-success"></i>';
+                    setTimeout(() => { qbLocateBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs me-1"></i> Detect'; }, 2000);
+                },
+                function() {
+                    alert('Could not access current location. Please enter your society/pool name manually.');
+                    qbLocateBtn.disabled = false;
+                    qbLocateBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs me-1"></i> Detect';
+                }
+            );
+        });
+    }
+
+    // Submit Quick Booking via AJAX
+    const qbForm = document.getElementById('quickBookingForm');
+    const qbAlert = document.getElementById('qbAlert');
+    const qbSubmitBtn = document.getElementById('qbSubmitBtn');
+    const qbSubmitText = document.getElementById('qbSubmitText');
+    const qbSubmitSpinner = document.getElementById('qbSubmitSpinner');
+
+    if (qbForm) {
+        qbForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            qbAlert.classList.add('d-none');
+            qbAlert.innerText = '';
+
+            const phoneVal = (qbPhone?.value || '').trim();
+            if (!validateQbPhone(phoneVal)) {
+                qbAlert.innerText = 'Please provide a valid 10-digit mobile number matching all security requirements.';
+                qbAlert.classList.remove('d-none');
+                qbPhone.focus();
+                return;
+            }
+
+            const coachVal = document.getElementById('qbCoach')?.value;
+            if (!coachVal) {
+                qbAlert.innerText = 'Please select a coach.';
+                qbAlert.classList.remove('d-none');
+                return;
+            }
+
+            // UI Loading state
+            qbSubmitBtn.disabled = true;
+            qbSubmitSpinner.classList.remove('d-none');
+            qbSubmitText.innerText = 'Creating Account & Booking...';
+
+            const formData = new FormData(qbForm);
+
+            try {
+                const response = await fetch('/book', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const result = await response.json().catch(() => null);
+
+                if (response.ok && result && result.success) {
+                    qbSubmitText.innerText = 'Success! Redirecting...';
+                    window.location.href = result.redirect_url || '/';
+                } else {
+                    const errorMsg = (result && result.error) ? result.error : 'Booking failed. Please check all details.';
+                    qbAlert.innerText = errorMsg;
+                    qbAlert.classList.remove('d-none');
+                    qbSubmitBtn.disabled = false;
+                    qbSubmitSpinner.classList.add('d-none');
+                    qbSubmitText.innerHTML = '<i class="fa-solid fa-calendar-check me-2"></i> Confirm Booking';
+                }
+            } catch (err) {
+                console.error('Booking submission error:', err);
+                qbAlert.innerText = 'Connection error. Please try again.';
+                qbAlert.classList.remove('d-none');
+                qbSubmitBtn.disabled = false;
+                qbSubmitSpinner.classList.add('d-none');
+                qbSubmitText.innerHTML = '<i class="fa-solid fa-calendar-check me-2"></i> Confirm Booking';
             }
         });
     }
