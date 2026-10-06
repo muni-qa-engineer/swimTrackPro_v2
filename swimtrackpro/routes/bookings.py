@@ -63,6 +63,20 @@ def book():
             flash(err_msg, 'danger')
             return redirect(url_for('index'))
 
+    elif package in ('3_months', '6_months', '9_months', '12_months'):
+        selected_days = request.form.get('selected_days', '')
+        selected_days_list = [
+            day.strip()
+            for day in selected_days.split(',')
+            if day.strip()
+        ]
+        if len(selected_days_list) != 3:
+            err_msg = 'Please select 3 weekly training days for long term package.'
+            if is_ajax:
+                return jsonify({'success': False, 'error': err_msg}), 400
+            flash(err_msg, 'danger')
+            return redirect(url_for('index'))
+
     elif package == 'Custom':
         selected_days = request.form.get('selected_days', '')
         selected_days_list = [
@@ -307,38 +321,40 @@ def book():
         "trainer_username": trainer_username,
     }
 
-    # V0037.1 - Automatically create the swimmer if it does not already exist.
-    existing_swimmer = next(
-        (
-            s for s in data['students']
-            if isinstance(s, dict)
-            and (s.get('name') or '').strip().lower() == student.strip().lower()
-            and s.get('owner_name') == owner_name
-            and s.get('owner_phone') == owner_phone
-        ),
-        None
-    )
+    # For Demo class or existing logged-in users, create swimmer if needed
+    is_free_or_demo = (int(fee) == 0 or package == 'Demo')
+    if is_free_or_demo or session.get('user_name'):
+        existing_swimmer = next(
+            (
+                s for s in data['students']
+                if isinstance(s, dict)
+                and (s.get('name') or '').strip().lower() == student.strip().lower()
+                and s.get('owner_name') == owner_name
+                and s.get('owner_phone') == owner_phone
+            ),
+            None
+        )
 
-    if not existing_swimmer:
-        swimmer_conn = get_pg_connection()
-        swimmer_cursor = swimmer_conn.cursor()
+        if not existing_swimmer:
+            swimmer_conn = get_pg_connection()
+            swimmer_cursor = swimmer_conn.cursor()
 
-        swimmer_cursor.execute('''
-        INSERT INTO students (
-            student_name,
-            owner_name,
-            owner_phone,
-            skill_level
-        ) VALUES (%s, %s, %s, %s)
-        ''', (
-            student.strip(),
-            owner_name,
-            owner_phone,
-            request.form.get('skill_level', 'Beginner')
-        ))
+            swimmer_cursor.execute('''
+            INSERT INTO students (
+                student_name,
+                owner_name,
+                owner_phone,
+                skill_level
+            ) VALUES (%s, %s, %s, %s)
+            ''', (
+                student.strip(),
+                owner_name,
+                owner_phone,
+                request.form.get('skill_level', 'Beginner')
+            ))
 
-        swimmer_conn.commit()
-        swimmer_conn.close()
+            swimmer_conn.commit()
+            swimmer_conn.close()
 
     # Convert group_swimmers set to sorted list for deterministic indexing
     group_swimmers = sorted(group_swimmers)
@@ -400,44 +416,43 @@ def book():
     conn.commit()
     conn.close()
 
-    # Automatically create user account / session if not logged in
-    if not session.get('user_name'):
-        session['role'] = 'guest'
-        session['user_name'] = owner_name
-        session['phone'] = owner_phone
-
-        try:
-            act_conn = get_pg_connection()
-            act_cursor = act_conn.cursor()
-            act_cursor.execute(
-                "SELECT id, current_login, id_number FROM user_activity WHERE LOWER(user_name) = LOWER(%s) AND role = %s ORDER BY current_login DESC",
-                (owner_name.lower(), "guest")
-            )
-            act_rows = act_cursor.fetchall()
-            if act_rows:
-                act_row = act_rows[0]
-                session["id_number"] = act_row[2] or "STPS0000"
-                act_cursor.execute(
-                    "UPDATE user_activity SET previous_login = %s, current_login = CURRENT_TIMESTAMP, phone = %s WHERE id = %s",
-                    (act_row[1], owner_phone, act_row[0])
-                )
-            else:
-                act_cursor.execute("SELECT MAX(CAST(SUBSTRING(id_number FROM 5) AS INTEGER)) FROM user_activity WHERE id_number LIKE 'STPS%'")
-                max_guest_val = act_cursor.fetchone()[0] or 0
-                new_id_number = f"STPS{max_guest_val + 1:04d}"
-                session["id_number"] = new_id_number
-
-                act_cursor.execute(
-                    "INSERT INTO user_activity (user_name, phone, role, current_login, previous_login, id_number) VALUES (%s, %s, %s, CURRENT_TIMESTAMP, NULL, %s)",
-                    (owner_name, owner_phone, "guest", new_id_number)
-                )
-            act_conn.commit()
-            act_conn.close()
-        except Exception as e:
-            print("Auto-login user activity error:", e)
-
-    # If demo class or 0 fee, auto-confirm booking
+    # If demo class or 0 fee, auto-confirm booking and create account immediately
     if int(fee) == 0 or package == 'Demo':
+        if not session.get('user_name'):
+            session['role'] = 'guest'
+            session['user_name'] = owner_name
+            session['phone'] = owner_phone
+
+            try:
+                act_conn = get_pg_connection()
+                act_cursor = act_conn.cursor()
+                act_cursor.execute(
+                    "SELECT id, current_login, id_number FROM user_activity WHERE LOWER(user_name) = LOWER(%s) AND role = %s ORDER BY current_login DESC",
+                    (owner_name.lower(), "guest")
+                )
+                act_rows = act_cursor.fetchall()
+                if act_rows:
+                    act_row = act_rows[0]
+                    session["id_number"] = act_row[2] or "STPS0000"
+                    act_cursor.execute(
+                        "UPDATE user_activity SET previous_login = %s, current_login = CURRENT_TIMESTAMP, phone = %s WHERE id = %s",
+                        (act_row[1], owner_phone, act_row[0])
+                    )
+                else:
+                    act_cursor.execute("SELECT MAX(CAST(SUBSTRING(id_number FROM 5) AS INTEGER)) FROM user_activity WHERE id_number LIKE 'STPS%'")
+                    max_guest_val = act_cursor.fetchone()[0] or 0
+                    new_id_number = f"STPS{max_guest_val + 1:04d}"
+                    session["id_number"] = new_id_number
+
+                    act_cursor.execute(
+                        "INSERT INTO user_activity (user_name, phone, role, current_login, previous_login, id_number) VALUES (%s, %s, %s, CURRENT_TIMESTAMP, NULL, %s)",
+                        (owner_name, owner_phone, "guest", new_id_number)
+                    )
+                act_conn.commit()
+                act_conn.close()
+            except Exception as e:
+                print("Auto-login user activity error:", e)
+
         try:
             cf_conn = get_pg_connection()
             cf_cur = cf_conn.cursor()
@@ -470,6 +485,10 @@ def book():
         flash('Your Demo booking has been confirmed! Welcome to SwimTrackPro.', 'success')
         redirect_url = url_for('index')
     else:
+        # Paid package: do NOT create user_activity account or permanent guest session yet!
+        session['pending_booking_id'] = booking_id
+        session['pending_guest_name'] = owner_name
+        session['pending_guest_phone'] = owner_phone
         redirect_url = f'/payment_options/{booking_id}'
 
     if is_ajax:
@@ -1308,31 +1327,83 @@ def register_bookings_routes(app):
     app.add_url_rule('/booking/renew', endpoint='renew_booking', view_func=renew_booking, methods=['POST'])
 
 def confirm_paylater(booking_id):
-    if not session.get('user_name'):
-        flash("Unauthorized action", "danger")
-        return redirect('/booking')
-        
     data = load_data()
     booking = next((b for b in data.get('bookings', []) if str(b['id']) == str(booking_id)), None)
     
     if not booking:
         flash("Booking not found", "danger")
-        return redirect('/booking')
+        return redirect(url_for('index'))
         
+    owner_name = (booking.get('owner_name') or '').strip()
+    owner_phone = (booking.get('owner_phone') or '').strip()
+    student = (booking.get('student') or owner_name).strip()
     current_user = (session.get('user_name') or '').strip().lower()
-    b_owner = (booking.get('owner_name') or '').strip().lower()
+    b_owner = owner_name.lower()
     b_created = (booking.get('created_by') or '').strip().lower()
+    pending_id = str(session.get('pending_booking_id') or '')
 
-    if b_owner != current_user and b_created != current_user and session.get('role') != 'admin':
+    is_authorized = (
+        (current_user and (current_user == b_owner or current_user == b_created or session.get('role') == 'admin')) or
+        (pending_id == str(booking_id)) or
+        (session.get('pending_guest_phone') == owner_phone)
+    )
+
+    if not is_authorized:
         flash("Unauthorized action", "danger")
-        return redirect('/booking')
+        return redirect(url_for('index'))
         
     conn = get_pg_connection()
     cursor = conn.cursor()
     cursor.execute("UPDATE bookings SET payment_request = 'Not Paid', status = 'Not Paid' WHERE id = %s", (booking_id,))
+    
+    # 1. Ensure student exists in students table
+    cursor.execute(
+        "SELECT id FROM students WHERE LOWER(student_name) = LOWER(%s) AND LOWER(owner_name) = LOWER(%s) AND owner_phone = %s",
+        (student, owner_name, owner_phone)
+    )
+    if not cursor.fetchone():
+        cursor.execute('''
+        INSERT INTO students (student_name, owner_name, owner_phone, skill_level)
+        VALUES (%s, %s, %s, %s)
+        ''', (student, owner_name, owner_phone, 'Beginner'))
+
+    # 2. Create guest account & session if not already logged in
+    if not session.get('user_name'):
+        session['role'] = 'guest'
+        session['user_name'] = owner_name
+        session['phone'] = owner_phone
+
+        cursor.execute(
+            "SELECT id, current_login, id_number FROM user_activity WHERE LOWER(user_name) = LOWER(%s) AND role = %s ORDER BY current_login DESC",
+            (owner_name.lower(), "guest")
+        )
+        act_rows = cursor.fetchall()
+        if act_rows:
+            act_row = act_rows[0]
+            session["id_number"] = act_row[2] or "STPS0000"
+            cursor.execute(
+                "UPDATE user_activity SET previous_login = %s, current_login = CURRENT_TIMESTAMP, phone = %s WHERE id = %s",
+                (act_row[1], owner_phone, act_row[0])
+            )
+        else:
+            cursor.execute("SELECT MAX(CAST(SUBSTRING(id_number FROM 5) AS INTEGER)) FROM user_activity WHERE id_number LIKE 'STPS%'")
+            max_guest_val = cursor.fetchone()[0] or 0
+            new_id_number = f"STPS{max_guest_val + 1:04d}"
+            session["id_number"] = new_id_number
+
+            cursor.execute(
+                "INSERT INTO user_activity (user_name, phone, role, current_login, previous_login, id_number) VALUES (%s, %s, %s, CURRENT_TIMESTAMP, NULL, %s)",
+                (owner_name, owner_phone, "guest", new_id_number)
+            )
+
     conn.commit()
     conn.close()
     
+    # Clear pending state
+    session.pop('pending_booking_id', None)
+    session.pop('pending_guest_name', None)
+    session.pop('pending_guest_phone', None)
+
     # Update dict so email has correct status
     booking['payment_request'] = 'Not Paid'
     booking['status'] = 'Not Paid'
@@ -1342,7 +1413,7 @@ def confirm_paylater(booking_id):
     return redirect('/my-bookings?booking_success=true')
 
 def cancel_booking(booking_id):
-    """Deletes an unconfirmed or abandoned booking."""
+    """Deletes an unconfirmed or abandoned booking and clears pending state."""
     try:
         conn = get_pg_connection()
         cursor = conn.cursor()
@@ -1354,6 +1425,12 @@ def cancel_booking(booking_id):
         conn.close()
     except Exception as e:
         print("Cancel booking error:", e)
+
+    # Clear pending guest session keys
+    session.pop('pending_booking_id', None)
+    session.pop('pending_guest_name', None)
+    session.pop('pending_guest_phone', None)
+
     flash("Your pending booking was cancelled.", "info")
     return redirect(url_for('index'))
 
