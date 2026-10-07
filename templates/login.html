@@ -600,15 +600,56 @@
             <p class="text-muted">Private training plans tailored to your personal pool schedule.</p>
         </div>
         
-        <!-- ChatGPT-Style Segmented Pill Toggle -->
-        <div class="d-flex justify-content-center mb-5">
+        <!-- Segmented Pill Toggle -->
+        <div class="d-flex justify-content-center mb-4">
             <div class="cg-toggle-container">
                 <button type="button" class="cg-toggle-btn active" id="toggle-individual" onclick="togglePlanView('individual')">
                     Individual
                 </button>
-                <button type="button" class="cg-toggle-btn" id="toggle-group" onclick="togglePlanView('group')">
-                    Group
+                <button type="button" class="cg-toggle-btn" id="toggle-group" onclick="showGroupDynamicNotice()" style="opacity: 0.75; cursor: pointer;" title="Group coaching has dynamic per-person pricing">
+                    Group <span class="badge bg-secondary ms-1" style="font-size: 0.65rem; font-weight: 700;">Dynamic Pricing</span>
                 </button>
+            </div>
+        </div>
+
+        <!-- Group Coaching Dynamic Pricing Notice Banner -->
+        <div id="cgGroupDynamicNotice" class="cg-group-banner mb-5 p-3 p-md-4 rounded-3 text-center mx-auto" style="max-width: 880px; background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(59, 130, 246, 0.04) 100%); border: 1px solid rgba(6, 182, 212, 0.25); box-shadow: 0 4px 20px rgba(0,0,0,0.15); transition: all 0.3s ease;">
+            <div class="d-flex align-items-center justify-content-center gap-2 mb-2 flex-wrap">
+                <span class="badge bg-primary text-dark text-uppercase px-2.5 py-1 fw-bold" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                    <i class="fa-solid fa-users me-1"></i> Group Coaching Available
+                </span>
+                <span class="badge bg-black border border-white-10 text-white-50 px-2 py-0.5" style="font-size: 0.7rem;">
+                    Dynamic Pricing
+                </span>
+            </div>
+            
+            <h4 class="font-display text-white mb-2" style="font-size: 1.25rem; font-weight: 700;">
+                Looking for Group Swimming Coaching?
+            </h4>
+            
+            <p class="text-light mb-3 mx-auto" style="max-width: 740px; font-size: 0.94rem; line-height: 1.6;">
+                Group coaching is also available! Pricing is <strong>fully dynamic and calculated based on the number of persons in your group</strong> — <strong>as the person count increases, the price per person decreases</strong> with group discounts up to <strong>21% off</strong>.
+            </p>
+            
+            <!-- Tiered Discount Pills -->
+            <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                <div class="px-3 py-1.5 rounded-pill bg-black border border-white-10 text-white small">
+                    👥 <strong>2 Swimmers:</strong> <span class="text-primary fw-bold">12% OFF</span> / person
+                </div>
+                <div class="px-3 py-1.5 rounded-pill bg-black border border-white-10 text-white small">
+                    👥 <strong>3 Swimmers:</strong> <span class="text-primary fw-bold">15% OFF</span> / person
+                </div>
+                <div class="px-3 py-1.5 rounded-pill bg-black border border-white-10 text-white small">
+                    👥 <strong>4 Swimmers:</strong> <span class="text-primary fw-bold">18% OFF</span> / person
+                </div>
+                <div class="px-3 py-1.5 rounded-pill bg-black border border-white-10 text-white small">
+                    👥 <strong>5 Swimmers:</strong> <span class="text-primary fw-bold">21% OFF</span> / person
+                </div>
+            </div>
+            
+            <div class="small text-muted d-flex align-items-center justify-content-center gap-1 flex-wrap">
+                <i class="fa-solid fa-circle-check text-success me-1"></i>
+                <span>Choose any package below and simply specify your group size (1 to 5 swimmers) during booking to see your dynamic group rate!</span>
             </div>
         </div>
         
@@ -1427,14 +1468,28 @@
 </style>
 <script>
     function togglePlanView(view) {
-        document.getElementById('toggle-individual').classList.remove('active');
-        document.getElementById('toggle-group').classList.remove('active');
-        
-        document.getElementById('view-individual').style.display = 'none';
-        document.getElementById('view-group').style.display = 'none';
-        
-        document.getElementById('toggle-' + view).classList.add('active');
-        document.getElementById('view-' + view).style.display = 'block';
+        if (view === 'group') {
+            showGroupDynamicNotice();
+            return;
+        }
+        document.getElementById('toggle-individual')?.classList.add('active');
+        const viewInd = document.getElementById('view-individual');
+        if (viewInd) viewInd.style.display = 'block';
+        const viewGrp = document.getElementById('view-group');
+        if (viewGrp) viewGrp.style.display = 'none';
+    }
+
+    function showGroupDynamicNotice() {
+        const el = document.getElementById('cgGroupDynamicNotice');
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.style.boxShadow = '0 0 0 3px var(--color-primary), 0 10px 35px rgba(6, 182, 212, 0.45)';
+            el.style.borderColor = 'var(--color-primary)';
+            setTimeout(() => {
+                el.style.boxShadow = '0 4px 20px rgba(0,0,0,0.15)';
+                el.style.borderColor = 'rgba(6, 182, 212, 0.25)';
+            }, 2500);
+        }
     }
 </script>
 
