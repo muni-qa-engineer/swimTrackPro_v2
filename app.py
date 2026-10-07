@@ -418,6 +418,39 @@ def ensure_database_tables():
         cursor.execute("ALTER TABLE notice_reads ALTER COLUMN user_id TYPE TEXT")
     except psycopg2.Error:
         conn.rollback()
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS promotions (
+        id SERIAL PRIMARY KEY,
+        promo_key TEXT UNIQUE DEFAULT 'top_banner',
+        event_name TEXT NOT NULL,
+        badge_text TEXT DEFAULT 'SPECIAL OFFER',
+        message TEXT NOT NULL,
+        cta_text TEXT DEFAULT 'View Plans',
+        cta_url TEXT DEFAULT '/#plans',
+        banner_theme TEXT DEFAULT 'ocean',
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+    try:
+        cursor.execute("ALTER TABLE promotions ADD COLUMN IF NOT EXISTS badge_text TEXT DEFAULT 'SPECIAL OFFER'")
+        cursor.execute("ALTER TABLE promotions ADD COLUMN IF NOT EXISTS banner_theme TEXT DEFAULT 'ocean'")
+        cursor.execute("ALTER TABLE promotions ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE")
+        cursor.execute("ALTER TABLE promotions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    except psycopg2.Error:
+        conn.rollback()
+    else:
+        conn.commit()
+
+    try:
+        cursor.execute("""
+            INSERT INTO promotions (promo_key, event_name, badge_text, message, cta_text, cta_url, banner_theme, is_active)
+            VALUES ('top_banner', 'Summer Swimming Camp 2026', 'SUMMER CAMP', '☀️ Summer Swimming Camp 2026 is LIVE! Enroll early & get 20% off coaching at your apartment pool in Hyderabad.', 'Book Summer Camp', '/#plans', 'summer', TRUE)
+            ON CONFLICT (promo_key) DO NOTHING
+        """)
+    except psycopg2.Error:
+        conn.rollback()
     else:
         conn.commit()
 
@@ -858,6 +891,15 @@ def inject_unread_notices():
         conn.close()
         
     return {'unread_notices_count': unread_count, 'all_notices': notices}
+
+@app.context_processor
+def inject_promotions():
+    try:
+        from services.promotion_service import get_active_promotion
+        return {'active_promotion': get_active_promotion()}
+    except Exception as e:
+        print(f"Error injecting promotions: {e}")
+        return {'active_promotion': None}
 
 @app.route('/api/notices', methods=['POST'])
 def create_notice():

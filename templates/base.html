@@ -243,37 +243,54 @@
             0%, 100% { transform: translateY(0) rotate(-5deg); }
             50% { transform: translateY(-6px) rotate(5deg); }
         }
+
+        /* Sitewide Promotional Banner Themes */
+        .promo-theme-ocean { background: linear-gradient(90deg, #0284c7 0%, #0f766e 100%); }
+        .promo-theme-summer { background: linear-gradient(90deg, #ea580c 0%, #d97706 100%); }
+        .promo-theme-winter { background: linear-gradient(90deg, #0284c7 0%, #4f46e5 100%); }
+        .promo-theme-festival { background: linear-gradient(90deg, #7c3aed 0%, #db2777 100%); }
+        .promo-theme-emerald { background: linear-gradient(90deg, #059669 0%, #0d9488 100%); }
+        .promo-theme-gold { background: linear-gradient(90deg, #b45309 0%, #d97706 100%); }
+        .promo-theme-dark { background: linear-gradient(90deg, #18181b 0%, #27272a 100%); border-bottom: 1px solid rgba(245, 158, 11, 0.4) !important; }
     </style>
 </head>
 <body class="{% block body_class %}{% endblock %}" style="display: flex; flex-direction: column; min-height: 100vh;">
 
-    <!-- Reusable Promotional Banner -->
-    <div id="promoBanner" class="promo-banner" style="display: none; background: linear-gradient(90deg, var(--color-primary), #005f73); color: white; padding: 0.5rem 1rem; text-align: center; position: relative; z-index: 1050; font-size: 0.9rem; font-weight: 600;">
-        <span id="promoBannerText"></span>
-        <button type="button" class="btn-close btn-close-white" style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); font-size: 0.7rem;" onclick="dismissPromoBanner()" aria-label="Close"></button>
+    <!-- Reusable Promotional Banner (Customizable via Admin Offer Zone) -->
+    {% if active_promotion and active_promotion.is_active %}
+    <div id="promoBanner" class="promo-banner promo-theme-{{ active_promotion.banner_theme|default('ocean') }}" style="display: none; color: #ffffff; padding: 0.55rem 1.25rem; text-align: center; position: relative; z-index: 1050; font-size: 0.88rem; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.12);">
+        <div class="container d-flex align-items-center justify-content-center flex-wrap gap-2 pe-4">
+            {% if active_promotion.badge_text %}
+            <span class="badge bg-white text-dark text-uppercase px-2 py-1 shadow-sm" style="font-size: 0.72rem; font-weight: 800; letter-spacing: 0.5px; border-radius: 4px;">{{ active_promotion.badge_text }}</span>
+            {% endif %}
+            <span id="promoBannerText">
+                {{ active_promotion.message }}
+                {% if active_promotion.cta_text and active_promotion.cta_url %}
+                <a href="{{ active_promotion.cta_url }}" class="text-white text-decoration-underline ms-2 fw-bold" style="text-underline-offset: 3px;">
+                    {{ active_promotion.cta_text }} <i class="fa-solid fa-arrow-right ms-1" style="font-size: 0.75rem;"></i>
+                </a>
+                {% endif %}
+            </span>
+        </div>
+        <button type="button" class="btn-close btn-close-white" style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); font-size: 0.7rem; opacity: 0.85;" onclick="dismissPromoBanner()" aria-label="Close"></button>
     </div>
     
     <script>
-        // Check for active promotions (mocked via localStorage/JS for now, or backend injected)
         document.addEventListener('DOMContentLoaded', function() {
-            const promoConfig = {
-                active: true,
-                id: 'promo_vinayaka_2026',
-                text: '🎉 Happy Vinayaka Chavithi! Book 3 months & get 15% off. <a href="/#plans" class="text-white text-decoration-underline">View Plans</a>'
-            };
-            
-            if (promoConfig.active && localStorage.getItem('dismissed_promo') !== promoConfig.id) {
-                document.getElementById('promoBannerText').innerHTML = promoConfig.text;
-                document.getElementById('promoBanner').style.display = 'block';
+            const promoVersion = "{{ active_promotion.promo_version_id }}";
+            if (localStorage.getItem('dismissed_promo') !== promoVersion) {
+                const banner = document.getElementById('promoBanner');
+                if (banner) banner.style.display = 'block';
             }
         });
         
         function dismissPromoBanner() {
-            document.getElementById('promoBanner').style.display = 'none';
-            // Save the current promo ID so we don't show it again
-            localStorage.setItem('dismissed_promo', 'promo_vinayaka_2026');
+            const banner = document.getElementById('promoBanner');
+            if (banner) banner.style.display = 'none';
+            localStorage.setItem('dismissed_promo', "{{ active_promotion.promo_version_id }}");
         }
     </script>
+    {% endif %}
 
 
     <!-- Global Page Loader -->

@@ -553,6 +553,63 @@ def update_package():
     return redirect(url_for("index"))
 
 
+@admin_required("Only admin can update promotions.")
+def update_promotion():
+    if request.method == "POST":
+        from services.promotion_service import save_promotion
+        event_name = request.form.get("event_name", "").strip()
+        badge_text = request.form.get("badge_text", "SPECIAL OFFER").strip()
+        message = request.form.get("message", "").strip()
+        cta_text = request.form.get("cta_text", "Explore Plans").strip()
+        cta_url = request.form.get("cta_url", "/#plans").strip()
+        banner_theme = request.form.get("banner_theme", "ocean").strip()
+        is_active = request.form.get("is_active") in ["on", "true", "1", True]
+
+        if not message:
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
+                return jsonify({"success": False, "message": "Banner announcement message cannot be empty."}), 400
+            flash("Banner announcement message cannot be empty.", "warning")
+            return redirect(url_for("index"))
+
+        saved_promo = save_promotion(
+            event_name=event_name or "Special Offer",
+            badge_text=badge_text,
+            message=message,
+            cta_text=cta_text,
+            cta_url=cta_url,
+            banner_theme=banner_theme,
+            is_active=is_active
+        )
+
+        msg = f"Promotional banner for '{saved_promo['event_name']}' updated successfully!"
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
+            return jsonify({"success": True, "message": msg, "promotion": saved_promo})
+
+        flash(msg, "success")
+    return redirect(url_for("index"))
+
+
+@admin_required("Only admin can toggle promotions.")
+def toggle_promotion():
+    if request.method == "POST":
+        from services.promotion_service import toggle_promotion_status
+        is_active_val = None
+        if "is_active" in request.form:
+            is_active_val = request.form.get("is_active") in ["on", "true", "1", True]
+        elif request.is_json and request.get_json(silent=True) and "is_active" in request.get_json(silent=True):
+            is_active_val = bool(request.get_json(silent=True).get("is_active"))
+
+        updated = toggle_promotion_status(is_active_val)
+        status_text = "activated (LIVE on site)" if updated.get("is_active") else "paused / hidden"
+        msg = f"Promotional banner is now {status_text}."
+
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
+            return jsonify({"success": True, "message": msg, "is_active": updated.get("is_active"), "promotion": updated})
+
+        flash(msg, "success")
+    return redirect(url_for("index"))
+
+
 @admin_required("Only admin can edit trainers.")
 def edit_trainer(username):
     if request.method == "POST":
@@ -886,6 +943,18 @@ def register_general_routes(app):
         "/admin/update_package",
         endpoint="update_package",
         view_func=update_package,
+        methods=["POST"],
+    )
+    app.add_url_rule(
+        "/admin/update_promotion",
+        endpoint="update_promotion",
+        view_func=update_promotion,
+        methods=["POST"],
+    )
+    app.add_url_rule(
+        "/admin/toggle_promotion",
+        endpoint="toggle_promotion",
+        view_func=toggle_promotion,
         methods=["POST"],
     )
     def profile_update_password():

@@ -3,5 +3,19 @@
   "account_holder_name": "Munisekhar Pothaganti",
   "trainer_phone": "9133851400",
   "upi_id": "pmunihdfc@ybl",
-  "upi_qr_path": ""
+  "upi_qr_path": "",
+  "promotion": {
+    "id": 1,
+    "promo_key": "top_banner",
+    "event_name": "Summer Swimming Camp 2026",
+    "badge_text": "SUMMER CAMP",
+    "message": "☀️ Summer Swimming Camp 2026 is LIVE! Enroll early & get 20% off coaching at your apartment pool in Hyderabad.",
+    "cta_text": "Book Summer Camp",
+    "cta_url": "/#plans",
+    "banner_theme": "summer",
+    "is_active": true,
+    "updated_at": "2026-10-07 22:02:57",
+    "updated_ts": 1791390777.178607,
+    "promo_version_id": "promo_summer_swimming_camp_2026_1791390777"
+  }
 }
