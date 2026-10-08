@@ -601,55 +601,14 @@
         </div>
         
         <!-- Segmented Pill Toggle -->
-        <div class="d-flex justify-content-center mb-4">
+        <div class="d-flex justify-content-center mb-5">
             <div class="cg-toggle-container">
                 <button type="button" class="cg-toggle-btn active" id="toggle-individual" onclick="togglePlanView('individual')">
                     Individual
                 </button>
-                <button type="button" class="cg-toggle-btn" id="toggle-group" onclick="showGroupDynamicNotice()" style="opacity: 0.75; cursor: pointer;" title="Group coaching has dynamic per-person pricing">
-                    Group <span class="badge bg-secondary ms-1" style="font-size: 0.65rem; font-weight: 700;">Dynamic Pricing</span>
+                <button type="button" class="cg-toggle-btn" id="toggle-group" onclick="togglePlanView('group')">
+                    Group
                 </button>
-            </div>
-        </div>
-
-        <!-- Group Coaching Dynamic Pricing Notice Banner -->
-        <div id="cgGroupDynamicNotice" class="cg-group-banner mb-5 p-3 p-md-4 rounded-3 text-center mx-auto" style="max-width: 880px; background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(59, 130, 246, 0.04) 100%); border: 1px solid rgba(6, 182, 212, 0.25); box-shadow: 0 4px 20px rgba(0,0,0,0.15); transition: all 0.3s ease;">
-            <div class="d-flex align-items-center justify-content-center gap-2 mb-2 flex-wrap">
-                <span class="badge bg-primary text-dark text-uppercase px-2.5 py-1 fw-bold" style="font-size: 0.72rem; letter-spacing: 0.5px;">
-                    <i class="fa-solid fa-users me-1"></i> Group Coaching Available
-                </span>
-                <span class="badge bg-black border border-white-10 text-white-50 px-2 py-0.5" style="font-size: 0.7rem;">
-                    Dynamic Pricing
-                </span>
-            </div>
-            
-            <h4 class="font-display text-white mb-2" style="font-size: 1.25rem; font-weight: 700;">
-                Looking for Group Swimming Coaching?
-            </h4>
-            
-            <p class="text-light mb-3 mx-auto" style="max-width: 740px; font-size: 0.94rem; line-height: 1.6;">
-                Group coaching is also available! Pricing is <strong>fully dynamic and calculated based on the number of persons in your group</strong> — <strong>as the person count increases, the price per person decreases</strong> with group discounts up to <strong>21% off</strong>.
-            </p>
-            
-            <!-- Tiered Discount Pills -->
-            <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
-                <div class="px-3 py-1.5 rounded-pill bg-black border border-white-10 text-white small">
-                    👥 <strong>2 Swimmers:</strong> <span class="text-primary fw-bold">12% OFF</span> / person
-                </div>
-                <div class="px-3 py-1.5 rounded-pill bg-black border border-white-10 text-white small">
-                    👥 <strong>3 Swimmers:</strong> <span class="text-primary fw-bold">15% OFF</span> / person
-                </div>
-                <div class="px-3 py-1.5 rounded-pill bg-black border border-white-10 text-white small">
-                    👥 <strong>4 Swimmers:</strong> <span class="text-primary fw-bold">18% OFF</span> / person
-                </div>
-                <div class="px-3 py-1.5 rounded-pill bg-black border border-white-10 text-white small">
-                    👥 <strong>5 Swimmers:</strong> <span class="text-primary fw-bold">21% OFF</span> / person
-                </div>
-            </div>
-            
-            <div class="small text-muted d-flex align-items-center justify-content-center gap-1 flex-wrap">
-                <i class="fa-solid fa-circle-check text-success me-1"></i>
-                <span>Choose any package below and simply specify your group size (1 to 5 swimmers) during booking to see your dynamic group rate!</span>
             </div>
         </div>
         
@@ -902,249 +861,56 @@
         
         <!-- GROUP VIEW -->
         <div id="view-group" style="display: none;">
-            <div class="d-md-none text-center text-muted small mb-3">
-                <i class="fa-solid fa-arrows-left-right me-1" style="color: var(--color-primary);"></i> Swipe to view all plans
-            </div>
-            <div class="cg-pricing-grid mb-5">
-                <!-- Group Demo -->
-                <div class="cg-pricing-card">
-                    <div class="cg-plan-tier-wrap">
-                        <div class="cg-plan-tier">Free</div>
+            <div id="cgGroupDynamicNotice" class="cg-group-banner mb-5 p-4 p-md-5 rounded-4 text-center mx-auto" style="max-width: 900px; background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(59, 130, 246, 0.04) 100%); border: 1px solid rgba(6, 182, 212, 0.25); box-shadow: 0 4px 25px rgba(0,0,0,0.25);">
+                <div class="d-flex align-items-center justify-content-center gap-2 mb-3 flex-wrap">
+                    <span class="badge bg-primary text-dark text-uppercase px-3 py-1.5 fw-bold" style="font-size: 0.78rem; letter-spacing: 0.5px;">
+                        <i class="fa-solid fa-users me-1"></i> Group Coaching Available
+                    </span>
+                    <span class="badge bg-black border border-white-10 text-white-50 px-2.5 py-1" style="font-size: 0.75rem;">
+                        Dynamic Pricing
+                    </span>
+                </div>
+                
+                <h3 class="font-display text-white mb-3" style="font-size: 1.6rem; font-weight: 700;">
+                    Looking for Group Swimming Coaching?
+                </h3>
+                
+                <p class="text-light mb-4 mx-auto" style="max-width: 740px; font-size: 1.05rem; line-height: 1.7;">
+                    Group coaching is available for families, apartment communities, and friends! Pricing is <strong>fully dynamic and calculated based on the number of persons in your group</strong> — <strong>as the person count increases, the price per person decreases</strong> with group discounts up to <strong>21% off</strong>.
+                </p>
+                
+                <!-- Tiered Discount Pills -->
+                <div class="d-flex flex-wrap justify-content-center gap-3 mb-4">
+                    <div class="px-3.5 py-2 rounded-pill bg-black border border-white-10 text-white" style="font-size: 0.95rem;">
+                        👥 <strong>2 Swimmers:</strong> <span class="text-primary fw-bold">12% OFF</span> / person
                     </div>
-                    <div class="cg-plan-headline">Try Group Session</div>
-                    <p class="cg-plan-desc">Experience group coaching with family or friends at your pool facility.</p>
-                    
-                    <div class="cg-price-wrap">
-                        <span class="cg-currency">₹</span><span class="cg-amount">0</span><span class="cg-period">/ session</span>
+                    <div class="px-3.5 py-2 rounded-pill bg-black border border-white-10 text-white" style="font-size: 0.95rem;">
+                        👥 <strong>3 Swimmers:</strong> <span class="text-primary fw-bold">15% OFF</span> / person
                     </div>
-                    
-                    <a href="/booking?package=Demo" class="cg-btn cg-btn-outline btn-book-session">Book Demo</a>
-                    
-                    <div class="cg-features-heading">Start with the basics:</div>
-                    <ul class="cg-features-list">
-                        <li class="cg-feature-item">
-                            <i class="fa-solid fa-users cg-feature-icon"></i>
-                            <span>Up to 5 members included</span>
-                        </li>
-                        <li class="cg-feature-item">
-                            <i class="fa-solid fa-water cg-feature-icon"></i>
-                            <span>At your villa, apartment, or club pool</span>
-                        </li>
-                        <li class="cg-feature-item">
-                            <i class="fa-solid fa-user-check cg-feature-icon"></i>
-                            <span>Assigned certified trainer</span>
-                        </li>
-                        <li class="cg-feature-item">
-                            <i class="fa-solid fa-clock cg-feature-icon"></i>
-                            <span>1hr dedicated group trial session</span>
-                        </li>
-                        <li class="cg-feature-item">
-                            <i class="fa-solid fa-clipboard-check cg-feature-icon"></i>
-                            <span>Group comfort assessment</span>
-                        </li>
-                        <li class="cg-feature-item">
-                            <i class="fa-solid fa-shield-halved cg-feature-icon"></i>
-                            <span>Zero recurring commitment</span>
-                        </li>
-                    </ul>
+                    <div class="px-3.5 py-2 rounded-pill bg-black border border-white-10 text-white" style="font-size: 0.95rem;">
+                        👥 <strong>4 Swimmers:</strong> <span class="text-primary fw-bold">18% OFF</span> / person
+                    </div>
+                    <div class="px-3.5 py-2 rounded-pill bg-black border border-white-10 text-white" style="font-size: 0.95rem;">
+                        👥 <strong>5 Swimmers:</strong> <span class="text-primary fw-bold">21% OFF</span> / person
+                    </div>
+                </div>
+                
+                <div class="p-3 rounded-3 mb-4 mx-auto" style="max-width: 680px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08);">
+                    <div class="text-muted small mb-0">
+                        <i class="fa-solid fa-circle-check text-success me-1"></i>
+                        Select any package (Single Day, Monthly, 3 Months, or Custom) and simply choose your group size (1 to 5 swimmers) during booking to see the automatic per-person discounted rate.
+                    </div>
                 </div>
 
-                <!-- Group Single Day -->
-                <div class="cg-pricing-card">
-                    <div class="cg-plan-tier-wrap">
-                        <div class="cg-plan-tier">Single Day (Group)</div>
-                    </div>
-                    <div class="cg-plan-headline">Flexible group access</div>
-                    <p class="cg-plan-desc">Book a one-off group session for family or friends with no ongoing commitment.</p>
-                    
-                    <div class="cg-price-wrap">
-                        <span class="cg-currency">₹</span><span class="cg-amount">{{ '{:,}'.format(pkg['group']['single'].final_price) }}</span><span class="cg-period">/ session</span>
-                    </div>
-                    
-                    <a href="/booking?package=Single" class="cg-btn cg-btn-dark btn-book-session">Buy now</a>
-                    
-                    <div class="cg-features-heading">Includes:</div>
-                    <ul class="cg-features-list">
-                        <li class="cg-feature-item">
-                            <i class="fa-solid fa-users cg-feature-icon"></i>
-                            <span>Up to 5 swimmers included</span>
-                        </li>
-                        <li class="cg-feature-item">
-                            <i class="fa-solid fa-user-plus cg-feature-icon"></i>
-                            <span>Selectable coach of your choice</span>
-                        </li>
-                        <li class="cg-feature-item">
-                            <i class="fa-solid fa-clock cg-feature-icon"></i>
-                            <span>1hr dedicated group training session</span>
-                        </li>
-                        <li class="cg-feature-item">
-                            <i class="fa-solid fa-water cg-feature-icon"></i>
-                            <span>At your villa, apartment, or club pool</span>
-                        </li>
-                        <li class="cg-feature-item">
-                            <i class="fa-solid fa-user-group cg-feature-icon"></i>
-                            <span>Expandable for additional members</span>
-                        </li>
-                        <li class="cg-feature-item">
-                            <i class="fa-solid fa-calendar-check cg-feature-icon"></i>
-                            <span>Flexible schedule & slot selection</span>
-                        </li>
-                    </ul>
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <button type="button" class="btn btn-outline-light px-4 py-2.5 fw-semibold" onclick="togglePlanView('individual')">
+                        <i class="fa-solid fa-arrow-left me-1"></i> View Individual Plans
+                    </button>
+                    <button type="button" class="btn btn-primary px-4 py-2.5 fw-bold" onclick="openQuickBookingModal('Monthly')">
+                        <i class="fa-solid fa-bolt me-1"></i> Book Group Coaching Now
+                    </button>
                 </div>
-
-                <!-- Group Monthly (RECOMMENDED) -->
-                <div class="cg-pricing-card recommended">
-                    <div class="cg-plan-tier-wrap">
-                        <div class="cg-plan-tier">Monthly Package (Group)</div>
-                        <span class="cg-badge-recommended">RECOMMENDED</span>
-                    </div>
-                    <div class="cg-plan-headline">Group mastery</div>
-                    <p class="cg-plan-desc">Structured recurring coaching for your family or apartment community group.</p>
-                    
-                    <div class="cg-price-wrap">
-                        <span class="cg-currency">₹</span><span class="cg-amount">{{ '{:,}'.format(pkg['group']['monthly'].final_price) }}</span><span class="cg-period">/ month</span>
-                    </div>
-                    
-                    <a href="/booking?package=Monthly" class="cg-btn cg-btn-primary btn-book-session">
-                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Buy now
-                    </a>
-                    
-                    <div class="cg-features-heading">Everything in Single, plus:</div>
-                    <ul class="cg-features-list">
-                        <li class="cg-feature-item">
-                            <i class="fa-solid fa-users cg-feature-icon"></i>
-                            <span>Up to 5 swimmers included</span>
-                        </li>
-                        <li class="cg-feature-item">
-                            <i class="fa-solid fa-award cg-feature-icon"></i>
-                            <span>Preferred coach priority reservation</span>
-                        </li>
-                        <li class="cg-feature-item">
-                            <i class="fa-solid fa-calendar-week cg-feature-icon"></i>
-                            <span>2 or 3 days / week structured training</span>
-                        </li>
-                        <li class="cg-feature-item">
-                            <i class="fa-solid fa-clock-rotate-left cg-feature-icon"></i>
-                            <span>Skip & Makeup credits included</span>
-                        </li>
-                        <li class="cg-feature-item">
-                            <i class="fa-solid fa-circle-pause cg-feature-icon"></i>
-                            <span>Pause subscription enabled (1 time)</span>
-                        </li>
-                        <li class="cg-feature-item">
-                            <i class="fa-solid fa-people-roof cg-feature-icon"></i>
-                            <span>Community & family friendly</span>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Group Customize -->
-                <div class="cg-pricing-card">
-                    <div class="cg-plan-tier-wrap">
-                        <div class="cg-plan-tier">Customize (Group)</div>
-                    </div>
-                    <div class="cg-plan-headline">Tailored group plan</div>
-                    <p class="cg-plan-desc">Custom schedule and group duration tailored for your residential community or society.</p>
-                    
-                    <div class="cg-price-wrap">
-                        <span class="cg-amount" style="font-size: 2.1rem;">Dynamic</span><span class="cg-period">/ flexible</span>
-                    </div>
-                    
-                    <a href="/booking?package=Custom" class="cg-btn cg-btn-dark btn-book-session">Configure</a>
-                    
-                    <div class="cg-features-heading">Full customization:</div>
-                    <ul class="cg-features-list">
-                        <li class="cg-feature-item">
-                            <i class="fa-solid fa-users-gear cg-feature-icon"></i>
-                            <span>Flexible member count (5+ swimmers)</span>
-                        </li>
-                        <li class="cg-feature-item">
-                            <i class="fa-solid fa-sliders cg-feature-icon"></i>
-                            <span>Up to 5 days / week custom schedule</span>
-                        </li>
-                        <li class="cg-feature-item">
-                            <i class="fa-solid fa-calendar-days cg-feature-icon"></i>
-                            <span>Duration up to 60 days max</span>
-                        </li>
-                        <li class="cg-feature-item">
-                            <i class="fa-solid fa-user-gear cg-feature-icon"></i>
-                            <span>Flexible coach selection</span>
-                        </li>
-                        <li class="cg-feature-item">
-                            <i class="fa-solid fa-clock-rotate-left cg-feature-icon"></i>
-                            <span>Skip & Makeup credits enabled</span>
-                        </li>
-                        <li class="cg-feature-item">
-                            <i class="fa-solid fa-city cg-feature-icon"></i>
-                            <span>Society & community pool programs</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="text-center mb-4 pt-2">
-                <h3 class="font-display text-white" style="font-weight: 700;">Long Term Coaching (Group)</h3>
-                <p class="text-muted">Commit longer, save more as a group.</p>
-                <p class="text-warning small mb-0">*Note: Prices shown are placeholders pending confirmation.</p>
-            </div>
-            
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4">
-                <!-- 3 Months -->
-                <a href="/booking?package=3_months" class="text-decoration-none d-block">
-                    <div class="long-term-card">
-                    {% if pkg['group']['3_months'].discount_percentage > 0 %}
-                    <div class="badge badge-primary mb-2" style="background: rgba(6,182,212,0.1); color: var(--color-primary); padding: 0.3rem 0.6rem;">{{ pkg['group']['3_months'].discount_percentage }}% OFF</div>
-                    {% endif %}
-                    <h4>3 Months</h4>
-                    {% if pkg['group']['3_months'].discount_percentage > 0 %}
-                    <div class="price-strike">₹{{ '{:,}'.format(pkg['group']['3_months'].base_price) }}</div>
-                    {% endif %}
-                    <div class="price-actual mb-0">₹{{ "{:,}".format(pkg["individual"]["3_months"].final_price) }}</div>
-                    <div class="mt-2 text-center" style="font-size: 0.8rem; color: var(--color-primary); font-weight: 600;">Buy Now <i class="fa-solid fa-arrow-right fa-sm ms-1"></i></div>
-                    </div>
-                </a>
-                <!-- 6 Months -->
-                <a href="/booking?package=6_months" class="text-decoration-none d-block">
-                    <div class="long-term-card">
-                    {% if pkg['group']['6_months'].discount_percentage > 0 %}
-                    <div class="badge badge-primary mb-2" style="background: rgba(6,182,212,0.1); color: var(--color-primary); padding: 0.3rem 0.6rem;">{{ pkg['group']['6_months'].discount_percentage }}% OFF</div>
-                    {% endif %}
-                    <h4>6 Months</h4>
-                    {% if pkg['group']['6_months'].discount_percentage > 0 %}
-                    <div class="price-strike">₹{{ '{:,}'.format(pkg['group']['6_months'].base_price) }}</div>
-                    {% endif %}
-                    <div class="price-actual mb-0">₹{{ "{:,}".format(pkg["individual"]["6_months"].final_price) }}</div>
-                    <div class="mt-2 text-center" style="font-size: 0.8rem; color: var(--color-primary); font-weight: 600;">Buy Now <i class="fa-solid fa-arrow-right fa-sm ms-1"></i></div>
-                    </div>
-                </a>
-                <!-- 9 Months -->
-                <a href="/booking?package=9_months" class="text-decoration-none d-block">
-                    <div class="long-term-card">
-                    {% if pkg['group']['9_months'].discount_percentage > 0 %}
-                    <div class="badge badge-primary mb-2" style="background: rgba(6,182,212,0.1); color: var(--color-primary); padding: 0.3rem 0.6rem;">{{ pkg['group']['9_months'].discount_percentage }}% OFF</div>
-                    {% endif %}
-                    <h4>9 Months</h4>
-                    {% if pkg['group']['9_months'].discount_percentage > 0 %}
-                    <div class="price-strike">₹{{ '{:,}'.format(pkg['group']['9_months'].base_price) }}</div>
-                    {% endif %}
-                    <div class="price-actual mb-0">₹{{ "{:,}".format(pkg["individual"]["9_months"].final_price) }}</div>
-                    <div class="mt-2 text-center" style="font-size: 0.8rem; color: var(--color-primary); font-weight: 600;">Buy Now <i class="fa-solid fa-arrow-right fa-sm ms-1"></i></div>
-                    </div>
-                </a>
-                <!-- 1 Year -->
-                <a href="/booking?package=12_months" class="text-decoration-none d-block">
-                    <div class="long-term-card">
-                    {% if pkg['group']['12_months'].discount_percentage > 0 %}
-                    <div class="badge badge-primary mb-2" style="background: rgba(6,182,212,0.1); color: var(--color-primary); padding: 0.3rem 0.6rem;">{{ pkg['group']['12_months'].discount_percentage }}% OFF</div>
-                    {% endif %}
-                    <h4>1 Year</h4>
-                    {% if pkg['group']['12_months'].discount_percentage > 0 %}
-                    <div class="price-strike">₹{{ '{:,}'.format(pkg['group']['12_months'].base_price) }}</div>
-                    {% endif %}
-                    <div class="price-actual mb-0">₹{{ "{:,}".format(pkg["individual"]["12_months"].final_price) }}</div>
-                    <div class="mt-2 text-center" style="font-size: 0.8rem; color: var(--color-primary); font-weight: 600;">Buy Now <i class="fa-solid fa-arrow-right fa-sm ms-1"></i></div>
-                    </div>
-                </a>
             </div>
         </div>
     </div>
@@ -1468,27 +1234,24 @@
 </style>
 <script>
     function togglePlanView(view) {
-        if (view === 'group') {
-            showGroupDynamicNotice();
-            return;
-        }
-        document.getElementById('toggle-individual')?.classList.add('active');
-        const viewInd = document.getElementById('view-individual');
-        if (viewInd) viewInd.style.display = 'block';
-        const viewGrp = document.getElementById('view-group');
-        if (viewGrp) viewGrp.style.display = 'none';
-    }
+        const indBtn = document.getElementById('toggle-individual');
+        const grpBtn = document.getElementById('toggle-group');
+        const indView = document.getElementById('view-individual');
+        const grpView = document.getElementById('view-group');
 
-    function showGroupDynamicNotice() {
-        const el = document.getElementById('cgGroupDynamicNotice');
-        if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            el.style.boxShadow = '0 0 0 3px var(--color-primary), 0 10px 35px rgba(6, 182, 212, 0.45)';
-            el.style.borderColor = 'var(--color-primary)';
-            setTimeout(() => {
-                el.style.boxShadow = '0 4px 20px rgba(0,0,0,0.15)';
-                el.style.borderColor = 'rgba(6, 182, 212, 0.25)';
-            }, 2500);
+        if (view === 'group') {
+            if (indBtn) indBtn.classList.remove('active');
+            if (grpBtn) grpBtn.classList.add('active');
+            if (indView) indView.style.display = 'none';
+            if (grpView) {
+                grpView.style.display = 'block';
+                grpView.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        } else {
+            if (grpBtn) grpBtn.classList.remove('active');
+            if (indBtn) indBtn.classList.add('active');
+            if (grpView) grpView.style.display = 'none';
+            if (indView) indView.style.display = 'block';
         }
     }
 </script>
