@@ -157,7 +157,13 @@ function initializePaymentStatusActions() {
       const selectedStatus = this.value;
       
       if (selectedStatus === 'Paid') {
-        const confirmChange = confirm('Have you successfully paid for this booking? Changing this status will alert the coach/admin for verification.');
+        const confirmChange = await (typeof showConfirmToast === 'function' ? showConfirmToast({
+          title: 'Confirm Payment Status',
+          message: 'Have you successfully paid for this booking? Changing this status will alert the coach/admin for verification.',
+          confirmText: 'Yes',
+          cancelText: 'No',
+          type: 'primary'
+        }) : Promise.resolve(window.confirm('Have you successfully paid for this booking? Changing this status will alert the coach/admin for verification.')));
         if (!confirmChange) {
           this.value = 'Not Paid';
           return;

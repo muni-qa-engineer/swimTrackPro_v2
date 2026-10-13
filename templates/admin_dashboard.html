@@ -1750,15 +1750,22 @@
     };
 
     window.handleActionSubmit = function(form, message) {
-        if (confirm(message)) {
-            const btn = form.querySelector('button[type="submit"]');
-            if (btn) {
-                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-                btn.disabled = true;
-                btn.style.opacity = '0.7';
+        showConfirmToast({
+            title: 'Are you sure?',
+            message: message || 'Are you sure you want to proceed?',
+            confirmText: 'Yes',
+            cancelText: 'No',
+            type: 'danger',
+            onConfirm: function() {
+                const btn = form.querySelector('button[type="submit"]');
+                if (btn) {
+                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                    btn.disabled = true;
+                    btn.style.opacity = '0.7';
+                }
+                form.submit();
             }
-            return true;
-        }
+        });
         return false;
     };
 

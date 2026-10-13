@@ -115,8 +115,8 @@
             <!-- Action Buttons in a Single Row -->
             <div class="row g-2 g-sm-3 mt-1">
                 <div class="col-6">
-                    <form action="/booking/cancel/{{ booking.id }}" method="POST" class="w-100 m-0" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
-                        <button type="submit" class="btn btn-outline text-danger border-danger-subtle w-100 py-3 d-flex align-items-center justify-content-center gap-1.5" style="border-radius: var(--radius-sm); font-size: 0.92rem; font-weight: 700; background: rgba(239, 68, 68, 0.06); height: 50px;">
+                    <form action="/booking/cancel/{{ booking.id }}" method="POST" class="w-100 m-0" id="cancelBookingForm">
+                        <button type="button" class="btn btn-outline text-danger border-danger-subtle w-100 py-3 d-flex align-items-center justify-content-center gap-1.5" style="border-radius: var(--radius-sm); font-size: 0.92rem; font-weight: 700; background: rgba(239, 68, 68, 0.06); height: 50px;" onclick="confirmCancelBooking(this)">
                             <i class="fa-solid fa-xmark me-1"></i>
                             <span class="text-truncate">Cancel Booking</span>
                         </button>
@@ -157,6 +157,27 @@
 <script src="{{ url_for('static', filename='common.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    function confirmCancelBooking(btn) {
+        showConfirmToast({
+            title: 'Cancel Booking?',
+            message: 'Are you sure you want to cancel this booking?',
+            confirmText: 'Yes',
+            cancelText: 'No',
+            type: 'danger',
+            onConfirm: function() {
+                if (btn) {
+                    btn.disabled = true;
+                    btn.style.pointerEvents = 'none';
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Cancelling...';
+                }
+                const form = document.getElementById('cancelBookingForm') || (btn ? btn.closest('form') : null);
+                if (form) {
+                    form.submit();
+                }
+            }
+        });
+    }
+
     // Ensure page starts at top (browsers sometimes restore scroll position on redirect)
     document.addEventListener("DOMContentLoaded", function() {
         window.scrollTo(0, 0);

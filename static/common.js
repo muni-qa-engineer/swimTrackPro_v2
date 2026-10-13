@@ -55,6 +55,123 @@ function createToast(message, type = 'success', duration = 2000) {
   }, duration);
 }
 
+function showConfirmToast(options, onConfirmCb, onCancelCb) {
+  return new Promise((resolve) => {
+    let title = 'Are you sure?';
+    let message = 'Are you sure you want to proceed?';
+    let confirmText = 'Yes';
+    let cancelText = 'No';
+    let type = 'danger';
+    let onConfirm = onConfirmCb;
+    let onCancel = onCancelCb;
+
+    if (typeof options === 'string') {
+      message = options;
+    } else if (typeof options === 'object' && options !== null) {
+      if (options.title) title = options.title;
+      if (options.message) message = options.message;
+      if (options.confirmText) confirmText = options.confirmText;
+      if (options.cancelText) cancelText = options.cancelText;
+      if (options.type) type = options.type;
+      if (typeof options.onConfirm === 'function') onConfirm = options.onConfirm;
+      if (typeof options.onCancel === 'function') onCancel = options.onCancel;
+    }
+
+    const existing = document.getElementById('confirmToastOverlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'confirmToastOverlay';
+    overlay.className = 'confirm-toast-overlay';
+
+    let iconClass = 'fa-solid fa-triangle-exclamation';
+    let iconType = 'danger';
+    if (type === 'primary') {
+      iconClass = 'fa-solid fa-circle-question';
+      iconType = 'primary';
+    } else if (type === 'warning') {
+      iconClass = 'fa-solid fa-triangle-exclamation';
+      iconType = 'warning';
+    }
+
+    overlay.innerHTML = `
+      <div class="confirm-toast-card" role="dialog" aria-modal="true" aria-labelledby="confirmToastTitle">
+        <div class="confirm-toast-header">
+          <div class="confirm-toast-icon ${iconType}">
+            <i class="${iconClass}"></i>
+          </div>
+          <div class="confirm-toast-text">
+            <div class="confirm-toast-title" id="confirmToastTitle">${title}</div>
+            <div class="confirm-toast-msg">${message}</div>
+          </div>
+        </div>
+        <div class="confirm-toast-actions">
+          <button type="button" class="confirm-toast-btn-no" id="confirmToastNoBtn">${cancelText}</button>
+          <button type="button" class="confirm-toast-btn-yes ${type === 'primary' ? 'primary-yes' : ''}" id="confirmToastYesBtn">${confirmText}</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    requestAnimationFrame(() => {
+      overlay.classList.add('active');
+      const noBtn = overlay.querySelector('#confirmToastNoBtn');
+      if (noBtn) noBtn.focus();
+    });
+
+    let isDone = false;
+    function cleanup(confirmed) {
+      if (isDone) return;
+      isDone = true;
+      overlay.classList.remove('active');
+      document.removeEventListener('keydown', keyHandler);
+      setTimeout(() => {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      }, 250);
+
+      if (confirmed) {
+        if (typeof onConfirm === 'function') onConfirm();
+        resolve(true);
+      } else {
+        if (typeof onCancel === 'function') onCancel();
+        resolve(false);
+      }
+    }
+
+    function keyHandler(e) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        cleanup(false);
+      }
+    }
+    document.addEventListener('keydown', keyHandler);
+
+    overlay.querySelector('#confirmToastNoBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      cleanup(false);
+    });
+
+    overlay.querySelector('#confirmToastYesBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const yesBtn = e.currentTarget;
+      yesBtn.disabled = true;
+      yesBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Processing...';
+      cleanup(true);
+    });
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        cleanup(false);
+      }
+    });
+  });
+}
+
+window.showConfirmToast = showConfirmToast;
+window.confirmToast = showConfirmToast;
+
+
 
 
 // ---------- SCROLL POSITION HELPERS ----------
