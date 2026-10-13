@@ -1,5 +1,5 @@
 import psycopg2
-from flask import Flask, session, request, jsonify, redirect
+from flask import Flask, session, request, jsonify, redirect, render_template
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from services.booking_engine import generate_recurring_dates
@@ -34,6 +34,10 @@ app.config['TEMPLATES_AUTO_RELOAD'] = True
 @app.route('/service-worker.js')
 def service_worker():
     return app.send_static_file('service-worker.js')
+
+@app.route('/favicon.ico')
+def favicon():
+    return redirect('/static/images/icon-192.png')
 
 def get_pg_connection():
     return psycopg2.connect(DATABASE_URL)

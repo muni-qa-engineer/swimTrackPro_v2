@@ -1,6 +1,6 @@
 """Authenticated booking, calendar, and payment page routes."""
 
-from flask import redirect, render_template, session, url_for, request
+from flask import flash, redirect, render_template, session, url_for, request
 
 from services.email_service import (
     send_package_completion_email,

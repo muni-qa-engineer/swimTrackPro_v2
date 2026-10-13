@@ -74,6 +74,14 @@ PACKAGE_NAMES = {
     'custom': 'Custom Schedule',
 }
 
+PACKAGE_METADATA = {
+    'demo': {'name': 'Demo Session', 'sessions': 1, 'badge': 'Trial'},
+    'single': {'name': 'Single Day', 'sessions': 1, 'badge': 'Flexible'},
+    'monthly_2d': {'name': 'Monthly (2 days/week)', 'sessions': 8, 'badge': 'Popular'},
+    'monthly_3d': {'name': 'Monthly (3 days/week)', 'sessions': 12, 'badge': 'Recommended'},
+    '3_months': {'name': '3 Calendar Months', 'sessions': 36, 'badge': 'Best Value'},
+}
+
 
 def _get_settings_path():
     return os.path.join(os.path.dirname(__file__), 'settings.json')

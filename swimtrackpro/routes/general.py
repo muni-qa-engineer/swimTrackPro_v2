@@ -45,7 +45,7 @@ def about_trainer():
 
         # Also query PostgreSQL bookings table directly to ensure no assigned coaches are missed
         try:
-            cursor.execute("""
+            cursor.execute(r"""
                 SELECT DISTINCT trainer_username FROM bookings 
                 WHERE LOWER(owner_name) = %s OR LOWER(student_name) = %s OR LOWER(created_by) = %s
                    OR (owner_phone IS NOT NULL AND %s <> '' AND regexp_replace(owner_phone, '\D', '', 'g') = %s)
