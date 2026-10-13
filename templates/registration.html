@@ -339,17 +339,17 @@
                     </div>
                 </div>
 
-                <div class="d-flex gap-3 mt-3">
-                    <button type="button" class="register-btn" style="flex: 1; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1);" onclick="window.location.href='/'">
+                <div class="d-flex gap-3 mt-4">
+                    <button type="button" class="btn btn-outline-light register-cancel-btn" style="flex: 1; height: 50px; background: rgba(255, 255, 255, 0.08); color: #f4f4f5; border: 1.5px solid rgba(255, 255, 255, 0.28); border-radius: var(--radius-sm, 8px); font-family: var(--font-display, inherit); font-size: 1rem; font-weight: 700; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.18)'; this.style.borderColor='rgba(255,255,255,0.5)';" onmouseout="this.style.background='rgba(255,255,255,0.08)'; this.style.borderColor='rgba(255,255,255,0.28)';" onclick="if(document.getElementById('footerDynamicModal') && typeof bootstrap !== 'undefined') { const m = bootstrap.Modal.getInstance(document.getElementById('footerDynamicModal')); if(m) { m.hide(); return false; } } window.location.href='/'; return false;">
                         Cancel
                     </button>
-                    <button type="submit" class="register-btn" style="flex: 1;">
+                    <button type="submit" class="btn btn-primary register-btn" style="flex: 1; height: 50px; background: #06b6d4; color: #000000; border: none; border-radius: var(--radius-sm, 8px); font-family: var(--font-display, inherit); font-size: 1rem; font-weight: 800; box-shadow: 0 4px 15px rgba(6, 182, 212, 0.35); transition: all 0.2s;" onmouseover="this.style.background='#0891b2'; this.style.boxShadow='0 6px 20px rgba(6, 182, 212, 0.5)';" onmouseout="this.style.background='#06b6d4'; this.style.boxShadow='0 4px 15px rgba(6, 182, 212, 0.35)';">
                         Register as Coach
                     </button>
                 </div>
 
-                <div class="footer-text">
-                    Already registered? <a href="/" class="text-primary fw-bold text-decoration-none">Login Here</a>
+                <div class="footer-text" style="text-align: center; margin-top: 1.25rem; color: #a1a1aa; font-size: 0.9rem;">
+                    Already registered? <a href="/?login=true&role=trainer" class="text-primary fw-bold text-decoration-none" onclick="if(document.getElementById('footerDynamicModal') && typeof bootstrap !== 'undefined') { const m = bootstrap.Modal.getInstance(document.getElementById('footerDynamicModal')); if(m) m.hide(); } if(typeof openLoginModal === 'function') { openLoginModal(); return false; } window.location.href='/?login=true&role=trainer'; return false;">Login Here</a>
                 </div>
             </form>
         </div>

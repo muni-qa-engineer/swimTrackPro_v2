@@ -147,7 +147,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             contentToInject = doc.querySelector('.container.py-4') || doc.body;
                         }
                         
-                        modalBody.innerHTML = contentToInject.innerHTML;
+                        // Also preserve page-specific style tags if present
+                        let stylesHtml = '';
+                        doc.querySelectorAll('style').forEach(s => { stylesHtml += s.outerHTML; });
+                        modalBody.innerHTML = stylesHtml + contentToInject.innerHTML;
                         
                         // Re-render Mermaid graphs if any exist in the injected content
                         if (window.mermaid && modalBody.querySelector('.mermaid')) {
