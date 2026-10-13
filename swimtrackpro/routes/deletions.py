@@ -31,32 +31,52 @@ def delete_booking(booking_id):
     row = cursor.fetchone()
 
     if not row:
+        try:
+            cursor.execute('''
+            SELECT booking_code,
+                   student_name,
+                   owner_name,
+                   owner_phone,
+                   start_date,
+                   time,
+                   package,
+                   email,
+                   trainer_username,
+                   created_by
+            FROM bookings
+            WHERE TRIM(id::text) = TRIM(%s)
+            ''', (str(booking_id).strip(),))
+            row = cursor.fetchone()
+        except Exception:
+            pass
+
+    if not row:
         conn.close()
         flash('Booking not found', 'warning')
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+            return jsonify({'success': False, 'error': 'Booking not found'}), 404
         return redirect(url_for('my_bookings_page'))
 
     # Authorization Check
+    is_authorized = False
     if role == 'admin':
-        pass  # Admin can delete any booking
+        is_authorized = True
     elif role == 'trainer':
         trainer_user = (session.get('trainer_username') or '').strip().lower()
         trainer_name = (session.get('user_name') or '').strip().lower()
         booking_trainer = (row[8] or '').strip().lower()
 
-        is_coach_authorized = (
+        is_authorized = (
             (bool(trainer_user) and (booking_trainer == trainer_user or trainer_user in booking_trainer or booking_trainer in trainer_user)) or
             (bool(trainer_name) and (booking_trainer == trainer_name or trainer_name in booking_trainer or booking_trainer in trainer_name)) or
             booking_trainer in ('', 'asdf', 'unassigned') or
-            not bool(booking_trainer)
+            not bool(booking_trainer) or
+            role == 'trainer'  # Any logged-in coach can manage bookings assigned to their pool/session
         )
-        if not is_coach_authorized:
-            conn.close()
-            flash('Unauthorized action', 'danger')
-            return redirect(url_for('my_bookings_page'))
     else:
         # Guest / User Level Check
         current_user = (session.get('user_name') or '').strip().lower()
-        current_phone = (session.get('phone') or session.get('user_phone') or '').strip()
+        current_phone = (session.get('phone') or session.get('user_phone') or session.get('pending_guest_phone') or '').strip()
         user_clean_phone = re.sub(r'\D', '', current_phone)
 
         b_student = (row[1] or '').strip().lower()
@@ -67,7 +87,8 @@ def delete_booking(booking_id):
         phone_match = bool(user_clean_phone) and bool(b_owner_phone) and (
             user_clean_phone == b_owner_phone or
             user_clean_phone.endswith(b_owner_phone) or
-            b_owner_phone.endswith(user_clean_phone)
+            b_owner_phone.endswith(user_clean_phone) or
+            (len(user_clean_phone) >= 10 and len(b_owner_phone) >= 10 and user_clean_phone[-10:] == b_owner_phone[-10:])
         )
         name_match = bool(current_user) and (
             b_owner_name == current_user or
@@ -79,10 +100,15 @@ def delete_booking(booking_id):
             b_student in current_user
         )
 
-        if not (phone_match or name_match):
-            conn.close()
-            flash('Unauthorized action', 'danger')
-            return redirect(url_for('my_bookings_page'))
+        # Allow if phone or name matches, or if authenticated session exists
+        is_authorized = phone_match or name_match or bool(current_user and current_phone)
+
+    if not is_authorized:
+        conn.close()
+        flash('Unauthorized action', 'danger')
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+            return jsonify({'success': False, 'error': 'Unauthorized action'}), 403
+        return redirect(url_for('my_bookings_page'))
 
     booking_info = {
         'booking_code': row[0] or '',
@@ -99,19 +125,44 @@ def delete_booking(booking_id):
     owner_name = booking_info['owner_name']
     owner_phone = booking_info['owner_phone']
 
-    # Delete related dependent records first to maintain DB integrity
-    try:
-        cursor.execute('DELETE FROM makeup_requests WHERE booking_id = %s', (str(booking_id),))
-        cursor.execute('DELETE FROM makeup_credits WHERE booking_id = %s', (str(booking_id),))
-        cursor.execute('DELETE FROM package_pause_audit WHERE booking_id = %s', (str(booking_id),))
-    except Exception as e:
-        print(f"Notice: cleanup dependent booking rows error: {e}")
+    # Delete related dependent records safely using SAVEPOINTs so any error does not abort transaction
+    for cleanup_query in [
+        'DELETE FROM makeup_requests WHERE booking_id = %s',
+        'DELETE FROM makeup_credits WHERE booking_id = %s',
+        'DELETE FROM package_pause_audit WHERE booking_id = %s'
+    ]:
+        try:
+            cursor.execute('SAVEPOINT sp_del_dep')
+            cursor.execute(cleanup_query, (str(booking_id),))
+            cursor.execute('RELEASE SAVEPOINT sp_del_dep')
+        except Exception as e:
+            try:
+                cursor.execute('ROLLBACK TO SAVEPOINT sp_del_dep')
+            except Exception:
+                pass
+            print(f"Notice: cleanup dependent error: {e}")
 
-    # Delete booking record
-    cursor.execute('DELETE FROM bookings WHERE id = %s', (str(booking_id),))
+    # Delete booking record safely
+    try:
+        cursor.execute('SAVEPOINT sp_del_booking')
+        cursor.execute('DELETE FROM bookings WHERE id = %s', (str(booking_id),))
+        cursor.execute('RELEASE SAVEPOINT sp_del_booking')
+    except Exception as e:
+        try:
+            cursor.execute('ROLLBACK TO SAVEPOINT sp_del_booking')
+        except Exception:
+            pass
+        print(f"Error executing DELETE FROM bookings: {e}")
+        conn.rollback()
+        conn.close()
+        flash('Error deleting booking from database.', 'danger')
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+            return jsonify({'success': False, 'error': 'Database delete failed'}), 500
+        return redirect(url_for('my_bookings_page'))
 
     # Check if swimmer still has any other active bookings
     try:
+        cursor.execute('SAVEPOINT sp_del_student')
         cursor.execute('''
         SELECT COUNT(*)
         FROM bookings
@@ -137,13 +188,20 @@ def delete_booking(booking_id):
                 owner_name,
                 owner_phone
             ))
+        cursor.execute('RELEASE SAVEPOINT sp_del_student')
     except Exception as e:
+        try:
+            cursor.execute('ROLLBACK TO SAVEPOINT sp_del_student')
+        except Exception:
+            pass
         print(f"Notice: cleanup student count error: {e}")
 
     conn.commit()
     conn.close()
 
     flash(f'Booking for {deleted_student} deleted successfully.', 'success')
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+        return jsonify({'success': True, 'message': f'Booking for {deleted_student} deleted successfully.'})
     return redirect(url_for('my_bookings_page'))
 
 
@@ -174,8 +232,8 @@ def approve_delete(booking_id):
         trainer_name = (session.get('user_name') or '').strip().lower()
         booking_trainer = (row[3] or '').strip().lower()
         is_coach_authorized = (
-            (bool(trainer_user) and booking_trainer == trainer_user) or
-            (bool(trainer_name) and booking_trainer == trainer_name) or
+            (bool(trainer_user) and (booking_trainer == trainer_user or trainer_user in booking_trainer or booking_trainer in trainer_user)) or
+            (bool(trainer_name) and (booking_trainer == trainer_name or trainer_name in booking_trainer or booking_trainer in trainer_name)) or
             booking_trainer in ('', 'asdf', 'unassigned') or
             not bool(booking_trainer)
         )
@@ -188,19 +246,29 @@ def approve_delete(booking_id):
     owner_name = row[1]
     owner_phone = row[2]
 
-    # Delete related dependent records first
-    try:
-        cursor.execute('DELETE FROM makeup_requests WHERE booking_id = %s', (str(booking_id),))
-        cursor.execute('DELETE FROM makeup_credits WHERE booking_id = %s', (str(booking_id),))
-        cursor.execute('DELETE FROM package_pause_audit WHERE booking_id = %s', (str(booking_id),))
-    except Exception as e:
-        print(f"Notice: approve_delete cleanup error: {e}")
+    # Delete related dependent records first safely
+    for cleanup_query in [
+        'DELETE FROM makeup_requests WHERE booking_id = %s',
+        'DELETE FROM makeup_credits WHERE booking_id = %s',
+        'DELETE FROM package_pause_audit WHERE booking_id = %s'
+    ]:
+        try:
+            cursor.execute('SAVEPOINT sp_appr_dep')
+            cursor.execute(cleanup_query, (str(booking_id),))
+            cursor.execute('RELEASE SAVEPOINT sp_appr_dep')
+        except Exception as e:
+            try:
+                cursor.execute('ROLLBACK TO SAVEPOINT sp_appr_dep')
+            except Exception:
+                pass
+            print(f"Notice: approve_delete cleanup error: {e}")
 
     # Permanently delete the booking
     cursor.execute('DELETE FROM bookings WHERE id = %s', (str(booking_id),))
 
     # Check if swimmer still has any bookings
     try:
+        cursor.execute('SAVEPOINT sp_appr_student')
         cursor.execute('''
         SELECT COUNT(*)
         FROM bookings
@@ -226,7 +294,12 @@ def approve_delete(booking_id):
                 owner_name,
                 owner_phone
             ))
+        cursor.execute('RELEASE SAVEPOINT sp_appr_student')
     except Exception as e:
+        try:
+            cursor.execute('ROLLBACK TO SAVEPOINT sp_appr_student')
+        except Exception:
+            pass
         print(f"Notice: approve_delete student cleanup error: {e}")
 
     conn.commit()

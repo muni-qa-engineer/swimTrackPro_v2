@@ -498,6 +498,9 @@
                 if (e.defaultPrevented) return;
                 
                 const form = e.target;
+                if (!form || (form.classList && (form.classList.contains('delete-booking-form') || form.classList.contains('no-loading-spinner')))) {
+                    return;
+                }
                 const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]') || 
                                   document.querySelector(`button[type="submit"][form="${form.id}"], input[type="submit"][form="${form.id}"]`);
                 
