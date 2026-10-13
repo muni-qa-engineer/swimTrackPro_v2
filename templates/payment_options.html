@@ -47,9 +47,18 @@
             {% include 'components/booking_stepper.html' %}
         </div>
     </div>
-    <div class="row justify-content-center mt-2">
-        <div class="col-12 col-md-8 col-lg-6 animate-slide-up">
+    <div class="row justify-content-center mt-2" id="paymentMainContent">
+        <div class="col-12 col-md-8 col-lg-6 animate-slide-up position-relative">
             
+            <!-- Top Corner 'X' Danger Cancel Button -->
+            <div class="position-absolute" style="top: 0px; right: 12px; z-index: 10;">
+                <form action="/booking/cancel/{{ booking.id }}" method="POST" class="m-0" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
+                    <button type="submit" class="btn btn-outline-danger rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 36px; height: 36px; border-width: 1.5px; background: rgba(239, 68, 68, 0.08); color: #ef4444; transition: all 0.2s;" title="Cancel & Discard Booking" aria-label="Cancel & Discard Booking">
+                        <i class="fa-solid fa-xmark fs-5"></i>
+                    </button>
+                </form>
+            </div>
+
             <!-- Header Section -->
             <div class="text-center mb-4">
                 <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle mb-3" style="width: 64px; height: 64px; background: rgba(6,182,212,0.1);">
@@ -112,24 +121,24 @@
                 {% endif %}
             </div>
 
-            <!-- Action Buttons -->
-            <div class="flex flex-col gap-3">
-                <button type="button" class="btn btn-outline py-3" disabled style="opacity: 0.5;">
-                    <i class="fa-solid fa-shield-halved me-2"></i> Pay Now (Online Coming Soon)
-                </button>
-                
-                <form action="/booking/confirm_paylater/{{ booking.id }}" method="POST" class="w-100" id="payLaterForm">
-                    <button type="submit" class="btn btn-primary w-100 py-3" id="payLaterBtn">
-                        <span id="payLaterSpinner" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
-                        <span id="payLaterText">Confirm & Pay Later</span>
-                    </button>
-                </form>
-
-                <form action="/booking/cancel/{{ booking.id }}" method="POST" class="w-100" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
-                    <button type="submit" class="btn btn-outline text-danger border-danger-subtle w-100 py-2.5" style="border-radius: var(--radius-sm); font-size: 0.9rem; background: rgba(239, 68, 68, 0.05);">
-                        <i class="fa-solid fa-xmark me-2"></i> Cancel & Discard Booking
-                    </button>
-                </form>
+            <!-- Action Buttons in a Single Row -->
+            <div class="row g-2 g-sm-3 mt-1">
+                <div class="col-6">
+                    <form action="/booking/cancel/{{ booking.id }}" method="POST" class="w-100 m-0" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
+                        <button type="submit" class="btn btn-outline text-danger border-danger-subtle w-100 py-3 d-flex align-items-center justify-content-center gap-1.5" style="border-radius: var(--radius-sm); font-size: 0.92rem; font-weight: 700; background: rgba(239, 68, 68, 0.06); height: 50px;">
+                            <i class="fa-solid fa-xmark me-1"></i>
+                            <span class="text-truncate">Cancel Booking</span>
+                        </button>
+                    </form>
+                </div>
+                <div class="col-6">
+                    <form action="/booking/confirm_paylater/{{ booking.id }}" method="POST" class="w-100 m-0" id="payLaterForm">
+                        <button type="submit" class="btn btn-primary w-100 py-3 d-flex align-items-center justify-content-center gap-1.5" id="payLaterBtn" style="border-radius: var(--radius-sm); font-size: 0.92rem; font-weight: 700; height: 50px;">
+                            <span id="payLaterSpinner" class="spinner-border spinner-border-sm me-1 d-none" role="status" aria-hidden="true"></span>
+                            <span id="payLaterText" class="text-truncate">Confirm &amp; Pay Later</span>
+                        </button>
+                    </form>
+                </div>
             </div>
             
         </div>
@@ -181,7 +190,8 @@
             body: new FormData(this)
         }).then(response => {
             // Hide main content, show success overlay
-            document.querySelector('.row.justify-content-center.mt-4').classList.add('d-none');
+            const mainContent = document.getElementById('paymentMainContent');
+            if (mainContent) mainContent.classList.add('d-none');
             const successOverlay = document.getElementById('paymentSuccessOverlay');
             successOverlay.classList.remove('d-none');
             
