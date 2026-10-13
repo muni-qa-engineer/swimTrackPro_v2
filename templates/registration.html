@@ -343,13 +343,13 @@
                     <button type="button" class="register-btn" style="flex: 1; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1);" onclick="window.location.href='/'">
                         Cancel
                     </button>
-                    <button type="submit" class="register-btn" style="flex: 1;">
+                    <button type="submit" class="register-btn" style="flex: 1; background: #06b6d4; color: #000000; font-weight: 700;">
                         Register as Coach
                     </button>
                 </div>
 
                 <div class="footer-text">
-                    Already registered? <a href="/" class="text-primary fw-bold text-decoration-none">Login Here</a>
+                    Already registered? <a href="javascript:void(0)" onclick="openLoginModal()" class="text-primary fw-bold text-decoration-none">Login Here</a>
                 </div>
             </form>
         </div>
@@ -358,6 +358,10 @@
     {% include 'components/footer.html' %}
 
     <script>
+        function openLoginModal() {
+            window.location.href = '/?login=true&role=trainer';
+        }
+
         function togglePasswordVisibility(inputId, btn) {
             const input = document.getElementById(inputId);
             const icon = btn.querySelector('i');

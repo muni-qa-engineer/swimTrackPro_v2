@@ -2054,6 +2054,11 @@
     });
 
     function openLoginModal() {
+        const dynamicModal = document.getElementById('footerDynamicModal');
+        if (dynamicModal && typeof bootstrap !== 'undefined') {
+            const inst = bootstrap.Modal.getInstance(dynamicModal);
+            if (inst) inst.hide();
+        }
         if (myModal) {
             myModal.show();
         }
