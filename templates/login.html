@@ -1547,6 +1547,24 @@
     background: #ffffff !important;
     color: #0f172a !important;
   }
+  #quickBookingModal .btn-close-qb {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    border: 1.5px solid #cbd5e1;
+    color: #475569;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+  }
+  #quickBookingModal .btn-close-qb:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+    border-color: #94a3b8;
+  }
   #quickBookingModal .qb-input {
     background-color: #f1f5f9 !important;
     border: 1px solid #cbd5e1 !important;
@@ -1745,7 +1763,9 @@
             <p class="mb-0" style="font-size: 0.82rem; font-weight: 500;">Book in 60s</p>
           </div>
         </div>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close-qb" data-bs-dismiss="modal" onclick="closeQuickBookingModal()" aria-label="Close" title="Close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
       </div>
 
       <div style="border-bottom: 1px solid #e2e8f0; margin: 0.25rem 1rem 0;"></div>
@@ -2197,6 +2217,16 @@
     // Quick Booking Modal Logic & Validation
     // ==========================================
     let qbModalInstance;
+
+    function closeQuickBookingModal() {
+        const modalEl = document.getElementById('quickBookingModal');
+        if (modalEl) {
+            const inst = bootstrap.Modal.getInstance(modalEl) || qbModalInstance || bootstrap.Modal.getOrCreateInstance(modalEl);
+            if (inst) {
+                inst.hide();
+            }
+        }
+    }
 
     function openQuickBookingModal(preferredPackage = 'Monthly', preferredCoach = '', preferredPersons = null) {
         const modalEl = document.getElementById('quickBookingModal');
