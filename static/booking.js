@@ -290,6 +290,14 @@
     feeInput.value = finalFee;
 
     const perSwimmerEl = document.getElementById('bookingPerSwimmerShare');
+    const bookingGroupHint = document.getElementById('bookingGroupHint');
+    if (bookingGroupHint) {
+      if (quote && quote.isGroup) {
+        bookingGroupHint.innerText = `(${persons} swimmers • ${quote.savingsPerPersonPercent}% group discount applied)`;
+      } else {
+        bookingGroupHint.innerText = `(1-5 persons, group scaling up to 36% OFF)`;
+      }
+    }
     if (perSwimmerEl) {
       if (quote && quote.isGroup && finalFee > 0) {
         perSwimmerEl.style.display = 'block';

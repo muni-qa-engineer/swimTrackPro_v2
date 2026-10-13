@@ -4,6 +4,7 @@ import calendar
 
 from swimtrackpro.runtime import get_pg_connection
 from services.settings_service import get_setting
+from services.pricing_service import get_pricing_config_dict
 
 def get_admin_dashboard_data(current_user, data):
     """Fetch and process data specifically for the Admin dashboard."""
@@ -140,7 +141,8 @@ def get_admin_dashboard_data(current_user, data):
         'resume_pending_count': resume_pending_count,
         'audit_logs': audit_logs,
         'packages': packages_list,
-        'carousel_images': carousel_images
+        'carousel_images': carousel_images,
+        'pricing_config': get_pricing_config_dict()
     }
 
 def get_all_packages():

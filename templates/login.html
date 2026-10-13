@@ -304,17 +304,17 @@
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="feature-card" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-md); padding: 2rem;">
+            <div class="feature-card" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.18); box-shadow: 0 6px 20px rgba(0,0,0,0.35); border-radius: var(--radius-md); padding: 2rem;">
                 <div style="font-size: 2.2rem; color: var(--color-primary); margin-bottom: 1rem;"><i class="fa-solid fa-location-dot"></i></div>
                 <h4 class="font-display text-white mb-2" style="font-weight: 700;">1. Provide Your Location</h4>
                 <p class="text-muted small mb-0">Specify where your pool is located using our Leaflet geographical map picker. Our coaches will travel directly to you.</p>
             </div>
-            <div class="feature-card" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-md); padding: 2rem;">
+            <div class="feature-card" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.18); box-shadow: 0 6px 20px rgba(0,0,0,0.35); border-radius: var(--radius-md); padding: 2rem;">
                 <div style="font-size: 2.2rem; color: var(--color-primary); margin-bottom: 1rem;"><i class="fa-solid fa-user-check"></i></div>
                 <h4 class="font-display text-white mb-2" style="font-weight: 700;">2. Match with Elite Coaches</h4>
                 <p class="text-muted small mb-0">Browse and select certified coaches. Inspect their specialties, ratings, qualifications, and parents' reviews.</p>
             </div>
-            <div class="feature-card" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-md); padding: 2rem;">
+            <div class="feature-card" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.18); box-shadow: 0 6px 20px rgba(0,0,0,0.35); border-radius: var(--radius-md); padding: 2rem;">
                 <div style="font-size: 2.2rem; color: var(--color-primary); margin-bottom: 1rem;"><i class="fa-solid fa-check-double"></i></div>
                 <h4 class="font-display text-white mb-2" style="font-weight: 700;">3. Confirm & Track</h4>
                 <p class="text-muted small mb-0">Verify payment, receive your physical-style digital ID card, skip or adjust sessions using an interactive calendar, and monitor progress.</p>
@@ -535,7 +535,7 @@
             {% if coaches %}
                 {% for coach in coaches %}
                     <div class="col-12 col-md-6 col-lg-4 animate-slide-up">
-                        <div class="glass-panel h-100 p-4 d-flex flex-column" style="position: relative; overflow: hidden; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: var(--radius-md); transition: all 0.3s ease;">
+                        <div class="glass-panel h-100 p-4 d-flex flex-column" style="position: relative; overflow: hidden; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.18); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); border-radius: var(--radius-md); transition: all 0.3s ease;">
                             <div class="d-flex align-items-center gap-3 mb-3">
                                 <div class="text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.2);">
                                     <i class="fa-solid fa-user-tie fs-4"></i>
@@ -849,7 +849,7 @@
             
             <div class="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4 mb-4">
                 <!-- 3 Calendar Months Card (Anchor Value) -->
-                <div class="long-term-card p-3.5 rounded-4" style="background: rgba(24,24,27,0.7); border: 1.5px solid rgba(6,182,212,0.35); cursor: pointer;" onclick="bookFromPricingCard('3_months')">
+                <div class="long-term-card p-3.5 rounded-4" style="background: rgba(24,24,27,0.7); border: 1.5px solid rgba(6,182,212,0.5); box-shadow: 0 6px 24px rgba(0,0,0,0.4); cursor: pointer;" onclick="bookFromPricingCard('3_months')">
                     <div class="badge badge-primary mb-2" id="plan-3months-badge" style="background: rgba(6,182,212,0.15); color: var(--color-primary); padding: 0.35rem 0.65rem; font-weight: 700;">36 SESSIONS • BEST VALUE</div>
                     <h4 class="text-white mb-1">3 Calendar Months</h4>
                     <div class="text-muted small mb-2">3 days/wk × 12 wks</div>
@@ -861,7 +861,7 @@
                 </div>
 
                 <!-- 6 Months -->
-                <div class="long-term-card p-3.5 rounded-4" style="background: rgba(24,24,27,0.5); border: 1px solid rgba(255,255,255,0.1); cursor: pointer;" onclick="bookFromPricingCard('6_months')">
+                <div class="long-term-card p-3.5 rounded-4" style="background: rgba(24,24,27,0.6); border: 1px solid rgba(255,255,255,0.18); box-shadow: 0 4px 16px rgba(0,0,0,0.35); cursor: pointer;" onclick="bookFromPricingCard('6_months')">
                     <div class="badge badge-secondary mb-2" style="background: rgba(255,255,255,0.08); color: #e4e4e7; padding: 0.35rem 0.65rem;">72 SESSIONS</div>
                     <h4 class="text-white mb-1">6 Months</h4>
                     <div class="text-muted small mb-2">3 days/wk × 24 wks</div>
@@ -873,7 +873,7 @@
                 </div>
 
                 <!-- 9 Months -->
-                <div class="long-term-card p-3.5 rounded-4" style="background: rgba(24,24,27,0.5); border: 1px solid rgba(255,255,255,0.1); cursor: pointer;" onclick="bookFromPricingCard('9_months')">
+                <div class="long-term-card p-3.5 rounded-4" style="background: rgba(24,24,27,0.6); border: 1px solid rgba(255,255,255,0.18); box-shadow: 0 4px 16px rgba(0,0,0,0.35); cursor: pointer;" onclick="bookFromPricingCard('9_months')">
                     <div class="badge badge-secondary mb-2" style="background: rgba(255,255,255,0.08); color: #e4e4e7; padding: 0.35rem 0.65rem;">108 SESSIONS</div>
                     <h4 class="text-white mb-1">9 Months</h4>
                     <div class="text-muted small mb-2">3 days/wk × 36 wks</div>
@@ -885,7 +885,7 @@
                 </div>
 
                 <!-- 1 Year -->
-                <div class="long-term-card p-3.5 rounded-4" style="background: rgba(24,24,27,0.5); border: 1px solid rgba(255,255,255,0.1); cursor: pointer;" onclick="bookFromPricingCard('12_months')">
+                <div class="long-term-card p-3.5 rounded-4" style="background: rgba(24,24,27,0.6); border: 1px solid rgba(255,255,255,0.18); box-shadow: 0 4px 16px rgba(0,0,0,0.35); cursor: pointer;" onclick="bookFromPricingCard('12_months')">
                     <div class="badge badge-secondary mb-2" style="background: rgba(255,255,255,0.08); color: #e4e4e7; padding: 0.35rem 0.65rem;">144 SESSIONS</div>
                     <h4 class="text-white mb-1">1 Year</h4>
                     <div class="text-muted small mb-2">3 days/wk × 48 wks</div>
@@ -958,7 +958,7 @@
     /* Card Styling */
     .cg-pricing-card {
         background: #18181b;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.18);
         border-radius: 24px;
         padding: 2rem 1.4rem;
         display: flex;
@@ -967,11 +967,12 @@
         height: 100%;
         position: relative;
         box-sizing: border-box;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
     }
     .cg-pricing-card:hover {
         transform: translateY(-4px);
-        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
-        border-color: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+        border-color: rgba(6, 182, 212, 0.45);
     }
     .cg-pricing-card.recommended {
         border: 2px solid #06b6d4;
@@ -1529,228 +1530,259 @@
 <!-- QUICK BOOKING MODAL (Trial Feature)        -->
 <!-- All options at one single glance           -->
 <!-- ========================================== -->
+<!-- ========================================== -->
+<!-- QUICK POOLSIDE BOOKING MODAL               -->
+<!-- Compact 3-Section 60s Booking Flow         -->
+<!-- ========================================== -->
+<style>
+  #quickBookingModal .qb-input {
+    background-color: #f1f5f9 !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    color: #0f172a !important;
+    font-size: 0.85rem !important;
+    padding: 0.45rem 0.65rem !important;
+    color-scheme: light !important;
+  }
+  #quickBookingModal .qb-input:focus {
+    background-color: #ffffff !important;
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
+    color: #0f172a !important;
+  }
+  #quickBookingModal .qb-label {
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    margin-bottom: 3px !important;
+    display: block;
+  }
+  #quickBookingModal .qb-num-badge {
+    background: #1e293b;
+    color: #ffffff;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 800;
+  }
+  #quickBookingModal .qb-section-title {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: 0.5px;
+    margin: 0;
+  }
+</style>
+
 <div class="modal fade" id="quickBookingModal" tabindex="-1" aria-labelledby="quickBookingModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content" style="background: rgba(18, 18, 22, 0.98); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-lg); box-shadow: 0 20px 50px rgba(0,0,0,0.8); color: white;">
-      <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding: 1.25rem 1.75rem;">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+    <div class="modal-content" style="background: #ffffff; border-radius: 22px; box-shadow: 0 25px 60px -15px rgba(0,0,0,0.45); border: 1px solid #e2e8f0; color: #0f172a;">
+      
+      <!-- Header -->
+      <div class="modal-header border-0 pb-1 pt-3 px-3 px-sm-4 d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center gap-2">
-            <span style="font-size: 1.5rem;">🏊🏼‍♂️</span>
-            <div>
-                <h4 class="modal-title font-display text-white mb-0" id="quickBookingModalLabel" style="font-weight: 700; font-size: 1.25rem;">Quick Poolside Booking</h4>
-                <p class="text-muted small mb-0">Book your coaching session in 60 seconds — all options at a glance</p>
-            </div>
+          <span style="font-size: 1.75rem; line-height: 1;">🏊‍♂️</span>
+          <div>
+            <h4 class="mb-0" id="quickBookingModalLabel" style="font-weight: 800; font-size: 1.25rem; color: #0f172a;">Poolside Booking</h4>
+            <p class="mb-0" style="color: #475569; font-size: 0.82rem; font-weight: 500;">Book in 60s</p>
+          </div>
         </div>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: none; opacity: 0.65;"></button>
       </div>
 
-      <div class="modal-body" style="padding: 1.5rem 1.75rem; max-height: calc(85vh - 120px); overflow-y: auto;">
-        <div id="qbAlert" class="alert alert-danger d-none" role="alert" style="border-radius: var(--radius-sm); font-size: 0.9rem;"></div>
+      <div style="border-bottom: 1px solid #e2e8f0; margin: 0.25rem 1rem 0;"></div>
+
+      <div class="modal-body px-3 px-sm-4 pt-3 pb-3" style="max-height: calc(88vh - 80px); overflow-y: auto;">
+        <div id="qbAlert" class="alert alert-danger d-none py-2 px-3 small mb-2" role="alert" style="border-radius: 8px; font-size: 0.85rem;"></div>
 
         <form id="quickBookingForm" method="POST" action="/book">
-            <input type="hidden" name="is_ajax" value="true">
-            <input type="hidden" name="active_tab" value="book_slot">
+          <input type="hidden" name="is_ajax" value="true">
+          <input type="hidden" name="active_tab" value="book_slot">
 
-            <!-- Section 1: Swimmer & Contact (Acts as user registration / credentials) -->
-            <div class="mb-4">
-                <div class="d-flex align-items-center gap-2 mb-3">
-                    <span class="badge bg-primary text-black fw-bold" style="font-size: 0.75rem; border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;">1</span>
-                    <h6 class="text-white fw-bold mb-0" style="letter-spacing: 0.5px;">SWIMMER & CONTACT INFO</h6>
-                    <span class="text-muted small ms-auto"><i class="fa-solid fa-lock text-primary fa-xs me-1"></i> Account auto-created with your phone</span>
-                </div>
-                
-                <div class="row g-3">
-                    <div class="col-12 col-md-6">
-                        <label class="form-label text-muted small fw-semibold">Full / Swimmer Name <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <span class="input-group-text" style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: var(--color-primary);"><i class="fa-solid fa-user"></i></span>
-                            <input type="text" name="student" id="qbStudent" class="form-control" placeholder="e.g. Rahul Sharma" required style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: white;">
-                        </div>
-                    </div>
-
-                    <div class="col-12 col-md-6">
-                        <label class="form-label text-muted small fw-semibold">Contact Number (Your Password) <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <span class="input-group-text" style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: var(--color-primary);"><i class="fa-solid fa-phone"></i></span>
-                            <input type="tel" name="phone" id="qbPhone" class="form-control" placeholder="10-digit mobile number" maxlength="10" required autocomplete="tel" style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: white;">
-                        </div>
-                        <div id="qbPhoneError" class="text-danger small mt-1 d-none" style="font-size: 0.8rem;"></div>
-                    </div>
-
-                    <div class="col-12 col-md-6">
-                        <label class="form-label text-muted small fw-semibold">Email Address <span class="text-muted fw-normal">(Optional for confirmation)</span></label>
-                        <div class="input-group">
-                            <span class="input-group-text" style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: var(--color-primary);"><i class="fa-solid fa-envelope"></i></span>
-                            <input type="email" name="email" id="qbEmail" class="form-control" placeholder="parent@example.com" style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: white;">
-                        </div>
-                    </div>
-
-                    <div class="col-12 col-md-6">
-                        <label class="form-label text-muted small fw-semibold">Skill Level <span class="text-danger">*</span></label>
-                        <select name="skill_level" id="qbSkillLevel" class="form-select" style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: white;">
-                            <option value="Beginner" selected>Beginner (Water familiarity / safety)</option>
-                            <option value="Intermediate">Intermediate (Basic strokes & breath control)</option>
-                            <option value="Regular">Regular (Refining technique & stamina)</option>
-                            <option value="Competitor">Competitor (Advanced drill & timing)</option>
-                        </select>
-                    </div>
-                </div>
+          <!-- 1. SWIMMER INFO -->
+          <div class="mb-3">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="qb-num-badge">1</span>
+              <h6 class="qb-section-title">SWIMMER INFO</h6>
+            </div>
+            
+            <div class="row g-2 mb-2">
+              <div class="col-6">
+                <label class="qb-label">Full Name<span class="text-danger">*</span></label>
+                <input type="text" name="student" id="qbStudent" class="form-control qb-input" placeholder="e.g., Rahul" required>
+              </div>
+              <div class="col-6">
+                <label class="qb-label">Mobile Number<span class="text-danger">*</span></label>
+                <input type="tel" name="phone" id="qbPhone" class="form-control qb-input" placeholder="10-digit number" maxlength="10" required autocomplete="tel">
+                <div id="qbPhoneError" class="text-danger small mt-0.5 d-none" style="font-size: 0.75rem;"></div>
+              </div>
             </div>
 
-            <!-- Section 2: Package & Coach Selection -->
-            <div class="mb-4">
-                <div class="d-flex align-items-center gap-2 mb-3">
-                    <span class="badge bg-primary text-black fw-bold" style="font-size: 0.75rem; border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;">2</span>
-                    <h6 class="text-white fw-bold mb-0" style="letter-spacing: 0.5px;">PACKAGE & COACH</h6>
-                </div>
+            <div class="row g-2">
+              <div class="col-6">
+                <label class="qb-label">Email (Optional)</label>
+                <input type="email" name="email" id="qbEmail" class="form-control qb-input" placeholder="e.g., (Optional)">
+              </div>
+              <div class="col-6">
+                <label class="qb-label">Skill Level<span class="text-danger">*</span></label>
+                <select name="skill_level" id="qbSkillLevel" class="form-select qb-input">
+                  <option value="Beginner" selected>Beginner</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Regular">Regular</option>
+                  <option value="Competitor">Competitor</option>
+                </select>
+              </div>
+            </div>
+          </div>
 
-                <div class="row g-3">
-                    <div class="col-12 col-md-6">
-                        <label class="form-label text-muted small fw-semibold">Training Package <span class="text-danger">*</span></label>
-                        <select name="package" id="qbPackage" class="form-select" required style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: white;">
-                            <option value="Demo">Free Demo Trial (₹0)</option>
-                            <option value="Single">Single Session (Flexible)</option>
-                            <option value="Monthly" selected>Monthly Package (Recommended)</option>
-                            <option value="Custom">Custom Duration (Flexible)</option>
-                            <option value="3_months">Long Term (3 Months)</option>
-                            <option value="6_months">Long Term (6 Months)</option>
-                            <option value="9_months">Long Term (9 Months)</option>
-                            <option value="12_months">Long Term (1 Year)</option>
-                        </select>
-                    </div>
-
-                    <div class="col-12 col-md-6">
-                        <label class="form-label text-muted small fw-semibold">Assigned Coach <span class="text-danger">*</span></label>
-                        <select name="trainer_username" id="qbCoach" class="form-select" required style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: white;">
-                            <option value="">-- Choose Coach --</option>
-                            {% if coaches %}
-                                {% for coach in coaches %}
-                                    <option value="{{ coach.username }}" data-slots='{{ coach.available_slots or "[]" }}'>{{ coach.name }} (★ {{ '%.1f' | format(coach.rating | float) }})</option>
-                                {% endfor %}
-                            {% endif %}
-                        </select>
-                    </div>
-                </div>
+          <!-- 2. PACKAGE & COACH -->
+          <div class="mb-3">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="qb-num-badge">2</span>
+              <h6 class="qb-section-title">PACKAGE & COACH</h6>
             </div>
 
-            <!-- Section 3: Schedule, Time & Dates -->
-            <div class="mb-4">
-                <div class="d-flex align-items-center gap-2 mb-3">
-                    <span class="badge bg-primary text-black fw-bold" style="font-size: 0.75rem; border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;">3</span>
-                    <h6 class="text-white fw-bold mb-0" style="letter-spacing: 0.5px;">SCHEDULE & LOCATION</h6>
-                </div>
+            <div class="row g-2">
+              <div class="col-6">
+                <label class="qb-label">Package<span class="text-danger">*</span></label>
+                <select name="package" id="qbPackage" class="form-select qb-input" required>
+                  <option value="Demo">Demo Session (₹500)</option>
+                  <option value="Single">Single Day (₹750)</option>
+                  <option value="Monthly" selected>Monthly Package</option>
+                  <option value="Custom">Custom Schedule</option>
+                  <option value="3_months">3 Months (₹18,000)</option>
+                  <option value="6_months">6 Months</option>
+                  <option value="9_months">9 Months</option>
+                  <option value="12_months">1 Year</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label class="qb-label">Coach<span class="text-danger">*</span></label>
+                <select name="trainer_username" id="qbCoach" class="form-select qb-input" required>
+                  <option value="">-- Choose Coach --</option>
+                  {% if coaches %}
+                    {% for coach in coaches %}
+                      <option value="{{ coach.username }}" data-slots='{{ coach.available_slots or "[]" }}'>{{ coach.name }}</option>
+                    {% endfor %}
+                  {% endif %}
+                </select>
+              </div>
+            </div>
+          </div>
 
-                <div class="row g-3">
-                    <div class="col-12 col-md-4">
-                        <label class="form-label text-muted small fw-semibold">Start Date <span class="text-danger">*</span></label>
-                        <input type="date" name="date" id="qbStartDate" class="form-control" required style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: white; color-scheme: dark;">
-                    </div>
-
-                    <div class="col-12 col-md-4" id="qbEndDateCol">
-                        <label class="form-label text-muted small fw-semibold">End Date</label>
-                        <input type="date" name="end_date" id="qbEndDate" class="form-control" style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: white; color-scheme: dark;">
-                    </div>
-
-                    <div class="col-12 col-md-4">
-                        <label class="form-label text-muted small fw-semibold">Preferred Time <span class="text-danger">*</span></label>
-                        <select name="time" id="qbTime" class="form-select" required style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: white;">
-                            <option value="06:00 AM">06:00 AM - 07:00 AM</option>
-                            <option value="07:00 AM">07:00 AM - 08:00 AM</option>
-                            <option value="08:00 AM">08:00 AM - 09:00 AM</option>
-                            <option value="09:00 AM">09:00 AM - 10:00 AM</option>
-                            <option value="04:00 PM">04:00 PM - 05:00 PM</option>
-                            <option value="05:00 PM">05:00 PM - 06:00 PM</option>
-                            <option value="06:00 PM">06:00 PM - 07:00 PM</option>
-                            <option value="07:00 PM">07:00 PM - 08:00 PM</option>
-                        </select>
-                    </div>
-
-                    <!-- Selected Days for recurring packages -->
-                    <div class="col-12" id="qbDaysRow">
-                        <label class="form-label text-muted small fw-semibold d-flex justify-content-between">
-                            <span>Weekly Training Days <span id="qbDaysHint" class="text-primary">(Pick 2 or 3 days)</span></span>
-                        </label>
-                        <div class="d-flex flex-wrap gap-2" id="qbDayPills">
-                            {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
-                                <label class="btn btn-sm btn-outline-secondary qb-day-label" style="border-color: rgba(255,255,255,0.1); color: #e4e4e7; border-radius: var(--radius-sm); font-size: 0.8rem; padding: 0.35rem 0.8rem; cursor: pointer;">
-                                    <input type="checkbox" class="qb-day-cb d-none" value="{{ day }}">
-                                    <span>{{ day[:3] }}</span>
-                                </label>
-                            {% endfor %}
-                        </div>
-                        <input type="hidden" name="selected_days" id="qbSelectedDays" value="">
-                        <div id="qbDaysWarning" class="text-warning small mt-1.5 d-none" style="font-size: 0.82rem;">
-                            <i class="fa-solid fa-circle-exclamation me-1"></i> <span>Please select 2 or 3 training days</span>
-                        </div>
-                    </div>
-
-                    <!-- Pool Location -->
-                    <div class="col-12">
-                        <label class="form-label text-muted small fw-semibold">Pool Location / Society / Villa Address <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <span class="input-group-text" style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: var(--color-primary);"><i class="fa-solid fa-location-dot"></i></span>
-                            <input type="text" name="location" id="qbLocation" class="form-control" placeholder="e.g. My Home Bhooja, Gachibowli, Hyderabad" required style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: white;">
-                            <button type="button" class="btn btn-outline-primary" id="qbLocateBtn" title="Detect Current Location" style="border-color: rgba(6,182,212,0.4);">
-                                <i class="fa-solid fa-location-crosshairs me-1"></i> Detect
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Co-swimmer & Location Conflict Real-Time Alerts -->
-                    <div class="col-12">
-                        <div id="qbLocationConflictWarning" class="alert alert-warning d-none mb-0" role="alert" style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #fde68a; font-size: 0.85rem; border-radius: var(--radius-sm);">
-                            <i class="fa-solid fa-triangle-exclamation me-1"></i> <span id="qbLocationConflictMsg"></span>
-                        </div>
-                        <div id="qbGroupSwimmerInfo" class="alert alert-info d-none mb-0 mt-2" role="alert" style="background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.4); color: #67e8f9; font-size: 0.85rem; border-radius: var(--radius-sm);">
-                            <i class="fa-solid fa-users me-1"></i> <span id="qbGroupSwimmerMsg"></span>
-                        </div>
-                    </div>
-                </div>
+          <!-- 3. SCHEDULE -->
+          <div class="mb-3">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="qb-num-badge">3</span>
+              <h6 class="qb-section-title">SCHEDULE</h6>
             </div>
 
-            <!-- Section 4: Persons Count & Fee Display (Moved Down) -->
-            <div class="mb-4 p-3 rounded" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);">
-                <div class="row g-3 align-items-center">
-                    <div class="col-12 col-md-6">
-                        <label class="form-label text-muted small fw-semibold mb-1">Swimmers / Persons</label>
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="input-group" style="max-width: 130px;">
-                                <button type="button" class="btn btn-outline-secondary" id="qbBtnMinus" style="border-color: rgba(255,255,255,0.1); color: white;">-</button>
-                                <input type="text" name="persons" id="qbPersons" class="form-control text-center fw-bold" value="1" readonly style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: white;">
-                                <button type="button" class="btn btn-outline-secondary" id="qbBtnPlus" style="border-color: rgba(255,255,255,0.1); color: white;">+</button>
-                            </div>
-                            <span class="text-muted small" id="qbGroupHint" style="font-size: 0.75rem;">(1-5 persons, group scaling up to 36% OFF)</span>
-                        </div>
-                    </div>
-
-                    <div class="col-12 col-md-6">
-                        <div class="d-flex flex-column align-items-md-end">
-                            <label class="form-label text-muted small fw-semibold mb-1">Total Batch Payable Fee</label>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="p-2 px-3 rounded" style="background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.3); font-size: 1.35rem; font-weight: 800; color: var(--color-primary);">
-                                    <span id="qbFeeDisplay">₹7,500</span>
-                                </div>
-                            </div>
-                            <span class="text-muted small mt-1" id="qbFeeNote" style="font-size: 0.75rem;">Inclusive of all pool sessions</span>
-                            <div id="qbPerSwimmerShare" class="text-primary small fw-semibold mt-1" style="display: none; font-size: 0.8rem;"></div>
-                            <input type="hidden" name="fee" id="qbFeeInput" value="7500">
-                        </div>
-                    </div>
-                </div>
+            <!-- Start, End, Time (3 columns) -->
+            <div class="row g-2 mb-2">
+              <div class="col-4">
+                <label class="qb-label">Start<span class="text-danger">*</span></label>
+                <input type="date" name="date" id="qbStartDate" class="form-control qb-input" required>
+              </div>
+              <div class="col-4" id="qbEndDateCol">
+                <label class="qb-label">End<span class="text-danger">*</span></label>
+                <input type="date" name="end_date" id="qbEndDate" class="form-control qb-input">
+              </div>
+              <div class="col-4">
+                <label class="qb-label">Time<span class="text-danger">*</span></label>
+                <select name="time" id="qbTime" class="form-select qb-input" required>
+                  <option value="06:00 AM">06:00 AM</option>
+                  <option value="07:00 AM">07:00 AM</option>
+                  <option value="08:00 AM">08:00 AM</option>
+                  <option value="09:00 AM">09:00 AM</option>
+                  <option value="04:00 PM">04:00 PM</option>
+                  <option value="05:00 PM">05:00 PM</option>
+                  <option value="06:00 PM">06:00 PM</option>
+                  <option value="07:00 PM">07:00 PM</option>
+                </select>
+              </div>
             </div>
 
-            <!-- Submit Button & Disclaimer -->
-            <div class="d-flex flex-column gap-2 pt-2" style="border-top: 1px solid rgba(255,255,255,0.08);">
-                <div id="qbSubmitAlert" class="alert alert-warning d-none py-2 px-3 small mb-2" role="alert" style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #fde68a; border-radius: var(--radius-sm);"></div>
-                <button type="submit" class="btn btn-primary w-100 py-3 fw-bold" id="qbSubmitBtn" style="border-radius: var(--radius-sm); font-size: 1rem; letter-spacing: 0.5px;">
-                    <span id="qbSubmitText"><i class="fa-solid fa-calendar-check me-2"></i> Confirm Booking</span>
-                    <span id="qbSubmitSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
+            <!-- Days (Pick 2-3) -->
+            <div class="mb-2" id="qbDaysRow">
+              <label class="qb-label">Days (Pick 2-3)</label>
+              <div class="d-flex flex-wrap gap-1.5" id="qbDayPills">
+                {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
+                  <label class="btn btn-sm qb-day-label" style="background: #e2e8f0; border: 1px solid #cbd5e1; color: #334155; border-radius: 6px; font-size: 0.78rem; padding: 0.25rem 0.65rem; cursor: pointer; font-weight: 600;">
+                    <input type="checkbox" class="qb-day-cb d-none" value="{{ day }}">
+                    <span>{{ day[:3] }}</span>
+                  </label>
+                {% endfor %}
+              </div>
+              <input type="hidden" name="selected_days" id="qbSelectedDays" value="">
+              <div id="qbDaysWarning" class="text-warning small mt-1 d-none" style="font-size: 0.78rem;">
+                <i class="fa-solid fa-circle-exclamation me-1"></i> <span>Please select 2 or 3 training days</span>
+              </div>
+            </div>
+
+            <!-- Pool Location -->
+            <div class="mb-2">
+              <label class="qb-label">Pool Location<span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text" style="background: #f1f5f9; border-color: #cbd5e1; color: #0f172a; padding: 0.45rem 0.6rem;"><i class="fa-solid fa-location-dot"></i></span>
+                <input type="text" name="location" id="qbLocation" class="form-control qb-input" style="border-radius: 0 !important;" placeholder="e.g. My Home, Gachibowli" required>
+                <button type="button" class="btn" id="qbLocateBtn" title="Detect Current Location" style="background: #ffffff; border: 1px solid #cbd5e1; color: #0f172a; font-size: 0.82rem; font-weight: 600; border-radius: 0 8px 8px 0 !important; padding: 0.45rem 0.75rem;">
+                  <i class="fa-solid fa-location-crosshairs me-1"></i> Detect
                 </button>
-                <div class="text-center text-muted small" style="font-size: 0.75rem;">
-                    <i class="fa-solid fa-shield-halved text-success me-1"></i> No upfront payment required for Demo class. You will be logged into your account immediately.
-                </div>
+              </div>
             </div>
+
+            <!-- Conflict Alerts -->
+            <div id="qbLocationConflictWarning" class="alert alert-warning d-none mb-2 py-1.5 px-2.5" role="alert" style="font-size: 0.78rem; border-radius: 6px;">
+              <i class="fa-solid fa-triangle-exclamation me-1"></i> <span id="qbLocationConflictMsg"></span>
+            </div>
+            <div id="qbGroupSwimmerInfo" class="alert alert-info d-none mb-2 py-1.5 px-2.5" role="alert" style="font-size: 0.78rem; border-radius: 6px;">
+              <i class="fa-solid fa-users me-1"></i> <span id="qbGroupSwimmerMsg"></span>
+            </div>
+          </div>
+
+          <!-- Swimmers & Payable Fee Card -->
+          <div class="mb-3 p-3 rounded-3" style="background: #f1f5f9; border: 1px solid #e2e8f0;">
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <label class="qb-label mb-1">Swimmers</label>
+                <div class="d-flex align-items-center">
+                  <div class="input-group input-group-sm" style="width: 105px;">
+                    <button type="button" class="btn btn-outline-secondary px-2" id="qbBtnMinus" style="background: #ffffff; border-color: #cbd5e1; color: #0f172a; font-weight: 700;">-</button>
+                    <input type="text" name="persons" id="qbPersons" class="form-control text-center fw-bold px-0" value="1" readonly style="background: #ffffff; border-color: #cbd5e1; color: #0f172a; pointer-events: none;">
+                    <button type="button" class="btn btn-outline-secondary px-2" id="qbBtnPlus" style="background: #ffffff; border-color: #cbd5e1; color: #0f172a; font-weight: 700;">+</button>
+                  </div>
+                </div>
+                <div class="text-muted mt-1" id="qbGroupHint" style="font-size: 0.72rem; color: #64748b;">(1-5 persons, group scaling up to 36% OFF)</div>
+              </div>
+
+              <div class="text-end">
+                <label class="form-label mb-0" style="font-size: 0.78rem; font-weight: 600; color: #64748b;">Payable Fee</label>
+                <div id="qbFeeDisplay" style="font-size: 1.55rem; font-weight: 900; color: #0f172a; line-height: 1.1;">₹5,000</div>
+                <div id="qbFeeNote" style="font-size: 0.72rem; color: #64748b; font-weight: 600;">8 sessions</div>
+                <div id="qbPerSwimmerShare" class="small fw-semibold mt-0.5" style="display: none; font-size: 0.75rem; color: #2563eb;"></div>
+                <input type="hidden" name="fee" id="qbFeeInput" value="5000">
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit Button & Footer -->
+          <div class="d-flex flex-column gap-1.5 pt-1">
+            <div id="qbSubmitAlert" class="alert alert-warning d-none py-1.5 px-2.5 small mb-1" role="alert" style="border-radius: 6px; font-size: 0.8rem;"></div>
+            <button type="submit" class="btn w-100 py-2.5 fw-bold" id="qbSubmitBtn" style="background: #1e293b; color: #ffffff; border-radius: 8px; font-size: 0.98rem; box-shadow: 0 4px 12px rgba(15,23,42,0.25);">
+              <span id="qbSubmitText">📅 Book Your Session</span>
+              <span id="qbSubmitSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
+            </button>
+            <div class="text-center" style="font-size: 0.75rem; color: #475569; font-weight: 500;">
+              Demo class is free. No upfront payment required.
+            </div>
+          </div>
         </form>
       </div>
+
     </div>
   </div>
 </div>
@@ -2202,20 +2234,20 @@
             if (['Monthly', '3_months', '6_months', '9_months', '12_months'].includes(pkg) && checkedCount > 3) {
                 alert('Maximum 3 training days allowed for this package.');
                 this.checked = false;
-                label.style.background = 'transparent';
-                label.style.color = '#e4e4e7';
-                label.style.borderColor = 'rgba(255,255,255,0.1)';
+                label.style.background = '#e2e8f0';
+                label.style.color = '#334155';
+                label.style.borderColor = '#cbd5e1';
                 return;
             }
 
             if (this.checked) {
-                label.style.background = 'var(--gradient-primary)';
-                label.style.color = '#fff';
-                label.style.borderColor = 'transparent';
+                label.style.background = '#2563eb';
+                label.style.color = '#ffffff';
+                label.style.borderColor = '#2563eb';
             } else {
-                label.style.background = 'transparent';
-                label.style.color = '#e4e4e7';
-                label.style.borderColor = 'rgba(255,255,255,0.1)';
+                label.style.background = '#e2e8f0';
+                label.style.color = '#334155';
+                label.style.borderColor = '#cbd5e1';
             }
 
             const checkedDays = updateQbSelectedDaysString();

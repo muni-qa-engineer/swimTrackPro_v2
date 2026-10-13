@@ -5,7 +5,7 @@
   --color-bg: #09090b; /* Very dark zinc */
   --color-surface: #18181b; /* Slightly lighter zinc for cards */
   --color-surface-hover: #27272a;
-  --color-border: #27272a;
+  --color-border: rgba(255, 255, 255, 0.16);
   
   --color-text-primary: #ffffff;
   --color-text-secondary: #e4e4e7; /* Lightened from #a1a1aa for high contrast */
@@ -165,30 +165,31 @@ img {
   background: var(--gradient-glass);
   backdrop-filter: var(--backdrop-blur);
   -webkit-backdrop-filter: var(--backdrop-blur);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
   transition: transform var(--transition-bounce), box-shadow var(--transition-normal), border-color var(--transition-normal);
 }
 
 .glass-panel:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(6, 182, 212, 0.15);
-  border-color: rgba(6, 182, 212, 0.3);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 15px rgba(6, 182, 212, 0.2);
+  border-color: rgba(6, 182, 212, 0.45);
 }
 
 .card {
   background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: var(--radius-md);
   padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
   transition: transform var(--transition-bounce), box-shadow var(--transition-bounce), border-color var(--transition-normal);
 }
 
 .card:hover {
   transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
-  border-color: rgba(6, 182, 212, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+  border-color: rgba(6, 182, 212, 0.4);
 }
 
 /* Buttons */

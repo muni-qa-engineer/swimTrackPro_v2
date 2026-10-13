@@ -8,12 +8,12 @@
 <style>
     /* Premium Booking Card Container for Dark Theme */
     .booking-card {
-        background: rgba(24, 24, 27, 0.6) !important;
+        background: rgba(24, 24, 27, 0.8) !important;
         backdrop-filter: var(--backdrop-blur) !important;
         -webkit-backdrop-filter: var(--backdrop-blur) !important;
-        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.18) !important;
         border-radius: var(--radius-md) !important;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
         transition: all var(--transition-fast) !important;
         overflow: hidden;
         position: relative;
@@ -21,8 +21,8 @@
     
     .booking-card:hover {
         transform: translateY(-4px) !important;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
-        border-color: rgba(6, 182, 212, 0.3) !important;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 15px rgba(6, 182, 212, 0.25) !important;
+        border-color: var(--color-primary) !important;
     }
     
     .booking-card.past-session {
@@ -309,7 +309,6 @@
                                                   </div>
                                                {% endif %}
                                           {% else %}
-                                              {% if role == 'trainer' or (b.completed_classes or 0) == 0 %}
                                               <div class="flex justify-end gap-2">
                                                   <form action="/edit/{{ b.id }}" method="GET" class="d-inline" onsubmit="saveScrollPosition()">
                                                       <button type="submit" class="btn btn-outline" style="font-size: 0.75rem; padding: 0.25rem 0.75rem; border-radius: var(--radius-sm);">Edit</button>
@@ -320,7 +319,6 @@
                                                       </button>
                                                   </form>
                                               </div>
-                                              {% endif %}
 
                                               {% if role != 'trainer' and b.status != 'Paid' and (b.fee or 0)|float > 0 %}
                                               <a href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name|urlencode }}&tn=SwimTrackPro%20Payment" class="btn btn-primary w-100 py-2.5" style="text-align: center;">

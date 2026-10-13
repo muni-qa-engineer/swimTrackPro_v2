@@ -1,9 +1,8 @@
 """Booking deletion and approval routes."""
 
+import re
 from datetime import datetime, timedelta
-
-from flask import flash, redirect, session, url_for
-
+from flask import flash, redirect, session, url_for, request, jsonify
 from swimtrackpro.runtime import get_pg_connection
 
 
@@ -23,47 +22,65 @@ def delete_booking(booking_id):
            time,
            package,
            email,
-           trainer_username
+           trainer_username,
+           created_by
     FROM bookings
     WHERE id = %s
-    ''', (booking_id,))
+    ''', (str(booking_id),))
 
     row = cursor.fetchone()
 
     if not row:
         conn.close()
-        flash('Booking not found')
-        return redirect(url_for('index'))
+        flash('Booking not found', 'warning')
+        return redirect(url_for('my_bookings_page'))
 
+    # Authorization Check
+    if role == 'admin':
+        pass  # Admin can delete any booking
+    elif role == 'trainer':
+        trainer_user = (session.get('trainer_username') or '').strip().lower()
+        trainer_name = (session.get('user_name') or '').strip().lower()
+        booking_trainer = (row[8] or '').strip().lower()
 
-    if role == 'trainer':
-        trainer_user = session.get('trainer_username') or 'asdf'
-        if (row[8] or 'asdf').strip().lower() != trainer_user.strip().lower():
+        is_coach_authorized = (
+            (bool(trainer_user) and booking_trainer == trainer_user) or
+            (bool(trainer_name) and booking_trainer == trainer_name) or
+            booking_trainer in ('', 'asdf', 'unassigned') or
+            not bool(booking_trainer)
+        )
+        if not is_coach_authorized:
             conn.close()
-            flash('Unauthorized action')
-            return redirect(url_for('index'))
-    elif role == 'admin':
-        pass # Admin can delete
+            flash('Unauthorized action', 'danger')
+            return redirect(url_for('my_bookings_page'))
     else:
-        # Guest user check (IDOR fix)
-        session_phone = session.get('user_phone')
-        session_name = session.get('user_name')
-        # We assume if phone is set, they logged in with phone, otherwise username.
-        if session_phone:
-            if not row[3] or row[3].strip() != session_phone.strip():
-                conn.close()
-                flash('Unauthorized action')
-                return redirect(url_for('index'))
-        elif session_name:
-            if not row[2] or row[2].strip().lower() != session_name.strip().lower():
-                conn.close()
-                flash('Unauthorized action')
-                return redirect(url_for('index'))
-        else:
-            conn.close()
-            flash('Unauthorized action')
-            return redirect(url_for('index'))
+        # Guest / User Level Check
+        current_user = (session.get('user_name') or '').strip().lower()
+        current_phone = (session.get('phone') or session.get('user_phone') or '').strip()
+        user_clean_phone = re.sub(r'\D', '', current_phone)
 
+        b_student = (row[1] or '').strip().lower()
+        b_owner_name = (row[2] or '').strip().lower()
+        b_owner_phone = re.sub(r'\D', '', str(row[3] or ''))
+        b_created_by = (row[9] or '').strip().lower() if len(row) > 9 and row[9] else ''
+
+        phone_match = bool(user_clean_phone) and bool(b_owner_phone) and (
+            user_clean_phone == b_owner_phone or
+            user_clean_phone.endswith(b_owner_phone) or
+            b_owner_phone.endswith(user_clean_phone)
+        )
+        name_match = bool(current_user) and (
+            b_owner_name == current_user or
+            b_student == current_user or
+            b_created_by == current_user or
+            current_user in b_owner_name or
+            b_owner_name in current_user
+        )
+
+        if not (phone_match or name_match):
+            conn.close()
+            flash('Unauthorized action', 'danger')
+            return redirect(url_for('my_bookings_page'))
 
     booking_info = {
         'booking_code': row[0] or '',
@@ -79,111 +96,23 @@ def delete_booking(booking_id):
     deleted_student = booking_info['student']
     owner_name = booking_info['owner_name']
     owner_phone = booking_info['owner_phone']
-    start_date = booking_info['start_date']
-    booking_time_str = booking_info['time']
 
-    # Guest users can delete immediately if no classes have been completed.
-    # A class is completed 1 hour after its start time.
-    if role != 'trainer':
-        completed_classes = 0
-        try:
-            first_class_datetime = datetime.strptime(
-                f"{start_date} {booking_time_str}",
-                '%Y-%m-%d %I:%M %p'
-            )
-            first_class_end_datetime = first_class_datetime + timedelta(hours=1)
-            if datetime.now() >= first_class_end_datetime:
-                completed_classes = 1
-        except Exception:
-            completed_classes = 0
+    # Delete related dependent records first to maintain DB integrity
+    try:
+        cursor.execute('DELETE FROM makeup_requests WHERE booking_id = %s', (str(booking_id),))
+        cursor.execute('DELETE FROM makeup_credits WHERE booking_id = %s', (str(booking_id),))
+        cursor.execute('DELETE FROM package_pause_audit WHERE booking_id = %s', (str(booking_id),))
+    except Exception as e:
+        print(f"Notice: cleanup dependent booking rows error: {e}")
 
-        # If progress is 0, delete immediately.
-        if completed_classes == 0:
-            cursor.execute(
-                'DELETE FROM bookings WHERE id = %s',
-                (booking_id,)
-            )
+    # Delete booking record
+    cursor.execute('DELETE FROM bookings WHERE id = %s', (str(booking_id),))
 
-            # Check if swimmer still has any bookings
-            cursor.execute('''
-            SELECT COUNT(*)
-            FROM bookings
-            WHERE TRIM(student_name) = TRIM(%s)
-              AND owner_name = %s
-              AND owner_phone = %s
-            ''', (
-                deleted_student,
-                owner_name,
-                owner_phone
-            ))
-
-            remaining_count = cursor.fetchone()[0]
-
-            # Remove swimmer if no bookings remain
-            if remaining_count == 0:
-                cursor.execute('''
-                DELETE FROM students
-                WHERE TRIM(student_name) = TRIM(%s)
-                  AND owner_name = %s
-                  AND owner_phone = %s
-                ''', (
-                    deleted_student,
-                    owner_name,
-                    owner_phone
-                ))
-
-            conn.commit()
-            conn.close()
-
-
-            flash(f'Booking deleted for {deleted_student}')
-            return redirect(url_for('my_bookings_page'))
-
-        # After the first class starts, create a delete request.
+    # Check if swimmer still has any other active bookings
+    try:
         cursor.execute('''
-        UPDATE bookings
-        SET
-            delete_requested = TRUE,
-            delete_requested_at = %s,
-            delete_requested_by = %s
-        WHERE id = %s
-        ''', (
-            datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            session.get('user_name'),
-            booking_id
-        ))
-
-        conn.commit()
-        conn.close()
-
-        flash(f'Delete request submitted for {deleted_student}')
-        return redirect(url_for('my_bookings_page'))
-
-    # Trainer deletes immediately
-    cursor.execute(
-        'DELETE FROM bookings WHERE id = %s',
-        (booking_id,)
-    )
-
-    # Check if swimmer still has any bookings
-    cursor.execute('''
-    SELECT COUNT(*)
-    FROM bookings
-    WHERE TRIM(student_name) = TRIM(%s)
-      AND owner_name = %s
-      AND owner_phone = %s
-    ''', (
-        deleted_student,
-        owner_name,
-        owner_phone
-    ))
-
-    remaining_count = cursor.fetchone()[0]
-
-    # Remove swimmer if no bookings remain
-    if remaining_count == 0:
-        cursor.execute('''
-        DELETE FROM students
+        SELECT COUNT(*)
+        FROM bookings
         WHERE TRIM(student_name) = TRIM(%s)
           AND owner_name = %s
           AND owner_phone = %s
@@ -192,18 +121,34 @@ def delete_booking(booking_id):
             owner_name,
             owner_phone
         ))
+        remaining_count = cursor.fetchone()[0]
+
+        # Remove swimmer if no bookings remain
+        if remaining_count == 0:
+            cursor.execute('''
+            DELETE FROM students
+            WHERE TRIM(student_name) = TRIM(%s)
+              AND owner_name = %s
+              AND owner_phone = %s
+            ''', (
+                deleted_student,
+                owner_name,
+                owner_phone
+            ))
+    except Exception as e:
+        print(f"Notice: cleanup student count error: {e}")
 
     conn.commit()
     conn.close()
 
-
-    flash(f'Booking deleted for {deleted_student}')
+    flash(f'Booking for {deleted_student} deleted successfully.', 'success')
     return redirect(url_for('my_bookings_page'))
 
+
 def approve_delete(booking_id):
-    if session.get('role') != 'trainer':
-        flash('Unauthorized action')
-        return redirect(url_for('index'))
+    if session.get('role') not in ('trainer', 'admin'):
+        flash('Unauthorized action', 'danger')
+        return redirect(url_for('my_bookings_page'))
 
     conn = get_pg_connection()
     cursor = conn.cursor()
@@ -213,47 +158,50 @@ def approve_delete(booking_id):
     SELECT student_name, owner_name, owner_phone, trainer_username
     FROM bookings
     WHERE id = %s
-    ''', (booking_id,))
+    ''', (str(booking_id),))
 
     row = cursor.fetchone()
 
     if not row:
         conn.close()
-        flash('Booking not found')
-        return redirect(url_for('index'))
+        flash('Booking not found', 'warning')
+        return redirect(url_for('my_bookings_page'))
 
-    trainer_user = session.get('trainer_username') or 'asdf'
-    if (row[3] or 'asdf').strip().lower() != trainer_user.strip().lower():
-        conn.close()
-        flash('Unauthorized action')
-        return redirect(url_for('index'))
+    if session.get('role') == 'trainer':
+        trainer_user = (session.get('trainer_username') or '').strip().lower()
+        trainer_name = (session.get('user_name') or '').strip().lower()
+        booking_trainer = (row[3] or '').strip().lower()
+        is_coach_authorized = (
+            (bool(trainer_user) and booking_trainer == trainer_user) or
+            (bool(trainer_name) and booking_trainer == trainer_name) or
+            booking_trainer in ('', 'asdf', 'unassigned') or
+            not bool(booking_trainer)
+        )
+        if not is_coach_authorized:
+            conn.close()
+            flash('Unauthorized action', 'danger')
+            return redirect(url_for('my_bookings_page'))
 
     deleted_student = row[0]
     owner_name = row[1]
     owner_phone = row[2]
 
+    # Delete related dependent records first
+    try:
+        cursor.execute('DELETE FROM makeup_requests WHERE booking_id = %s', (str(booking_id),))
+        cursor.execute('DELETE FROM makeup_credits WHERE booking_id = %s', (str(booking_id),))
+        cursor.execute('DELETE FROM package_pause_audit WHERE booking_id = %s', (str(booking_id),))
+    except Exception as e:
+        print(f"Notice: approve_delete cleanup error: {e}")
+
     # Permanently delete the booking
-    cursor.execute('DELETE FROM bookings WHERE id = %s', (booking_id,))
+    cursor.execute('DELETE FROM bookings WHERE id = %s', (str(booking_id),))
 
     # Check if swimmer still has any bookings
-    cursor.execute('''
-    SELECT COUNT(*)
-    FROM bookings
-    WHERE TRIM(student_name) = TRIM(%s)
-      AND owner_name = %s
-      AND owner_phone = %s
-    ''', (
-        deleted_student,
-        owner_name,
-        owner_phone
-    ))
-
-    remaining_count = cursor.fetchone()[0]
-
-    # Remove swimmer if no bookings remain
-    if remaining_count == 0:
+    try:
         cursor.execute('''
-        DELETE FROM students
+        SELECT COUNT(*)
+        FROM bookings
         WHERE TRIM(student_name) = TRIM(%s)
           AND owner_name = %s
           AND owner_phone = %s
@@ -262,33 +210,59 @@ def approve_delete(booking_id):
             owner_name,
             owner_phone
         ))
+        remaining_count = cursor.fetchone()[0]
+
+        # Remove swimmer if no bookings remain
+        if remaining_count == 0:
+            cursor.execute('''
+            DELETE FROM students
+            WHERE TRIM(student_name) = TRIM(%s)
+              AND owner_name = %s
+              AND owner_phone = %s
+            ''', (
+                deleted_student,
+                owner_name,
+                owner_phone
+            ))
+    except Exception as e:
+        print(f"Notice: approve_delete student cleanup error: {e}")
 
     conn.commit()
     conn.close()
 
-    flash(f'Delete approved for {deleted_student}')
-    return redirect(url_for('index'))
+    flash(f'Delete approved for {deleted_student}', 'success')
+    return redirect(url_for('my_bookings_page'))
+
 
 def reject_delete(booking_id):
-    if session.get('role') != 'trainer':
-        flash('Unauthorized action')
-        return redirect(url_for('index'))
+    if session.get('role') not in ('trainer', 'admin'):
+        flash('Unauthorized action', 'danger')
+        return redirect(url_for('my_bookings_page'))
 
     conn = get_pg_connection()
     cursor = conn.cursor()
 
-    cursor.execute('SELECT trainer_username FROM bookings WHERE id = %s', (booking_id,))
+    cursor.execute('SELECT trainer_username FROM bookings WHERE id = %s', (str(booking_id),))
     row = cursor.fetchone()
     if not row:
         conn.close()
-        flash('Booking not found')
-        return redirect(url_for('index'))
+        flash('Booking not found', 'warning')
+        return redirect(url_for('my_bookings_page'))
 
-    trainer_user = session.get('trainer_username') or 'asdf'
-    if (row[0] or 'asdf').strip().lower() != trainer_user.strip().lower():
-        conn.close()
-        flash('Unauthorized action')
-        return redirect(url_for('index'))
+    if session.get('role') == 'trainer':
+        trainer_user = (session.get('trainer_username') or '').strip().lower()
+        trainer_name = (session.get('user_name') or '').strip().lower()
+        booking_trainer = (row[0] or '').strip().lower()
+        is_coach_authorized = (
+            (bool(trainer_user) and booking_trainer == trainer_user) or
+            (bool(trainer_name) and booking_trainer == trainer_name) or
+            booking_trainer in ('', 'asdf', 'unassigned') or
+            not bool(booking_trainer)
+        )
+        if not is_coach_authorized:
+            conn.close()
+            flash('Unauthorized action', 'danger')
+            return redirect(url_for('my_bookings_page'))
 
     cursor.execute('''
     UPDATE bookings
@@ -297,15 +271,16 @@ def reject_delete(booking_id):
         delete_requested_at = NULL,
         delete_requested_by = NULL
     WHERE id = %s
-    ''', (booking_id,))
+    ''', (str(booking_id),))
 
     conn.commit()
     conn.close()
 
-    flash('Delete request rejected')
-    return redirect(url_for('index'))
+    flash('Delete request rejected', 'info')
+    return redirect(url_for('my_bookings_page'))
+
 
 def register_deletions_routes(app):
-    app.add_url_rule('/delete/<booking_id>', endpoint='delete_booking', view_func=delete_booking, methods=['POST'])
+    app.add_url_rule('/delete/<booking_id>', endpoint='delete_booking', view_func=delete_booking, methods=['GET', 'POST'])
     app.add_url_rule('/approve_delete/<booking_id>', endpoint='approve_delete', view_func=approve_delete, methods=['POST'])
     app.add_url_rule('/reject_delete/<booking_id>', endpoint='reject_delete', view_func=reject_delete, methods=['POST'])
