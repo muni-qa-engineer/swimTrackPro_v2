@@ -1,16 +1,20 @@
 <style>
     .stepper-row {
         position: relative;
-        padding: 0.5rem;
+        padding: 0.25rem 0;
     }
     .step-col {
         transition: all 0.3s ease;
         position: relative;
         z-index: 2;
+        flex-shrink: 0;
     }
     .step-num {
         transition: all 0.3s ease;
         box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        width: 24px;
+        height: 24px;
+        font-size: 0.78rem;
     }
     .step-col.completed .step-num {
         background-color: #10b981 !important; /* Success green */
@@ -27,44 +31,50 @@
     .step-col.active .step-label {
         color: white !important;
     }
-    @media (max-width: 768px) {
+    .step-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+    }
+    @media (max-width: 576px) {
         .step-label {
             display: none !important;
         }
         .step-divider {
-            margin: 0 0.5rem !important;
+            margin: 0 0.4rem !important;
         }
     }
 </style>
 
-<div class="glass-panel mb-4 py-3 px-4 animate-slide-down" style="border-radius: var(--radius-sm);">
-    <div class="stepper-row d-flex justify-content-between align-items-center flex-wrap flex-md-nowrap gap-2 gap-md-3">
+<div class="glass-panel mb-4 py-2.5 px-3 px-sm-4 animate-slide-down" style="border-radius: var(--radius-sm);">
+    <div class="stepper-row d-flex justify-content-between align-items-center flex-nowrap gap-1 gap-sm-2">
         <!-- Step 1: Session Details -->
-        <div class="step-col d-flex align-items-center gap-2 {{ 'active' if current_step == 1 else 'completed' if current_step > 1 else '' }}" id="step-indicator-1">
-            <span class="step-num {{ 'bg-primary text-black' if current_step == 1 else 'bg-secondary text-white' }} fw-bold rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 0.85rem;">
+        <div class="step-col d-flex align-items-center gap-1.5 {{ 'active' if current_step == 1 else 'completed' if current_step > 1 else '' }}" id="step-indicator-1">
+            <span class="step-num {{ 'bg-primary text-black' if current_step == 1 else 'bg-secondary text-white' }} fw-bold rounded-circle d-inline-flex align-items-center justify-content-center">
                 {% if current_step > 1 %}<i class="fa-solid fa-check"></i>{% else %}1{% endif %}
             </span>
-            <span class="step-label {{ 'text-white fw-bold' if current_step == 1 else 'text-muted' }}" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap;">Session Details</span>
+            <span class="step-label {{ 'text-white fw-bold' if current_step == 1 else 'text-muted' }}">Session Details</span>
         </div>
         
-        <div class="step-divider flex-grow-1 border-top border-secondary" style="border-style: dashed !important; opacity: 0.25; margin: 0 1rem; min-width: 20px;"></div>
+        <div class="step-divider flex-grow-1 border-top border-secondary" style="border-style: dashed !important; opacity: 0.25; margin: 0 0.5rem; min-width: 12px;"></div>
         
         <!-- Step 2: Swimmer Details -->
-        <div class="step-col d-flex align-items-center gap-2 {{ 'active' if current_step == 2 else 'completed' if current_step > 2 else '' }}" id="step-indicator-2">
-            <span class="step-num {{ 'bg-primary text-black' if current_step == 2 else 'bg-secondary text-white' }} fw-bold rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 0.85rem;">
+        <div class="step-col d-flex align-items-center gap-1.5 {{ 'active' if current_step == 2 else 'completed' if current_step > 2 else '' }}" id="step-indicator-2">
+            <span class="step-num {{ 'bg-primary text-black' if current_step == 2 else 'bg-secondary text-white' }} fw-bold rounded-circle d-inline-flex align-items-center justify-content-center">
                 {% if current_step > 2 %}<i class="fa-solid fa-check"></i>{% else %}2{% endif %}
             </span>
-            <span class="step-label {{ 'text-white fw-bold' if current_step == 2 else 'text-muted' }}" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap;">Swimmer Details</span>
+            <span class="step-label {{ 'text-white fw-bold' if current_step == 2 else 'text-muted' }}">Swimmer Details</span>
         </div>
         
-        <div class="step-divider flex-grow-1 border-top border-secondary" style="border-style: dashed !important; opacity: 0.25; margin: 0 1rem; min-width: 20px;"></div>
+        <div class="step-divider flex-grow-1 border-top border-secondary" style="border-style: dashed !important; opacity: 0.25; margin: 0 0.5rem; min-width: 12px;"></div>
         
         <!-- Step 3: Confirmation -->
-        <div class="step-col d-flex align-items-center gap-2 {{ 'active' if current_step == 3 else 'completed' if current_step > 3 else '' }}" id="step-indicator-3">
-            <span class="step-num {{ 'bg-primary text-black' if current_step == 3 else 'bg-secondary text-white' }} fw-bold rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 0.85rem;">
+        <div class="step-col d-flex align-items-center gap-1.5 {{ 'active' if current_step == 3 else 'completed' if current_step > 3 else '' }}" id="step-indicator-3">
+            <span class="step-num {{ 'bg-primary text-black' if current_step == 3 else 'bg-secondary text-white' }} fw-bold rounded-circle d-inline-flex align-items-center justify-content-center">
                 {% if current_step > 3 %}<i class="fa-solid fa-check"></i>{% else %}3{% endif %}
             </span>
-            <span class="step-label {{ 'text-white fw-bold' if current_step == 3 else 'text-muted' }}" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap;">Confirmation</span>
+            <span class="step-label {{ 'text-white fw-bold' if current_step == 3 else 'text-muted' }}">Confirmation</span>
         </div>
     </div>
 </div>
