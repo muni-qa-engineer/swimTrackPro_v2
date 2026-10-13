@@ -1596,16 +1596,146 @@
   #quickBookingModal p {
     color: #475569 !important;
   }
-  #quickBookingModal .btn-close {
-    filter: none !important;
-    opacity: 0.7 !important;
+  /* Days (Pick 2-3) Pills Visibility */
+  #quickBookingModal .qb-day-label {
+    background: #f1f5f9 !important;
+    border: 1.5px solid #cbd5e1 !important;
+    color: #1e293b !important;
+    border-radius: 8px !important;
+    font-size: 0.8rem !important;
+    padding: 0.35rem 0.68rem !important;
+    cursor: pointer !important;
+    font-weight: 700 !important;
+    transition: all 0.15s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+  }
+  #quickBookingModal .qb-day-label:hover {
+    background: #e2e8f0 !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+  }
+  #quickBookingModal .qb-day-label.active {
+    background: #2563eb !important;
+    border-color: #1d4ed8 !important;
+    color: #ffffff !important;
+    box-shadow: 0 3px 10px rgba(37, 99, 235, 0.35) !important;
+  }
+
+  /* High-Contrast Error Alerts */
+  #quickBookingModal #qbAlert,
+  #quickBookingModal .alert-danger {
+    background-color: #fef2f2 !important;
+    border: 1.5px solid #fecaca !important;
+    color: #991b1b !important;
+    font-weight: 600 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.08) !important;
+  }
+  #quickBookingModal #qbSubmitAlert {
+    background-color: #fef2f2 !important;
+    border: 1.5px solid #fecaca !important;
+    color: #991b1b !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+  }
+
+  /* Center Screen Toast Overlay */
+  .qb-toast-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 88%;
+    max-width: 380px;
+    z-index: 1070;
+    pointer-events: auto;
+    animation: qbToastPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  @keyframes qbToastPop {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, -46%) scale(0.92);
+    }
+    100% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+  .qb-toast-card {
+    background: #ffffff !important;
+    border: 2px solid #ef4444 !important;
+    border-radius: 16px !important;
+    padding: 14px 16px !important;
+    box-shadow: 0 20px 45px -10px rgba(220, 38, 38, 0.4), 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    color: #0f172a !important;
+    cursor: pointer;
+  }
+  .qb-toast-icon {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    background: #fee2e2;
+    color: #dc2626;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+  }
+  .qb-toast-title {
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: #991b1b;
+    margin-bottom: 2px;
+  }
+  .qb-toast-text {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.35;
+  }
+  .qb-toast-close {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 2px 4px;
+    font-size: 1.1rem;
+    line-height: 1;
+    transition: color 0.15s;
+    margin-left: auto;
+  }
+  .qb-toast-close:hover {
+    color: #0f172a;
   }
 </style>
 
 <div class="modal fade" id="quickBookingModal" tabindex="-1" aria-labelledby="quickBookingModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
-    <div class="modal-content">
+    <div class="modal-content" style="position: relative;">
       
+      <!-- Center Screen / Modal Toast Overlay for Instant Error Visibility -->
+      <div id="qbToastOverlay" class="qb-toast-overlay d-none" role="alert" aria-live="assertive">
+        <div class="qb-toast-card">
+          <div class="qb-toast-icon">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div class="qb-toast-body" style="flex: 1;">
+            <div class="qb-toast-title">Notice</div>
+            <div id="qbToastMessage" class="qb-toast-text"></div>
+          </div>
+          <button type="button" class="qb-toast-close" onclick="dismissQbToast()" aria-label="Close">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
       <!-- Header -->
       <div class="modal-header border-0 pb-1 pt-3 px-3 px-sm-4 d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center gap-2">
@@ -1732,17 +1862,17 @@
 
             <!-- Days (Pick 2-3) -->
             <div class="mb-2" id="qbDaysRow">
-              <label class="qb-label">Days (Pick 2-3)</label>
+              <label class="qb-label" style="color: #0f172a !important; font-weight: 700; font-size: 0.82rem;">Days (Pick 2-3)<span class="text-danger">*</span></label>
               <div class="d-flex flex-wrap gap-1.5" id="qbDayPills">
                 {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
-                  <label class="btn btn-sm qb-day-label" style="background: #e2e8f0; border: 1px solid #cbd5e1; color: #334155; border-radius: 6px; font-size: 0.78rem; padding: 0.25rem 0.65rem; cursor: pointer; font-weight: 600;">
+                  <label class="btn btn-sm qb-day-label">
                     <input type="checkbox" class="qb-day-cb d-none" value="{{ day }}">
                     <span>{{ day[:3] }}</span>
                   </label>
                 {% endfor %}
               </div>
               <input type="hidden" name="selected_days" id="qbSelectedDays" value="">
-              <div id="qbDaysWarning" class="text-warning small mt-1 d-none" style="font-size: 0.78rem;">
+              <div id="qbDaysWarning" class="text-danger small mt-1 d-none" style="font-size: 0.78rem; font-weight: 600;">
                 <i class="fa-solid fa-circle-exclamation me-1"></i> <span>Please select 2 or 3 training days</span>
               </div>
             </div>
@@ -2095,9 +2225,10 @@
             cb.checked = false;
             const label = cb.closest('.qb-day-label');
             if (label) {
-                label.style.background = 'transparent';
-                label.style.color = '#e4e4e7';
-                label.style.borderColor = 'rgba(255,255,255,0.1)';
+                label.classList.remove('active');
+                label.style.background = '#f1f5f9';
+                label.style.color = '#1e293b';
+                label.style.borderColor = '#cbd5e1';
             }
         });
         const selectedDaysInput = document.getElementById('qbSelectedDays');
@@ -2105,10 +2236,7 @@
 
         const daysWarn = document.getElementById('qbDaysWarning');
         if (daysWarn) daysWarn.classList.add('d-none');
-        const alertEl = document.getElementById('qbAlert');
-        if (alertEl) { alertEl.classList.add('d-none'); alertEl.innerText = ''; }
-        const submitAlert = document.getElementById('qbSubmitAlert');
-        if (submitAlert) { submitAlert.classList.add('d-none'); submitAlert.innerText = ''; }
+        clearQbError();
 
         // Default start date to tomorrow if not set
         if (startDateInput && !startDateInput.value) {
@@ -2256,21 +2384,26 @@
             const checkedCount = document.querySelectorAll('.qb-day-cb:checked').length;
 
             if (['Monthly', '3_months', '6_months', '9_months', '12_months'].includes(pkg) && checkedCount > 3) {
-                alert('Maximum 3 training days allowed for this package.');
+                showQbToast('Maximum 3 training days allowed for this package.');
                 this.checked = false;
-                label.style.background = '#e2e8f0';
-                label.style.color = '#334155';
-                label.style.borderColor = '#cbd5e1';
+                if (label) {
+                    label.classList.remove('active');
+                    label.style.background = '#f1f5f9';
+                    label.style.color = '#1e293b';
+                    label.style.borderColor = '#cbd5e1';
+                }
                 return;
             }
 
             if (this.checked) {
+                label.classList.add('active');
                 label.style.background = '#2563eb';
                 label.style.color = '#ffffff';
-                label.style.borderColor = '#2563eb';
+                label.style.borderColor = '#1d4ed8';
             } else {
-                label.style.background = '#e2e8f0';
-                label.style.color = '#334155';
+                label.classList.remove('active');
+                label.style.background = '#f1f5f9';
+                label.style.color = '#1e293b';
                 label.style.borderColor = '#cbd5e1';
             }
 
@@ -2624,6 +2757,84 @@
         });
     }
 
+    // Toast & Overlay Notification for Quick Booking Modal
+    let qbToastTimer = null;
+
+    function showQbToast(message) {
+        const overlay = document.getElementById('qbToastOverlay');
+        const textEl = document.getElementById('qbToastMessage');
+        if (!overlay || !textEl) return;
+
+        textEl.innerHTML = message.replace(/\n/g, '<br>');
+        overlay.classList.remove('d-none');
+
+        if (qbToastTimer) clearTimeout(qbToastTimer);
+        qbToastTimer = setTimeout(() => {
+            dismissQbToast();
+        }, 6000);
+    }
+
+    function dismissQbToast() {
+        const overlay = document.getElementById('qbToastOverlay');
+        if (overlay) {
+            overlay.classList.add('d-none');
+        }
+        if (qbToastTimer) {
+            clearTimeout(qbToastTimer);
+            qbToastTimer = null;
+        }
+    }
+
+    function showQbError(msg) {
+        // 1. Center Overlay Toast - always visible in the center of the modal regardless of scroll position
+        showQbToast(msg);
+
+        // 2. High-contrast Top Alert Banner
+        const qbAlert = document.getElementById('qbAlert');
+        if (qbAlert) {
+            qbAlert.innerHTML = `<div class="d-flex align-items-start gap-2"><i class="fa-solid fa-triangle-exclamation text-danger mt-1"></i><div>${msg.replace(/\n/g, '<br>')}</div></div>`;
+            qbAlert.classList.remove('d-none');
+        }
+
+        // 3. High-contrast Bottom Alert Banner (right above submit button)
+        const qbSubmitAlert = document.getElementById('qbSubmitAlert');
+        if (qbSubmitAlert) {
+            qbSubmitAlert.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1 text-danger"></i> ${msg.replace(/\n/g, '<br>')}`;
+            qbSubmitAlert.classList.remove('d-none');
+        }
+
+        // 4. Smoothly scroll modal body to top so top banner is also directly visible
+        const modalBody = document.querySelector('#quickBookingModal .modal-body');
+        if (modalBody) {
+            modalBody.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
+    function clearQbError() {
+        dismissQbToast();
+        const qbAlert = document.getElementById('qbAlert');
+        if (qbAlert) {
+            qbAlert.classList.add('d-none');
+            qbAlert.innerHTML = '';
+        }
+        const qbSubmitAlert = document.getElementById('qbSubmitAlert');
+        if (qbSubmitAlert) {
+            qbSubmitAlert.classList.add('d-none');
+            qbSubmitAlert.innerHTML = '';
+        }
+    }
+
+    // Dismiss toast on user interaction inside form
+    const qbFormEl = document.getElementById('quickBookingForm');
+    if (qbFormEl) {
+        qbFormEl.addEventListener('input', () => {
+            const overlay = document.getElementById('qbToastOverlay');
+            if (overlay && !overlay.classList.contains('d-none')) {
+                dismissQbToast();
+            }
+        });
+    }
+
     // Submit Quick Booking via AJAX
     const qbForm = document.getElementById('quickBookingForm');
     const qbAlert = document.getElementById('qbAlert');
@@ -2634,21 +2845,11 @@
     if (qbForm) {
         qbForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            qbAlert.classList.add('d-none');
-            qbAlert.innerText = '';
-
-            const qbSubmitAlert = document.getElementById('qbSubmitAlert');
-            if (qbSubmitAlert) {
-                qbSubmitAlert.classList.add('d-none');
-                qbSubmitAlert.innerText = '';
-            }
+            clearQbError();
 
             const studentVal = (document.getElementById('qbStudent')?.value || '').trim();
             if (!studentVal) {
-                const msg = 'Please enter the swimmer / full name.';
-                qbAlert.innerText = msg;
-                qbAlert.classList.remove('d-none');
-                if (qbSubmitAlert) { qbSubmitAlert.innerText = msg; qbSubmitAlert.classList.remove('d-none'); }
+                showQbError('Please enter the swimmer / full name.');
                 document.getElementById('qbStudent')?.focus();
                 return;
             }
@@ -2656,23 +2857,18 @@
             const phoneVal = (qbPhone?.value || '').trim();
             const phoneCheck = validateQbPhone(phoneVal);
             if (!phoneCheck.valid) {
-                qbAlert.innerText = phoneCheck.message;
-                qbAlert.classList.remove('d-none');
+                showQbError(phoneCheck.message);
                 if (qbPhoneError) {
                     qbPhoneError.innerText = phoneCheck.message;
                     qbPhoneError.classList.remove('d-none');
                 }
-                if (qbSubmitAlert) { qbSubmitAlert.innerText = phoneCheck.message; qbSubmitAlert.classList.remove('d-none'); }
                 qbPhone?.focus();
                 return;
             }
 
             const coachVal = document.getElementById('qbCoach')?.value;
             if (!coachVal) {
-                const msg = 'Please select an assigned coach.';
-                qbAlert.innerText = msg;
-                qbAlert.classList.remove('d-none');
-                if (qbSubmitAlert) { qbSubmitAlert.innerText = msg; qbSubmitAlert.classList.remove('d-none'); }
+                showQbError('Please select an assigned coach.');
                 document.getElementById('qbCoach')?.focus();
                 return;
             }
@@ -2682,13 +2878,7 @@
 
             if (['Monthly', '3_months', '6_months', '9_months', '12_months'].includes(pkgVal)) {
                 if (checkedDays.length === 0) {
-                    const msg = '⚠️ Please select weekly training days (Pick 2 or 3 days) to proceed.';
-                    qbAlert.innerText = msg;
-                    qbAlert.classList.remove('d-none');
-                    if (qbSubmitAlert) {
-                        qbSubmitAlert.innerText = msg;
-                        qbSubmitAlert.classList.remove('d-none');
-                    }
+                    showQbError('⚠️ Please select weekly training days (Pick 2 or 3 days) to proceed.');
                     const daysWarn = document.getElementById('qbDaysWarning');
                     if (daysWarn) {
                         daysWarn.classList.remove('d-none');
@@ -2697,44 +2887,26 @@
                     const daysRow = document.getElementById('qbDaysRow');
                     if (daysRow) {
                         daysRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        daysRow.style.boxShadow = '0 0 0 2px #f59e0b';
-                        daysRow.style.borderRadius = 'var(--radius-sm)';
+                        daysRow.style.boxShadow = '0 0 0 2px #ef4444';
+                        daysRow.style.borderRadius = '8px';
                         setTimeout(() => { daysRow.style.boxShadow = 'none'; }, 3000);
                     }
                     return;
                 }
                 if (pkgVal === 'Monthly' && (checkedDays.length < 2 || checkedDays.length > 3)) {
-                    const msg = '⚠️ Monthly package requires exactly 2 or 3 weekly training days.';
-                    qbAlert.innerText = msg;
-                    qbAlert.classList.remove('d-none');
-                    if (qbSubmitAlert) {
-                        qbSubmitAlert.innerText = msg;
-                        qbSubmitAlert.classList.remove('d-none');
-                    }
+                    showQbError('⚠️ Monthly package requires exactly 2 or 3 weekly training days.');
                     return;
                 }
             } else if (pkgVal === 'Custom') {
                 if (checkedDays.length === 0) {
-                    const msg = '⚠️ Please select weekly training days for the Custom package.';
-                    qbAlert.innerText = msg;
-                    qbAlert.classList.remove('d-none');
-                    if (qbSubmitAlert) {
-                        qbSubmitAlert.innerText = msg;
-                        qbSubmitAlert.classList.remove('d-none');
-                    }
+                    showQbError('⚠️ Please select weekly training days for the Custom package.');
                     return;
                 }
             }
 
             const locVal = (document.getElementById('qbLocation')?.value || '').trim();
             if (!locVal) {
-                const msg = 'Please enter your pool location or society address.';
-                qbAlert.innerText = msg;
-                qbAlert.classList.remove('d-none');
-                if (qbSubmitAlert) {
-                    qbSubmitAlert.innerText = msg;
-                    qbSubmitAlert.classList.remove('d-none');
-                }
+                showQbError('Please enter your pool location or society address.');
                 document.getElementById('qbLocation')?.focus();
                 return;
             }
@@ -2762,16 +2934,14 @@
                     window.location.href = result.redirect_url || '/';
                 } else {
                     const errorMsg = (result && result.error) ? result.error : 'Booking failed. Please check all details.';
-                    qbAlert.innerText = errorMsg;
-                    qbAlert.classList.remove('d-none');
+                    showQbError(errorMsg);
                     qbSubmitBtn.disabled = false;
                     qbSubmitSpinner.classList.add('d-none');
                     qbSubmitText.innerHTML = '<i class="fa-solid fa-calendar-check me-2"></i> Confirm Booking';
                 }
             } catch (err) {
                 console.error('Booking submission error:', err);
-                qbAlert.innerText = 'Connection error. Please try again.';
-                qbAlert.classList.remove('d-none');
+                showQbError('Connection error. Please check your connection and try again.');
                 qbSubmitBtn.disabled = false;
                 qbSubmitSpinner.classList.add('d-none');
                 qbSubmitText.innerHTML = '<i class="fa-solid fa-calendar-check me-2"></i> Confirm Booking';
