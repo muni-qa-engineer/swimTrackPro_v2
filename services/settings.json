@@ -17,5 +17,21 @@
     "updated_at": "2026-10-07 22:02:57",
     "updated_ts": 1791390777.178607,
     "promo_version_id": "promo_summer_swimming_camp_2026_1791390777"
+  },
+  "pricing": {
+    "base_prices": {
+      "demo": 500,
+      "single": 750,
+      "monthly_2d": 5000,
+      "monthly_3d": 7500,
+      "3_months": 18000
+    },
+    "multipliers": {
+      "1": 1.0,
+      "2": 1.7,
+      "3": 2.3,
+      "4": 2.8,
+      "5": 3.2
+    }
   }
 }

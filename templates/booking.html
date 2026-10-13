@@ -343,11 +343,12 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="feeInput" class="form-label">Calculated Fee</label>
+                        <label for="feeInput" class="form-label">Calculated Fee (Total Batch)</label>
                         <div style="position: relative;">
                             <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 700; color: var(--color-primary);">₹</span>
                             <input type="number" id="feeInput" name="fee" class="form-control" value="750" readonly style="padding-left: 2rem; font-weight: 700; font-size: 1.2rem; color: white !important;">
                         </div>
+                        <div id="bookingPerSwimmerShare" class="text-primary small fw-semibold mt-1" style="display: none; font-size: 0.85rem;"></div>
                     </div>
                 </div>
 
@@ -418,9 +419,11 @@
 <script>
     // Inject pricing configuration for frontend validation
     window.LONG_TERM_PACKAGES = {{ packages_json|safe if packages_json else 'null' }};
+    window.SWIMTRACK_PRICING_CONFIG = {{ pricing_config|tojson|safe if pricing_config else '{}' }};
 </script>
+<script src="{{ url_for('static', filename='js/pricingEngine.js') }}"></script>
 <script src="{{ url_for('static', filename='common.js') }}"></script>
-<script src="{{ url_for('static', filename='booking.js') }}?v=5"></script>
+<script src="{{ url_for('static', filename='booking.js') }}?v=6"></script>
 <script>
     // Copy filters, details visibility controllers
     document.addEventListener('DOMContentLoaded', function() {

@@ -597,40 +597,73 @@
     <div class="container">
         <div class="text-center mb-4">
             <h2 class="font-display text-white" style="font-weight: 800; font-size: 2.2rem; margin-bottom: 0.5rem;">Choose Your Training Plan</h2>
-            <p class="text-muted">Private training plans tailored to your personal pool schedule.</p>
+            <p class="text-muted">Decoupled 1-on-1 private base rates with dynamic group scaling for 1 to 5 swimmers.</p>
         </div>
         
-        <!-- Segmented Pill Toggle -->
-        <div class="d-flex justify-content-center mb-5">
+        <!-- Segmented Mode Toggle (Individual vs Group Matrix) -->
+        <div class="d-flex justify-content-center mb-3">
             <div class="cg-toggle-container">
                 <button type="button" class="cg-toggle-btn active" id="toggle-individual" onclick="togglePlanView('individual')">
-                    Individual
+                    <i class="fa-solid fa-user me-1"></i> Pricing Cards
                 </button>
                 <button type="button" class="cg-toggle-btn" id="toggle-group" onclick="togglePlanView('group')">
-                    Group
+                    <i class="fa-solid fa-table-cells me-1"></i> Group Pricing Matrix
                 </button>
             </div>
         </div>
+
+        <!-- Dynamic Swimmer Cohort Selector (1 to 5 Swimmers) -->
+        <div class="cg-swimmer-selector-wrap text-center mb-5">
+            <div class="small text-uppercase text-muted fw-bold mb-2" style="letter-spacing: 0.8px; font-size: 0.75rem;">
+                Select Cohort Size:
+            </div>
+            <div class="d-inline-flex flex-wrap justify-content-center gap-2 p-1.5 rounded-pill" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); backdrop-filter: blur(12px);">
+                <button type="button" class="btn btn-sm swimmer-pill active" id="pill-swimmer-1" onclick="selectSwimmerCount(1)">
+                    1 Swimmer <span class="badge bg-secondary ms-1" style="font-size: 0.68rem;">Solo</span>
+                </button>
+                <button type="button" class="btn btn-sm swimmer-pill" id="pill-swimmer-2" onclick="selectSwimmerCount(2)">
+                    2 Swimmers <span class="badge bg-primary text-black ms-1 fw-bold" style="font-size: 0.68rem;">15.0% OFF</span>
+                </button>
+                <button type="button" class="btn btn-sm swimmer-pill" id="pill-swimmer-3" onclick="selectSwimmerCount(3)">
+                    3 Swimmers <span class="badge bg-primary text-black ms-1 fw-bold" style="font-size: 0.68rem;">23.3% OFF</span>
+                </button>
+                <button type="button" class="btn btn-sm swimmer-pill" id="pill-swimmer-4" onclick="selectSwimmerCount(4)">
+                    4 Swimmers <span class="badge bg-primary text-black ms-1 fw-bold" style="font-size: 0.68rem;">30.0% OFF</span>
+                </button>
+                <button type="button" class="btn btn-sm swimmer-pill" id="pill-swimmer-5" onclick="selectSwimmerCount(5)">
+                    5 Swimmers <span class="badge bg-primary text-black ms-1 fw-bold" style="font-size: 0.68rem;">36.0% OFF</span>
+                </button>
+            </div>
+            <div id="swimmer-cohort-caption" class="text-muted small mt-2">
+                <i class="fa-solid fa-user-check text-primary me-1"></i> Dedicated 1-on-1 personalized private instruction at your doorstep pool.
+            </div>
+        </div>
         
-        <!-- INDIVIDUAL VIEW -->
+        <!-- INDIVIDUAL / CARDS VIEW -->
         <div id="view-individual">
             <div class="d-md-none text-center text-muted small mb-3">
-                <i class="fa-solid fa-arrows-left-right me-1" style="color: var(--color-primary);"></i> Swipe to view all plans
+                <i class="fa-solid fa-arrows-left-right me-1" style="color: var(--color-primary);"></i> Swipe horizontally to compare all plans
             </div>
             <div class="cg-pricing-grid mb-5">
-                <!-- Free / Demo -->
+                <!-- 1. Demo Session -->
                 <div class="cg-pricing-card">
                     <div class="cg-plan-tier-wrap">
-                        <div class="cg-plan-tier">Free</div>
+                        <div class="cg-plan-tier">Trial Assessment</div>
+                        <span class="badge bg-info-subtle text-info border border-info-subtle plan-discount-badge" id="plan-demo-badge" style="display: none; font-size: 0.68rem; font-weight: 700;">15.0% OFF</span>
                     </div>
                     <div class="cg-plan-headline">Try SwimTrackPro</div>
-                    <p class="cg-plan-desc">Experience 1-on-1 personalized private coaching at your pool with zero commitment.</p>
+                    <p class="cg-plan-desc">Experience personalized private coaching at your pool with zero recurring commitment.</p>
                     
-                    <div class="cg-price-wrap">
-                        <span class="cg-currency">₹</span><span class="cg-amount">0</span><span class="cg-period">/ session</span>
+                    <div class="cg-price-wrap flex-column align-items-start mb-3" style="min-height: 64px;">
+                        <div class="d-flex align-items-baseline gap-1">
+                            <span class="cg-currency">₹</span>
+                            <span class="cg-amount" id="plan-demo-amount">500</span>
+                            <span class="cg-period" id="plan-demo-period">/ session</span>
+                        </div>
+                        <div class="plan-subcaption text-muted small mt-1" id="plan-demo-subcaption" style="display: none; font-size: 0.8rem;"></div>
                     </div>
                     
-                    <a href="/booking?package=Demo" class="cg-btn cg-btn-outline btn-book-session">Book Demo</a>
+                    <button type="button" class="cg-btn cg-btn-outline w-100 btn-book-session" onclick="bookFromPricingCard('Demo')">Book Demo</button>
                     
                     <div class="cg-features-heading">Start with the basics:</div>
                     <ul class="cg-features-list">
@@ -648,11 +681,11 @@
                         </li>
                         <li class="cg-feature-item">
                             <i class="fa-solid fa-calendar-day cg-feature-icon"></i>
-                            <span>Fixed 1-class trial booking</span>
+                            <span>Fixed 1-class assessment</span>
                         </li>
                         <li class="cg-feature-item">
                             <i class="fa-solid fa-clipboard-check cg-feature-icon"></i>
-                            <span>Stroke & comfort assessment</span>
+                            <span>Stroke & comfort evaluation</span>
                         </li>
                         <li class="cg-feature-item">
                             <i class="fa-solid fa-shield-halved cg-feature-icon"></i>
@@ -661,19 +694,25 @@
                     </ul>
                 </div>
 
-                <!-- Single Day -->
+                <!-- 2. Single Day -->
                 <div class="cg-pricing-card">
                     <div class="cg-plan-tier-wrap">
                         <div class="cg-plan-tier">Single Day</div>
+                        <span class="badge bg-info-subtle text-info border border-info-subtle plan-discount-badge" id="plan-single-badge" style="display: none; font-size: 0.68rem; font-weight: 700;">15.0% OFF</span>
                     </div>
                     <div class="cg-plan-headline">Flexible access</div>
                     <p class="cg-plan-desc">Book individual sessions whenever you need without recurring commitments.</p>
                     
-                    <div class="cg-price-wrap">
-                        <span class="cg-currency">₹</span><span class="cg-amount">{{ '{:,}'.format(pkg['individual']['single'].final_price) }}</span><span class="cg-period">/ session</span>
+                    <div class="cg-price-wrap flex-column align-items-start mb-3" style="min-height: 64px;">
+                        <div class="d-flex align-items-baseline gap-1">
+                            <span class="cg-currency">₹</span>
+                            <span class="cg-amount" id="plan-single-amount">750</span>
+                            <span class="cg-period" id="plan-single-period">/ session</span>
+                        </div>
+                        <div class="plan-subcaption text-muted small mt-1" id="plan-single-subcaption" style="display: none; font-size: 0.8rem;"></div>
                     </div>
                     
-                    <a href="/booking?package=Single" class="cg-btn cg-btn-dark btn-book-session">Buy now</a>
+                    <button type="button" class="cg-btn cg-btn-dark w-100 btn-book-session" onclick="bookFromPricingCard('Single')">Buy now</button>
                     
                     <div class="cg-features-heading">Includes:</div>
                     <ul class="cg-features-list">
@@ -699,33 +738,50 @@
                         </li>
                         <li class="cg-feature-item">
                             <i class="fa-solid fa-person-swimming cg-feature-icon"></i>
-                            <span>1-on-1 personalized instruction</span>
+                            <span>Personalized 1-on-1 or cohort coaching</span>
                         </li>
                     </ul>
                 </div>
 
-                <!-- Monthly Package (RECOMMENDED) -->
+                <!-- 3. Monthly Package (RECOMMENDED) -->
                 <div class="cg-pricing-card recommended">
                     <div class="cg-plan-tier-wrap">
                         <div class="cg-plan-tier">Monthly Package</div>
                         <span class="cg-badge-recommended">RECOMMENDED</span>
                     </div>
+
+                    <!-- Frequency Selector: 2 vs 3 days/week -->
+                    <div class="d-flex align-items-center gap-1 p-1 rounded-pill my-2" style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); width: fit-content;">
+                        <button type="button" class="btn btn-sm monthly-days-btn py-0.5 px-2.5 rounded-pill" id="monthly-days-btn-2" onclick="setMonthlyDays(2)" style="font-size: 0.72rem; color: #a1a1aa; border: none; background: transparent;">
+                            2 days/wk (8 sess)
+                        </button>
+                        <button type="button" class="btn btn-sm monthly-days-btn active py-0.5 px-2.5 rounded-pill fw-bold" id="monthly-days-btn-3" onclick="setMonthlyDays(3)" style="font-size: 0.72rem; background: var(--color-primary); color: #09090b; border: none;">
+                            3 days/wk (12 sess)
+                        </button>
+                    </div>
+
                     <div class="cg-plan-headline">Your coaching plan</div>
                     <p class="cg-plan-desc">Structured recurring training with your preferred coach to build stamina and master technique.</p>
                     
-                    <div class="cg-price-wrap">
-                        <span class="cg-currency">₹</span><span class="cg-amount">{{ '{:,}'.format(pkg['individual']['monthly'].final_price) }}</span><span class="cg-period">/ month</span>
+                    <div class="cg-price-wrap flex-column align-items-start mb-3" style="min-height: 64px;">
+                        <div class="d-flex align-items-baseline gap-1">
+                            <span class="cg-currency">₹</span>
+                            <span class="cg-amount" id="plan-monthly-amount">7,500</span>
+                            <span class="cg-period" id="plan-monthly-period">/ month</span>
+                            <span class="badge bg-info-subtle text-info border border-info-subtle plan-discount-badge ms-1" id="plan-monthly-badge" style="display: none; font-size: 0.68rem; font-weight: 700;">15.0% OFF</span>
+                        </div>
+                        <div class="plan-subcaption text-muted small mt-1" id="plan-monthly-subcaption" style="display: none; font-size: 0.8rem;"></div>
                     </div>
                     
-                    <a href="/booking?package=Monthly" class="cg-btn cg-btn-primary btn-book-session">
+                    <button type="button" class="cg-btn cg-btn-primary w-100 btn-book-session" onclick="bookFromPricingCard('Monthly')">
                         <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Buy now
-                    </a>
+                    </button>
                     
                     <div class="cg-features-heading">Everything in Single, plus:</div>
                     <ul class="cg-features-list">
                         <li class="cg-feature-item">
                             <i class="fa-solid fa-calendar-week cg-feature-icon"></i>
-                            <span>2 or 3 days / week structured training</span>
+                            <span id="plan-monthly-freq-label">3 days / week structured training (12 sess)</span>
                         </li>
                         <li class="cg-feature-item">
                             <i class="fa-solid fa-award cg-feature-icon"></i>
@@ -741,7 +797,7 @@
                         </li>
                         <li class="cg-feature-item">
                             <i class="fa-solid fa-users cg-feature-icon"></i>
-                            <span>Multi-person discounts up to 21% off</span>
+                            <span>Group scaling discounts up to 36% off</span>
                         </li>
                         <li class="cg-feature-item">
                             <i class="fa-solid fa-person-swimming cg-feature-icon"></i>
@@ -750,7 +806,7 @@
                     </ul>
                 </div>
 
-                <!-- Customize -->
+                <!-- 4. Customize -->
                 <div class="cg-pricing-card">
                     <div class="cg-plan-tier-wrap">
                         <div class="cg-plan-tier">Customize</div>
@@ -758,11 +814,15 @@
                     <div class="cg-plan-headline">Maximum control</div>
                     <p class="cg-plan-desc">Design a customized schedule up to 60 days to match your personal routine and fitness goals.</p>
                     
-                    <div class="cg-price-wrap">
-                        <span class="cg-amount" style="font-size: 2.1rem;">Dynamic</span><span class="cg-period">/ flexible</span>
+                    <div class="cg-price-wrap flex-column align-items-start mb-3" style="min-height: 64px;">
+                        <div class="d-flex align-items-baseline gap-1">
+                            <span class="cg-amount" id="plan-custom-amount" style="font-size: 2.1rem;">Dynamic</span>
+                            <span class="cg-period">/ flexible</span>
+                        </div>
+                        <div class="plan-subcaption text-muted small mt-1" id="plan-custom-subcaption" style="font-size: 0.8rem;">₹750/sess anchor rate • Group scaling</div>
                     </div>
                     
-                    <a href="/booking?package=Custom" class="cg-btn cg-btn-dark btn-book-session">Configure</a>
+                    <button type="button" class="cg-btn cg-btn-dark w-100 btn-book-session" onclick="bookFromPricingCard('Custom')">Configure</button>
                     
                     <div class="cg-features-heading">Full customization:</div>
                     <ul class="cg-features-list">
@@ -784,7 +844,7 @@
                         </li>
                         <li class="cg-feature-item">
                             <i class="fa-solid fa-users cg-feature-icon"></i>
-                            <span>Multi-person discounts up to 21% off</span>
+                            <span>Dynamic group multipliers apply</span>
                         </li>
                         <li class="cg-feature-item">
                             <i class="fa-solid fa-bullseye cg-feature-icon"></i>
@@ -794,121 +854,286 @@
                 </div>
             </div>
             
+            <!-- Long Term Coaching Section -->
             <div class="text-center mb-4 pt-2">
-                <h3 class="font-display text-white" style="font-weight: 700;">Long Term Coaching (Individual)</h3>
-                <p class="text-muted">Commit longer, save more.</p>
+                <h3 class="font-display text-white" style="font-weight: 700;">Long Term Coaching</h3>
+                <p class="text-muted">Commit longer, lock in stable cash flow & save up to 57.3% over standalone sessions.</p>
             </div>
             
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4">
-                <!-- 3 Months -->
-                <a href="/booking?package=3_months" class="text-decoration-none d-block">
-                    <div class="long-term-card">
-                    {% if pkg['individual']['3_months'].discount_percentage > 0 %}
-                    <div class="badge badge-primary mb-2" style="background: rgba(6,182,212,0.1); color: var(--color-primary); padding: 0.3rem 0.6rem;">{{ pkg['individual']['3_months'].discount_percentage }}% OFF</div>
-                    {% endif %}
-                    <h4>3 Months</h4>
-                    {% if pkg['individual']['3_months'].discount_percentage > 0 %}
-                    <div class="price-strike">₹{{ '{:,}'.format(pkg['individual']['3_months'].base_price) }}</div>
-                    {% endif %}
-                    <div class="price-actual mb-0">₹{{ "{:,}".format(pkg["individual"]["3_months"].final_price) }}</div>
-                    <div class="mt-2 text-center" style="font-size: 0.8rem; color: var(--color-primary); font-weight: 600;">Buy Now <i class="fa-solid fa-arrow-right fa-sm ms-1"></i></div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4 mb-4">
+                <!-- 3 Calendar Months Card (Anchor Value) -->
+                <div class="long-term-card p-3.5 rounded-4" style="background: rgba(24,24,27,0.7); border: 1.5px solid rgba(6,182,212,0.35); cursor: pointer;" onclick="bookFromPricingCard('3_months')">
+                    <div class="badge badge-primary mb-2" id="plan-3months-badge" style="background: rgba(6,182,212,0.15); color: var(--color-primary); padding: 0.35rem 0.65rem; font-weight: 700;">36 SESSIONS • BEST VALUE</div>
+                    <h4 class="text-white mb-1">3 Calendar Months</h4>
+                    <div class="text-muted small mb-2">3 days/wk × 12 wks</div>
+                    <div class="price-actual mb-0 text-white" id="plan-3months-total" style="font-size: 1.6rem; font-weight: 800; color: var(--color-primary) !important;">₹18,000</div>
+                    <div class="plan-subcaption small text-muted mt-1" id="plan-3months-subcaption">₹18,000 / head (₹500/sess)</div>
+                    <div class="mt-2 text-center" style="font-size: 0.8rem; color: var(--color-primary); font-weight: 600;">
+                        Buy Now <i class="fa-solid fa-arrow-right fa-sm ms-1"></i>
                     </div>
-                </a>
+                </div>
+
                 <!-- 6 Months -->
-                <a href="/booking?package=6_months" class="text-decoration-none d-block">
-                    <div class="long-term-card">
-                    {% if pkg['individual']['6_months'].discount_percentage > 0 %}
-                    <div class="badge badge-primary mb-2" style="background: rgba(6,182,212,0.1); color: var(--color-primary); padding: 0.3rem 0.6rem;">{{ pkg['individual']['6_months'].discount_percentage }}% OFF</div>
-                    {% endif %}
-                    <h4>6 Months</h4>
-                    {% if pkg['individual']['6_months'].discount_percentage > 0 %}
-                    <div class="price-strike">₹{{ '{:,}'.format(pkg['individual']['6_months'].base_price) }}</div>
-                    {% endif %}
-                    <div class="price-actual mb-0">₹{{ "{:,}".format(pkg["individual"]["6_months"].final_price) }}</div>
-                    <div class="mt-2 text-center" style="font-size: 0.8rem; color: var(--color-primary); font-weight: 600;">Buy Now <i class="fa-solid fa-arrow-right fa-sm ms-1"></i></div>
+                <div class="long-term-card p-3.5 rounded-4" style="background: rgba(24,24,27,0.5); border: 1px solid rgba(255,255,255,0.1); cursor: pointer;" onclick="bookFromPricingCard('6_months')">
+                    <div class="badge badge-secondary mb-2" style="background: rgba(255,255,255,0.08); color: #e4e4e7; padding: 0.35rem 0.65rem;">72 SESSIONS</div>
+                    <h4 class="text-white mb-1">6 Months</h4>
+                    <div class="text-muted small mb-2">3 days/wk × 24 wks</div>
+                    <div class="price-actual mb-0 text-white" id="plan-6months-total" style="font-size: 1.6rem; font-weight: 800;">₹36,000</div>
+                    <div class="plan-subcaption small text-muted mt-1" id="plan-6months-subcaption">Pro-rated long term</div>
+                    <div class="mt-2 text-center" style="font-size: 0.8rem; color: var(--color-primary); font-weight: 600;">
+                        Buy Now <i class="fa-solid fa-arrow-right fa-sm ms-1"></i>
                     </div>
-                </a>
+                </div>
+
                 <!-- 9 Months -->
-                <a href="/booking?package=9_months" class="text-decoration-none d-block">
-                    <div class="long-term-card">
-                    {% if pkg['individual']['9_months'].discount_percentage > 0 %}
-                    <div class="badge badge-primary mb-2" style="background: rgba(6,182,212,0.1); color: var(--color-primary); padding: 0.3rem 0.6rem;">{{ pkg['individual']['9_months'].discount_percentage }}% OFF</div>
-                    {% endif %}
-                    <h4>9 Months</h4>
-                    {% if pkg['individual']['9_months'].discount_percentage > 0 %}
-                    <div class="price-strike">₹{{ '{:,}'.format(pkg['individual']['9_months'].base_price) }}</div>
-                    {% endif %}
-                    <div class="price-actual mb-0">₹{{ "{:,}".format(pkg["individual"]["9_months"].final_price) }}</div>
-                    <div class="mt-2 text-center" style="font-size: 0.8rem; color: var(--color-primary); font-weight: 600;">Buy Now <i class="fa-solid fa-arrow-right fa-sm ms-1"></i></div>
+                <div class="long-term-card p-3.5 rounded-4" style="background: rgba(24,24,27,0.5); border: 1px solid rgba(255,255,255,0.1); cursor: pointer;" onclick="bookFromPricingCard('9_months')">
+                    <div class="badge badge-secondary mb-2" style="background: rgba(255,255,255,0.08); color: #e4e4e7; padding: 0.35rem 0.65rem;">108 SESSIONS</div>
+                    <h4 class="text-white mb-1">9 Months</h4>
+                    <div class="text-muted small mb-2">3 days/wk × 36 wks</div>
+                    <div class="price-actual mb-0 text-white" id="plan-9months-total" style="font-size: 1.6rem; font-weight: 800;">₹54,000</div>
+                    <div class="plan-subcaption small text-muted mt-1" id="plan-9months-subcaption">Pro-rated long term</div>
+                    <div class="mt-2 text-center" style="font-size: 0.8rem; color: var(--color-primary); font-weight: 600;">
+                        Buy Now <i class="fa-solid fa-arrow-right fa-sm ms-1"></i>
                     </div>
-                </a>
+                </div>
+
                 <!-- 1 Year -->
-                <a href="/booking?package=12_months" class="text-decoration-none d-block">
-                    <div class="long-term-card">
-                    {% if pkg['individual']['12_months'].discount_percentage > 0 %}
-                    <div class="badge badge-primary mb-2" style="background: rgba(6,182,212,0.1); color: var(--color-primary); padding: 0.3rem 0.6rem;">{{ pkg['individual']['12_months'].discount_percentage }}% OFF</div>
-                    {% endif %}
-                    <h4>1 Year</h4>
-                    {% if pkg['individual']['12_months'].discount_percentage > 0 %}
-                    <div class="price-strike">₹{{ '{:,}'.format(pkg['individual']['12_months'].base_price) }}</div>
-                    {% endif %}
-                    <div class="price-actual mb-0">₹{{ "{:,}".format(pkg["individual"]["12_months"].final_price) }}</div>
-                    <div class="mt-2 text-center" style="font-size: 0.8rem; color: var(--color-primary); font-weight: 600;">Buy Now <i class="fa-solid fa-arrow-right fa-sm ms-1"></i></div>
+                <div class="long-term-card p-3.5 rounded-4" style="background: rgba(24,24,27,0.5); border: 1px solid rgba(255,255,255,0.1); cursor: pointer;" onclick="bookFromPricingCard('12_months')">
+                    <div class="badge badge-secondary mb-2" style="background: rgba(255,255,255,0.08); color: #e4e4e7; padding: 0.35rem 0.65rem;">144 SESSIONS</div>
+                    <h4 class="text-white mb-1">1 Year</h4>
+                    <div class="text-muted small mb-2">3 days/wk × 48 wks</div>
+                    <div class="price-actual mb-0 text-white" id="plan-12months-total" style="font-size: 1.6rem; font-weight: 800;">₹72,000</div>
+                    <div class="plan-subcaption small text-muted mt-1" id="plan-12months-subcaption">Annual commitment</div>
+                    <div class="mt-2 text-center" style="font-size: 0.8rem; color: var(--color-primary); font-weight: 600;">
+                        Buy Now <i class="fa-solid fa-arrow-right fa-sm ms-1"></i>
                     </div>
-                </a>
+                </div>
             </div>
         </div>
         
-        <!-- GROUP VIEW -->
+        <!-- GROUP VIEW: Full Master Client Pricing Matrix Table -->
         <div id="view-group" style="display: none;">
-            <div id="cgGroupDynamicNotice" class="cg-group-banner mb-5 p-4 p-md-5 rounded-4 text-center mx-auto" style="max-width: 900px; background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(59, 130, 246, 0.04) 100%); border: 1px solid rgba(6, 182, 212, 0.25); box-shadow: 0 4px 25px rgba(0,0,0,0.25);">
+            <div class="cg-group-banner mb-5 p-4 p-md-5 rounded-4 mx-auto" style="max-width: 1100px; background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(59, 130, 246, 0.04) 100%); border: 1px solid rgba(6, 182, 212, 0.25); box-shadow: 0 4px 25px rgba(0,0,0,0.25);">
                 <div class="d-flex align-items-center justify-content-center gap-2 mb-3 flex-wrap">
                     <span class="badge bg-primary text-dark text-uppercase px-3 py-1.5 fw-bold" style="font-size: 0.78rem; letter-spacing: 0.5px;">
-                        <i class="fa-solid fa-users me-1"></i> Group Coaching Available
+                        <i class="fa-solid fa-users me-1"></i> Master Client Pricing Matrix
                     </span>
                     <span class="badge bg-black border border-white-10 text-white-50 px-2.5 py-1" style="font-size: 0.75rem;">
-                        Dynamic Pricing
+                        Decoupled Dynamic Architecture
                     </span>
                 </div>
                 
-                <h3 class="font-display text-white mb-3" style="font-size: 1.6rem; font-weight: 700;">
-                    Looking for Group Swimming Coaching?
+                <h3 class="font-display text-white text-center mb-2" style="font-size: 1.7rem; font-weight: 700;">
+                    Gross Batch Fee & Per Swimmer Share
                 </h3>
-                
-                <p class="text-light mb-4 mx-auto" style="max-width: 740px; font-size: 1.05rem; line-height: 1.7;">
-                    Group coaching is available for families, apartment communities, and friends! Pricing is <strong>fully dynamic and calculated based on the number of persons in your group</strong> — <strong>as the person count increases, the price per person decreases</strong> with group discounts up to <strong>21% off</strong>.
+                <p class="text-light text-center mb-4 mx-auto" style="max-width: 760px; font-size: 0.95rem; line-height: 1.6;">
+                    Group coaching decreases 1-on-1 attention, so each participant pays progressively less per lesson while coach yield increases up to +220%.
                 </p>
-                
-                <!-- Tiered Discount Pills -->
-                <div class="d-flex flex-wrap justify-content-center gap-3 mb-4">
-                    <div class="px-3.5 py-2 rounded-pill bg-black border border-white-10 text-white" style="font-size: 0.95rem;">
-                        👥 <strong>2 Swimmers:</strong> <span class="text-primary fw-bold">12% OFF</span> / person
-                    </div>
-                    <div class="px-3.5 py-2 rounded-pill bg-black border border-white-10 text-white" style="font-size: 0.95rem;">
-                        👥 <strong>3 Swimmers:</strong> <span class="text-primary fw-bold">15% OFF</span> / person
-                    </div>
-                    <div class="px-3.5 py-2 rounded-pill bg-black border border-white-10 text-white" style="font-size: 0.95rem;">
-                        👥 <strong>4 Swimmers:</strong> <span class="text-primary fw-bold">18% OFF</span> / person
-                    </div>
-                    <div class="px-3.5 py-2 rounded-pill bg-black border border-white-10 text-white" style="font-size: 0.95rem;">
-                        👥 <strong>5 Swimmers:</strong> <span class="text-primary fw-bold">21% OFF</span> / person
-                    </div>
+
+                <!-- Full Responsive Matrix Table -->
+                <div class="table-responsive rounded-3 mb-4" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);">
+                    <table class="table table-dark table-hover mb-0 text-center align-middle" style="font-size: 0.88rem;">
+                        <thead style="background: rgba(255,255,255,0.06); border-bottom: 2px solid rgba(6,182,212,0.4);">
+                            <tr>
+                                <th class="text-start py-3 ps-3 text-uppercase text-muted" style="letter-spacing: 0.5px; min-width: 180px;">Package Tier & Details</th>
+                                <th class="py-3 text-white">1 Swimmer<br><small class="text-muted fw-normal">(1-on-1)</small></th>
+                                <th class="py-3 text-info">2 Swimmers<br><small class="text-info-emphasis fw-normal">(× 1.70)</small></th>
+                                <th class="py-3 text-info">3 Swimmers<br><small class="text-info-emphasis fw-normal">(× 2.30)</small></th>
+                                <th class="py-3 text-info">4 Swimmers<br><small class="text-info-emphasis fw-normal">(× 2.80)</small></th>
+                                <th class="py-3 text-info">5 Swimmers<br><small class="text-info-emphasis fw-normal">(× 3.20)</small></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Demo Session -->
+                            <tr>
+                                <td class="text-start ps-3 fw-semibold">
+                                    <div>Demo Session</div>
+                                    <small class="text-muted">1 single assessment trial</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">₹500</div>
+                                    <small class="text-muted">₹500/head</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-info">₹850</div>
+                                    <small class="text-info-emphasis">₹425/head</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-info">₹1,150</div>
+                                    <small class="text-info-emphasis">₹383/head</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-info">₹1,400</div>
+                                    <small class="text-info-emphasis">₹350/head</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-info">₹1,600</div>
+                                    <small class="text-info-emphasis">₹320/head</small>
+                                </td>
+                            </tr>
+                            <!-- Single Day -->
+                            <tr>
+                                <td class="text-start ps-3 fw-semibold">
+                                    <div>Single Day Booking</div>
+                                    <small class="text-muted">1 standalone lesson</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">₹750</div>
+                                    <small class="text-muted">₹750/head</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-info">₹1,275</div>
+                                    <small class="text-info-emphasis">₹638/head</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-info">₹1,725</div>
+                                    <small class="text-info-emphasis">₹575/head</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-info">₹2,100</div>
+                                    <small class="text-info-emphasis">₹525/head</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-info">₹2,400</div>
+                                    <small class="text-info-emphasis">₹480/head</small>
+                                </td>
+                            </tr>
+                            <!-- Monthly 2d/wk -->
+                            <tr>
+                                <td class="text-start ps-3 fw-semibold">
+                                    <div>Monthly (2 days/wk)</div>
+                                    <small class="text-muted">8 sessions (4 calendar weeks)</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">₹5,000</div>
+                                    <small class="text-muted">₹5,000/head</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-info">₹8,500</div>
+                                    <small class="text-info-emphasis">₹4,250/head</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-info">₹11,500</div>
+                                    <small class="text-info-emphasis">₹3,833/head</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-info">₹14,000</div>
+                                    <small class="text-info-emphasis">₹3,500/head</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-info">₹16,000</div>
+                                    <small class="text-info-emphasis">₹3,200/head</small>
+                                </td>
+                            </tr>
+                            <!-- Monthly 3d/wk -->
+                            <tr style="background: rgba(6,182,212,0.06);">
+                                <td class="text-start ps-3 fw-semibold">
+                                    <div class="text-primary">Monthly (3 days/wk) <span class="badge bg-primary text-black ms-1" style="font-size: 0.65rem;">REC</span></div>
+                                    <small class="text-muted">12 sessions (4 calendar weeks)</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">₹7,500</div>
+                                    <small class="text-muted">₹7,500/head</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-primary">₹12,750</div>
+                                    <small class="text-info">₹6,375/head</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-primary">₹17,250</div>
+                                    <small class="text-info">₹5,750/head</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-primary">₹21,000</div>
+                                    <small class="text-info">₹5,250/head</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-primary">₹24,000</div>
+                                    <small class="text-info">₹4,800/head</small>
+                                </td>
+                            </tr>
+                            <!-- 3 Calendar Months -->
+                            <tr>
+                                <td class="text-start ps-3 fw-semibold">
+                                    <div>3 Calendar Months</div>
+                                    <small class="text-muted">36 sessions (3d/wk × 12 wks)</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">₹18,000</div>
+                                    <small class="text-muted">₹18,000/head</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-info">₹30,600</div>
+                                    <small class="text-info-emphasis">₹15,300/head</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-info">₹41,400</div>
+                                    <small class="text-info-emphasis">₹13,800/head</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-info">₹50,400</div>
+                                    <small class="text-info-emphasis">₹12,600/head</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-info">₹57,600</div>
+                                    <small class="text-info-emphasis">₹11,520/head</small>
+                                </td>
+                            </tr>
+                            <!-- Custom Schedule -->
+                            <tr>
+                                <td class="text-start ps-3 fw-semibold">
+                                    <div>Custom Schedule</div>
+                                    <small class="text-muted">Dynamic custom duration</small>
+                                </td>
+                                <td><span class="badge bg-secondary">1.00× Base</span></td>
+                                <td><span class="badge bg-info text-black fw-bold">1.70× Base</span></td>
+                                <td><span class="badge bg-info text-black fw-bold">2.30× Base</span></td>
+                                <td><span class="badge bg-info text-black fw-bold">2.80× Base</span></td>
+                                <td><span class="badge bg-info text-black fw-bold">3.20× Base</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-                
-                <div class="p-3 rounded-3 mb-4 mx-auto" style="max-width: 680px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08);">
-                    <div class="text-muted small mb-0">
-                        <i class="fa-solid fa-circle-check text-success me-1"></i>
-                        Select any package (Single Day, Monthly, 3 Months, or Custom) and simply choose your group size (1 to 5 swimmers) during booking to see the automatic per-person discounted rate.
+
+                <!-- Mathematical Mechanics Pills -->
+                <div class="row g-2 justify-content-center text-center mb-4">
+                    <div class="col-6 col-md-3">
+                        <div class="p-2.5 rounded-3 bg-black border border-white-10">
+                            <small class="text-muted d-block" style="font-size: 0.72rem;">2 SWIMMERS</small>
+                            <span class="text-primary fw-bold">15.0% OFF</span> / head
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">Coach Yield +70%</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-2.5 rounded-3 bg-black border border-white-10">
+                            <small class="text-muted d-block" style="font-size: 0.72rem;">3 SWIMMERS</small>
+                            <span class="text-primary fw-bold">23.3% OFF</span> / head
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">Coach Yield +130%</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-6 col-md-3 p-2.5 rounded-3 bg-black border border-white-10">
+                            <small class="text-muted d-block" style="font-size: 0.72rem;">4 SWIMMERS</small>
+                            <span class="text-primary fw-bold">30.0% OFF</span> / head
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">Coach Yield +180%</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-2.5 rounded-3 bg-black border border-white-10">
+                            <small class="text-muted d-block" style="font-size: 0.72rem;">5 SWIMMERS</small>
+                            <span class="text-primary fw-bold">36.0% OFF</span> / head
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">Coach Yield +220%</small>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Action Buttons -->
                 <div class="d-flex justify-content-center gap-3 flex-wrap">
                     <button type="button" class="btn btn-outline-light px-4 py-2.5 fw-semibold" onclick="togglePlanView('individual')">
-                        <i class="fa-solid fa-arrow-left me-1"></i> View Individual Plans
+                        <i class="fa-solid fa-arrow-left me-1"></i> Back to Pricing Cards
                     </button>
-                    <button type="button" class="btn btn-primary px-4 py-2.5 fw-bold" onclick="openQuickBookingModal('Monthly')">
-                        <i class="fa-solid fa-bolt me-1"></i> Book Group Coaching Now
+                    <button type="button" class="btn btn-primary px-4 py-2.5 fw-bold" onclick="openQuickBookingModal('Monthly', '', 2)">
+                        <i class="fa-solid fa-bolt me-1"></i> Book Group Coaching (2+ Swimmers)
                     </button>
                 </div>
             </div>
@@ -1231,8 +1456,223 @@
         margin-bottom: 0.25rem;
         font-family: var(--font-display, 'Outfit', sans-serif);
     }
+    /* Swimmer Cohort Selector Pills */
+    .swimmer-pill {
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.75);
+        padding: 0.45rem 1.15rem;
+        border-radius: 9999px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .swimmer-pill.active {
+        background: #ffffff;
+        color: #09090b;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    }
+    .swimmer-pill:not(.active):hover {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.08);
+    }
+    .monthly-days-btn.active {
+        background: var(--color-primary) !important;
+        color: #09090b !important;
+        font-weight: 700 !important;
+    }
 </style>
 <script>
+    let currentSwimmerCount = 1;
+    let currentMonthlyDays = 3;
+
+    function selectSwimmerCount(count) {
+        currentSwimmerCount = Math.max(1, Math.min(5, parseInt(count, 10) || 1));
+        
+        // Update pills
+        for (let i = 1; i <= 5; i++) {
+            const pill = document.getElementById('pill-swimmer-' + i);
+            if (pill) {
+                if (i === currentSwimmerCount) pill.classList.add('active');
+                else pill.classList.remove('active');
+            }
+        }
+
+        // Update cohort caption
+        const caption = document.getElementById('swimmer-cohort-caption');
+        if (caption && typeof PricingEngine !== 'undefined') {
+            const quote = PricingEngine.getPackageQuote('monthly_3d', currentSwimmerCount);
+            if (currentSwimmerCount === 1) {
+                caption.innerHTML = '<i class="fa-solid fa-user-check text-primary me-1"></i> Dedicated 1-on-1 personalized private instruction at your doorstep pool.';
+            } else {
+                caption.innerHTML = `👥 Small Cohort: <strong>${currentSwimmerCount} Swimmers</strong> &bull; <span class="text-primary fw-bold">${quote.savingsPerPersonPercent}% OFF</span> per swimmer &bull; Coach Yield +${quote.coachBonusPercent}%`;
+            }
+        }
+
+        updatePricingCardsUI();
+    }
+
+    function setMonthlyDays(days) {
+        currentMonthlyDays = days === 2 ? 2 : 3;
+        const btn2 = document.getElementById('monthly-days-btn-2');
+        const btn3 = document.getElementById('monthly-days-btn-3');
+        if (btn2 && btn3) {
+            if (currentMonthlyDays === 2) {
+                btn2.classList.add('active');
+                btn2.style.background = 'var(--color-primary)';
+                btn2.style.color = '#09090b';
+                btn2.style.fontWeight = '700';
+                btn3.classList.remove('active');
+                btn3.style.background = 'transparent';
+                btn3.style.color = '#a1a1aa';
+                btn3.style.fontWeight = 'normal';
+            } else {
+                btn3.classList.add('active');
+                btn3.style.background = 'var(--color-primary)';
+                btn3.style.color = '#09090b';
+                btn3.style.fontWeight = '700';
+                btn2.classList.remove('active');
+                btn2.style.background = 'transparent';
+                btn2.style.color = '#a1a1aa';
+                btn2.style.fontWeight = 'normal';
+            }
+        }
+        updatePricingCardsUI();
+    }
+
+    function updatePricingCardsUI() {
+        if (typeof PricingEngine === 'undefined') return;
+
+        const count = currentSwimmerCount;
+
+        // 1. Demo
+        const qDemo = PricingEngine.getPackageQuote('demo', count);
+        const demoAmt = document.getElementById('plan-demo-amount');
+        const demoBadge = document.getElementById('plan-demo-badge');
+        const demoSub = document.getElementById('plan-demo-subcaption');
+        if (demoAmt) demoAmt.innerText = qDemo.totalBatchPrice.toLocaleString('en-IN');
+        if (demoBadge) {
+            if (count > 1) {
+                demoBadge.innerText = `${qDemo.savingsPerPersonPercent}% OFF`;
+                demoBadge.style.display = 'inline-block';
+            } else {
+                demoBadge.style.display = 'none';
+            }
+        }
+        if (demoSub) {
+            if (count > 1) {
+                demoSub.innerText = `₹${qDemo.pricePerPerson.toLocaleString('en-IN')} / swimmer`;
+                demoSub.style.display = 'block';
+            } else {
+                demoSub.style.display = 'none';
+            }
+        }
+
+        // 2. Single Day
+        const qSingle = PricingEngine.getPackageQuote('single', count);
+        const singleAmt = document.getElementById('plan-single-amount');
+        const singleBadge = document.getElementById('plan-single-badge');
+        const singleSub = document.getElementById('plan-single-subcaption');
+        if (singleAmt) singleAmt.innerText = qSingle.totalBatchPrice.toLocaleString('en-IN');
+        if (singleBadge) {
+            if (count > 1) {
+                singleBadge.innerText = `${qSingle.savingsPerPersonPercent}% OFF`;
+                singleBadge.style.display = 'inline-block';
+            } else {
+                singleBadge.style.display = 'none';
+            }
+        }
+        if (singleSub) {
+            if (count > 1) {
+                singleSub.innerText = `₹${qSingle.pricePerPerson.toLocaleString('en-IN')} / swimmer`;
+                singleSub.style.display = 'block';
+            } else {
+                singleSub.style.display = 'none';
+            }
+        }
+
+        // 3. Monthly
+        const monthlyKey = currentMonthlyDays === 2 ? 'monthly_2d' : 'monthly_3d';
+        const qMonthly = PricingEngine.getPackageQuote(monthlyKey, count);
+        const monthlyAmt = document.getElementById('plan-monthly-amount');
+        const monthlyBadge = document.getElementById('plan-monthly-badge');
+        const monthlySub = document.getElementById('plan-monthly-subcaption');
+        const monthlyFreqLabel = document.getElementById('plan-monthly-freq-label');
+        if (monthlyAmt) monthlyAmt.innerText = qMonthly.totalBatchPrice.toLocaleString('en-IN');
+        if (monthlyBadge) {
+            if (count > 1) {
+                monthlyBadge.innerText = `${qMonthly.savingsPerPersonPercent}% OFF`;
+                monthlyBadge.style.display = 'inline-block';
+            } else {
+                monthlyBadge.style.display = 'none';
+            }
+        }
+        if (monthlySub) {
+            if (count > 1) {
+                monthlySub.innerText = `₹${qMonthly.pricePerPerson.toLocaleString('en-IN')} / swimmer`;
+                monthlySub.style.display = 'block';
+            } else {
+                monthlySub.style.display = 'none';
+            }
+        }
+        if (monthlyFreqLabel) {
+            monthlyFreqLabel.innerText = `${currentMonthlyDays} days / week structured training (${qMonthly.sessions} sess)`;
+        }
+
+        // 4. Customize
+        const customSub = document.getElementById('plan-custom-subcaption');
+        if (customSub) {
+            if (count > 1) {
+                customSub.innerText = `₹750/sess anchor rate • ${qDemo.multiplier.toFixed(2)}× cohort scaling (${qDemo.savingsPerPersonPercent}% OFF)`;
+            } else {
+                customSub.innerText = '₹750/sess anchor rate • Multipliers scale dynamically';
+            }
+        }
+
+        // 5. 3 Calendar Months
+        const q3m = PricingEngine.getPackageQuote('3_months', count);
+        const threeMoTotal = document.getElementById('plan-3months-total');
+        const threeMoSub = document.getElementById('plan-3months-subcaption');
+        const threeMoBadge = document.getElementById('plan-3months-badge');
+        if (threeMoTotal) threeMoTotal.innerText = `₹${q3m.totalBatchPrice.toLocaleString('en-IN')}`;
+        if (threeMoSub) {
+            threeMoSub.innerText = `₹${q3m.pricePerPerson.toLocaleString('en-IN')} / head (₹${q3m.costPerPersonPerSession}/sess)`;
+        }
+        if (threeMoBadge) {
+            threeMoBadge.innerText = count > 1 ? `36 SESSIONS • ${q3m.savingsPerPersonPercent}% OFF` : '36 SESSIONS • BEST VALUE';
+        }
+
+        // 6, 9, 12 Months
+        const sixMo = PricingEngine.getPackageQuote('6_months', count, { customBasePrice: 36000 });
+        const sixMoTotal = document.getElementById('plan-6months-total');
+        const sixMoSub = document.getElementById('plan-6months-subcaption');
+        if (sixMoTotal) sixMoTotal.innerText = `₹${sixMo.totalBatchPrice.toLocaleString('en-IN')}`;
+        if (sixMoSub) sixMoSub.innerText = `₹${sixMo.pricePerPerson.toLocaleString('en-IN')} / head`;
+
+        const nineMo = PricingEngine.getPackageQuote('9_months', count, { customBasePrice: 54000 });
+        const nineMoTotal = document.getElementById('plan-9months-total');
+        const nineMoSub = document.getElementById('plan-9months-subcaption');
+        if (nineMoTotal) nineMoTotal.innerText = `₹${nineMo.totalBatchPrice.toLocaleString('en-IN')}`;
+        if (nineMoSub) nineMoSub.innerText = `₹${nineMo.pricePerPerson.toLocaleString('en-IN')} / head`;
+
+        const twelveMo = PricingEngine.getPackageQuote('12_months', count, { customBasePrice: 72000 });
+        const twelveMoTotal = document.getElementById('plan-12months-total');
+        const twelveMoSub = document.getElementById('plan-12months-subcaption');
+        if (twelveMoTotal) twelveMoTotal.innerText = `₹${twelveMo.totalBatchPrice.toLocaleString('en-IN')}`;
+        if (twelveMoSub) twelveMoSub.innerText = `₹${twelveMo.pricePerPerson.toLocaleString('en-IN')} / head`;
+    }
+
+    function bookFromPricingCard(pkgKey) {
+        let pkgParam = pkgKey;
+        if (pkgKey === 'Monthly') pkgParam = 'Monthly';
+        else if (pkgKey === '3_months') pkgParam = '3_months';
+        openQuickBookingModal(pkgParam, '', currentSwimmerCount);
+    }
+
     function togglePlanView(view) {
         const indBtn = document.getElementById('toggle-individual');
         const grpBtn = document.getElementById('toggle-group');
@@ -1254,6 +1694,12 @@
             if (indView) indView.style.display = 'block';
         }
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof PricingEngine !== 'undefined') {
+            updatePricingCardsUI();
+        }
+    });
 </script>
 
 {% if recent_reviews %}
@@ -1564,20 +2010,21 @@
                                 <input type="text" name="persons" id="qbPersons" class="form-control text-center fw-bold" value="1" readonly style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); color: white;">
                                 <button type="button" class="btn btn-outline-secondary" id="qbBtnPlus" style="border-color: rgba(255,255,255,0.1); color: white;">+</button>
                             </div>
-                            <span class="text-muted small" id="qbGroupHint" style="font-size: 0.75rem;">(1-5 persons, group discounts up to 21%)</span>
+                            <span class="text-muted small" id="qbGroupHint" style="font-size: 0.75rem;">(1-5 persons, group scaling up to 36% OFF)</span>
                         </div>
                     </div>
 
                     <div class="col-12 col-md-6">
                         <div class="d-flex flex-column align-items-md-end">
-                            <label class="form-label text-muted small fw-semibold mb-1">Estimated Total Fee</label>
+                            <label class="form-label text-muted small fw-semibold mb-1">Total Batch Payable Fee</label>
                             <div class="d-flex align-items-center gap-2">
                                 <div class="p-2 px-3 rounded" style="background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.3); font-size: 1.35rem; font-weight: 800; color: var(--color-primary);">
-                                    <span id="qbFeeDisplay">₹9,000</span>
+                                    <span id="qbFeeDisplay">₹7,500</span>
                                 </div>
                             </div>
                             <span class="text-muted small mt-1" id="qbFeeNote" style="font-size: 0.75rem;">Inclusive of all pool sessions</span>
-                            <input type="hidden" name="fee" id="qbFeeInput" value="9000">
+                            <div id="qbPerSwimmerShare" class="text-primary small fw-semibold mt-1" style="display: none; font-size: 0.8rem;"></div>
+                            <input type="hidden" name="fee" id="qbFeeInput" value="7500">
                         </div>
                     </div>
                 </div>
@@ -1603,6 +2050,10 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    window.SWIMTRACK_PRICING_CONFIG = {{ pricing_config|tojson|safe if pricing_config else '{}' }};
+</script>
+<script src="{{ url_for('static', filename='js/pricingEngine.js') }}"></script>
 <script>
     window.allBookingsData = {{ all_bookings|default([])|tojson|safe }};
     let myModal;
@@ -1853,7 +2304,7 @@
     // ==========================================
     let qbModalInstance;
 
-    function openQuickBookingModal(preferredPackage = 'Monthly', preferredCoach = '') {
+    function openQuickBookingModal(preferredPackage = 'Monthly', preferredCoach = '', preferredPersons = null) {
         const modalEl = document.getElementById('quickBookingModal');
         if (!modalEl) return;
         qbModalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
@@ -1861,6 +2312,7 @@
         const pkgSelect = document.getElementById('qbPackage');
         const coachSelect = document.getElementById('qbCoach');
         const startDateInput = document.getElementById('qbStartDate');
+        const personsInput = document.getElementById('qbPersons');
 
         if (pkgSelect && preferredPackage) {
             pkgSelect.value = preferredPackage;
@@ -1868,6 +2320,10 @@
 
         if (coachSelect && preferredCoach) {
             coachSelect.value = preferredCoach;
+        }
+
+        if (personsInput && preferredPersons !== null && preferredPersons !== undefined) {
+            personsInput.value = Math.max(1, Math.min(5, parseInt(preferredPersons, 10) || 1));
         }
 
         // Reset day checkboxes so user explicitly picks their days
@@ -2103,16 +2559,6 @@
         if (!qbPackage) return;
         const pkg = qbPackage.value;
         const persons = parseInt(qbPersons?.value || 1, 10);
-        const discountMap = { 1: 0, 2: 6, 3: 11, 4: 16, 5: 21 };
-        const discountPercent = discountMap[persons] || 0;
-
-        const groupHint = document.getElementById('qbGroupHint');
-        if (groupHint) {
-            groupHint.innerText = persons > 1 
-                ? `(${persons} swimmers • ${discountPercent}% group discount applied)`
-                : `(1-5 persons, group discounts up to 21%)`;
-        }
-
         const checkedDays = updateQbSelectedDaysString();
 
         // Visibility & Date calculation
@@ -2145,84 +2591,126 @@
         }
 
         const feeNote = document.getElementById('qbFeeNote');
-        let fee = 0;
+        const perSwimmerShareEl = document.getElementById('qbPerSwimmerShare');
+        const groupHint = document.getElementById('qbGroupHint');
 
-        if (pkg === 'Demo') {
-            fee = 0;
-            if (feeNote) {
-                feeNote.innerText = 'Free 1-on-1 trial session (₹0)';
-                feeNote.className = 'text-success small mt-1 fw-bold';
+        let fee = 0;
+        let quote = null;
+
+        if (typeof PricingEngine !== 'undefined') {
+            if (pkg === 'Demo') {
+                quote = PricingEngine.getPackageQuote('demo', persons);
+                fee = quote.totalBatchPrice;
+                if (feeNote) {
+                    feeNote.innerText = persons > 1
+                        ? `Trial assessment for ${persons} swimmers (${quote.sessions} session)`
+                        : 'Dedicated 1-on-1 trial session (1 session)';
+                    feeNote.className = 'text-muted small mt-1';
+                }
+            } else if (pkg === 'Single') {
+                quote = PricingEngine.getPackageQuote('single', persons);
+                fee = quote.totalBatchPrice;
+                if (feeNote) {
+                    feeNote.innerText = persons > 1
+                        ? `1-hour dedicated coaching for ${persons} swimmers`
+                        : '1-hour dedicated coaching session';
+                    feeNote.className = 'text-muted small mt-1';
+                }
+            } else if (pkg === 'Monthly') {
+                if (checkedDays.length === 0) {
+                    fee = 0;
+                    if (feeNote) {
+                        feeNote.innerText = '⚠️ Please select 2 or 3 training days above';
+                        feeNote.className = 'text-warning small mt-1 fw-bold';
+                    }
+                } else if (checkedDays.length === 1) {
+                    fee = 0;
+                    if (feeNote) {
+                        feeNote.innerText = '⚠️ Minimum 2 days required for Monthly';
+                        feeNote.className = 'text-warning small mt-1 fw-bold';
+                    }
+                } else if (checkedDays.length > 3) {
+                    fee = 0;
+                    if (feeNote) {
+                        feeNote.innerText = '⚠️ Monthly allows max 3 days (use Custom for more)';
+                        feeNote.className = 'text-warning small mt-1 fw-bold';
+                    }
+                } else {
+                    const pkgKey = checkedDays.length === 2 ? 'monthly_2d' : 'monthly_3d';
+                    quote = PricingEngine.getPackageQuote(pkgKey, persons);
+                    fee = quote.totalBatchPrice;
+                    if (feeNote) {
+                        feeNote.innerText = `${checkedDays.length} days/week • ${quote.sessions} sessions total month coaching`;
+                        feeNote.className = 'text-muted small mt-1';
+                    }
+                }
+            } else if (pkg === 'Custom') {
+                let sessionCount = 0;
+                if (qbStartDate?.value && qbEndDate?.value && checkedDays.length > 0) {
+                    sessionCount = calculateCustomSessionCount(qbStartDate.value, qbEndDate.value, checkedDays);
+                }
+                if (sessionCount === 0) {
+                    fee = 0;
+                    if (feeNote) {
+                        feeNote.innerText = 'Select dates and training days to calculate fee';
+                        feeNote.className = 'text-warning small mt-1';
+                    }
+                } else if (sessionCount > 14) {
+                    fee = 0;
+                    if (feeNote) {
+                        feeNote.innerText = `${sessionCount} sessions (Requires trainer discussion)`;
+                        feeNote.className = 'text-warning small mt-1';
+                    }
+                } else if (sessionCount >= 12 && sessionCount <= 14) {
+                    quote = PricingEngine.getPackageQuote('monthly_3d', persons);
+                    fee = quote.totalBatchPrice;
+                    if (feeNote) {
+                        feeNote.innerText = `${sessionCount} sessions • Monthly equivalent rate`;
+                        feeNote.className = 'text-muted small mt-1';
+                    }
+                } else {
+                    const customBase = sessionCount * 750;
+                    quote = PricingEngine.getPackageQuote('custom', persons, { customBasePrice: customBase, sessionCount: sessionCount });
+                    fee = quote.totalBatchPrice;
+                    if (feeNote) {
+                        feeNote.innerText = `${sessionCount} sessions @ ₹750/session anchor rate`;
+                        feeNote.className = 'text-muted small mt-1';
+                    }
+                }
+            } else if (pkg === '3_months') {
+                quote = PricingEngine.getPackageQuote('3_months', persons);
+                fee = quote.totalBatchPrice;
+                if (feeNote) {
+                    feeNote.innerText = '3 Calendar Months • 36 sessions (₹500/sess loyalty rate)';
+                    feeNote.className = 'text-muted small mt-1';
+                }
+            } else if (['6_months', '9_months', '12_months'].includes(pkg)) {
+                const monthsMap = { '6_months': 6, '9_months': 9, '12_months': 12 };
+                const mCount = monthsMap[pkg] || 6;
+                const ltBase = 6000 * mCount;
+                quote = PricingEngine.getPackageQuote(pkg, persons, { customBasePrice: ltBase });
+                fee = quote.totalBatchPrice;
+                if (feeNote) {
+                    feeNote.innerText = `${mCount} Months Long-Term Training Plan`;
+                    feeNote.className = 'text-muted small mt-1';
+                }
             }
-        } else if (pkg === 'Single') {
-            fee = Math.round((750 * persons) * (1 - discountPercent / 100));
-            if (feeNote) {
-                feeNote.innerText = '1-hour dedicated coaching session';
-                feeNote.className = 'text-muted small mt-1';
-            }
-        } else if (pkg === 'Monthly') {
-            if (checkedDays.length === 0) {
-                fee = 0;
-                if (feeNote) {
-                    feeNote.innerText = '⚠️ Please select 2 or 3 training days above';
-                    feeNote.className = 'text-warning small mt-1 fw-bold';
-                }
-            } else if (checkedDays.length === 1) {
-                fee = 0;
-                if (feeNote) {
-                    feeNote.innerText = '⚠️ Minimum 2 days required for Monthly';
-                    feeNote.className = 'text-warning small mt-1 fw-bold';
-                }
-            } else if (checkedDays.length > 3) {
-                fee = 0;
-                if (feeNote) {
-                    feeNote.innerText = '⚠️ Monthly allows max 3 days (use Custom for more)';
-                    feeNote.className = 'text-warning small mt-1 fw-bold';
-                }
+        }
+
+        if (groupHint) {
+            if (quote && quote.isGroup) {
+                groupHint.innerText = `(${persons} swimmers • ${quote.savingsPerPersonPercent}% group discount applied)`;
             } else {
-                const baseMonthly = checkedDays.length === 2 ? 6000 : 9000;
-                fee = Math.round((baseMonthly * persons) * (1 - discountPercent / 100));
-                if (feeNote) {
-                    feeNote.innerText = `${checkedDays.length} days/week • Full month coaching`;
-                    feeNote.className = 'text-muted small mt-1';
-                }
+                groupHint.innerText = `(1-5 persons, group scaling up to 36% OFF)`;
             }
-        } else if (pkg === 'Custom') {
-            let sessionCount = 0;
-            if (qbStartDate?.value && qbEndDate?.value && checkedDays.length > 0) {
-                sessionCount = calculateCustomSessionCount(qbStartDate.value, qbEndDate.value, checkedDays);
-            }
-            if (sessionCount === 0) {
-                fee = 0;
-                if (feeNote) {
-                    feeNote.innerText = 'Select dates and training days to calculate fee';
-                    feeNote.className = 'text-warning small mt-1';
-                }
-            } else if (sessionCount > 14) {
-                fee = 0;
-                if (feeNote) {
-                    feeNote.innerText = `${sessionCount} sessions (Requires trainer discussion)`;
-                    feeNote.className = 'text-warning small mt-1';
-                }
-            } else if (sessionCount >= 12 && sessionCount <= 14) {
-                fee = Math.round((9000 * persons) * (1 - discountPercent / 100));
-                if (feeNote) {
-                    feeNote.innerText = `${sessionCount} sessions • Monthly equivalent rate`;
-                    feeNote.className = 'text-muted small mt-1';
-                }
+        }
+
+        if (perSwimmerShareEl) {
+            if (quote && quote.isGroup && fee > 0) {
+                perSwimmerShareEl.style.display = 'block';
+                perSwimmerShareEl.innerHTML = `<i class="fa-solid fa-users text-primary me-1"></i> ₹${quote.pricePerPerson.toLocaleString('en-IN')} / swimmer &bull; <span class="text-success">${quote.savingsPerPersonPercent}% OFF</span>`;
             } else {
-                fee = Math.round((sessionCount * 750 * persons) * (1 - discountPercent / 100));
-                if (feeNote) {
-                    feeNote.innerText = `${sessionCount} sessions @ ₹750/session`;
-                    feeNote.className = 'text-muted small mt-1';
-                }
-            }
-        } else if (['3_months', '6_months', '9_months', '12_months'].includes(pkg)) {
-            const ltMap = { '3_months': 22950, '6_months': 43200, '9_months': 60750, '12_months': 75600 };
-            const baseLt = ltMap[pkg] || 22950;
-            fee = Math.round((baseLt * persons) * (1 - discountPercent / 100));
-            if (feeNote) {
-                feeNote.innerText = 'Long-term discounted training plan';
-                feeNote.className = 'text-muted small mt-1';
+                perSwimmerShareEl.style.display = 'none';
             }
         }
 

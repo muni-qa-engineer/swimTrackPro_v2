@@ -610,6 +610,63 @@ def toggle_promotion():
     return redirect(url_for("index"))
 
 
+def get_pricing_quote_api():
+    """
+    Decoupled pricing quote API endpoint.
+    Returns calculated batch fee, per-person fee, discount %, and coach yield.
+    """
+    from services.pricing_service import get_package_quote
+    data = request.get_json(silent=True) or {}
+    package = request.args.get("package") or request.form.get("package") or data.get("package", "monthly_3d")
+    persons = request.args.get("persons") or request.args.get("swimmer_count") or request.form.get("persons") or data.get("persons", 1)
+    session_count = request.args.get("session_count") or request.form.get("session_count") or data.get("session_count")
+    weekly_days = request.args.get("weekly_days") or request.form.get("weekly_days") or data.get("weekly_days")
+
+    quote = get_package_quote(
+        package_key=package,
+        swimmer_count=persons,
+        session_count=session_count,
+        weekly_days=weekly_days
+    )
+    return jsonify({"success": True, "quote": quote})
+
+
+def get_pricing_config_api():
+    """
+    Returns active pricing configuration (base rates, multipliers, discounts).
+    """
+    from services.pricing_service import get_pricing_config_dict
+    return jsonify({"success": True, "config": get_pricing_config_dict()})
+
+
+@admin_required("Only admin can update pricing configuration.")
+def admin_update_pricing():
+    """
+    Admin endpoint to dynamically update base prices without code rewrites.
+    """
+    if request.method == "POST":
+        from services.pricing_service import update_base_prices, get_base_prices
+        data = request.get_json(silent=True) or request.form
+        base_prices = {}
+        for key in ["demo", "single", "monthly_2d", "monthly_3d", "3_months"]:
+            if key in data and str(data.get(key)).strip() != "":
+                try:
+                    base_prices[key] = int(float(data.get(key)))
+                except (ValueError, TypeError):
+                    pass
+
+        if base_prices:
+            update_base_prices(base_prices)
+            current_prices = get_base_prices()
+            msg = "Base pricing rates updated successfully."
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
+                return jsonify({"success": True, "message": msg, "base_prices": current_prices})
+            flash(msg, "success")
+        else:
+            flash("No valid base price values provided.", "danger")
+    return redirect(url_for("index"))
+
+
 @admin_required("Only admin can edit trainers.")
 def edit_trainer(username):
     if request.method == "POST":
@@ -1232,5 +1289,23 @@ def register_general_routes(app):
         "/admin/carousel/delete/<int:img_id>",
         endpoint="delete_carousel_image",
         view_func=delete_carousel_image,
+        methods=["POST"]
+    )
+    app.add_url_rule(
+        "/api/pricing/quote",
+        endpoint="get_pricing_quote_api",
+        view_func=get_pricing_quote_api,
+        methods=["GET", "POST"]
+    )
+    app.add_url_rule(
+        "/api/pricing/config",
+        endpoint="get_pricing_config_api",
+        view_func=get_pricing_config_api,
+        methods=["GET"]
+    )
+    app.add_url_rule(
+        "/admin/pricing/update",
+        endpoint="admin_update_pricing",
+        view_func=admin_update_pricing,
         methods=["POST"]
     )

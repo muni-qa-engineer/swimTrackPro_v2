@@ -106,9 +106,6 @@ def book():
 
     fee = calculate_discounted_fee(package, persons, session_count)
 
-    if package == 'Demo':
-        fee = 0
-
     # V0044.0 - Custom package fee is calculated by the frontend fee engine.
     if package == 'Custom':
         try:
@@ -321,8 +318,8 @@ def book():
         "trainer_username": trainer_username,
     }
 
-    # For Demo class or existing logged-in users, create swimmer if needed
-    is_free_or_demo = (int(fee) == 0 or package == 'Demo')
+    # For 0 fee class or existing logged-in users, create swimmer if needed
+    is_free_or_demo = (int(fee) == 0)
     if is_free_or_demo or session.get('user_name'):
         existing_swimmer = next(
             (
@@ -416,8 +413,8 @@ def book():
     conn.commit()
     conn.close()
 
-    # If demo class or 0 fee, auto-confirm booking and create account immediately
-    if int(fee) == 0 or package == 'Demo':
+    # If 0 fee booking, auto-confirm booking and create account immediately
+    if int(fee) == 0:
         if not session.get('user_name'):
             session['role'] = 'guest'
             session['user_name'] = owner_name
@@ -597,8 +594,6 @@ def update_booking(booking_id):
         )
 
     fee = calculate_discounted_fee(package, persons, session_count)
-    if package == 'Demo':
-        fee = 0
 
     # V0044.0 - Custom package fee is calculated by the frontend fee engine.
     if package == 'Custom':
@@ -1729,9 +1724,7 @@ def renew_booking():
         
     persons = original.get('persons', 1)
     fee = calculate_discounted_fee(package, persons, session_count)
-    if package == 'Demo':
-        fee = 0
-    elif package == 'Custom':
+    if package == 'Custom':
         if fee == 0:
             fee = original.get('fee', 0)
 

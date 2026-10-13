@@ -183,125 +183,121 @@
     };
 
     const discountPercent = discountMap[persons] || 0;
-    let actualAmount = 0;
+    let finalFee = 0;
+    let quote = null;
 
-    if (pkg.value === 'Demo') {
-      actualAmount = 0 * persons;
-    }
-    else if (pkg.value === 'Single') {
-      actualAmount = 750 * persons;
-    }
-    else if (['Monthly', '3_months', '6_months', '9_months', '12_months'].includes(pkg.value)) {
-      if (pkg.value === 'Monthly') {
-          if (selected.length < 2 || selected.length > 3) {
-            feeInput.value = '';
-            feeInput.placeholder = 'Select 2 or 3 class days';
-            return;
-          }
-          if (selected.length === 2) {
-            actualAmount = 6000 * persons;
-          } else {
-            actualAmount = 9000 * persons;
-          }
-      } else {
-          if (selected.length !== 3) {
-            feeInput.value = '';
-            feeInput.placeholder = 'Select exactly 3 class days';
-            return;
-          }
-          const isGroup = persons > 1;
-          const category = isGroup ? 'group' : 'individual';
-          const pricingData = window.LONG_TERM_PACKAGES && window.LONG_TERM_PACKAGES[category] && window.LONG_TERM_PACKAGES[category][pkg.value];
-          if (pricingData) {
-              actualAmount = Math.round((pricingData.final_price * persons * 100) / (100 - discountPercent));
-          } else {
-              actualAmount = 0;
-          }
+    if (typeof PricingEngine !== 'undefined') {
+      if (pkg.value === 'Demo') {
+        quote = PricingEngine.getPackageQuote('demo', persons);
+        finalFee = quote.totalBatchPrice;
       }
-    }
-    else if (pkg.value === 'Custom') {
-      const startDateInput = document.querySelector('input[name="date"]');
-      const endDateInput = document.querySelector('input[name="end_date"]');
-
-      if (!startDateInput.value || !endDateInput.value || selected.length === 0) {
-        feeInput.value = 0;
-        feeInput.placeholder = '';
-        return;
+      else if (pkg.value === 'Single') {
+        quote = PricingEngine.getPackageQuote('single', persons);
+        finalFee = quote.totalBatchPrice;
       }
-
-      const start = new Date(startDateInput.value + 'T00:00:00');
-      const end = new Date(endDateInput.value + 'T00:00:00');
-
-      const durationDays =
-        Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
-
-      const dayMap = {
-        'Sunday': 0,
-        'Monday': 1,
-        'Tuesday': 2,
-        'Wednesday': 3,
-        'Thursday': 4,
-        'Friday': 5,
-        'Saturday': 6
-      };
-
-      const selectedDayIndexes = selected.map(day => dayMap[day]);
-
-      let totalClasses = 0;
-      const current = new Date(start);
-
-      while (current <= end) {
-        if (selectedDayIndexes.includes(current.getDay())) {
-          totalClasses++;
+      else if (pkg.value === 'Monthly') {
+        if (selected.length < 2 || selected.length > 3) {
+          feeInput.value = '';
+          feeInput.placeholder = 'Select 2 or 3 class days';
+          const perSwimmerEl = document.getElementById('bookingPerSwimmerShare');
+          if (perSwimmerEl) perSwimmerEl.style.display = 'none';
+          return;
         }
-        current.setDate(current.getDate() + 1);
+        const pkgKey = selected.length === 2 ? 'monthly_2d' : 'monthly_3d';
+        quote = PricingEngine.getPackageQuote(pkgKey, persons);
+        finalFee = quote.totalBatchPrice;
       }
+      else if (pkg.value === '3_months') {
+        if (selected.length !== 3) {
+          feeInput.value = '';
+          feeInput.placeholder = 'Select exactly 3 class days';
+          const perSwimmerEl = document.getElementById('bookingPerSwimmerShare');
+          if (perSwimmerEl) perSwimmerEl.style.display = 'none';
+          return;
+        }
+        quote = PricingEngine.getPackageQuote('3_months', persons);
+        finalFee = quote.totalBatchPrice;
+      }
+      else if (['6_months', '9_months', '12_months'].includes(pkg.value)) {
+        if (selected.length !== 3) {
+          feeInput.value = '';
+          feeInput.placeholder = 'Select exactly 3 class days';
+          const perSwimmerEl = document.getElementById('bookingPerSwimmerShare');
+          if (perSwimmerEl) perSwimmerEl.style.display = 'none';
+          return;
+        }
+        const mCount = { '6_months': 6, '9_months': 9, '12_months': 12 }[pkg.value] || 6;
+        quote = PricingEngine.getPackageQuote(pkg.value, persons, { customBasePrice: 6000 * mCount });
+        finalFee = quote.totalBatchPrice;
+      }
+      else if (pkg.value === 'Custom') {
+        const startDateInput = document.querySelector('input[name="date"]');
+        const endDateInput = document.querySelector('input[name="end_date"]');
 
-      const monthlyCustomFees = {
-        1: 3000,
-        2: 6000,
-        3: 9000,
-        4: 11000,
-        5: 12000
-      };
+        if (!startDateInput.value || !endDateInput.value || selected.length === 0) {
+          feeInput.value = 0;
+          feeInput.placeholder = '';
+          const perSwimmerEl = document.getElementById('bookingPerSwimmerShare');
+          if (perSwimmerEl) perSwimmerEl.style.display = 'none';
+          return;
+        }
 
-      const twoMonthCustomFees = {
-        1: 6000,
-        2: 12000,
-        3: 18000,
-        4: 22000,
-        5: 24000
-      };
+        const start = new Date(startDateInput.value + 'T00:00:00');
+        const end = new Date(endDateInput.value + 'T00:00:00');
 
-      const selectedDaysPerWeek = selected.length;
+        const durationDays =
+          Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
 
-      if (durationDays >= 1 && durationDays <= 23) {
-        actualAmount = totalClasses * 750 * persons;
-      }
-      else if (durationDays >= 24 && durationDays <= 30) {
-        actualAmount =
-          (monthlyCustomFees[selectedDaysPerWeek] || 0) * persons;
-      }
-      else if (durationDays >= 31 && durationDays <= 53) {
-        actualAmount = totalClasses * 650 * persons;
-      }
-      else if (durationDays >= 54 && durationDays <= 60) {
-        actualAmount =
-          (twoMonthCustomFees[selectedDaysPerWeek] || 0) * persons;
-      }
-      else {
-        feeInput.value = '';
-        feeInput.placeholder = 'Maximum 60 days allowed';
-        return;
+        if (durationDays > 60) {
+          feeInput.value = '';
+          feeInput.placeholder = 'Maximum 60 days allowed';
+          const perSwimmerEl = document.getElementById('bookingPerSwimmerShare');
+          if (perSwimmerEl) perSwimmerEl.style.display = 'none';
+          return;
+        }
+
+        const dayMap = {
+          'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3,
+          'Thursday': 4, 'Friday': 5, 'Saturday': 6
+        };
+        const selectedDayIndexes = selected.map(day => dayMap[day]);
+        let totalClasses = 0;
+        const current = new Date(start);
+        while (current <= end) {
+          if (selectedDayIndexes.includes(current.getDay())) {
+            totalClasses++;
+          }
+          current.setDate(current.getDate() + 1);
+        }
+
+        if (totalClasses > 14) {
+          feeInput.value = '';
+          feeInput.placeholder = `${totalClasses} sessions (Requires trainer discussion)`;
+          const perSwimmerEl = document.getElementById('bookingPerSwimmerShare');
+          if (perSwimmerEl) perSwimmerEl.style.display = 'none';
+          return;
+        } else if (totalClasses >= 12 && totalClasses <= 14) {
+          quote = PricingEngine.getPackageQuote('monthly_3d', persons);
+          finalFee = quote.totalBatchPrice;
+        } else {
+          quote = PricingEngine.getPackageQuote('custom', persons, { customBasePrice: totalClasses * 750 });
+          finalFee = quote.totalBatchPrice;
+        }
       }
     }
-
-    const finalFee = Math.round(
-      actualAmount * (100 - discountPercent) / 100
-    );
 
     feeInput.placeholder = '';
     feeInput.value = finalFee;
+
+    const perSwimmerEl = document.getElementById('bookingPerSwimmerShare');
+    if (perSwimmerEl) {
+      if (quote && quote.isGroup && finalFee > 0) {
+        perSwimmerEl.style.display = 'block';
+        perSwimmerEl.innerHTML = `<i class="fa-solid fa-users me-1"></i> ₹${quote.pricePerPerson.toLocaleString('en-IN')} / swimmer &bull; ${quote.savingsPerPersonPercent}% group savings applied`;
+      } else {
+        perSwimmerEl.style.display = 'none';
+      }
+    }
   }
 
 

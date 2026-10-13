@@ -8,6 +8,7 @@ from services.email_service import (
 )
 from services.settings_service import get_setting
 from services.dashboard_service import get_all_packages
+from services.pricing_service import get_pricing_config_dict
 import json
 from swimtrackpro.auth import login_required
 from swimtrackpro.routes.bookings import check_and_perform_auto_resumes
@@ -156,7 +157,8 @@ def register_page_routes(app, *, get_pg_connection, load_data):
             renew_booking=renew_booking,
             packages=packages,
             preselected_package=preselected_package,
-            packages_json=json.dumps(packages)
+            packages_json=json.dumps(packages),
+            pricing_config=get_pricing_config_dict()
         )
 
     @login_required

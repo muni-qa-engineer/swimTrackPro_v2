@@ -10,6 +10,7 @@ from services.dashboard_service import (
 )
 from swimtrackpro.runtime import get_pg_connection, load_data
 from swimtrackpro.routes.bookings import check_and_perform_auto_resumes
+from services.pricing_service import get_pricing_config_dict
 
 def index():
     if 'user_name' not in session:
@@ -85,7 +86,15 @@ def index():
             if b.get('payment_request') != 'unconfirmed' and b.get('status') != 'unconfirmed'
         ]
 
-        return render_template('login.html', pkg=packages, coaches=coaches_list, carousel_images=carousel_images, recent_reviews=recent_reviews, all_bookings=active_bookings)
+        return render_template(
+            'login.html',
+            pkg=packages,
+            coaches=coaches_list,
+            carousel_images=carousel_images,
+            recent_reviews=recent_reviews,
+            all_bookings=active_bookings,
+            pricing_config=get_pricing_config_dict()
+        )
 
     
     check_and_perform_auto_resumes()
