@@ -44,8 +44,8 @@ def delete_booking(booking_id):
         booking_trainer = (row[8] or '').strip().lower()
 
         is_coach_authorized = (
-            (bool(trainer_user) and booking_trainer == trainer_user) or
-            (bool(trainer_name) and booking_trainer == trainer_name) or
+            (bool(trainer_user) and (booking_trainer == trainer_user or trainer_user in booking_trainer or booking_trainer in trainer_user)) or
+            (bool(trainer_name) and (booking_trainer == trainer_name or trainer_name in booking_trainer or booking_trainer in trainer_name)) or
             booking_trainer in ('', 'asdf', 'unassigned') or
             not bool(booking_trainer)
         )
@@ -74,7 +74,9 @@ def delete_booking(booking_id):
             b_student == current_user or
             b_created_by == current_user or
             current_user in b_owner_name or
-            b_owner_name in current_user
+            b_owner_name in current_user or
+            current_user in b_student or
+            b_student in current_user
         )
 
         if not (phone_match or name_match):

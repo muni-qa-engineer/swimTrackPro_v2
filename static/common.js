@@ -76,6 +76,14 @@ function restoreScrollPosition() {
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('form').forEach(form => {
         form.addEventListener('submit', function(e) {
+            // If submission was already canceled or default prevented by confirmation, do nothing
+            if (e.defaultPrevented) {
+                return;
+            }
+            // Skip forms with custom delete or confirmation handlers
+            if (this.classList.contains('delete-booking-form') || this.classList.contains('no-loading-spinner')) {
+                return;
+            }
             // Check if form is valid before disabling button (if HTML5 validation is used)
             if (this.checkValidity && !this.checkValidity()) {
                 return;

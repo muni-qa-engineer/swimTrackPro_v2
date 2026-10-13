@@ -684,36 +684,22 @@
         }
         
         function handleAnimatedDelete(event, formElem) {
-            const btn = formElem.querySelector('button[type="submit"]');
-            if (!btn) return true;
+            const btn = formElem ? formElem.querySelector('button[type="submit"]') : null;
             
-            if (btn.dataset.confirmed !== 'true') {
-                event.preventDefault();
-                btn.dataset.confirmed = 'true';
-                
-                if (!btn.dataset.originalHtml) {
-                    btn.dataset.originalHtml = btn.innerHTML;
+            const confirmed = window.confirm('Are you sure you want to delete this? This action cannot be undone.');
+            if (!confirmed) {
+                if (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
                 }
-                
-                btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Confirm';
-                
-                // Keep original classes but ensure it looks like a warning/danger state if needed
-                // We'll just rely on the text change to "Confirm"
-                
-                clearTimeout(btn.resetTimer);
-                btn.resetTimer = setTimeout(() => {
-                    if (btn.dataset.confirmed === 'true') {
-                        btn.dataset.confirmed = 'false';
-                        btn.innerHTML = btn.dataset.originalHtml;
-                    }
-                }, 3000);
-                
                 return false;
             }
             
-            // Proceed with submission
-            btn.style.pointerEvents = 'none';
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>...';
+            if (btn) {
+                btn.dataset.isSubmitting = 'true';
+                btn.style.pointerEvents = 'none';
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Deleting...';
+            }
             return true;
         }
     </script>
