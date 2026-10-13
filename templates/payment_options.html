@@ -48,16 +48,7 @@
         </div>
     </div>
     <div class="row justify-content-center mt-2" id="paymentMainContent">
-        <div class="col-12 col-md-8 col-lg-6 animate-slide-up position-relative">
-            
-            <!-- Top Corner 'X' Danger Cancel Button -->
-            <div class="position-absolute" style="top: 0px; right: 12px; z-index: 10;">
-                <form action="/booking/cancel/{{ booking.id }}" method="POST" class="m-0" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
-                    <button type="submit" class="btn btn-outline-danger rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 36px; height: 36px; border-width: 1.5px; background: rgba(239, 68, 68, 0.08); color: #ef4444; transition: all 0.2s;" title="Cancel & Discard Booking" aria-label="Cancel & Discard Booking">
-                        <i class="fa-solid fa-xmark fs-5"></i>
-                    </button>
-                </form>
-            </div>
+        <div class="col-12 col-md-8 col-lg-6 animate-slide-up">
 
             <!-- Header Section -->
             <div class="text-center mb-4">
