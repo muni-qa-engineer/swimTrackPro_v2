@@ -170,7 +170,7 @@
     }
     
     /* Modal Login Styling */
-    .modal-content {
+    #loginModal .modal-content {
         background: rgba(24, 24, 27, 0.95) !important;
         backdrop-filter: blur(20px);
         border: 1px solid rgba(255, 255, 255, 0.1);
@@ -1535,6 +1535,18 @@
 <!-- Compact 3-Section 60s Booking Flow         -->
 <!-- ========================================== -->
 <style>
+  #quickBookingModal .modal-content {
+    background: #ffffff !important;
+    border-radius: 22px !important;
+    box-shadow: 0 25px 60px -15px rgba(0,0,0,0.55) !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #0f172a !important;
+  }
+  #quickBookingModal .modal-header,
+  #quickBookingModal .modal-body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
   #quickBookingModal .qb-input {
     background-color: #f1f5f9 !important;
     border: 1px solid #cbd5e1 !important;
@@ -1572,26 +1584,38 @@
   #quickBookingModal .qb-section-title {
     font-size: 0.85rem;
     font-weight: 800;
-    color: #0f172a;
+    color: #0f172a !important;
     letter-spacing: 0.5px;
     margin: 0;
+  }
+  #quickBookingModal h4,
+  #quickBookingModal .modal-title {
+    color: #0f172a !important;
+    font-weight: 800 !important;
+  }
+  #quickBookingModal p {
+    color: #475569 !important;
+  }
+  #quickBookingModal .btn-close {
+    filter: none !important;
+    opacity: 0.7 !important;
   }
 </style>
 
 <div class="modal fade" id="quickBookingModal" tabindex="-1" aria-labelledby="quickBookingModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
-    <div class="modal-content" style="background: #ffffff; border-radius: 22px; box-shadow: 0 25px 60px -15px rgba(0,0,0,0.45); border: 1px solid #e2e8f0; color: #0f172a;">
+    <div class="modal-content">
       
       <!-- Header -->
       <div class="modal-header border-0 pb-1 pt-3 px-3 px-sm-4 d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center gap-2">
           <span style="font-size: 1.75rem; line-height: 1;">🏊‍♂️</span>
           <div>
-            <h4 class="mb-0" id="quickBookingModalLabel" style="font-weight: 800; font-size: 1.25rem; color: #0f172a;">Poolside Booking</h4>
-            <p class="mb-0" style="color: #475569; font-size: 0.82rem; font-weight: 500;">Book in 60s</p>
+            <h4 class="mb-0" id="quickBookingModalLabel" style="font-size: 1.25rem;">Poolside Booking</h4>
+            <p class="mb-0" style="font-size: 0.82rem; font-weight: 500;">Book in 60s</p>
           </div>
         </div>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: none; opacity: 0.65;"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
       <div style="border-bottom: 1px solid #e2e8f0; margin: 0.25rem 1rem 0;"></div>
@@ -1613,11 +1637,11 @@
             <div class="row g-2 mb-2">
               <div class="col-6">
                 <label class="qb-label">Full Name<span class="text-danger">*</span></label>
-                <input type="text" name="student" id="qbStudent" class="form-control qb-input" placeholder="e.g., Rahul" required>
+                <input type="text" name="student" id="qbStudent" class="form-control qb-input" placeholder="e.g., Rahul" value="{{ session.get('user_name', '') }}" required>
               </div>
               <div class="col-6">
                 <label class="qb-label">Mobile Number<span class="text-danger">*</span></label>
-                <input type="tel" name="phone" id="qbPhone" class="form-control qb-input" placeholder="10-digit number" maxlength="10" required autocomplete="tel">
+                <input type="tel" name="phone" id="qbPhone" class="form-control qb-input" placeholder="10-digit number" value="{{ session.get('phone', '') }}" maxlength="10" required autocomplete="tel">
                 <div id="qbPhoneError" class="text-danger small mt-0.5 d-none" style="font-size: 0.75rem;"></div>
               </div>
             </div>
@@ -1625,7 +1649,7 @@
             <div class="row g-2">
               <div class="col-6">
                 <label class="qb-label">Email (Optional)</label>
-                <input type="email" name="email" id="qbEmail" class="form-control qb-input" placeholder="e.g., (Optional)">
+                <input type="email" name="email" id="qbEmail" class="form-control qb-input" placeholder="e.g., (Optional)" value="{{ session.get('email', '') }}">
               </div>
               <div class="col-6">
                 <label class="qb-label">Skill Level<span class="text-danger">*</span></label>

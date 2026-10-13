@@ -125,27 +125,41 @@
     {% set current_step = 1 %}
     {% include 'components/booking_stepper.html' %}
     
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="mb-4" style="max-width: 800px; margin: 0 auto;">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category in ['danger', 'error'] else ('warning' if category == 'warning' else 'info') }} alert-dismissible fade show" role="alert" style="border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.15);">
+              <i class="fa-solid fa-circle-exclamation me-2"></i> {{ message }}
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <div id="bookingClientAlert" class="alert alert-danger d-none mb-4" role="alert" style="max-width: 800px; margin: 0 auto; border-radius: var(--radius-sm); border: 1px solid rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.15); color: #fca5a5;">
+        <i class="fa-solid fa-triangle-exclamation me-2"></i> <span id="bookingClientAlertText"></span>
+    </div>
+    
     <form action="{{ url_for('book') }}" method="POST" id="bookingForm">
         <input type="hidden" name="active_tab" value="book_slot">
-        
-        <!-- Coach Selection added to Step 1 -->
-        <div class="booking-step-pane" id="step-pane-0" style="display:none;"></div> <!-- dummy to keep indexing simple if needed, wait no -->
-        
-        <div class="form-group mb-4" style="max-width: 800px; margin: 0 auto 1.5rem auto;">
-            <label for="coachSelect" class="form-label" style="color: var(--color-primary); font-weight: 700;">Select Coach <span class="text-danger">*</span></label>
-            <select name="trainer_username" id="coachSelect" class="form-control" required style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 0.75rem; border-radius: var(--radius-sm);">
-                <option value="">-- Choose a Coach --</option>
-                {% for t in trainers %}
-                <option value="{{ t.username }}" data-slots='{{ t.available_slots or "[]" }}'>{{ t.name }} (Rating: {{ t.rating }})</option>
-                {% endfor %}
-            </select>
-        </div>
-
         
         <!-- STEP 1: Session Details -->
         <div class="booking-step-pane" id="step-pane-1">
             <div class="glass-panel animate-slide-up" style="padding: 2rem; max-width: 800px; margin: 0 auto;">
                 <h3 class="font-display mb-4" style="font-size: 1.4rem; color: var(--color-primary);">1. Session Details</h3>
+                
+                <!-- Coach Selection inside the card -->
+                <div class="form-group mb-4">
+                    <label for="coachSelect" class="form-label" style="color: var(--color-primary); font-weight: 700;">Select Coach <span class="text-danger">*</span></label>
+                    <select name="trainer_username" id="coachSelect" class="form-control" required style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 0.75rem; border-radius: var(--radius-sm);">
+                        <option value="">-- Choose a Coach --</option>
+                        {% for t in trainers %}
+                        <option value="{{ t.username }}" data-slots='{{ t.available_slots or "[]" }}'>{{ t.name }} (Rating: {{ t.rating }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="form-group">
@@ -268,14 +282,12 @@
             <div class="glass-panel animate-slide-up" style="padding: 2rem; max-width: 800px; margin: 0 auto;">
                 <h3 class="font-display mb-4" style="font-size: 1.4rem; color: var(--color-primary);">2. Swimmer Details</h3>
                 
-                {% if not session.get('user_name') %}
-                <input type="hidden" id="ownerNameInput" name="owner_name">
-                {% endif %}
+                <input type="hidden" id="ownerNameInput" name="owner_name" value="{{ session.get('user_name', '') }}">
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div class="form-group" style="position: relative;">
                         <label for="studentSelect" class="form-label">Swimmer Name <span class="text-danger">*</span></label>
-                        <input type="text" id="studentSelect" name="student" class="form-control" placeholder="Enter swimmer name" autocomplete="off" required>
+                        <input type="text" id="studentSelect" name="student" class="form-control" placeholder="Enter swimmer name" value="{{ session.get('user_name', '') }}" autocomplete="off" required>
                         <div class="custom-autocomplete-list" id="swimmerAutoList"></div>
                     </div>
                     
@@ -289,22 +301,18 @@
                         </select>
                     </div>
 
-                    {% if not session.get('user_name') %}
                     <div class="form-group">
-                        <label for="bookingPhoneInput" class="form-label">Contact Number (Password) <span class="text-danger">*</span></label>
-                        <input type="tel" id="bookingPhoneInput" name="phone" class="form-control" placeholder="10-digit mobile number" maxlength="10" required autocomplete="tel">
+                        <label for="bookingPhoneInput" class="form-label">Contact Number <span class="text-danger">*</span></label>
+                        <input type="tel" id="bookingPhoneInput" name="phone" class="form-control" placeholder="10-digit mobile number" value="{{ session.get('phone', '') }}" maxlength="10" required autocomplete="tel">
+                        {% if not session.get('phone') %}
                         <small class="text-muted" style="font-size: 0.75rem;">Your account will be auto-created with this number.</small>
+                        {% endif %}
                     </div>
+
                     <div class="form-group">
                         <label for="emailInput" class="form-label">Email Address <span class="text-muted small fw-normal">(Optional)</span></label>
-                        <input type="email" id="emailInput" name="email" class="form-control" placeholder="parent@example.com - for alerts" autocomplete="email">
+                        <input type="email" id="emailInput" name="email" class="form-control" placeholder="parent@example.com - for alerts" value="{{ session.get('email', '') }}" autocomplete="email">
                     </div>
-                    {% else %}
-                    <div class="form-group md:col-span-2">
-                        <label for="emailInput" class="form-label">Email Address <span class="text-muted small fw-normal">(Optional)</span></label>
-                        <input type="email" id="emailInput" name="email" class="form-control" placeholder="parent@example.com - for alerts" autocomplete="email">
-                    </div>
-                    {% endif %}
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -983,8 +991,69 @@
         }
     });
     
+    // Inline Booking Alert helper
+    function showBookingAlert(msg) {
+        const alertBox = document.getElementById('bookingClientAlert');
+        const alertText = document.getElementById('bookingClientAlertText');
+        if (alertBox && alertText) {
+            alertText.innerHTML = msg;
+            alertBox.classList.remove('d-none');
+            alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+            alert(msg);
+        }
+    }
+
+    function hideBookingAlert() {
+        const alertBox = document.getElementById('bookingClientAlert');
+        if (alertBox) {
+            alertBox.classList.add('d-none');
+        }
+    }
+
     // Wizard Navigation logic
     function wizardNext(currentStep) {
+        hideBookingAlert();
+
+        // Custom validation for Step 1
+        if (currentStep === 1) {
+            const coachSelect = document.getElementById('coachSelect');
+            if (!coachSelect || !coachSelect.value) {
+                showBookingAlert('<strong>Coach required:</strong> Please select an assigned coach from the dropdown above.');
+                if (coachSelect) coachSelect.focus();
+                return;
+            }
+
+            const packageSelect = document.getElementById('packageSelect');
+            if (packageSelect) {
+                const pkg = packageSelect.value;
+                const checkedDays = document.querySelectorAll('.class-day:checked').length;
+                if (pkg === 'Monthly' && (checkedDays < 2 || checkedDays > 3)) {
+                    showBookingAlert('<strong>Weekly days required:</strong> Monthly Pack requires choosing 2 or 3 training days per week.');
+                    return;
+                }
+                if (['3_months', '6_months', '9_months', '12_months'].includes(pkg) && checkedDays !== 3) {
+                    showBookingAlert('<strong>Weekly days required:</strong> Long Term packages require exactly 3 training days per week.');
+                    return;
+                }
+            }
+
+            const timeSelect = document.getElementById('timeSelect');
+            if (!timeSelect || !timeSelect.value || timeSelect.value.trim() === '') {
+                showBookingAlert('<strong>Time required:</strong> Please select a preferred training time slot.');
+                if (timeSelect) timeSelect.focus();
+                return;
+            }
+            
+            const areaInput = document.getElementById('areaInput');
+            const locationInput = document.querySelector('input[name="location"]');
+            if ((!areaInput || !areaInput.value.trim()) && (!locationInput || !locationInput.value.trim())) {
+                showBookingAlert('<strong>Location required:</strong> Please enter your locality or pool address.');
+                if (areaInput) areaInput.focus();
+                return;
+            }
+        }
+
         // Basic required field validation for current step before advancing
         const pane = document.getElementById('step-pane-' + currentStep);
         const inputs = pane.querySelectorAll('input[required], select[required]');
@@ -997,21 +1066,6 @@
         });
         
         if (!isValid) return;
-
-        // Custom validation for Step 1
-        if (currentStep === 1) {
-            const timeSelect = document.getElementById('timeSelect');
-            if (timeSelect && (!timeSelect.value || timeSelect.value === '')) {
-                alert('Please select a valid time slot.');
-                return;
-            }
-            
-            const locationInput = document.getElementById('locationInput');
-            if (!locationInput || !locationInput.value) {
-                alert('Please select your location on the map properly.');
-                return;
-            }
-        }
         
         // Hide current step, show next
         pane.classList.add('d-none');
@@ -1041,6 +1095,7 @@
     }
 
     function wizardPrev(currentStep) {
+        hideBookingAlert();
         // Hide current step, show prev
         document.getElementById('step-pane-' + currentStep).classList.add('d-none');
         document.getElementById('step-pane-' + (currentStep - 1)).classList.remove('d-none');
@@ -1069,6 +1124,24 @@
     }
 
     function wizardSubmit() {
+        hideBookingAlert();
+        const studentInput = document.getElementById('studentSelect');
+        if (!studentInput || !studentInput.value.trim()) {
+            showBookingAlert('<strong>Swimmer Name required:</strong> Please enter the swimmer full name.');
+            if (studentInput) studentInput.focus();
+            return;
+        }
+
+        const phoneInput = document.getElementById('bookingPhoneInput');
+        if (phoneInput) {
+            const clean = phoneInput.value.replace(/\D/g, '');
+            if (clean.length !== 10) {
+                showBookingAlert('<strong>Valid contact number required:</strong> Please enter a genuine 10-digit mobile number.');
+                phoneInput.focus();
+                return;
+            }
+        }
+
         const pane = document.getElementById('step-pane-2');
         const inputs = pane.querySelectorAll('input[required], select[required]');
         let isValid = true;

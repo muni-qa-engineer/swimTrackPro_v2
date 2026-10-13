@@ -61,7 +61,7 @@ def book():
             if is_ajax:
                 return jsonify({'success': False, 'error': err_msg}), 400
             flash(err_msg, 'danger')
-            return redirect(url_for('index'))
+            return redirect(request.referrer or '/booking')
 
     elif package in ('3_months', '6_months', '9_months', '12_months'):
         selected_days = request.form.get('selected_days', '')
@@ -75,7 +75,7 @@ def book():
             if is_ajax:
                 return jsonify({'success': False, 'error': err_msg}), 400
             flash(err_msg, 'danger')
-            return redirect(url_for('index'))
+            return redirect(request.referrer or '/booking')
 
     elif package == 'Custom':
         selected_days = request.form.get('selected_days', '')
@@ -89,7 +89,7 @@ def book():
             if is_ajax:
                 return jsonify({'success': False, 'error': err_msg}), 400
             flash(err_msg, 'danger')
-            return redirect(url_for('index'))
+            return redirect(request.referrer or '/booking')
         session_count = len(
             generate_recurring_dates(
                 date_str,
@@ -102,7 +102,7 @@ def book():
             if is_ajax:
                 return jsonify({'success': False, 'error': err_msg}), 400
             flash(err_msg, 'danger')
-            return redirect(url_for('index'))
+            return redirect(request.referrer or '/booking')
 
     fee = calculate_discounted_fee(package, persons, session_count)
 
@@ -134,7 +134,7 @@ def book():
             if is_ajax:
                 return jsonify({'success': False, 'error': phone_err}), 400
             flash(phone_err, 'danger')
-            return redirect(url_for('index'))
+            return redirect(request.referrer or '/booking')
     else:
         owner_phone = session.get('phone') or 'unconfirmed'
 
@@ -154,14 +154,14 @@ def book():
             err_msg = 'End date cannot be earlier than start date'
             if is_ajax:
                 return jsonify({'success': False, 'error': err_msg}), 400
-            flash(err_msg)
-            return redirect(url_for('index'))
+            flash(err_msg, 'danger')
+            return redirect(request.referrer or '/booking')
     except Exception:
         err_msg = 'Invalid start or end date'
         if is_ajax:
             return jsonify({'success': False, 'error': err_msg}), 400
-        flash(err_msg)
-        return redirect(url_for('index'))
+        flash(err_msg, 'danger')
+        return redirect(request.referrer or '/booking')
 
     # Validate past date
     try:
@@ -170,14 +170,14 @@ def book():
             err_msg = 'Cannot book past dates'
             if is_ajax:
                 return jsonify({'success': False, 'error': err_msg}), 400
-            flash(err_msg)
-            return redirect(url_for('index'))
+            flash(err_msg, 'danger')
+            return redirect(request.referrer or '/booking')
     except Exception:
         err_msg = 'Invalid date'
         if is_ajax:
             return jsonify({'success': False, 'error': err_msg}), 400
-        flash(err_msg)
-        return redirect(url_for('index'))
+        flash(err_msg, 'danger')
+        return redirect(request.referrer or '/booking')
 
     booking_id = generate_booking_id(student, date_str, time_str)
 
@@ -193,8 +193,8 @@ def book():
         err_msg = 'Invalid time format'
         if is_ajax:
             return jsonify({'success': False, 'error': err_msg}), 400
-        flash(err_msg)
-        return redirect(url_for('index'))
+        flash(err_msg, 'danger')
+        return redirect(request.referrer or '/booking')
 
     new_booking_dates = generate_recurring_dates(
         date_str,
