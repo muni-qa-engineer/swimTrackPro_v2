@@ -309,22 +309,24 @@
                                                   </div>
                                                {% endif %}
                                           {% else %}
-                                              <div class="flex justify-end gap-2">
-                                                  <form action="/edit/{{ b.id }}" method="GET" class="d-inline" onsubmit="saveScrollPosition()">
-                                                      <button type="submit" class="btn btn-outline" style="font-size: 0.75rem; padding: 0.25rem 0.75rem; border-radius: var(--radius-sm);">Edit</button>
-                                                  </form>
-                                                  <form action="/delete/{{ b.id }}" method="POST" class="d-inline delete-booking-form" id="deleteForm-{{ b.id }}">
-                                                      <button type="button" class="btn btn-outline animated-delete-btn" style="border-color: var(--color-danger); color: var(--color-danger); font-size: 0.75rem; padding: 0.25rem 0.75rem; border-radius: var(--radius-sm);" onclick="confirmAndDeleteBooking('deleteForm-{{ b.id }}', this, 'Are you sure you want to delete this booking? This action cannot be undone.')">
-                                                          Delete
-                                                      </button>
-                                                  </form>
-                                              </div>
+                                              <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mt-1">
+                                                  <div class="d-flex align-items-center gap-2">
+                                                      <form action="/edit/{{ b.id }}" method="GET" class="d-inline m-0" onsubmit="saveScrollPosition()">
+                                                          <button type="submit" class="btn btn-outline" style="font-size: 0.75rem; padding: 0.25rem 0.75rem; border-radius: var(--radius-sm);">Edit</button>
+                                                      </form>
+                                                      <form action="/delete/{{ b.id }}" method="POST" class="d-inline delete-booking-form m-0" id="deleteForm-{{ b.id }}">
+                                                          <button type="button" class="btn btn-outline animated-delete-btn" style="border-color: var(--color-danger); color: var(--color-danger); font-size: 0.75rem; padding: 0.25rem 0.75rem; border-radius: var(--radius-sm);" onclick="confirmAndDeleteBooking('deleteForm-{{ b.id }}', this, 'Are you sure you want to delete this booking? This action cannot be undone.')">
+                                                              Delete
+                                                          </button>
+                                                      </form>
+                                                  </div>
 
-                                              {% if role != 'trainer' and b.status != 'Paid' and (b.fee or 0)|float > 0 %}
-                                              <a href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name|urlencode }}&tn=SwimTrackPro%20Payment" class="btn btn-primary w-100 py-2.5" style="text-align: center;">
-                                                 <i class="fa-solid fa-credit-card"></i> Pay Now (₹{{ b.fee }})
-                                              </a>
-                                              {% endif %}
+                                                  {% if role != 'trainer' and b.status != 'Paid' and (b.fee or 0)|float > 0 %}
+                                                  <a href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name|urlencode }}&tn=SwimTrackPro%20Payment" class="btn btn-primary d-inline-flex align-items-center justify-content-center gap-1.5 ms-auto" style="font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.75rem; border-radius: var(--radius-sm); white-space: nowrap; text-decoration: none;">
+                                                     <i class="fa-solid fa-credit-card"></i> Pay Now (₹{{ b.fee }})
+                                                  </a>
+                                                  {% endif %}
+                                              </div>
                                               
                                               {% if role != 'trainer' and b.package in ('Monthly', 'Custom') and not b.is_completed and not b.delete_requested and (b.completed_classes or 0) > 0 and (b.remaining_classes or 0) > 0 %}
                                                   {% if b.pause_status == 'Paused' or b.pause_status == 'PAUSED' %}
