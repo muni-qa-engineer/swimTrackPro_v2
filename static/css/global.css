@@ -205,6 +205,11 @@ img {
   white-space: nowrap;
 }
 
+.btn-sm {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.82rem;
+}
+
 .btn-primary {
   background: var(--gradient-primary);
   color: white;

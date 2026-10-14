@@ -205,15 +205,19 @@
                                         </div>
 
                                         <!-- Action Buttons -->
-                                        <div class="d-flex gap-2">
+                                        <div class="row g-2">
                                             {% if b.is_long_term %}
-                                                <button type="button" class="btn btn-outline-danger flex-grow-1 btn-sm" onclick="openCultFitPauseModal('{{ b.id }}', '{{ b.student }}', '{{ b.package }}', {{ b.available_pause_days }}, '{{ b.end_date }}')" {% if b.available_pause_days <= 0 %}disabled title="Pause pool exhausted"{% endif %}>
-                                                    <i class="fa-solid fa-pause me-1"></i> Pause Package
-                                                </button>
+                                                <div class="col-6">
+                                                    <button type="button" class="btn btn-outline-danger w-100 btn-sm text-truncate" style="padding: 0.45rem 0.4rem; font-size: 0.8rem; border-radius: var(--radius-sm); border: 1px solid rgba(239, 68, 68, 0.45);" onclick="openCultFitPauseModal('{{ b.id }}', '{{ b.student }}', '{{ b.package }}', {{ b.available_pause_days }}, '{{ b.end_date }}')" {% if b.available_pause_days <= 0 %}disabled title="Pause pool exhausted"{% endif %}>
+                                                        <i class="fa-solid fa-pause me-1"></i> Pause Package
+                                                    </button>
+                                                </div>
                                             {% endif %}
-                                            <button type="button" class="btn btn-outline-warning flex-grow-1 btn-sm" onclick="{% if b.skip_remaining <= 0 %}showSkipExhaustedToast(){% else %}openSkipModalForBooking('{{ b.id }}'){% endif %}">
-                                                <i class="fa-solid fa-forward-step me-1"></i> Skip Session
-                                            </button>
+                                            <div class="{% if b.is_long_term %}col-6{% else %}col-12{% endif %}">
+                                                <button type="button" class="btn btn-outline-warning w-100 btn-sm text-truncate" style="padding: 0.45rem 0.4rem; font-size: 0.8rem; border-radius: var(--radius-sm); border: 1px solid rgba(245, 158, 11, 0.45);" onclick="{% if b.skip_remaining <= 0 %}showSkipExhaustedToast(){% else %}openSkipModalForBooking('{{ b.id }}'){% endif %}">
+                                                    <i class="fa-solid fa-forward-step me-1"></i> Skip Session
+                                                </button>
+                                            </div>
                                         </div>
 
                                         {% if b.is_monthly %}
