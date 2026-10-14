@@ -582,6 +582,7 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
         }
         for s in all_future_sessions[:25]
     ]
+    total_packages = len(user_bookings)
     active_packages = active_bookings
     completed_packages = completed_bookings
     active_package_name = 'No Package'
