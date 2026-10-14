@@ -983,13 +983,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 4. Pre-fill Location
-        if (areaInput && window.renewBookingData.location) {
-            areaInput.value = window.renewBookingData.location;
-            areaInput.dispatchEvent(new Event('input', { bubbles: true }));
-            const locInput = document.getElementById('locationInput');
-            if (locInput) {
-                locInput.value = window.renewBookingData.location;
-            }
+        const locInput = document.getElementById('locationInput') || document.getElementById('areaInput');
+        if (locInput && window.renewBookingData.location) {
+            locInput.value = window.renewBookingData.location;
+            locInput.dispatchEvent(new Event('input', { bubbles: true }));
+            locInput.dispatchEvent(new Event('change', { bubbles: true }));
         }
 
         // 5. Pre-fill Days (Skip for Single/Demo because Start Date dictates the day)

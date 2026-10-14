@@ -215,44 +215,22 @@
 
                 <h3 class="font-display mt-5 mb-4" style="font-size: 1.4rem; color: var(--color-primary);">Pool Location</h3>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div class="form-group" style="position: relative;">
-                        <label class="form-label">Area / Locality <span class="text-danger">*</span></label>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <button type="button" id="locationPickerBtn" class="btn btn-outline" style="border-radius: var(--radius-sm); border-color: rgba(255,255,255,0.1); color: var(--color-primary);" title="Pick location on map">
-                                <i class="fa-solid fa-map-location-dot"></i>
-                            </button>
-                            <input type="text" id="areaInput" class="form-control" placeholder="Enter locality" autocomplete="off" required style="flex: 1;">
-                        </div>
-                        <div class="custom-autocomplete-list" id="areaAutoList"></div>
+                <div class="form-group mb-4" style="position: relative;">
+                    <label class="form-label">Pool Location <span class="text-danger">*</span></label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="button" id="locationPickerBtn" class="btn btn-outline" style="border-radius: var(--radius-sm); border-color: rgba(255,255,255,0.1); color: var(--color-primary); padding: 0.6rem 0.85rem;" title="Pick location on map">
+                            <i class="fa-solid fa-map-location-dot"></i>
+                        </button>
+                        <input type="text" name="location" id="locationInput" class="form-control" placeholder="e.g. My Home, Gachibowli" autocomplete="off" required style="flex: 1;">
+                        <button type="button" id="locateBtn" class="btn btn-outline" style="border-radius: var(--radius-sm); border-color: rgba(255,255,255,0.1); color: var(--color-primary); font-size: 0.85rem; font-weight: 600; padding: 0.6rem 1rem; white-space: nowrap; display: flex; align-items: center; gap: 0.35rem;" title="Detect Current Location">
+                            <i class="fa-solid fa-location-crosshairs"></i> <span>Detect</span>
+                        </button>
                     </div>
-                    
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="form-group">
-                            <label class="form-label">State <span class="text-danger">*</span></label>
-                            <select id="stateSelect" class="form-control" required style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white;">
-                                <option value="" disabled selected>State</option>
-                                <option value="Andhra Pradesh">Andhra Pradesh</option>
-                                <option value="Telangana">Telangana</option>
-                                <option value="Karnataka">Karnataka</option>
-                                <option value="Tamil Nadu">Tamil Nadu</option>
-                                <option value="Maharashtra">Maharashtra</option>
-                                <option value="Kerala">Kerala</option>
-                                <option value="Delhi">Delhi</option>
-                                <option value="Goa">Goa</option>
-                                <option value="Gujarat">Gujarat</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Pincode <span class="text-danger">*</span></label>
-                            <input type="text" id="pincodeInput" class="form-control" placeholder="6 digits" pattern="^[1-9][0-9]{5}$" maxlength="6" required>
-                        </div>
-                    </div>
+                    <div class="custom-autocomplete-list" id="locationAutoList"></div>
+                    <small class="text-muted mt-1 d-block" style="font-size: 0.78rem;">Society, apartment, or pool address. Use Detect or Map to auto-fill.</small>
                 </div>
                 
                 <!-- Hidden fields for Leaflet coords -->
-                <input type="hidden" name="location" id="locationInput">
                 <input type="hidden" name="latitude" id="latitudeInput">
                 <input type="hidden" name="longitude" id="longitudeInput">
                 
@@ -519,136 +497,64 @@
     // Copy leaflet logic mapping and geocoding controls
     document.addEventListener('DOMContentLoaded', function() {
         const locationPickerBtn = document.getElementById('locationPickerBtn');
+        const locateBtn = document.getElementById('locateBtn');
         const modalCurrentLocationBtn = document.getElementById('modalCurrentLocationBtn');
         const modalChooseOnMapBtn = document.getElementById('modalChooseOnMapBtn');
         const mapPickerContainer = document.getElementById('mapPickerContainer');
-        const locationInput = document.querySelector('input[name="location"]');
+        const locationInput = document.getElementById('locationInput') || document.querySelector('input[name="location"]');
         const latitudeInput = document.getElementById('latitudeInput');
         const longitudeInput = document.getElementById('longitudeInput');
-        const areaInput = document.getElementById('areaInput');
-        const stateSelect = document.getElementById('stateSelect');
-        const pincodeInput = document.getElementById('pincodeInput');
 
         async function reverseGeocode(lat, lng) {
             try {
                 const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
                 const data = await response.json();
-                const displayName = data.display_name || '';
-                const addressParts = displayName.split(',').map(part => part.trim());
-                
-                let pincode = '';
-                let pincodeIndex = -1;
-                for (let i = addressParts.length - 1; i >= 0; i--) {
-                    if (/^[1-9][0-9]{5}$/.test(addressParts[i])) {
-                        pincode = addressParts[i];
-                        pincodeIndex = i;
-                        break;
-                    }
-                }
-                
-                let stateName = '';
-                let stateIndex = -1;
-                if (pincodeIndex !== -1) {
-                    stateName = addressParts[pincodeIndex - 1] || '';
-                    stateIndex = pincodeIndex - 1;
-                } else {
-                    if (addressParts.length >= 3) {
-                        stateName = addressParts[addressParts.length - 2] || '';
-                        stateIndex = addressParts.length - 2;
-                    }
-                }
-                
-                let areaParts = [];
-                let limit = (stateIndex !== -1) ? stateIndex : addressParts.length;
-                for (let i = 0; i < limit; i++) {
-                    areaParts.push(addressParts[i]);
-                }
-                const area = areaParts.join(', ');
-                
-                return {
-                    area: area || displayName,
-                    state: stateName,
-                    pincode: pincode
-                };
+                return data.display_name || `${lat}, ${lng}`;
             } catch (error) {
                 console.error('Reverse geocoding failed:', error);
-                return { area: `${lat}, ${lng}`, state: '', pincode: '' };
+                return `${lat}, ${lng}`;
             }
         }
 
-        function updateFullLocation() {
-            const area = (areaInput.value || '').trim();
-            const state = (stateSelect.value || '').trim();
-            const pincode = (pincodeInput.value || '').trim();
-            
-            let full = '';
-            if (area) full += area;
-            if (state) full += (full ? ', ' : '') + state;
-            if (pincode) full += (full ? ' - ' : '') + pincode;
-            
+        function applyGeoLocationData(fullAddress, lat, lng) {
             if (locationInput) {
-                locationInput.value = full;
-                const event = new Event('input', { bubbles: true });
-                locationInput.dispatchEvent(event);
+                locationInput.value = fullAddress;
+                locationInput.dispatchEvent(new Event('input', { bubbles: true }));
+                locationInput.dispatchEvent(new Event('change', { bubbles: true }));
             }
+            if (latitudeInput) latitudeInput.value = lat;
+            if (longitudeInput) longitudeInput.value = lng;
         }
 
-        function setSelectedState(stateName) {
-            if (!stateSelect || !stateName) return;
-            let normalized = stateName.toLowerCase().trim();
-            const stateMappings = {
-                'ఆంధ్ర': 'andhra pradesh', 'ప్రదేశ్': 'andhra pradesh',
-                'తెలంగాణ': 'telangana', 'తెలంగాణా': 'telangana',
-                'కర్ణాటక': 'karnataka', 'మహారాష్ట్ర': 'maharashtra',
-                'తమిళ': 'tamil nadu', 'నాడు': 'tamil nadu',
-                'కేరళ': 'kerala', 'దిల్లీ': 'delhi', 'ఢిల్లీ': 'delhi',
-                'గోవా': 'goa', 'గుజరాత్': 'gujarat'
-            };
-            for (const [key, val] of Object.entries(stateMappings)) {
-                if (normalized.includes(key)) { normalized = val; break; }
-            }
-            for (let i = 0; i < stateSelect.options.length; i++) {
-                const optionVal = stateSelect.options[i].value.toLowerCase().trim();
-                if (optionVal && (normalized.includes(optionVal) || optionVal.includes(normalized))) {
-                    stateSelect.selectedIndex = i;
-                    break;
+        // Detect Current GPS Location
+        if (locateBtn && locationInput) {
+            locateBtn.addEventListener('click', function() {
+                if (!navigator.geolocation) {
+                    alert('Geolocation is not supported by your browser.');
+                    return;
                 }
-            }
-        }
-
-        if (areaInput) {
-            areaInput.addEventListener('input', updateFullLocation);
-            areaInput.addEventListener('change', function(e) {
-                const val = this.value;
-                // If the user selected an existing location like "Area, State - Pincode" or "Area, State 500049"
-                if (val.includes(',') && val.includes('-')) {
-                    const parts = val.split(',');
-                    const area = parts[0].trim();
-                    const rest = parts.slice(1).join(',').trim();
-                    const dashParts = rest.split('-');
-                    if (dashParts.length >= 2) {
-                        const state = dashParts[0].trim();
-                        const pincode = dashParts[1].trim();
-                        this.value = area;
-                        setSelectedState(state);
-                        if (pincodeInput) pincodeInput.value = pincode;
-                        updateFullLocation();
+                locateBtn.disabled = true;
+                locateBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> <span>Detecting...</span>';
+                navigator.geolocation.getCurrentPosition(
+                    async function(pos) {
+                        const lat = pos.coords.latitude.toFixed(6);
+                        const lng = pos.coords.longitude.toFixed(6);
+                        const fullAddress = await reverseGeocode(lat, lng);
+                        applyGeoLocationData(fullAddress, lat, lng);
+                        locateBtn.disabled = false;
+                        locateBtn.innerHTML = '<i class="fa-solid fa-check text-success me-1"></i> <span>Detected</span>';
+                        setTimeout(() => {
+                            locateBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs me-1"></i> <span>Detect</span>';
+                        }, 2500);
+                    },
+                    function() {
+                        alert('Could not access current location. Please enter your pool location manually.');
+                        locateBtn.disabled = false;
+                        locateBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs me-1"></i> <span>Detect</span>';
                     }
-                } else if (val.includes(',') && /\\d{6}/.test(val)) {
-                    const parts = val.split(',');
-                    const area = parts[0].trim();
-                    const rest = parts.slice(1).join(',').trim();
-                    const stateMatch = rest.match(/([a-zA-Z\\s]+)/);
-                    const pinMatch = rest.match(/(\\d{6})/);
-                    if (stateMatch) setSelectedState(stateMatch[1].trim());
-                    if (pinMatch && pincodeInput) pincodeInput.value = pinMatch[1];
-                    this.value = area;
-                    updateFullLocation();
-                }
+                );
             });
         }
-        if (stateSelect) stateSelect.addEventListener('change', updateFullLocation);
-        if (pincodeInput) pincodeInput.addEventListener('input', updateFullLocation);
 
         let map;
         let selectedLat = null;
@@ -683,7 +589,6 @@
                 document.getElementById('initialLocationOptions').style.display = 'none';
                 document.getElementById('mapPickerContainer').style.display = 'block';
                 document.getElementById('mapModalFooter').style.display = 'flex';
-                const mapPickerEl = document.getElementById('mapPicker');
                 
                 function initMapWithCoords(lat, lng, isCurrentLocation = false) {
                     if (!map) {
@@ -737,33 +642,6 @@
             });
         }
 
-        function applyGeoLocationData(geoData, lat, lng) {
-            const areaVal = (geoData && geoData.area) ? geoData.area : `${lat}, ${lng}`;
-            const stateVal = (geoData && geoData.state) ? geoData.state : 'Telangana';
-            const pincodeVal = (geoData && geoData.pincode) ? geoData.pincode : '500081';
-
-            if (areaInput) {
-                areaInput.value = areaVal;
-                areaInput.dispatchEvent(new Event('input', { bubbles: true }));
-                areaInput.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-            if (stateSelect) {
-                setSelectedState(stateVal);
-                if (!stateSelect.value) {
-                    stateSelect.selectedIndex = 1;
-                }
-                stateSelect.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-            if (pincodeInput) {
-                pincodeInput.value = pincodeVal;
-                pincodeInput.dispatchEvent(new Event('input', { bubbles: true }));
-                pincodeInput.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-            updateFullLocation();
-            if (latitudeInput) latitudeInput.value = lat;
-            if (longitudeInput) longitudeInput.value = lng;
-        }
-
         if (modalCurrentLocationBtn) {
             modalCurrentLocationBtn.addEventListener('click', function() {
                 if (!navigator.geolocation) {
@@ -777,8 +655,8 @@
                     async function(position) {
                         const latitude = position.coords.latitude.toFixed(6);
                         const longitude = position.coords.longitude.toFixed(6);
-                        const geoData = await reverseGeocode(latitude, longitude);
-                        applyGeoLocationData(geoData, latitude, longitude);
+                        const fullAddress = await reverseGeocode(latitude, longitude);
+                        applyGeoLocationData(fullAddress, latitude, longitude);
                         modalCurrentLocationBtn.disabled = false;
                         modalCurrentLocationBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs me-2"></i>Use Current Location';
                         const modalInstance = bootstrap.Modal.getInstance(document.getElementById('mapPickerModal'));
@@ -800,8 +678,8 @@
                     alert('Please select a location on the map.');
                     return;
                 }
-                reverseGeocode(selectedLat, selectedLng).then(geoData => {
-                    applyGeoLocationData(geoData, selectedLat, selectedLng);
+                reverseGeocode(selectedLat, selectedLng).then(fullAddress => {
+                    applyGeoLocationData(fullAddress, selectedLat, selectedLng);
                     const modalInstance = bootstrap.Modal.getInstance(document.getElementById('mapPickerModal'));
                     if (modalInstance) modalInstance.hide();
                 });
@@ -1034,11 +912,10 @@
                 return;
             }
             
-            const areaInput = document.getElementById('areaInput');
-            const locationInput = document.querySelector('input[name="location"]');
-            if ((!areaInput || !areaInput.value.trim()) && (!locationInput || !locationInput.value.trim())) {
-                showBookingAlert('<strong>Location required:</strong> Please enter your locality or pool address.');
-                if (areaInput) areaInput.focus();
+            const locationInput = document.getElementById('locationInput') || document.querySelector('input[name="location"]');
+            if (!locationInput || !locationInput.value.trim()) {
+                showBookingAlert('<strong>Location required:</strong> Please enter your pool location or society address.');
+                if (locationInput) locationInput.focus();
                 return;
             }
         }
@@ -1203,7 +1080,7 @@
     }
 
     setupAutocomplete('studentSelect', 'swimmerAutoList', swimmerNames);
-    setupAutocomplete('areaInput', 'areaAutoList', locationNames);
+    setupAutocomplete('locationInput', 'locationAutoList', locationNames);
 
     // Sync Swimmer Name to hidden Parent/Owner Name input
     const studentSelectEl = document.getElementById('studentSelect');
