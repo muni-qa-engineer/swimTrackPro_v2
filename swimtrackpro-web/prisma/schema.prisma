@@ -1,0 +1,226 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Booking {
+  id                         String    @id
+  student_name               String?
+  created_by                 String?
+  start_date                 String?
+  end_date                   String?
+  package                    String?
+  selected_days              String?
+  location                   String?
+  persons                    Int?
+  time                       String?
+  fee                        Int?
+  status                     String?
+  payment_request            String?
+  owner_name                 String?
+  owner_phone                String?
+  trainer_username           String?
+  pause_status               String?   @default("ACTIVE")
+  pause_used                 Boolean?  @default(false)
+  pause_date                 String?
+  resume_date                String?
+  auto_resume_date           String?
+  pause_reason               String?
+  pause_other_reason         String?
+  paused_days                Int?      @default(0)
+  package_status             String?   @default("ACTIVE")
+  last_status_change         DateTime?
+  calendar_dates_override    String?
+  pause_count                Int?      @default(0)
+  pause_request_status       String?
+  pause_requested_on         String?
+  pause_requested_by         String?
+  pause_approved_by          String?
+  pause_approved_on          String?
+  pause_rejected_by          String?
+  pause_rejected_on          String?
+  rejection_reason           String?
+  resume_type                String?
+  remaining_classes_at_pause Int?
+  allocated_pause_days       Int?      @default(0)
+  used_pause_days            Int?      @default(0)
+  pause_start_date           String?
+  pause_end_date             String?
+  original_end_date          String?
+  attended_sessions          String?
+  delete_requested           Boolean?  @default(false)
+  delete_reason              String?
+  latitude                   String?
+  longitude                  String?
+
+  @@map("bookings")
+}
+
+model Student {
+  id           Int      @id @default(autoincrement())
+  student_name String?
+  owner_name   String?
+  owner_phone  String?
+  skill_level  String?
+  is_blocked   Boolean? @default(false)
+
+  @@map("students")
+}
+
+model Trainer {
+  username            String   @id
+  password            String
+  name                String
+  phone               String?
+  email               String?
+  experience          String?
+  qualification       String?
+  currently_working   String?
+  residence_location  String?
+  id_proof            String?
+  id_number           String?
+  id_proof_file       String?
+  qualification_file  String?
+  consent_accepted    Boolean? @default(false)
+  rating              Decimal? @default(5.00)
+  photos              String?  @default("")
+  bio                 String?
+  specialties         String?
+  instagram           String?
+  facebook            String?
+  twitter             String?
+  youtube             String?
+  upi_id              String?
+  qr_code             String?
+  account_holder_name String?
+  notice              String?  @default("")
+  is_approved         Boolean? @default(false)
+  whatsapp            String?  @default("")
+  is_blocked          Boolean? @default(false)
+  available_slots     String?
+
+  @@map("trainers")
+}
+
+model Package {
+  id                  Int     @id @default(autoincrement())
+  category            String
+  package_name        String
+  base_price          Int
+  discount_percentage Int?    @default(0)
+
+  @@unique([category, package_name])
+  @@map("packages")
+}
+
+model MakeupCredit {
+  id            Int             @id @default(autoincrement())
+  booking_id    String
+  original_date DateTime
+  status        String          @default("available")
+  created_at    DateTime?       @default(now())
+  used_at       DateTime?
+  notes         String?
+  requests      MakeupRequest[]
+
+  @@map("makeup_credits")
+}
+
+model MakeupRequest {
+  id             Int          @id @default(autoincrement())
+  credit_id      Int
+  booking_id     String
+  original_date  DateTime
+  requested_date DateTime
+  status         String       @default("pending")
+  requested_by   String?
+  approved_by    String?
+  decision_notes String?
+  created_at     DateTime?    @default(now())
+  decided_at     DateTime?
+  credit         MakeupCredit @relation(fields: [credit_id], references: [id], onDelete: Cascade)
+
+  @@map("makeup_requests")
+}
+
+model Notice {
+  id          Int       @id @default(autoincrement())
+  author_type String?
+  author_name String?
+  author_id   String?
+  message     String?
+  created_at  DateTime? @default(now())
+
+  @@map("notices")
+}
+
+model NoticeRead {
+  id           Int       @id @default(autoincrement())
+  notice_id    Int
+  user_type    String?
+  user_id      String?
+  read_at      DateTime? @default(now())
+  is_dismissed Boolean?  @default(false)
+
+  @@unique([notice_id, user_type, user_id])
+  @@map("notice_reads")
+}
+
+model Lead {
+  id             Int       @id @default(autoincrement())
+  name           String
+  phone          String
+  swimmer_age    String?
+  swimming_level String?
+  goal           String?
+  location       String?
+  preferred_days String?
+  preferred_time String?
+  session_type   String?   @default("individual")
+  status         String?   @default("new")
+  created_at     DateTime? @default(now())
+
+  @@map("leads")
+}
+
+model UserActivity {
+  id             Int       @id @default(autoincrement())
+  username       String?
+  phone          String?
+  role           String?
+  last_active    DateTime?
+  current_login  DateTime? @default(now())
+  previous_login DateTime?
+  id_number      String?
+
+  @@map("user_activity")
+}
+
+model PackagePauseAudit {
+  id             Int       @id @default(autoincrement())
+  booking_id     String
+  action         String
+  performed_by   String
+  pause_date     String?
+  resume_date    String?
+  is_auto_resume Boolean?  @default(false)
+  reason         String?
+  ip_address     String?
+  created_at     DateTime? @default(now())
+
+  @@map("package_pause_audit")
+}
+
+model PasswordResetOtp {
+  id         Int       @id @default(autoincrement())
+  email      String
+  otp        String
+  expires_at DateTime
+  created_at DateTime? @default(now())
+
+  @@map("password_reset_otps")
+}
