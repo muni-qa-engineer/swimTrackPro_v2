@@ -5,3 +5,17 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
     autoDeploy: true
+
+  - type: web
+    name: swimtrackpro-web
+    env: node
+    plan: starter
+    rootDir: swimtrackpro-web
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false

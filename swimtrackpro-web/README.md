@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SwimTrackPro - Modern Web Platform (Next.js 15 + Prisma)
 
-## Getting Started
+Welcome to the modern Next.js 15 rewrite of **SwimTrackPro**. This full-stack application replaces the legacy Jinja/Flask frontend with modern React 19 Server Components, TypeScript type safety, dynamic pricing engine, responsive PWA support, and Prisma ORM against the existing PostgreSQL database.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🚀 Tech Stack
+
+- **Framework**: [Next.js 15 (App Router)](https://nextjs.org/)
+- **UI & Components**: [React 19](https://react.dev/), [Tailwind CSS v4](https://tailwindcss.com/), [Lucide React](https://lucide.dev/)
+- **Database & ORM**: [PostgreSQL](https://www.postgresql.org/) via [Prisma ORM v6](https://www.prisma.io/)
+- **Mobile First**: PWA with Web App Manifest, Service Worker (`/sw.js`), native bottom navigation bar, and offline fallback route (`/offline`).
+
+---
+
+## 📁 Application Structure
+
+```
+swimtrackpro-web/
+├── public/
+│   ├── icons/               # 192x192 & 512x512 maskable app icons
+│   ├── manifest.json        # PWA manifest fallback
+│   └── sw.js                # Offline caching service worker
+├── prisma/
+│   └── schema.prisma        # 12 Prisma models mapped to Postgres tables
+├── scripts/
+│   └── verify-parity.mjs    # Parity & pricing unit test suite
+├── src/
+│   ├── app/
+│   │   ├── actions/         # Server Actions (booking.ts, dashboard.ts)
+│   │   ├── admin/           # Admin command center & analytics
+│   │   ├── booking/         # 3-step booking wizard with single Pool Location
+│   │   ├── dashboard/       # Guest portal with interactive calendar & pause
+│   │   ├── my-bookings/     # Subscriptions sorted latest active first
+│   │   ├── offline/         # Offline fallback screen
+│   │   ├── trainer/         # Trainer attendance tracker & roster
+│   │   ├── layout.tsx       # Root layout with PWA meta & bottom bar
+│   │   ├── manifest.ts      # Next.js Metadata Route for Web Manifest
+│   │   └── page.tsx         # Modern hero landing page
+│   ├── components/
+│   │   ├── booking/         # Stepper, Map modal, Swimmer cards
+│   │   ├── common/          # Navbar & MobileBottomBar
+│   │   ├── dashboard/       # Calendar, Flexibility card, Swimmers card
+│   │   ├── pwa/             # ServiceWorkerRegister, InstallPwaPrompt
+│   │   └── trainer/         # TrainerAttendanceTracker
+│   └── lib/
+│       ├── pricingEngine.ts # Dynamic pricing & multi-swimmer discount logic
+│       └── prisma.ts        # Prisma client singleton
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🧪 Testing & Verification
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Run the automated parity verification test suite:
+```bash
+npm run build
+node scripts/verify-parity.mjs
+```
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 🚢 Deployment & Staging Cutover
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Option 1: Vercel (Recommended for Best Performance)
+1. Import your GitHub repository into Vercel.
+2. Set **Root Directory** to `swimtrackpro-web`.
+3. Under Environment Variables, add:
+   ```env
+   DATABASE_URL="postgresql://user:password@host/dbname?sslmode=require"
+   ```
+4. Deploy! Vercel will build the Next.js App Router and deploy to edge locations globally.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Option 2: Render Multi-Service
+In `render.yaml` at repository root, add the `swimtrackpro-web` service:
+```yaml
+services:
+  - type: web
+    name: swimtrackpro-web
+    env: node
+    rootDir: swimtrackpro-web
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+```
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Option 3: Docker Container
+```bash
+docker build -t swimtrackpro-web .
+docker run -p 3000:3000 -e DATABASE_URL="your-postgres-url" swimtrackpro-web
+```
