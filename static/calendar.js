@@ -573,14 +573,22 @@ document.addEventListener('DOMContentLoaded', function () {
     skipButton.disabled = !eligible;
 
     if (!eligible) {
-      skipButton.textContent = 'Skip Limit Reached';
+      skipButton.textContent = 'Skip Session Exhausted';
 
-      // Prevent any click action at the UI level
+      // Prevent any click action at the UI level but notify user
       skipButton.classList.add('disabled');
-      skipButton.style.pointerEvents = 'none';
       skipButton.style.opacity = '0.65';
+      skipButton.onclick = function (e) {
+        e.preventDefault();
+        if (typeof window.showCenteredToast === 'function') {
+          window.showCenteredToast('skip session exhausted. Sorry', 'warning', 'Skip Limit Reached');
+        } else {
+          alert('skip session exhausted. Sorry');
+        }
+      };
 
     } else if (eligible) {
+      skipButton.onclick = null;
       
       // Enforce 6 hour rule locally for UX
       // Parse session date and time
@@ -701,12 +709,14 @@ document.addEventListener('DOMContentLoaded', function () {
     requestedDateInput.value = datePicker.value;
 
     datePicker.onchange = function () {
-
         if (blockedDates.has(this.value)) {
-
-            alert(
-                'This swimmer already has a session on the selected date. Please choose another date.'
-            );
+            if (typeof window.showCenteredToast === 'function') {
+                window.showCenteredToast('already you have session on this day', 'warning', 'Session Conflict');
+            } else if (typeof createToast === 'function') {
+                createToast('already you have session on this day', 'danger');
+            } else {
+                alert('already you have session on this day');
+            }
 
             this.value = '';
             requestedDateInput.value = '';
@@ -716,7 +726,19 @@ document.addEventListener('DOMContentLoaded', function () {
         requestedDateInput.value = this.value;
     };
 
-      useMakeupForm.style.display = 'block';
+    useMakeupForm.onsubmit = function (e) {
+        if (!datePicker.value || blockedDates.has(datePicker.value)) {
+            e.preventDefault();
+            if (typeof window.showCenteredToast === 'function') {
+                window.showCenteredToast('already you have session on this day', 'warning', 'Session Conflict');
+            } else {
+                alert('already you have session on this day');
+            }
+            return false;
+        }
+    };
+
+    useMakeupForm.style.display = 'block';
     } else {
       useMakeupForm.style.display = 'none';
     }

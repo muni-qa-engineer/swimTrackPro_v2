@@ -394,3 +394,96 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+if (typeof window.showCenteredToast !== 'function') {
+    window.showCenteredToast = function(options, optType, optTitle) {
+        let message = '';
+        let title = optTitle || 'Notice';
+        let type = optType || 'warning';
+        let duration = 4000;
+
+        if (typeof options === 'string') {
+            message = options;
+        } else if (typeof options === 'object' && options !== null) {
+            message = options.message || '';
+            title = options.title || title;
+            type = options.type || type;
+            if (options.duration !== undefined) duration = options.duration;
+        }
+
+        const existing = document.getElementById('centeredToastOverlay');
+        if (existing) existing.remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = 'centeredToastOverlay';
+        overlay.className = 'confirm-toast-overlay';
+        overlay.style.cssText = 'position:fixed !important;top:0 !important;left:0 !important;right:0 !important;bottom:0 !important;width:100vw !important;height:100vh !important;background:rgba(0,0,0,0.65) !important;backdrop-filter:blur(8px) !important;-webkit-backdrop-filter:blur(8px) !important;display:flex !important;align-items:center !important;justify-content:center !important;z-index:9999999 !important;padding:1.25rem !important;margin:0 !important;box-sizing:border-box !important;opacity:0;pointer-events:none;transition:opacity 0.2s cubic-bezier(0.16,1,0.3,1);';
+
+        let iconClass = 'fa-solid fa-triangle-exclamation';
+        let iconStyle = 'background:rgba(245,158,11,0.15) !important;border:1px solid rgba(245,158,11,0.35) !important;color:#f59e0b !important;';
+        let btnStyle = 'background:#f59e0b !important;color:#000000 !important;box-shadow:0 4px 14px rgba(245,158,11,0.35) !important;';
+
+        if (type === 'danger') {
+            iconClass = 'fa-solid fa-circle-xmark';
+            iconStyle = 'background:rgba(239,68,68,0.15) !important;border:1px solid rgba(239,68,68,0.35) !important;color:#ef4444 !important;';
+            btnStyle = 'background:#ef4444 !important;color:#ffffff !important;box-shadow:0 4px 14px rgba(239,68,68,0.35) !important;';
+        } else if (type === 'info' || type === 'primary') {
+            iconClass = 'fa-solid fa-circle-info';
+            iconStyle = 'background:rgba(6,182,212,0.15) !important;border:1px solid rgba(6,182,212,0.35) !important;color:#06b6d4 !important;';
+            btnStyle = 'background:#06b6d4 !important;color:#000000 !important;box-shadow:0 4px 14px rgba(6,182,212,0.35) !important;';
+        } else if (type === 'success') {
+            iconClass = 'fa-solid fa-circle-check';
+            iconStyle = 'background:rgba(16,185,129,0.15) !important;border:1px solid rgba(16,185,129,0.35) !important;color:#10b981 !important;';
+            btnStyle = 'background:#10b981 !important;color:#ffffff !important;box-shadow:0 4px 14px rgba(16,185,129,0.35) !important;';
+        }
+
+        overlay.innerHTML = `
+            <div class="confirm-toast-card" style="background:#0f172a !important;background:rgba(15,23,42,0.98) !important;border:1px solid rgba(255,255,255,0.18) !important;border-radius:18px !important;box-shadow:0 25px 50px -12px rgba(0,0,0,0.8),0 0 35px rgba(245,158,11,0.18) !important;width:100% !important;max-width:400px !important;padding:1.75rem !important;margin:auto !important;transform:scale(0.92) translateY(12px);transition:transform 0.25s cubic-bezier(0.16,1,0.3,1);color:#ffffff !important;font-family:Inter,system-ui,-apple-system,sans-serif !important;box-sizing:border-box !important;text-align:left !important;" role="dialog">
+                <div class="confirm-toast-header" style="display:flex !important;align-items:center !important;gap:1.15rem !important;margin-bottom:1.25rem !important;">
+                    <div class="confirm-toast-icon" style="width:48px !important;height:48px !important;border-radius:14px !important;display:flex !important;align-items:center !important;justify-content:center !important;font-size:1.4rem !important;flex-shrink:0 !important;${iconStyle}">
+                        <i class="${iconClass}"></i>
+                    </div>
+                    <div class="confirm-toast-text" style="flex:1 !important;">
+                        <div class="confirm-toast-title" style="font-size:1.15rem !important;font-weight:700 !important;color:#ffffff !important;margin:0 0 0.25rem 0 !important;line-height:1.3 !important;">${title}</div>
+                        <div class="confirm-toast-msg" style="font-size:0.95rem !important;color:#cbd5e1 !important;line-height:1.4 !important;margin:0 !important;">${message}</div>
+                    </div>
+                </div>
+                <div class="confirm-toast-actions" style="display:flex !important;justify-content:flex-end !important;margin-top:1.25rem !important;">
+                    <button type="button" class="confirm-toast-btn-yes" id="centeredToastOkBtn" style="padding:0.6rem 1.5rem !important;border-radius:10px !important;font-size:0.95rem !important;font-weight:700 !important;cursor:pointer !important;border:none !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;text-align:center !important;box-sizing:border-box !important;${btnStyle}">OK</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+        const card = overlay.querySelector('.confirm-toast-card');
+
+        requestAnimationFrame(() => {
+            overlay.classList.add('active');
+            overlay.style.opacity = '1';
+            overlay.style.pointerEvents = 'auto';
+            if (card) card.style.transform = 'scale(1) translateY(0)';
+            const okBtn = overlay.querySelector('#centeredToastOkBtn');
+            if (okBtn) okBtn.focus();
+        });
+
+        let dismissed = false;
+        function dismissToast() {
+            if (dismissed) return;
+            dismissed = true;
+            overlay.classList.remove('active');
+            overlay.style.opacity = '0';
+            overlay.style.pointerEvents = 'none';
+            if (card) card.style.transform = 'scale(0.92) translateY(12px)';
+            setTimeout(() => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 250);
+        }
+
+        overlay.querySelector('#centeredToastOkBtn').addEventListener('click', dismissToast);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) dismissToast(); });
+
+        if (duration > 0) {
+            setTimeout(dismissToast, duration);
+        }
+    };
+    window.showToastMessage = window.showCenteredToast;
+}
+

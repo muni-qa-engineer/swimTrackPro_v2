@@ -402,6 +402,25 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
     
     has_active_package = any(not b.get('is_completed', False) and str(b.get('status', '')).strip().lower() in ('active', 'confirmed', 'paid') for b in user_bookings)
     has_monthly_custom = any(not b.get('is_completed', False) and str(b.get('status', '')).strip().lower() in ('active', 'confirmed', 'paid') and b.get('package') in ('Monthly', 'Custom') for b in user_bookings)
+    has_pausable_package = any(not b.get('is_completed', False) and b.get('is_long_term', False) for b in user_bookings)
+
+    for b in user_bookings:
+        b['is_paused'] = str(b.get('pause_status', '')).upper() in ('PAUSED', 'PAUSE')
+        if b.get('end_date'):
+            try:
+                b['end_date_display'] = datetime.strptime(str(b['end_date']), '%Y-%m-%d').strftime('%d %b %Y')
+            except Exception:
+                b['end_date_display'] = str(b['end_date'])
+        else:
+            b['end_date_display'] = '--'
+
+        if b.get('auto_resume_date'):
+            try:
+                b['auto_resume_date_display'] = datetime.strptime(str(b['auto_resume_date']), '%Y-%m-%d').strftime('%d %b %Y')
+            except Exception:
+                b['auto_resume_date_display'] = str(b['auto_resume_date'])
+        else:
+            b['auto_resume_date_display'] = '--'
 
     monthly_revenue = sum(int(b.get('fee', 0) or 0) for b in user_bookings if str(b.get('status', '')).lower() == 'paid')
     pending_payments = sum(int(b.get('fee', 0) or 0) for b in user_bookings if str(b.get('status', '')).lower() != 'paid')
@@ -549,11 +568,20 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
         next_session = guest_upcoming_raw[0]
         next_session_name = next_session['student']
         next_session_date = next_session['datetime'].strftime('%d %b')
-        next_session_time = next_session['time']
-        
-    guest_all_future = [{'name': s['student'], 'date': s['datetime'].strftime('%d %b %Y'), 'time': s['time'], 'booking_id': s['booking_id'], 'raw_date': s['raw_date']} for s in all_future_sessions[:15]]
-
-    total_packages = len(user_bookings)
+    booking_map = {str(b.get('id')): b for b in user_bookings}
+    guest_all_future = [
+        {
+            'name': s['student'],
+            'date': s['datetime'].strftime('%d %b %Y'),
+            'time': s['time'],
+            'booking_id': s['booking_id'],
+            'raw_date': s['raw_date'],
+            'skip_remaining': booking_map.get(str(s['booking_id']), {}).get('skip_remaining', 0),
+            'skip_eligible': booking_map.get(str(s['booking_id']), {}).get('skip_eligible', False),
+            'package': booking_map.get(str(s['booking_id']), {}).get('package', '')
+        }
+        for s in all_future_sessions[:25]
+    ]
     active_packages = active_bookings
     completed_packages = completed_bookings
     active_package_name = 'No Package'
@@ -696,6 +724,7 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
         'active_bookings': active_bookings,
         'has_active_package': has_active_package,
         'has_monthly_custom': has_monthly_custom,
+        'has_pausable_package': has_pausable_package,
         'completed_bookings': completed_bookings,
         'monthly_revenue': monthly_revenue,
         'pending_payments': pending_payments,

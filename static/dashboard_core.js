@@ -211,24 +211,24 @@ function renderCalendar() {
       let maxSkips = 0;
       let validUntil = '';
 
-      if (packageType === 'Monthly') {
-        // Monthly package: maximum 2 skips.
-        maxSkips = 2;
-
-        // Valid until package end date + 5 days.
-        if (booking.end_date) {
-          const expiry = new Date(booking.end_date + 'T00:00:00');
-          expiry.setDate(expiry.getDate() + 5);
-          validUntil = formatDate(expiry);
-        }
+      if (booking.total_skips_allowed !== undefined) {
+        maxSkips = Number(booking.total_skips_allowed);
+      } else if (packageType === 'Monthly') {
+        maxSkips = 3;
+      } else if (packageType === '3_months' || packageType.includes('3')) {
+        maxSkips = 9;
+      } else if (packageType === '6_months' || packageType.includes('6')) {
+        maxSkips = 18;
+      } else if (packageType === '9_months' || packageType.includes('9')) {
+        maxSkips = 27;
+      } else if (packageType === '12_months' || packageType.includes('12') || packageType.includes('year')) {
+        maxSkips = 36;
       } else if (packageType === 'Custom') {
-        // Custom package: 1 skip for every 7 scheduled classes.
-        maxSkips = Math.floor(scheduledClasses / 7);
+        maxSkips = Math.max(1, Math.floor(scheduledClasses / 4));
+      }
 
-        // Valid within 3 days from the skipped date.
-        const sessionDateObj = new Date(fullDate + 'T00:00:00');
-        sessionDateObj.setDate(sessionDateObj.getDate() + 3);
-        validUntil = formatDate(sessionDateObj);
+      if (booking.end_date) {
+        validUntil = formatDate(new Date(booking.end_date + 'T00:00:00'));
       }
 
       const skipRemaining = Math.max(0, maxSkips - usedSkips);

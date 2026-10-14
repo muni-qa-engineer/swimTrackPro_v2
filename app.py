@@ -3,6 +3,7 @@ from flask import Flask, session, request, jsonify, redirect, render_template
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from services.booking_engine import generate_recurring_dates
+from services.package_tier_service import get_package_tier_info
 from swimtrackpro import runtime
 from swimtrackpro.routes.authentication import register_authentication_routes
 from swimtrackpro.routes.bookings import register_bookings_routes
@@ -341,6 +342,11 @@ def ensure_database_tables():
     cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS rejection_reason TEXT")
     cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS resume_type TEXT")
     cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS remaining_classes_at_pause INTEGER")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS allocated_pause_days INTEGER DEFAULT 0")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS used_pause_days INTEGER DEFAULT 0")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS pause_start_date TEXT")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS pause_end_date TEXT")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS original_end_date TEXT")
     cursor.execute("UPDATE bookings SET pause_count = 1 WHERE pause_used = TRUE AND (pause_count IS NULL OR pause_count = 0)")
 
     cursor.execute("""
@@ -633,6 +639,9 @@ def load_data():
             'rejection_reason': b.get('rejection_reason'),
             'resume_type': b.get('resume_type'),
             'remaining_classes_at_pause': b.get('remaining_classes_at_pause'),
+            'pause_start_date': b.get('pause_start_date'),
+            'pause_end_date': b.get('pause_end_date') or b.get('auto_resume_date'),
+            'original_end_date': b.get('original_end_date') or b.get('end_date'),
         }
 
         # -------------------------------------------------------
@@ -673,13 +682,31 @@ def load_data():
         booking['pending_request_id'] = pending_request[0] if pending_request else None
         booking['approved_request_id'] = approved_request[0] if approved_request else None
         
-        # New Rule: 1 skip allowed for every 6 sessions booked
-        total_skips_allowed = booking.get('total_classes', 0) // 6
+        # Package tier rules:
+        # Monthly package: 3 skips max.
+        # Long-term packages (3, 6, 9, 12 months): 9, 18, 27, 36 skips.
+        pkg_tier = get_package_tier_info(booking.get('package'))
+        total_skips_allowed = pkg_tier['total_skips']
         skips_used = len(booking_credits)
         skip_remaining = max(0, total_skips_allowed - skips_used)
         
+        # Pause Days pool (Cult.fit model)
+        # 3m = 15 days, 6m = 30 days, 9m = 45 days, 12m = 60 days
+        raw_alloc = b.get('allocated_pause_days')
+        allocated_pause = int(raw_alloc) if (raw_alloc is not None and int(raw_alloc) > 0) else pkg_tier['pause_days']
+        used_pause = int(b.get('used_pause_days') or 0)
+        available_pause = max(0, allocated_pause - used_pause)
+
+        booking['pkg_tier'] = pkg_tier
+        booking['is_monthly'] = pkg_tier['is_monthly']
+        booking['is_long_term'] = pkg_tier['is_long_term']
+        booking['total_skips_allowed'] = total_skips_allowed
+        booking['skips_used'] = skips_used
         booking['skip_remaining'] = skip_remaining
         booking['skip_eligible'] = skip_remaining > 0
+        booking['allocated_pause_days'] = allocated_pause
+        booking['used_pause_days'] = used_pause
+        booking['available_pause_days'] = available_pause
         booking['valid_until'] = booking['end_date']
         booking['makeup_used'] = approved_request is not None
 

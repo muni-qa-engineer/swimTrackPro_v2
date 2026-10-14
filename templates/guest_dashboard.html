@@ -102,7 +102,7 @@
                             <button type="button" class="btn btn-outline flex-grow-1" style="color: var(--color-warning); border-color: rgba(245, 158, 11, 0.5);" onclick="openSkipModal()">
                                 <i class="fa-solid fa-forward-step"></i> Skip
                             </button>
-                            {% if has_monthly_custom %}
+                            {% if has_pausable_package %}
                             <button type="button" class="btn btn-outline flex-grow-1" style="color: var(--color-danger); border-color: rgba(239, 68, 68, 0.5);" onclick="openPauseModal()">
                                 <i class="fa-solid fa-pause"></i> Pause
                             </button>
@@ -117,6 +117,119 @@
                             <p class="text-muted mb-3" style="font-size: 0.95rem;">No bookings found yet.</p>
                             <a href="/booking" class="btn btn-primary btn-sm rounded-pill px-4 py-2">
                                 <i class="fa-solid fa-plus me-1"></i> Book Now
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Membership & Flexibility Card (Cult.fit Model) -->
+                <div class="glass-panel" style="padding: 1.5rem;">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h3 class="font-display" style="font-size: 1.25rem; margin: 0;">
+                            <i class="fa-solid fa-circle-pause text-warning"></i> Membership & Flexibility
+                        </h3>
+                        <span class="badge" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4; font-weight: 700; font-size: 0.72rem; letter-spacing: 0.3px;">Cult.fit Model</span>
+                    </div>
+                    <p class="text-muted small mb-3">Freeze long-term passes during travel/illness, or skip sessions with automatic reschedule.</p>
+
+                    {% set active_user_bookings = [] %}
+                    {% for b in bookings %}
+                        {% if not b.is_completed and (b.status|lower not in ['cancelled', 'deleted']) %}
+                            {% set _ = active_user_bookings.append(b) %}
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if active_user_bookings|length > 0 %}
+                        <div class="d-flex flex-column gap-3">
+                            {% for b in active_user_bookings %}
+                                {% set is_paused = b.pause_status|upper in ['PAUSED', 'PAUSE'] %}
+                                <div class="p-3 rounded" style="background: rgba(255, 255, 255, 0.03); border: 1px solid {% if is_paused %}rgba(245, 158, 11, 0.45){% else %}rgba(255, 255, 255, 0.08){% endif %};">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span style="font-weight: 700; color: #fff; font-size: 1rem;">🏊 {{ b.student }}</span>
+                                            <span class="badge" style="background: rgba(255, 255, 255, 0.08); color: #e2e8f0; font-size: 0.72rem;">{{ b.package }}</span>
+                                        </div>
+                                        {% if is_paused %}
+                                            <span class="badge bg-warning text-dark fw-bold"><i class="fa-solid fa-pause me-1"></i> PAUSED</span>
+                                        {% else %}
+                                            <span class="badge bg-success text-white fw-bold"><i class="fa-solid fa-circle-check me-1"></i> ACTIVE</span>
+                                        {% endif %}
+                                    </div>
+
+                                    {% if is_paused %}
+                                        <!-- Paused State View -->
+                                        <div class="p-3 my-2 rounded" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35);">
+                                            <div class="d-flex justify-content-between small text-white mb-1">
+                                                <span><strong>Status:</strong> Membership Frozen</span>
+                                                <span class="text-warning fw-bold">Auto-resumes: {{ b.auto_resume_date_display }}</span>
+                                            </div>
+                                            <div class="text-secondary small mb-3">Expiry automatically extended. Resume anytime to only consume the exact days used.</div>
+                                            <button type="button" class="btn btn-warning w-100 fw-bold py-2 btn-sm text-black" onclick="resumePackageNow('{{ b.id }}')">
+                                                <i class="fa-solid fa-play me-1"></i> Resume Package (Unpause Now)
+                                            </button>
+                                            <div class="text-muted text-center mt-1" style="font-size: 0.72rem;">Unused pause days are refunded back to your pool instantly.</div>
+                                        </div>
+                                    {% else %}
+                                        <!-- Active State View -->
+                                        <div class="row g-2 mb-2">
+                                            {% if b.is_long_term %}
+                                                <!-- Pause Days Pool -->
+                                                <div class="col-6">
+                                                    <div class="p-2 rounded text-center" style="background: rgba(6, 182, 212, 0.08); border: 1px solid rgba(6, 182, 212, 0.2);">
+                                                        <div class="text-muted" style="font-size: 0.7rem; text-transform: uppercase;">Pause Days Pool</div>
+                                                        <div style="font-size: 1.15rem; font-weight: 800; color: #38bdf8;">
+                                                            {{ b.available_pause_days }} <span style="font-size: 0.75rem; color: rgba(255,255,255,0.6);">/ {{ b.allocated_pause_days }} d</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                            <div class="{% if b.is_long_term %}col-6{% else %}col-12{% endif %}">
+                                                <div class="p-2 rounded text-center" style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.2);">
+                                                    <div class="text-muted" style="font-size: 0.7rem; text-transform: uppercase;">Skips Remaining</div>
+                                                    <div style="font-size: 1.15rem; font-weight: 800; color: {% if b.skip_remaining > 0 %}#f59e0b{% else %}#ef4444{% endif %};">
+                                                        {{ b.skip_remaining }} <span style="font-size: 0.75rem; color: rgba(255,255,255,0.6);">/ {{ b.total_skips_allowed }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {% if b.skip_remaining == 0 %}
+                                            <div class="alert alert-danger py-1.5 px-2 mb-2 text-center" style="font-size: 0.8rem; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5;">
+                                                <i class="fa-solid fa-circle-exclamation me-1"></i> skip session exhausted. Sorry
+                                            </div>
+                                        {% endif %}
+
+                                        <div class="d-flex justify-content-between text-muted small mb-2" style="font-size: 0.78rem;">
+                                            <span>Valid until: <strong class="text-white">{{ b.end_date_display }}</strong></span>
+                                            <span>{{ b.remaining_classes }} classes remaining</span>
+                                        </div>
+
+                                        <!-- Action Buttons -->
+                                        <div class="d-flex gap-2">
+                                            {% if b.is_long_term %}
+                                                <button type="button" class="btn btn-outline-danger flex-grow-1 btn-sm" onclick="openCultFitPauseModal('{{ b.id }}', '{{ b.student }}', '{{ b.package }}', {{ b.available_pause_days }}, '{{ b.end_date }}')" {% if b.available_pause_days <= 0 %}disabled title="Pause pool exhausted"{% endif %}>
+                                                    <i class="fa-solid fa-pause me-1"></i> Pause Package
+                                                </button>
+                                            {% endif %}
+                                            <button type="button" class="btn btn-outline-warning flex-grow-1 btn-sm" onclick="{% if b.skip_remaining <= 0 %}showSkipExhaustedToast(){% else %}openSkipModalForBooking('{{ b.id }}'){% endif %}">
+                                                <i class="fa-solid fa-forward-step me-1"></i> Skip Session
+                                            </button>
+                                        </div>
+
+                                        {% if b.is_monthly %}
+                                            <div class="text-secondary mt-2" style="font-size: 0.72rem;">
+                                                <i class="fa-solid fa-circle-info text-primary me-1"></i> Monthly Package: Up to 3 skips allowed. Pause feature is exclusive to 3, 6, 9 & 12 Month memberships.
+                                            </div>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <p class="text-muted small mb-2">No active memberships currently found.</p>
+                            <a href="/booking" class="btn btn-primary btn-sm rounded-pill px-3 py-1.5">
+                                <i class="fa-solid fa-plus me-1"></i> Explore Packages
                             </a>
                         </div>
                     {% endif %}
@@ -300,61 +413,8 @@
         </div>
         
     </section>
-    
-    <!-- Pause Package Modal -->
-    <div class="modal fade" id="pausePackageModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content glass-panel" style="background: rgba(15, 15, 18, 0.95); border: 1px solid rgba(255,255,255,0.1);">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title font-display fw-bold"><i class="fa-solid fa-pause text-danger"></i> Pause Package</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body pt-0">
-                    <form id="dashboardPauseForm" onsubmit="submitDashboardPause(event)">
-                        <div class="mb-3">
-                            <label class="form-label text-muted small">Select Package to Pause</label>
-                            <select class="form-select" id="pauseBookingId" name="booking_id" required style="background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.1); color: white;">
-                                <option value="" disabled selected>-- Select an active package --</option>
-                                {% for b in bookings %}
-                                    {% if b.package in ['Monthly', 'Custom'] and not b.is_completed %}
-                                        <option value="{{ b.id }}">
-                                            {{ b.package }} ({{ b.student }}) - {{ b.remaining_classes }} classes left
-                                        </option>
-                                    {% endif %}
-                                {% endfor %}
-                            </select>
-                            <div class="form-text text-secondary" style="font-size: 0.75rem;">Only Monthly and Custom packages can be paused.</div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label text-muted small">Reason for Pause <span class="text-danger">*</span></label>
-                            <select class="form-select" id="pauseReason" name="reason" onchange="toggleOtherReason()" required style="background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.1); color: white;">
-                                <option value="" disabled selected>-- Select Reason --</option>
-                                <option value="Medical">Medical / Health Issue</option>
-                                <option value="Travel">Out of Station / Travel</option>
-                                <option value="Exams">Exams / Studies</option>
-                                <option value="Weather">Weather Conditions</option>
-                                <option value="Other">Other (Please specify)</option>
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3 d-none" id="otherReasonContainer">
-                            <label class="form-label text-muted small">Specify Reason <span class="text-danger">*</span></label>
-                            <textarea class="form-control" id="pauseOtherReason" name="other_reason" rows="2" style="background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.1); color: white;"></textarea>
-                        </div>
-                        
-                        <div class="alert alert-warning py-2 mb-4" style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.15);">
-                            <i class="fa-solid fa-triangle-exclamation"></i> The first pause is instant (7 days). Subsequent pauses require coach approval.
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary w-100" id="submitPauseBtn" style="background: var(--color-danger); border: none;">Confirm Pause</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
 </div>
+
 
 <!-- Notifications Modal -->
 <div class="modal fade" id="notificationsModal" tabindex="-1" aria-labelledby="notificationsModalLabel" aria-hidden="true">
@@ -385,38 +445,83 @@
   </div>
 </div>
 
-<!-- Pause Package Modal -->
+<!-- Pause Package Modal (Cult.fit Model) -->
 <div class="modal fade" id="pausePackageModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content glass-panel" style="background: rgba(15, 15, 18, 0.95); border: 1px solid rgba(255,255,255,0.1);">
-            <div class="modal-header border-0">
-                <h5 class="modal-title font-display fw-bold"><i class="fa-solid fa-pause text-danger"></i> Pause Package</h5>
+        <div class="modal-content glass-panel" style="background: rgba(15, 15, 18, 0.95); border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 20px 50px rgba(0,0,0,0.8);">
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <h5 class="modal-title font-display fw-bold mb-1"><i class="fa-solid fa-pause text-warning me-2"></i>Pause Membership</h5>
+                    <div class="text-muted small">Freeze your package during travel or illness without wasting days.</div>
+                </div>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body pt-0">
+            <div class="modal-body pt-3">
                 <form id="dashboardPauseForm" onsubmit="submitDashboardPause(event)">
                     <div class="mb-3">
-                        <label class="form-label text-muted small">Select Package to Pause</label>
-                        <select class="form-select" id="pauseBookingId" name="booking_id" required style="background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.1); color: white;">
+                        <label class="form-label text-muted small">Select Long-Term Package</label>
+                        <select class="form-select" id="pauseBookingId" name="booking_id" required style="background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.15); color: white;" onchange="onPauseBookingSelectChange()">
                             <option value="" disabled selected>-- Select an active package --</option>
                             {% for b in bookings %}
-                                {% if b.package in ['Monthly', 'Custom'] and not b.is_completed %}
-                                    <option value="{{ b.id }}">
-                                        {{ b.package }} ({{ b.student }}) - {{ b.remaining_classes }} classes left
+                                {% if b.is_long_term and not b.is_completed and not b.is_paused %}
+                                    <option value="{{ b.id }}" data-avail="{{ b.available_pause_days }}" data-alloc="{{ b.allocated_pause_days }}" data-end="{{ b.end_date }}" data-student="{{ b.student }}" data-pkg="{{ b.package }}">
+                                        {{ b.package }} ({{ b.student }}) — {{ b.available_pause_days }} pause days left
                                     </option>
                                 {% endif %}
                             {% endfor %}
                         </select>
-                        <div class="form-text text-secondary" style="font-size: 0.75rem;">Only Monthly and Custom packages can be paused.</div>
+                        <div class="form-text text-secondary" style="font-size: 0.72rem;">Available exclusively for 3, 6, 9 & 12 Month memberships.</div>
+                    </div>
+
+                    <!-- Pause Pool Badge -->
+                    <div id="pausePoolBadge" class="p-2.5 mb-3 rounded d-flex align-items-center justify-content-between" style="background: rgba(6, 182, 212, 0.08); border: 1px solid rgba(6, 182, 212, 0.25); display: none !important;">
+                        <span class="small text-white"><i class="fa-solid fa-wallet text-info me-1"></i> Available Pause Days:</span>
+                        <span id="pausePoolCount" class="fw-bold text-info fs-6">0 days</span>
+                    </div>
+
+                    <!-- Pause Start Date -->
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Pause Start Date <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="pauseStartDate" name="start_date" required style="background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.15); color: white; color-scheme: dark;" onchange="updatePausePreview()">
+                    </div>
+
+                    <!-- Pause Duration (Days) -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label text-muted small mb-0">Pause Duration (Days) <span class="text-danger">*</span></label>
+                            <span id="pauseDurationLabel" class="small fw-bold text-warning">7 Days</span>
+                        </div>
+                        <input type="number" class="form-control" id="pauseDaysInput" name="pause_days" min="1" max="60" value="7" required style="background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.15); color: white;" oninput="updatePausePreview()">
+                        
+                        <!-- Quick Preset Pills -->
+                        <div class="d-flex gap-1.5 mt-2 flex-wrap" id="pausePresetPills">
+                            <button type="button" class="btn btn-outline-secondary btn-sm py-0.5 px-2.5 rounded-pill" onclick="setPausePresetDays(3)">3 Days</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm py-0.5 px-2.5 rounded-pill" onclick="setPausePresetDays(5)">5 Days</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm py-0.5 px-2.5 rounded-pill active" onclick="setPausePresetDays(7)">7 Days</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm py-0.5 px-2.5 rounded-pill" onclick="setPausePresetDays(14)">14 Days</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm py-0.5 px-2.5 rounded-pill" onclick="setPauseMaxDays()">Max Pool</button>
+                        </div>
+                    </div>
+
+                    <!-- Live Extension Preview Box -->
+                    <div class="p-3 mb-3 rounded" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1);">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="text-muted"><i class="fa-solid fa-calendar-check me-1 text-primary"></i> Auto-Resumes On:</span>
+                            <span id="previewAutoResumeDate" class="fw-bold text-white">--</span>
+                        </div>
+                        <div class="d-flex justify-content-between small">
+                            <span class="text-muted"><i class="fa-solid fa-hourglass-end me-1 text-warning"></i> New Membership Expiry:</span>
+                            <span id="previewExtendedExpiry" class="fw-bold text-warning">--</span>
+                        </div>
                     </div>
                     
                     <div class="mb-3">
                         <label class="form-label text-muted small">Reason for Pause <span class="text-danger">*</span></label>
-                        <select class="form-select" id="pauseReason" name="reason" onchange="toggleOtherReason()" required style="background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.1); color: white;">
-                            <option value="" disabled selected>-- Select Reason --</option>
-                            <option value="Medical">Medical / Health Issue</option>
-                            <option value="Travel">Out of Station / Travel</option>
+                        <select class="form-select" id="pauseReason" name="reason" onchange="toggleOtherReason()" required style="background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.15); color: white;">
+                            <option value="Travel" selected>Out of Station / Vacation</option>
+                            <option value="Medical">Medical / Health Issue / Injury</option>
                             <option value="Exams">Exams / Studies</option>
+                            <option value="Work/Busy">Work / Busy Schedule</option>
                             <option value="Weather">Weather Conditions</option>
                             <option value="Other">Other (Please specify)</option>
                         </select>
@@ -424,14 +529,16 @@
                     
                     <div class="mb-3 d-none" id="otherReasonContainer">
                         <label class="form-label text-muted small">Specify Reason <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="pauseOtherReason" name="other_reason" rows="2" style="background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.1); color: white;"></textarea>
+                        <textarea class="form-control" id="pauseOtherReason" name="other_reason" rows="2" style="background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.15); color: white;"></textarea>
                     </div>
                     
-                    <div class="alert alert-warning py-2 mb-4" style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.15);">
-                        <i class="fa-solid fa-triangle-exclamation"></i> The first pause is instant (7 days). Subsequent pauses require coach approval.
+                    <div class="alert alert-info py-2 mb-4" style="font-size: 0.75rem; background: rgba(6, 182, 212, 0.06); border: 1px solid rgba(6, 182, 212, 0.2); color: #bae6fd;">
+                        <i class="fa-solid fa-circle-info me-1"></i> Membership automatically pauses. Unpause early anytime to refund unused days back to your pool!
                     </div>
                     
-                    <button type="submit" class="btn btn-primary w-100" id="submitPauseBtn" style="background: var(--color-danger); border: none;">Confirm Pause</button>
+                    <button type="submit" class="btn btn-warning w-100 fw-bold py-2.5 text-black" id="submitPauseBtn" style="border: none;">
+                        <i class="fa-solid fa-pause me-1"></i> Confirm Pause Membership
+                    </button>
                 </form>
             </div>
         </div>
@@ -441,33 +548,41 @@
 <!-- Skip Session Modal -->
 <div class="modal fade" id="skipSessionModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content glass-panel" style="background: rgba(15, 15, 18, 0.95); border: 1px solid rgba(255,255,255,0.1);">
-            <div class="modal-header border-0">
-                <h5 class="modal-title font-display fw-bold"><i class="fa-solid fa-forward-step text-warning"></i> Skip Session</h5>
+        <div class="modal-content glass-panel" style="background: rgba(15, 15, 18, 0.95); border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 20px 50px rgba(0,0,0,0.8);">
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <h5 class="modal-title font-display fw-bold mb-1"><i class="fa-solid fa-forward-step text-warning me-2"></i>Skip Session</h5>
+                    <div class="text-muted small">Skip a scheduled class and generate a replacement credit.</div>
+                </div>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body pt-0">
+            <div class="modal-body pt-3">
                 <form id="dashboardSkipForm" method="POST">
-                    <div class="mb-4">
+                    <div class="mb-3">
                         <label class="form-label text-muted small">Select Session to Skip</label>
                         {% if guest_all_future and guest_all_future|length > 0 %}
-                            <select class="form-select" id="skipSessionSelect" required style="background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.1); color: white;" onchange="updateSkipFormAction()">
+                            <select class="form-select" id="skipSessionSelect" required style="background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.15); color: white;" onchange="updateSkipFormAction()">
                                 {% for s in guest_all_future %}
-                                    <option value="{{ s.booking_id }}|{{ s.raw_date }}">
+                                    <option value="{{ s.booking_id }}|{{ s.raw_date }}" data-skip-rem="{{ s.skip_remaining }}" data-eligible="{{ 'true' if s.skip_eligible else 'false' }}">
                                         {{ s.date }} - {{ s.time }} ({{ s.name }})
                                     </option>
                                 {% endfor %}
                             </select>
-                            <div class="form-text text-secondary" style="font-size: 0.75rem;">Skipping a session generates a make-up credit. You cannot skip a class less than 6 hours before it starts.</div>
+                            <div class="form-text text-secondary mt-1" style="font-size: 0.72rem;">Skipping generates a make-up credit. You cannot skip less than 6 hours before start.</div>
                         {% else %}
-                            <div class="alert alert-secondary text-center">
+                            <div class="alert alert-secondary text-center small py-3">
                                 No upcoming sessions available to skip.
                             </div>
                         {% endif %}
                     </div>
+
+                    <!-- Skip Status Indicator in Modal -->
+                    <div id="skipModalStatusNotice" class="mb-3"></div>
                     
                     {% if guest_all_future and guest_all_future|length > 0 %}
-                    <button type="submit" class="btn btn-primary w-100" id="submitSkipBtn" style="background: var(--color-warning); color: black; border: none;">Confirm Skip</button>
+                    <button type="submit" class="btn btn-primary w-100 py-2.5 fw-bold" id="submitSkipBtn" style="background: var(--color-warning); color: black; border: none;">
+                        <i class="fa-solid fa-forward-step me-1"></i> Confirm Skip
+                    </button>
                     {% endif %}
                 </form>
             </div>
@@ -546,21 +661,86 @@
         updateSkipFormAction();
         skipModalObj.show();
     }
+
+    function openSkipModalForBooking(bookingId) {
+        if (!skipModalObj) {
+            skipModalObj = new bootstrap.Modal(document.getElementById('skipSessionModal'));
+        }
+        const select = document.getElementById('skipSessionSelect');
+        if (select && bookingId) {
+            for (let i = 0; i < select.options.length; i++) {
+                const opt = select.options[i];
+                if (opt.value && opt.value.startsWith(bookingId + '|')) {
+                    select.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+        updateSkipFormAction();
+        skipModalObj.show();
+    }
+
+    function showSkipExhaustedToast() {
+        if (window.showCenteredToast) {
+            window.showCenteredToast('skip session exhausted. Sorry', 'warning', 'Skip Limit Reached');
+        } else {
+            alert('skip session exhausted. Sorry');
+        }
+    }
     
     function updateSkipFormAction() {
         const select = document.getElementById('skipSessionSelect');
         const form = document.getElementById('dashboardSkipForm');
-        if (select && form && select.value) {
-            const parts = select.value.split('|');
-            if (parts.length === 2) {
-                const bookingId = encodeURIComponent(parts[0]);
-                const sessionDate = encodeURIComponent(parts[1]);
-                form.action = '/skip_session/' + bookingId + '/' + sessionDate;
+        const notice = document.getElementById('skipModalStatusNotice');
+        const submitBtn = document.getElementById('submitSkipBtn');
+        if (!select || !form) return;
+
+        if (!select.value) {
+            if (submitBtn) submitBtn.disabled = true;
+            return;
+        }
+
+        const parts = select.value.split('|');
+        if (parts.length === 2) {
+            const bookingId = encodeURIComponent(parts[0]);
+            const sessionDate = encodeURIComponent(parts[1]);
+            form.action = '/skip_session/' + bookingId + '/' + sessionDate;
+        }
+
+        const selectedOpt = select.options[select.selectedIndex];
+        if (selectedOpt) {
+            const isEligible = selectedOpt.getAttribute('data-eligible') === 'true';
+            const skipRem = parseInt(selectedOpt.getAttribute('data-skip-rem') || '0', 10);
+
+            if (!isEligible || skipRem <= 0) {
+                if (notice) {
+                    notice.innerHTML = `
+                        <div class="alert alert-danger py-2 px-3 small mb-0" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); color: #fca5a5;">
+                            <i class="fa-solid fa-circle-exclamation me-1"></i> <strong>skip session exhausted. Sorry</strong>
+                        </div>
+                    `;
+                }
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('opacity-50');
+                }
+            } else {
+                if (notice) {
+                    notice.innerHTML = `
+                        <div class="alert alert-info py-2 px-3 small mb-0" style="background: rgba(6, 182, 212, 0.08); border: 1px solid rgba(6, 182, 212, 0.25); color: #7dd3fc;">
+                            <i class="fa-solid fa-circle-info me-1"></i> You have <strong>${skipRem}</strong> skip credit${skipRem > 1 ? 's' : ''} remaining for this package.
+                        </div>
+                    `;
+                }
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('opacity-50');
+                }
             }
         }
     }
 
-    // Pause functionality
+    // Cult.fit Pause Membership Functionality
     let pauseModalObj = null;
     function openPauseModal() {
         if (!pauseModalObj) {
@@ -568,7 +748,151 @@
         }
         document.getElementById('dashboardPauseForm').reset();
         document.getElementById('otherReasonContainer').classList.add('d-none');
+        
+        // Default start date to tomorrow
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const yyyy = tomorrow.getFullYear();
+        const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
+        const dd = String(tomorrow.getDate()).padStart(2, '0');
+        const startInput = document.getElementById('pauseStartDate');
+        if (startInput) {
+            startInput.min = `${yyyy}-${mm}-${dd}`;
+            startInput.value = `${yyyy}-${mm}-${dd}`;
+        }
+
+        onPauseBookingSelectChange();
         pauseModalObj.show();
+    }
+
+    function openCultFitPauseModal(bookingId, student, pkg, availableDays, currentEndDate) {
+        if (!pauseModalObj) {
+            pauseModalObj = new bootstrap.Modal(document.getElementById('pausePackageModal'));
+        }
+        const select = document.getElementById('pauseBookingId');
+        if (select && bookingId) {
+            select.value = bookingId;
+        }
+
+        // Default start date to tomorrow
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const yyyy = tomorrow.getFullYear();
+        const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
+        const dd = String(tomorrow.getDate()).padStart(2, '0');
+        const startInput = document.getElementById('pauseStartDate');
+        if (startInput) {
+            startInput.min = `${yyyy}-${mm}-${dd}`;
+            startInput.value = `${yyyy}-${mm}-${dd}`;
+        }
+
+        onPauseBookingSelectChange();
+        pauseModalObj.show();
+    }
+
+    function onPauseBookingSelectChange() {
+        const select = document.getElementById('pauseBookingId');
+        const badge = document.getElementById('pausePoolBadge');
+        const poolCount = document.getElementById('pausePoolCount');
+        const daysInput = document.getElementById('pauseDaysInput');
+
+        if (!select || !select.value) {
+            if (badge) badge.style.setProperty('display', 'none', 'important');
+            return;
+        }
+
+        const opt = select.options[select.selectedIndex];
+        const avail = parseInt(opt.getAttribute('data-avail') || '0', 10);
+        const alloc = parseInt(opt.getAttribute('data-alloc') || '0', 10);
+
+        if (badge && poolCount) {
+            poolCount.textContent = `${avail} of ${alloc} days left`;
+            badge.style.removeProperty('display');
+            badge.style.display = 'flex';
+        }
+
+        if (daysInput) {
+            daysInput.max = avail > 0 ? avail : 1;
+            const defaultDays = Math.min(avail > 0 ? avail : 7, 7);
+            daysInput.value = defaultDays;
+        }
+
+        updatePausePreview();
+    }
+
+    function setPausePresetDays(days) {
+        const select = document.getElementById('pauseBookingId');
+        const daysInput = document.getElementById('pauseDaysInput');
+        if (!select || !daysInput) return;
+
+        const opt = select.options[select.selectedIndex];
+        const avail = opt ? parseInt(opt.getAttribute('data-avail') || '60', 10) : 60;
+
+        daysInput.value = Math.min(days, avail);
+
+        // Highlight preset pills
+        const pills = document.querySelectorAll('#pausePresetPills button');
+        pills.forEach(p => p.classList.remove('active'));
+        if (event && event.target) {
+            event.target.classList.add('active');
+        }
+
+        updatePausePreview();
+    }
+
+    function setPauseMaxDays() {
+        const select = document.getElementById('pauseBookingId');
+        const daysInput = document.getElementById('pauseDaysInput');
+        if (!select || !daysInput) return;
+
+        const opt = select.options[select.selectedIndex];
+        const avail = opt ? parseInt(opt.getAttribute('data-avail') || '60', 10) : 60;
+        daysInput.value = avail;
+
+        const pills = document.querySelectorAll('#pausePresetPills button');
+        pills.forEach(p => p.classList.remove('active'));
+        if (event && event.target) {
+            event.target.classList.add('active');
+        }
+
+        updatePausePreview();
+    }
+
+    function updatePausePreview() {
+        const startInput = document.getElementById('pauseStartDate');
+        const daysInput = document.getElementById('pauseDaysInput');
+        const select = document.getElementById('pauseBookingId');
+        const label = document.getElementById('pauseDurationLabel');
+        const resumePreview = document.getElementById('previewAutoResumeDate');
+        const expiryPreview = document.getElementById('previewExtendedExpiry');
+
+        if (!daysInput || !startInput) return;
+
+        const pauseDays = parseInt(daysInput.value, 10) || 0;
+        if (label) label.textContent = `${pauseDays} Day${pauseDays === 1 ? '' : 's'}`;
+
+        const startVal = startInput.value;
+        if (startVal && pauseDays > 0) {
+            const startDate = new Date(startVal + 'T00:00:00');
+            const resumeDate = new Date(startDate);
+            resumeDate.setDate(resumeDate.getDate() + pauseDays);
+
+            const options = { month: 'short', day: 'numeric', year: 'numeric' };
+            if (resumePreview) {
+                resumePreview.textContent = resumeDate.toLocaleDateString('en-US', options);
+            }
+
+            if (select && select.selectedIndex >= 0) {
+                const opt = select.options[select.selectedIndex];
+                const endVal = opt ? opt.getAttribute('data-end') : null;
+                if (endVal && expiryPreview) {
+                    const endDate = new Date(endVal + 'T00:00:00');
+                    const newEndDate = new Date(endDate);
+                    newEndDate.setDate(newEndDate.getDate() + pauseDays);
+                    expiryPreview.textContent = newEndDate.toLocaleDateString('en-US', options);
+                }
+            }
+        }
     }
     
     function toggleOtherReason() {
@@ -591,7 +915,7 @@
         const btn = document.getElementById('submitPauseBtn');
         const originalText = btn.innerHTML;
         
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Freezing Package...';
         btn.disabled = true;
         
         fetch('/booking/pause', {
@@ -601,19 +925,81 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                pauseModalObj.hide();
-                window.location.reload();
+                if (pauseModalObj) pauseModalObj.hide();
+                if (window.showCenteredToast) {
+                    window.showCenteredToast(data.message || 'Membership paused successfully. Classes during pause are frozen.', 'success', 'Package Paused');
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    window.location.reload();
+                }
             } else {
-                alert(data.error || 'An error occurred while pausing.');
+                if (window.showCenteredToast) {
+                    window.showCenteredToast(data.error || 'An error occurred while pausing.', 'danger', 'Pause Failed');
+                } else {
+                    alert(data.error || 'An error occurred while pausing.');
+                }
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
         })
         .catch(err => {
             console.error(err);
-            alert('A network error occurred. Please try again.');
+            if (window.showCenteredToast) {
+                window.showCenteredToast('A network error occurred. Please try again.', 'danger', 'Network Error');
+            } else {
+                alert('A network error occurred. Please try again.');
+            }
             btn.innerHTML = originalText;
             btn.disabled = false;
+        });
+    }
+
+    // Cult.fit Manual Resumption (Unpause Early)
+    function resumePackageNow(bookingId) {
+        if (!window.showConfirmToast) {
+            if (!confirm("Are you sure you want to resume your package early? Remaining pause days will be refunded back to your pool.")) return;
+            performResume(bookingId);
+            return;
+        }
+        window.showConfirmToast({
+            title: 'Resume Membership Early?',
+            message: 'Your package will reactivate today and remaining sessions will resume. Unused pause days will be automatically refunded back to your pool.',
+            confirmText: 'Yes, Resume Now',
+            cancelText: 'Cancel',
+            type: 'primary',
+            onConfirm: () => performResume(bookingId)
+        });
+    }
+
+    function performResume(bookingId) {
+        const formData = new FormData();
+        formData.append('booking_id', bookingId);
+        fetch('/booking/resume', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                if (window.showCenteredToast) {
+                    window.showCenteredToast(data.message || 'Membership resumed successfully! Unused pause days have been refunded.', 'success', 'Membership Resumed');
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    window.location.reload();
+                }
+            } else {
+                if (window.showCenteredToast) {
+                    window.showCenteredToast(data.error || 'Unable to resume package.', 'danger', 'Resume Failed');
+                } else {
+                    alert(data.error || 'Unable to resume package.');
+                }
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            if (window.showCenteredToast) {
+                window.showCenteredToast('A network error occurred. Please try again.', 'danger', 'Network Error');
+            }
         });
     }
 </script>

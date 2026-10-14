@@ -6,6 +6,7 @@ from flask import flash, redirect, render_template, request, session, url_for
 
 from services.booking_engine import generate_recurring_dates
 from services.makeup_service import create_makeup_credit, get_available_makeup_credits
+from services.package_tier_service import get_package_tier_info
 from swimtrackpro.runtime import get_pg_connection
 
 
@@ -36,35 +37,37 @@ def skip_session(booking_id, session_date):
         start_date,
         end_date,
         selected_days,
-        time
+        time,
+        package,
+        calendar_dates_override
     FROM bookings
     WHERE id = %s
     LIMIT 1
     """, (str(booking_id),))
 
     row = cursor.fetchone()
-    conn.close()
 
-    if row:
-        booking = {
-            'id': row[0],
-            'student': row[1],
-            'owner_name': row[2],
-            'owner_phone': row[3],
-            'email': row[4] or '',
-            'time': row[8] or '06:00 AM',
-            'calendar_dates': generate_recurring_dates(
-                str(row[5]),
-                str(row[6]),
-                row[7]
-            )
-        }
-    else:
-        booking = None
-
-    if not booking:
+    if not row:
+        conn.close()
         flash('Booking not found')
         return redirect(url_for('calendar_page'))
+
+    override_dates = row[10]
+    if override_dates:
+        calendar_dates = [d.strip() for d in override_dates.split(',') if d.strip()]
+    else:
+        calendar_dates = generate_recurring_dates(str(row[5]), str(row[6]), row[7])
+
+    booking = {
+        'id': row[0],
+        'student': row[1],
+        'owner_name': row[2],
+        'owner_phone': row[3],
+        'email': row[4] or '',
+        'time': row[8] or '06:00 AM',
+        'package': row[9] or '',
+        'calendar_dates': calendar_dates
+    }
 
     # Guests may skip only their own bookings.
     if session.get('role') != 'trainer':
@@ -72,11 +75,28 @@ def skip_session(booking_id, session_date):
             booking.get('owner_name') != session.get('user_name')
             or booking.get('owner_phone') != session.get('phone')
         ):
+            conn.close()
             flash('Unauthorized action')
             return redirect(url_for('calendar_page'))
 
+    # Check skip limit based on package tier:
+    # Monthly: 3 skips max. Long term (3, 6, 9, 12 months): 9, 18, 27, 36.
+    pkg_tier = get_package_tier_info(booking.get('package'))
+    total_skips_allowed = pkg_tier['total_skips']
+
+    cursor.execute("""
+    SELECT COUNT(*) FROM makeup_credits WHERE booking_id = %s
+    """, (str(booking_id),))
+    skips_used_count = cursor.fetchone()[0] or 0
+
+    if skips_used_count >= total_skips_allowed:
+        conn.close()
+        flash('skip session exhausted. Sorry')
+        return redirect(url_for('calendar_page', booking=booking_id))
+
+    conn.close()
+
     # Validate that the selected date belongs to this booking schedule.
-    calendar_dates = booking.get('calendar_dates', [])
     if session_date not in calendar_dates:
         flash('Invalid session date')
         return redirect(url_for('calendar_page'))
@@ -324,6 +344,42 @@ def submit_makeup_request():
         conn.close()
         flash('Invalid replacement date.')
         return redirect(url_for('calendar_page'))
+
+    # Validate that the swimmer has NO existing session on requested_date
+    cursor.execute("""
+        SELECT student_name FROM bookings WHERE id = %s LIMIT 1
+    """, (str(booking_id),))
+    swimmer_row = cursor.fetchone()
+    student_name = swimmer_row[0] if swimmer_row else None
+
+    if student_name:
+        cursor.execute("""
+            SELECT id, start_date, end_date, selected_days, calendar_dates_override
+            FROM bookings
+            WHERE student_name = %s AND (status IS NULL OR LOWER(status) NOT IN ('cancelled', 'deleted'))
+        """, (student_name,))
+        for b_row in cursor.fetchall():
+            cal_override = b_row[4]
+            if cal_override:
+                dates = [d.strip() for d in cal_override.split(',') if d.strip()]
+            else:
+                dates = generate_recurring_dates(str(b_row[1]), str(b_row[2]), b_row[3])
+            if requested_date in dates:
+                if str(b_row[0]) != str(booking_id) or requested_date != str(original_date):
+                    conn.close()
+                    flash('already you have session on this day')
+                    return redirect(url_for('calendar_page', booking=booking_id, date=str(original_date)))
+
+        cursor.execute("""
+            SELECT mr.id
+            FROM makeup_requests mr
+            JOIN bookings b ON mr.booking_id = b.id
+            WHERE b.student_name = %s AND mr.requested_date = %s AND mr.status IN ('pending', 'approved')
+        """, (student_name, requested_date))
+        if cursor.fetchone():
+            conn.close()
+            flash('already you have session on this day')
+            return redirect(url_for('calendar_page', booking=booking_id, date=str(original_date)))
 
     # Prevent duplicate pending requests for the same credit.
     cursor.execute("""
