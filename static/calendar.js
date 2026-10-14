@@ -13,9 +13,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const dateObj = new Date(calendarMonthInput.value.split('-')[0], parseInt(calendarMonthInput.value.split('-')[1]) - 1, day);
         const formattedDate = dateObj.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' });
 
-        let html = `<div class="agenda-title mb-2 d-flex align-items-center justify-content-between">
-            <span class="fw-bold"><i class="fa-regular fa-calendar"></i> Agenda for ${formattedDate}</span>
-            <span class="badge bg-info text-white rounded-pill">${dayBookings.length} Session${dayBookings.length !== 1 ? 's' : ''}</span>
+        let html = `<div class="agenda-title mb-3 d-flex align-items-center justify-content-between">
+            <span class="fw-bold text-white fs-6"><i class="fa-regular fa-calendar text-primary me-2"></i>Agenda for ${formattedDate}</span>
+            <span class="badge rounded-pill px-3 py-1.5" style="background: var(--gradient-primary); color: #000; font-weight: 700; font-size: 0.75rem; letter-spacing: 0.5px;">${dayBookings.length} SESSION${dayBookings.length !== 1 ? 'S' : ''}</span>
         </div>`;
 
         if (dayBookings.length === 0) {
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const approvedRequest = (b.makeupRequests || []).find(r => r.status === 'approved');
                 const pendingRequest = (b.makeupRequests || []).find(r => r.status === 'pending');
 
-                let borderClass = '';
+                let borderClass = 'normal';
                 let statusText = '';
                 let completedClass = b.completed ? 'completed' : '';
 
@@ -63,18 +63,24 @@ document.addEventListener('DOMContentLoaded', function () {
                         data-makeup-used="${b.makeupUsed}"
                         data-session-time="${b.time}"
                     >
-                        <div class="d-flex flex-column">
-                            <div class="agenda-swimmer fw-bold text-dark d-flex align-items-center" style="font-size: 15px;">
-                                <span>🏊</span>
-                                <span class="ms-2">${b.student}</span>
-                                ${statusText}
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="agenda-avatar flex-shrink-0">
+                                <i class="fa-solid fa-person-swimming"></i>
                             </div>
-                            <div class="text-muted small mt-1" style="font-size: 13px;">
-                                <i class="fa-regular fa-clock me-1"></i>${b.time}
+                            <div class="d-flex flex-column">
+                                <div class="agenda-swimmer d-flex align-items-center flex-wrap gap-1">
+                                    <span class="swimmer-name text-white fw-bold">${b.student}</span>
+                                    ${statusText}
+                                </div>
+                                <div class="agenda-time d-flex align-items-center mt-1">
+                                    <i class="fa-regular fa-clock me-1 text-primary"></i>
+                                    <span class="time-slot-text">${b.time}</span>
+                                    ${b.package ? `<span class="agenda-pkg-badge ms-2">${b.package}</span>` : ''}
+                                </div>
                             </div>
                         </div>
-                        <div>
-                            <i class="fa-solid fa-chevron-right text-muted opacity-50"></i>
+                        <div class="agenda-chevron">
+                            <i class="fa-solid fa-chevron-right"></i>
                         </div>
                     </div>
                 `;
