@@ -515,6 +515,12 @@ def edit_booking(booking_id):
             flash("Unauthorized action", "danger")
             return redirect(url_for('my_bookings_page'))
 
+    # Active booking guard for regular users
+    is_active_booking = (booking.get('completed_classes', 0) or 0) > 0 or str(booking.get('status') or '').strip().lower() == 'active'
+    if session.get('role') not in ('admin', 'trainer') and is_active_booking:
+        flash("Active bookings cannot be edited.", "warning")
+        return redirect(url_for('my_bookings_page'))
+
     conn = get_pg_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT username, name, available_slots FROM trainers ORDER BY name")
@@ -608,6 +614,12 @@ def update_booking(booking_id):
         if (booking.get('trainer_username') or 'asdf').strip().lower() != trainer_user.strip().lower():
             flash("Unauthorized action", "danger")
             return redirect(url_for('my_bookings_page'))
+
+    # Active booking guard for regular users
+    is_active_booking = (booking.get('completed_classes', 0) or 0) > 0 or str(booking.get('status') or '').strip().lower() == 'active'
+    if session.get('role') not in ('admin', 'trainer') and is_active_booking:
+        flash("Active bookings cannot be edited.", "warning")
+        return redirect(url_for('my_bookings_page'))
 
     old_values = {
         'student': booking.get('student', ''),

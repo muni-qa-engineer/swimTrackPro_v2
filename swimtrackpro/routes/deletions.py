@@ -3,7 +3,7 @@
 import re
 from datetime import datetime, timedelta
 from flask import flash, redirect, session, url_for, request, jsonify
-from swimtrackpro.runtime import get_pg_connection
+from swimtrackpro.runtime import get_pg_connection, load_data
 
 
 def delete_booking(booking_id):
@@ -109,6 +109,19 @@ def delete_booking(booking_id):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
             return jsonify({'success': False, 'error': 'Unauthorized action'}), 403
         return redirect(url_for('my_bookings_page'))
+
+    # Active booking guard for regular users
+    if role not in ('admin', 'trainer'):
+        data = load_data()
+        b_data = next((b for b in data['bookings'] if str(b['id']) == str(booking_id)), None)
+        if b_data:
+            is_active_b = (b_data.get('completed_classes', 0) or 0) > 0 or str(b_data.get('status') or '').strip().lower() == 'active'
+            if is_active_b:
+                conn.close()
+                flash('Active bookings cannot be deleted.', 'warning')
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+                    return jsonify({'success': False, 'error': 'Active bookings cannot be deleted.'}), 400
+                return redirect(url_for('my_bookings_page'))
 
     booking_info = {
         'booking_code': row[0] or '',
