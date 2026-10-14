@@ -160,31 +160,6 @@
             <h2 class="font-display text-primary" style="font-size: 2rem; margin: 0;" id="pageTitle">Dashboard</h2>
         </div>
 
-        <!-- Alert Notifications (Floating) -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div id="floating-alerts" style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; max-width: 90vw; width: max-content;">
-                {% for category, message in messages %}
-                    <div class="toast-alert glass-panel animate-fade-in" style="padding: 1rem 1.5rem; border-left: 4px solid var(--color-primary); background: rgba(10, 10, 10, 0.95); display: flex; align-items: center; justify-content: space-between; box-shadow: 0 15px 35px rgba(0,0,0,0.6); border-radius: 8px;">
-                        <span class="text-white" style="font-weight: 500;"><i class="fa-solid fa-circle-info text-primary me-2"></i> {{ message }}</span>
-                        <button type="button" class="btn-close btn-close-white ms-4" onclick="this.parentElement.remove()" style="opacity: 0.5;"></button>
-                    </div>
-                {% endfor %}
-                </div>
-                <script>
-                    setTimeout(() => {
-                        const alerts = document.querySelectorAll('.toast-alert');
-                        alerts.forEach(alert => {
-                            alert.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
-                            alert.style.opacity = '0';
-                            alert.style.transform = 'translateY(10px)';
-                            setTimeout(() => alert.remove(), 500);
-                        });
-                    }, 2000);
-                </script>
-            {% endif %}
-        {% endwith %}
-
         <!-- Content Sections Container -->
         <div id="contentSections">
             

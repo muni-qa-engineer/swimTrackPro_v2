@@ -68,18 +68,6 @@
     </div>
 
     <div class="glass-panel animate-slide-up" style="max-width: 760px; margin: 0 auto; padding: 2rem;">
-        
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="alert alert-{{ 'warning' if category == 'warning' else 'info' if category == 'info' else 'success' }} alert-dismissible fade show mb-4" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
-              </div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
-        
         <form action="/update/{{ booking.id }}" method="POST" id="editBookingForm">
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
