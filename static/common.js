@@ -487,3 +487,42 @@ if (typeof window.showCenteredToast !== 'function') {
     window.showToastMessage = window.showCenteredToast;
 }
 
+// Global alert auto-dismiss within 5 seconds
+(function() {
+    function autoDismissAlerts() {
+        const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
+        alerts.forEach(function(alertElem) {
+            if (alertElem.closest('.modal') || alertElem.id === 'bookingClientAlert') return;
+            if (alertElem.dataset.autoDismissInitialized) return;
+            alertElem.dataset.autoDismissInitialized = 'true';
+
+            setTimeout(function() {
+                alertElem.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                alertElem.style.opacity = '0';
+                alertElem.style.transform = 'translateY(-10px)';
+                setTimeout(function() {
+                    if (alertElem.parentNode) {
+                        try {
+                            if (window.bootstrap && bootstrap.Alert) {
+                                const bsAlert = bootstrap.Alert.getInstance(alertElem) || new bootstrap.Alert(alertElem);
+                                bsAlert.close();
+                            } else {
+                                alertElem.remove();
+                            }
+                        } catch (e) {
+                            alertElem.remove();
+                        }
+                    }
+                }, 600);
+            }, 5000); // 5 seconds
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', autoDismissAlerts);
+    } else {
+        autoDismissAlerts();
+    }
+    window.autoDismissAlerts = autoDismissAlerts;
+})();
+

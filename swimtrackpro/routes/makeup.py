@@ -10,6 +10,13 @@ from services.package_tier_service import get_package_tier_info
 from swimtrackpro.runtime import get_pg_connection
 
 
+def _get_redirect_target(default_endpoint='calendar_page', **kwargs):
+    referrer = request.referrer
+    if referrer and ('login' not in referrer and 'logout' not in referrer):
+        return redirect(referrer)
+    return redirect(url_for(default_endpoint, **kwargs))
+
+
 def skip_session(booking_id, session_date):
     """
     V0033.0 Step 2 - Skip a scheduled class and create a make-up credit.
@@ -50,7 +57,7 @@ def skip_session(booking_id, session_date):
     if not row:
         conn.close()
         flash('Booking not found')
-        return redirect(url_for('calendar_page'))
+        return _get_redirect_target('calendar_page')
 
     override_dates = row[10]
     if override_dates:
@@ -77,7 +84,7 @@ def skip_session(booking_id, session_date):
         ):
             conn.close()
             flash('Unauthorized action')
-            return redirect(url_for('calendar_page'))
+            return _get_redirect_target('calendar_page')
 
     # Check skip limit based on package tier:
     # Monthly: 3 skips max. Long term (3, 6, 9, 12 months): 9, 18, 27, 36.
@@ -92,14 +99,14 @@ def skip_session(booking_id, session_date):
     if skips_used_count >= total_skips_allowed:
         conn.close()
         flash('skip session exhausted. Sorry')
-        return redirect(url_for('calendar_page', booking=booking_id))
+        return _get_redirect_target('calendar_page', booking=booking_id)
 
     conn.close()
 
     # Validate that the selected date belongs to this booking schedule.
     if session_date not in calendar_dates:
         flash('Invalid session date')
-        return redirect(url_for('calendar_page'))
+        return _get_redirect_target('calendar_page')
         
     try:
         from zoneinfo import ZoneInfo
@@ -114,12 +121,12 @@ def skip_session(booking_id, session_date):
         
         if session_datetime <= now_ist:
             flash('You cannot skip a class that has already started or ended.')
-            return redirect(url_for('calendar_page', booking=booking_id))
+            return _get_redirect_target('calendar_page', booking=booking_id)
             
         time_diff = (session_datetime - now_ist).total_seconds()
         if time_diff < 6 * 3600:
             flash('You can only skip a session at least 6 hours before it starts.')
-            return redirect(url_for('calendar_page', booking=booking_id))
+            return _get_redirect_target('calendar_page', booking=booking_id)
     except Exception as e:
         print("Error validating 6 hour rule:", e)
 
@@ -138,13 +145,7 @@ def skip_session(booking_id, session_date):
     else:
         flash('A make-up credit already exists for this session.')
 
-    return redirect(
-        url_for(
-            'calendar_page',
-            booking=booking_id,
-            date=session_date
-        )
-    )
+    return _get_redirect_target('calendar_page', booking=booking_id, date=session_date)
 
 def undo_skip_session(booking_id, session_date):
     """
@@ -173,7 +174,7 @@ def undo_skip_session(booking_id, session_date):
     if not booking_row:
         conn.close()
         flash('Booking not found.')
-        return redirect(url_for('calendar_page'))
+        return _get_redirect_target('calendar_page')
 
     # Guests may undo only their own skipped sessions.
     if session.get('role') != 'trainer':
@@ -183,7 +184,7 @@ def undo_skip_session(booking_id, session_date):
         ):
             conn.close()
             flash('Unauthorized action')
-            return redirect(url_for('calendar_page'))
+            return _get_redirect_target('calendar_page')
 
     # Find an available make-up credit for this skipped date.
     cursor.execute("""
@@ -203,7 +204,7 @@ def undo_skip_session(booking_id, session_date):
     if not credit_row:
         conn.close()
         flash('This skipped session cannot be undone.')
-        return redirect(url_for('calendar_page'))
+        return _get_redirect_target('calendar_page')
 
     credit_id = credit_row[0]
 
@@ -218,7 +219,7 @@ def undo_skip_session(booking_id, session_date):
     if cursor.fetchone():
         conn.close()
         flash('Cannot undo because a make-up request already exists.')
-        return redirect(url_for('calendar_page'))
+        return _get_redirect_target('calendar_page')
 
     # Delete the unused make-up credit.
     cursor.execute("""
@@ -230,13 +231,7 @@ def undo_skip_session(booking_id, session_date):
     conn.close()
 
     flash('Skipped session has been restored.')
-    return redirect(
-        url_for(
-            'calendar_page',
-            booking=booking_id,
-            date=session_date
-        )
-    )
+    return _get_redirect_target('calendar_page', booking=booking_id, date=session_date)
 
 def makeup_request_form(booking_id):
     """
@@ -296,7 +291,7 @@ def submit_makeup_request():
 
     if not booking_id or not credit_id or not requested_date:
         flash('All fields are required.')
-        return redirect(url_for('calendar_page'))
+        return _get_redirect_target('calendar_page')
 
     conn = get_pg_connection()
     cursor = conn.cursor()
@@ -316,7 +311,7 @@ def submit_makeup_request():
     if not row:
         conn.close()
         flash('Selected make-up credit is no longer available.')
-        return redirect(url_for('calendar_page'))
+        return _get_redirect_target('calendar_page')
 
     original_date = row[0]
 
@@ -338,12 +333,12 @@ def submit_makeup_request():
             flash(
                 'Replacement date must be after the skipped session date.'
             )
-            return redirect(url_for('calendar_page'))
+            return _get_redirect_target('calendar_page')
 
     except Exception:
         conn.close()
         flash('Invalid replacement date.')
-        return redirect(url_for('calendar_page'))
+        return _get_redirect_target('calendar_page')
 
     # Validate that the swimmer has NO existing session on requested_date
     cursor.execute("""
@@ -368,7 +363,7 @@ def submit_makeup_request():
                 if str(b_row[0]) != str(booking_id) or requested_date != str(original_date):
                     conn.close()
                     flash('already you have session on this day')
-                    return redirect(url_for('calendar_page', booking=booking_id, date=str(original_date)))
+                    return _get_redirect_target('calendar_page', booking=booking_id, date=str(original_date))
 
         cursor.execute("""
             SELECT mr.id
@@ -379,7 +374,7 @@ def submit_makeup_request():
         if cursor.fetchone():
             conn.close()
             flash('already you have session on this day')
-            return redirect(url_for('calendar_page', booking=booking_id, date=str(original_date)))
+            return _get_redirect_target('calendar_page', booking=booking_id, date=str(original_date))
 
     # Prevent duplicate pending requests for the same credit.
     cursor.execute("""
@@ -393,7 +388,7 @@ def submit_makeup_request():
     if cursor.fetchone():
         conn.close()
         flash('A make-up request already exists for this skipped session.')
-        return redirect(url_for('calendar_page'))
+        return _get_redirect_target('calendar_page')
 
     # Create pending request.
     cursor.execute("""
@@ -417,13 +412,7 @@ def submit_makeup_request():
     conn.close()
 
     flash('Make-up request submitted successfully for admin approval.')
-    return redirect(
-        url_for(
-            'calendar_page',
-            booking=booking_id,
-            date=str(original_date)
-        )
-    )
+    return _get_redirect_target('calendar_page', booking=booking_id, date=str(original_date))
 
 def approve_makeup_request(request_id):
     """
