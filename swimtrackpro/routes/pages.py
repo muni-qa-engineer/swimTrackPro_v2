@@ -9,12 +9,52 @@ from services.email_service import (
 from services.settings_service import get_setting
 from services.dashboard_service import get_all_packages
 from services.pricing_service import get_pricing_config_dict
+from datetime import datetime
 import json
-from swimtrackpro.auth import login_required
-from swimtrackpro.routes.bookings import check_and_perform_auto_resumes
-
-
 import re
+
+
+def sort_bookings_latest_active_first(bookings):
+    """
+    Sort bookings such that:
+    1. Active bookings appear first (latest active start_date first).
+    2. Booked (upcoming / not yet started) bookings follow (latest start_date first).
+    3. Completed / Expired bookings appear last (latest start_date first).
+    """
+    def _sort_key(b):
+        is_completed = bool(b.get('is_completed', False))
+        completed_classes = int(b.get('completed_classes', 0) or 0)
+        remaining_classes = int(b.get('remaining_classes', 0) or 0)
+        status_str = str(b.get('status', '')).strip().lower()
+
+        # Status rank:
+        # 0 = Active (has classes remaining, not completed, and classes attended or active status)
+        # 1 = Booked (upcoming, not yet started, 0 classes attended)
+        # 2 = Completed / Expired
+        if not is_completed and (remaining_classes > 0 or b.get('package') == 'Single') and (completed_classes > 0 or status_str in ('active', 'confirmed', 'paid')):
+            status_rank = 0
+        elif not is_completed:
+            status_rank = 1
+        else:
+            status_rank = 2
+
+        start_date_str = str(b.get('start_date') or '1970-01-01')
+        try:
+            date_obj = datetime.strptime(start_date_str[:10], '%Y-%m-%d')
+            timestamp = date_obj.timestamp()
+        except Exception:
+            timestamp = 0.0
+
+        try:
+            b_id = int(b.get('id', 0) or 0)
+        except Exception:
+            b_id = 0
+
+        # Status rank ascending (0 < 1 < 2), timestamp descending (-timestamp), id descending (-b_id)
+        return (status_rank, -timestamp, -b_id)
+
+    return sorted(bookings, key=_sort_key)
+
 
 def _bookings_for_session(data):
     current_user = (session.get("user_name") or "").strip().lower()
@@ -23,11 +63,12 @@ def _bookings_for_session(data):
 
     if current_role == "trainer":
         trainer_user = (session.get("trainer_username") or "asdf").strip().lower()
-        return [
+        trainer_bookings = [
             booking
             for booking in data.get("bookings", [])
             if (booking.get("trainer_username") or "asdf").strip().lower() == trainer_user
         ]
+        return sort_bookings_latest_active_first(trainer_bookings)
 
     def clean_phone(p):
         if not p:
@@ -61,7 +102,7 @@ def _bookings_for_session(data):
                 continue
             result.append(booking)
 
-    return result
+    return sort_bookings_latest_active_first(result)
 
 
 def register_page_routes(app, *, get_pg_connection, load_data):
