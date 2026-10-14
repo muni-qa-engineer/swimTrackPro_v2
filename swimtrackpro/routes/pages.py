@@ -12,6 +12,8 @@ from services.pricing_service import get_pricing_config_dict
 from datetime import datetime
 import json
 import re
+from swimtrackpro.auth import login_required
+from swimtrackpro.routes.bookings import check_and_perform_auto_resumes
 
 
 def sort_bookings_latest_active_first(bookings):
