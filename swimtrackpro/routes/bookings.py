@@ -501,19 +501,19 @@ def book():
 def edit_booking(booking_id):
     data = load_data()
 
-    # Find booking
-    booking = next((b for b in data['bookings'] if b['id'] == booking_id), None)
+    # Find booking safely
+    booking = next((b for b in data['bookings'] if str(b['id']) == str(booking_id)), None)
 
     if not booking:
-        flash("Booking not found")
-        return redirect(url_for('index'))
+        flash("Booking not found", "warning")
+        return redirect(url_for('my_bookings_page'))
 
     # Trainer check
     if session.get('role') == 'trainer':
         trainer_user = session.get('trainer_username') or 'asdf'
         if (booking.get('trainer_username') or 'asdf').strip().lower() != trainer_user.strip().lower():
-            flash("Unauthorized action")
-            return redirect(url_for('index'))
+            flash("Unauthorized action", "danger")
+            return redirect(url_for('my_bookings_page'))
 
     conn = get_pg_connection()
     cursor = conn.cursor()
@@ -521,10 +521,73 @@ def edit_booking(booking_id):
     trainers = [{"username": row[0], "name": row[1], "available_slots": row[2] or "[]"} for row in cursor.fetchall()]
     conn.close()
 
+    # Prepare safe formatted dates & package for template pre-fill
+    def to_input_date(d):
+        if not d:
+            return ''
+        if hasattr(d, 'strftime'):
+            return d.strftime('%Y-%m-%d')
+        s = str(d).strip()
+        for fmt in ('%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y', '%d %b %Y', '%Y/%m/%d'):
+            try:
+                return datetime.strptime(s, fmt).strftime('%Y-%m-%d')
+            except Exception:
+                pass
+        return s
+
+    def normalize_time_slot(t_str):
+        if not t_str:
+            return '06:00 AM'
+        s = str(t_str).strip()
+        for fmt in ('%I:%M %p', '%I:%M%p', '%H:%M'):
+            try:
+                dt = datetime.strptime(s, fmt)
+                hour = dt.hour % 12
+                if hour == 0:
+                    hour = 12
+                ampm = 'PM' if dt.hour >= 12 else 'AM'
+                return f"{hour:02d}:{dt.minute:02d} {ampm}"
+            except Exception:
+                pass
+        return s
+
+    raw_pkg = str(booking.get('package') or '').strip().lower()
+    if 'demo' in raw_pkg:
+        norm_pkg = 'Demo'
+    elif 'single' in raw_pkg:
+        norm_pkg = 'Single'
+    elif '12' in raw_pkg or 'year' in raw_pkg:
+        norm_pkg = '12_months'
+    elif '9' in raw_pkg:
+        norm_pkg = '9_months'
+    elif '6' in raw_pkg:
+        norm_pkg = '6_months'
+    elif '3' in raw_pkg:
+        norm_pkg = '3_months'
+    elif 'custom' in raw_pkg:
+        norm_pkg = 'Custom'
+    elif 'monthly' in raw_pkg:
+        norm_pkg = 'Monthly'
+    else:
+        norm_pkg = booking.get('package', 'Single')
+
+    raw_days = booking.get('selected_days') or ''
+    if isinstance(raw_days, list):
+        selected_days_list = [str(d).strip() for d in raw_days if str(d).strip()]
+    else:
+        selected_days_list = [d.strip() for d in str(raw_days).split(',') if d.strip()]
+
+    booking_prepared = dict(booking)
+    booking_prepared['start_date'] = to_input_date(booking.get('start_date'))
+    booking_prepared['end_date'] = to_input_date(booking.get('end_date'))
+    booking_prepared['time'] = normalize_time_slot(booking.get('time'))
+    booking_prepared['normalized_package'] = norm_pkg
+    booking_prepared['selected_days_list'] = selected_days_list
+
     # Render edit page with booking data and user role
     return render_template(
         'editBooking.html',
-        booking=booking,
+        booking=booking_prepared,
         role=session.get('role', 'guest'),
         trainers=trainers
     )
@@ -532,19 +595,19 @@ def edit_booking(booking_id):
 def update_booking(booking_id):
     data = load_data()
 
-    # Find booking
-    booking = next((b for b in data['bookings'] if b['id'] == booking_id), None)
+    # Find booking safely
+    booking = next((b for b in data['bookings'] if str(b['id']) == str(booking_id)), None)
 
     if not booking:
-        flash("Booking not found")
-        return redirect(url_for('index'))
+        flash("Booking not found", "warning")
+        return redirect(url_for('my_bookings_page'))
 
     # Trainer check
     if session.get('role') == 'trainer':
         trainer_user = session.get('trainer_username') or 'asdf'
         if (booking.get('trainer_username') or 'asdf').strip().lower() != trainer_user.strip().lower():
-            flash("Unauthorized action")
-            return redirect(url_for('index'))
+            flash("Unauthorized action", "danger")
+            return redirect(url_for('my_bookings_page'))
 
     old_values = {
         'student': booking.get('student', ''),
@@ -559,31 +622,71 @@ def update_booking(booking_id):
     }
 
     # Get updated values
-    student = request.form['student']
-    date_str = request.form['date']
+    student = request.form['student'].strip()
+    date_str = request.form['date'].strip()
     time_str = (request.form.get('time') or '').strip()
 
     if not time_str:
-        print('DEBUG UPDATE FORM KEYS:', list(request.form.keys()))
         flash('Please select a valid time slot before saving changes.', 'warning')
         return redirect(url_for('edit_booking', booking_id=booking_id))
 
-    package = request.form.get('package', 'Single')
-    end_date = request.form.get('end_date', date_str)
-    persons = request.form.get('persons', 1)
+    package = request.form.get('package', 'Single').strip()
+    end_date = (request.form.get('end_date') or '').strip()
+    if not end_date:
+        end_date = date_str
 
-    # Default fee based on package and group discount.
-    session_count = None
+    try:
+        persons = int(request.form.get('persons') or 1)
+    except Exception:
+        persons = 1
+    persons = max(1, min(5, persons))
+
+    # Selected class days
     selected_days = request.form.getlist('selected_days')
     selected_days_str = ', '.join(selected_days)
 
-    if package == 'Monthly':
-        session_count = len([
-            day.strip()
-            for day in selected_days
-            if day.strip()
-        ])
+    # Normalize end date based on package
+    if package in ('Single', 'Demo'):
+        end_date = date_str
+    elif package == 'Monthly':
+        start_dt = datetime.strptime(date_str, '%Y-%m-%d').date()
+        next_month = start_dt + timedelta(days=31)
+        end_date = (next_month - timedelta(days=1)).strftime('%Y-%m-%d')
+    elif package == '3_months':
+        start_dt = datetime.strptime(date_str, '%Y-%m-%d').date()
+        next_target = start_dt + timedelta(days=93)
+        end_date = (next_target - timedelta(days=1)).strftime('%Y-%m-%d')
+    elif package == '6_months':
+        start_dt = datetime.strptime(date_str, '%Y-%m-%d').date()
+        next_target = start_dt + timedelta(days=186)
+        end_date = (next_target - timedelta(days=1)).strftime('%Y-%m-%d')
+    elif package == '9_months':
+        start_dt = datetime.strptime(date_str, '%Y-%m-%d').date()
+        next_target = start_dt + timedelta(days=279)
+        end_date = (next_target - timedelta(days=1)).strftime('%Y-%m-%d')
+    elif package == '12_months':
+        start_dt = datetime.strptime(date_str, '%Y-%m-%d').date()
+        next_target = start_dt + timedelta(days=372)
+        end_date = (next_target - timedelta(days=1)).strftime('%Y-%m-%d')
 
+    # Validate that end date is not earlier than start date
+    try:
+        start_dt = datetime.strptime(date_str, '%Y-%m-%d').date()
+        end_dt = datetime.strptime(end_date, '%Y-%m-%d').date()
+
+        if end_dt < start_dt:
+            flash('End date cannot be earlier than start date', 'warning')
+            return redirect(url_for('edit_booking', booking_id=booking_id))
+    except Exception:
+        flash('Invalid start or end date', 'warning')
+        return redirect(url_for('edit_booking', booking_id=booking_id))
+
+    # Default fee based on package and group discount
+    session_count = None
+    if package == 'Monthly':
+        session_count = len([day.strip() for day in selected_days if day.strip()])
+    elif package in ('3_months', '6_months', '9_months', '12_months'):
+        session_count = 3
     elif package == 'Custom':
         session_count = len(
             generate_recurring_dates(
@@ -595,48 +698,23 @@ def update_booking(booking_id):
 
     fee = calculate_discounted_fee(package, persons, session_count)
 
-    # V0044.0 - Custom package fee is calculated by the frontend fee engine.
-    if package == 'Custom':
+    # If client submitted fee calculated by authoritative frontend PricingEngine:
+    client_fee = request.form.get('fee')
+    if client_fee:
         try:
-            fee = int(float(request.form.get('fee', 0) or 0))
+            parsed_fee = int(float(client_fee))
+            if parsed_fee > 0:
+                fee = parsed_fee
         except Exception:
-            fee = 0
+            pass
 
-    # Fee was already calculated above using calculate_discounted_fee().
-    # Do not recalculate here, otherwise Edit Booking can overwrite the
-    # correct pricing engine result (for example Monthly 2-days becoming ₹9000).
-    # Trainer can still manually override the fee.
-    # Only the old package/day-based recalculation was removed.
     if session.get('role') == 'trainer':
         manual_fee = (request.form.get('fee') or '').strip()
-
         if manual_fee:
             try:
                 fee = int(float(manual_fee))
             except ValueError:
                 pass
-
-    # Normalize end date based on package
-    if package in ('Single', 'Demo'):
-        end_date = date_str
-    elif package == 'Monthly':
-        start_dt = datetime.strptime(date_str, '%Y-%m-%d').date()
-        next_month = start_dt + timedelta(days=31)
-        end_date = (next_month - timedelta(days=1)).strftime('%Y-%m-%d')
-    # Validate that end date is not earlier than start date
-    try:
-        start_dt = datetime.strptime(date_str, '%Y-%m-%d').date()
-        end_dt = datetime.strptime(end_date, '%Y-%m-%d').date()
-
-        if end_dt < start_dt:
-            flash('End date cannot be earlier than start date')
-            return redirect(url_for('edit_booking', booking_id=booking_id))
-    except Exception:
-        flash('Invalid start or end date')
-        return redirect(url_for('edit_booking', booking_id=booking_id))
-
-    # Get selected class days
-    selected_days = request.form.getlist('selected_days')
 
     # Convert selected days list to comma-separated string
     selected_days_str = ', '.join(selected_days)
@@ -814,7 +892,7 @@ def update_booking(booking_id):
         booking['status'],
         booking['payment_request'],
         booking['trainer_username'],
-        booking_id
+        str(booking_id)
     ))
 
     changes = []
@@ -848,7 +926,7 @@ def update_booking(booking_id):
     if changes:
         print('BOOKING UPDATED:', changes)
 
-    # flash("Booking updated successfully")
+    flash("Booking updated successfully!", "success")
     return redirect('/my-bookings')
 
 def is_date_holiday_or_closed(date_str):

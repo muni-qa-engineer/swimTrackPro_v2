@@ -21,6 +21,41 @@
         border-radius: var(--radius-md);
         border: 1px solid rgba(255, 255, 255, 0.1);
     }
+
+    .class-day-checkboxes {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 0.5rem;
+    }
+    
+    .day-checkbox-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--color-text-secondary);
+        transition: all var(--transition-fast);
+        user-select: none;
+    }
+    
+    .class-day:checked + .day-checkbox-label {
+        background: var(--gradient-primary);
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 4px 10px var(--color-primary-glow);
+    }
+
+    .class-day:disabled + .day-checkbox-label {
+        opacity: 0.35;
+        cursor: not-allowed;
+        filter: grayscale(0.8);
+    }
 </style>
 {% endblock %}
 
@@ -85,12 +120,17 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Package</label>
+                    <label class="form-label">Package <span class="text-danger">*</span></label>
+                    {% set pkg_val = booking.normalized_package or booking.package %}
                     <select name="package" id="packageSelect" class="form-control" required style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white;">
-                        <option value="Demo" {% if booking.package == 'Demo' %}selected{% endif %}>Demo Class</option>
-                        <option value="Single" {% if booking.package == 'Single' %}selected{% endif %}>Single Session</option>
-                        <option value="Monthly" {% if booking.package == 'Monthly' %}selected{% endif %}>Monthly</option>
-                        <option value="Custom" {% if booking.package == 'Custom' %}selected{% endif %}>Custom</option>
+                        <option value="Demo" {% if pkg_val == 'Demo' %}selected{% endif %}>Demo Class</option>
+                        <option value="Single" {% if pkg_val == 'Single' %}selected{% endif %}>Single Session</option>
+                        <option value="Monthly" {% if pkg_val == 'Monthly' %}selected{% endif %}>Monthly Pack</option>
+                        <option value="Custom" {% if pkg_val == 'Custom' %}selected{% endif %}>Custom Duration</option>
+                        <option value="3_months" {% if pkg_val == '3_months' %}selected{% endif %}>Long Term (3 Months)</option>
+                        <option value="6_months" {% if pkg_val == '6_months' %}selected{% endif %}>Long Term (6 Months)</option>
+                        <option value="9_months" {% if pkg_val == '9_months' %}selected{% endif %}>Long Term (9 Months)</option>
+                        <option value="12_months" {% if pkg_val == '12_months' %}selected{% endif %}>Long Term (1 Year)</option>
                     </select>
                     <div id="customPackageHint" class="text-muted small mt-1" style="display:none;">
                         <i class="fa-solid fa-circle-info"></i> Custom package supports a maximum duration of 60 days.
@@ -100,7 +140,8 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="form-group">
-                    <label class="form-label">Time</label>
+                    <label class="form-label">Time <span class="text-danger">*</span></label>
+                    {% set booking_time_clean = (booking.time or '')|trim|upper %}
                     <select name="time" id="timeSelect" class="form-control" required style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white;">
                         {% for hour in range(6, 22) %}
                             {% for minute in [0, 15, 30, 45] %}
@@ -108,7 +149,8 @@
                                     {% set display_hour = hour % 12 if hour % 12 != 0 else 12 %}
                                     {% set ampm = 'PM' if hour >= 12 else 'AM' %}
                                     {% set formatted = '%02d:%02d %s' % (display_hour, minute, ampm) %}
-                                    <option value="{{ formatted }}" {% if booking.time == formatted %}selected{% endif %}>
+                                    {% set single_digit_formatted = '%d:%02d %s' % (display_hour, minute, ampm) %}
+                                    <option value="{{ formatted }}" {% if booking_time_clean == formatted|upper or booking_time_clean == single_digit_formatted|upper %}selected{% endif %}>
                                         {{ formatted }}
                                     </option>
                                 {% endif %}
@@ -128,16 +170,19 @@
                 <label class="form-label">
                     Select Class Days
                     <span id="monthlyPackageHint" class="text-muted small ms-2" style="display:none;">(Monthly: Choose 2 or 3 days/week)</span>
+                    <span id="longtermPackageHint" class="text-muted small ms-2" style="display:none;">(Long Term: Choose exactly 3 days/week)</span>
                     <span id="singleDemoHint" class="text-muted small ms-2" style="display:none;">(Day picked automatically.)</span>
                     <span id="customDaysHint" class="text-muted small ms-2" style="display:none;">(Max 5 class days per week allowed)</span>
                 </label>
 
+                {% set selected_days_list = booking.selected_days_list or [] %}
                 {% set selected_days_text = booking.selected_days or '' %}
-                <div class="flex flex-wrap gap-3 mt-2" style="font-size: 0.9rem;">
+                <div class="class-day-checkboxes mt-2">
                     {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
-                    <div class="flex items-center gap-1.5">
-                        <input class="class-day" type="checkbox" name="selected_days" value="{{ day }}" id="{{ day|lower }}" style="accent-color: var(--color-primary);" {% if day in selected_days_text or day[:3] in selected_days_text %}checked{% endif %}>
-                        <label for="{{ day|lower }}">{{ day[:3] }}</label>
+                    {% set is_day_checked = (day in selected_days_list) or (day[:3] in selected_days_list) or (day in selected_days_text) or (day[:3] in selected_days_text) %}
+                    <div>
+                        <input class="class-day d-none" type="checkbox" name="selected_days" value="{{ day }}" id="{{ day|lower }}" {% if is_day_checked %}checked{% endif %}>
+                        <label class="day-checkbox-label" for="{{ day|lower }}">{{ day[:3] }}</label>
                     </div>
                     {% endfor %}
                 </div>
@@ -158,7 +203,16 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="form-group">
                     <label class="form-label">No of Persons</label>
-                    <input type="number" name="persons" id="personsInput" class="form-control" min="1" max="5" value="{{ booking.persons or 1 }}" required>
+                    <div class="d-flex align-items-center">
+                        <div class="input-group input-group-sm" style="width: 120px;">
+                            <button class="btn btn-outline-secondary" type="button" id="btn-minus-person" style="background-color: var(--color-bg-alt); border-color: rgba(255,255,255,0.1); color: white; width: 36px;"><i class="fa-solid fa-minus"></i></button>
+                            <input type="text" id="personsInput" name="persons" class="form-control text-center fw-bold px-0" value="{{ booking.persons or 1 }}" readonly style="background-color: rgba(0,0,0,0.4); color: white; pointer-events: none; min-width: 40px;">
+                            <button class="btn btn-outline-secondary" type="button" id="btn-plus-person" style="background-color: var(--color-bg-alt); border-color: rgba(255,255,255,0.1); color: white; width: 36px;"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                    </div>
+                    <div id="editBookingGroupHint" class="text-muted small mt-1" style="font-size: 0.78rem;">
+                        (1-5 persons, group scaling up to 36% OFF)
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -222,6 +276,7 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='common.js') }}"></script>
+<script src="{{ url_for('static', filename='js/pricingEngine.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const pkg = document.getElementById('packageSelect');
@@ -231,25 +286,38 @@ document.addEventListener('DOMContentLoaded', function() {
     const dayCheckboxes = document.querySelectorAll('.class-day');
     const personsInput = document.getElementById('personsInput');
     const feeInput = document.getElementById('feeInput');
+    const btnMinusPerson = document.getElementById('btn-minus-person');
+    const btnPlusPerson = document.getElementById('btn-plus-person');
+    const groupHint = document.getElementById('editBookingGroupHint');
 
     const monthlyPackageHint = document.getElementById('monthlyPackageHint');
+    const longtermPackageHint = document.getElementById('longtermPackageHint');
     const singleDemoHint = document.getElementById('singleDemoHint');
     const customDaysHint = document.getElementById('customDaysHint');
     const customPackageHint = document.getElementById('customPackageHint');
 
-    function updateEditBookingRules() {
+    function formatDate(d) {
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function updateEditBookingRules(isInitial = false) {
         if (!pkg || !startDateInput) return;
 
-        monthlyPackageHint.style.display = pkg.value === 'Monthly' ? 'inline' : 'none';
-        singleDemoHint.style.display = (pkg.value === 'Demo' || pkg.value === 'Single') ? 'inline' : 'none';
-        if (customDaysHint) customDaysHint.style.display = pkg.value === 'Custom' ? 'inline' : 'none';
-        if (customPackageHint) customPackageHint.style.display = pkg.value === 'Custom' ? 'block' : 'none';
+        const pkgVal = pkg.value;
+        if (monthlyPackageHint) monthlyPackageHint.style.display = (pkgVal === 'Monthly') ? 'inline' : 'none';
+        if (longtermPackageHint) longtermPackageHint.style.display = (['3_months', '6_months', '9_months', '12_months'].includes(pkgVal)) ? 'inline' : 'none';
+        if (singleDemoHint) singleDemoHint.style.display = (pkgVal === 'Demo' || pkgVal === 'Single') ? 'inline' : 'none';
+        if (customDaysHint) customDaysHint.style.display = (pkgVal === 'Custom') ? 'inline' : 'none';
+        if (customPackageHint) customPackageHint.style.display = (pkgVal === 'Custom') ? 'block' : 'none';
 
-        const selectedDate = new Date(startDateInput.value + 'T00:00:00');
+        const selectedDate = startDateInput.value ? new Date(startDateInput.value + 'T00:00:00') : new Date();
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const allowedDay = days[selectedDate.getDay()];
 
-        if (pkg.value === 'Single' || pkg.value === 'Demo') {
+        if (pkgVal === 'Single' || pkgVal === 'Demo') {
             dayCheckboxes.forEach(cb => {
                 cb.checked = false;
                 if (cb.value === allowedDay) {
@@ -271,36 +339,41 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             if (endDateContainer) endDateContainer.style.display = 'block';
-            if (endDateInput) {
-                endDateInput.readOnly = (pkg.value === 'Monthly');
-            }
 
-            if (pkg.value === 'Monthly') {
-                const autoEndDate = new Date(selectedDate);
-                autoEndDate.setMonth(autoEndDate.getMonth() + 1);
-                autoEndDate.setDate(autoEndDate.getDate() - 1);
-
-                const yyyy = autoEndDate.getFullYear();
-                const mm = String(autoEndDate.getMonth() + 1).padStart(2, '0');
-                const dd = String(autoEndDate.getDate()).padStart(2, '0');
-
+            if (['Monthly', '3_months', '6_months', '9_months', '12_months'].includes(pkgVal)) {
                 if (endDateInput) {
-                    endDateInput.value = `${yyyy}-${mm}-${dd}`;
+                    endDateInput.readOnly = true;
                 }
-            } else if (pkg.value === 'Custom' && endDateInput) {
-                const maxEndDate = new Date(selectedDate);
-                maxEndDate.setDate(maxEndDate.getDate() + 59);
+                // Only overwrite end date if NOT initial load OR if end date is currently empty
+                if (!isInitial || !endDateInput || !endDateInput.value) {
+                    const autoEndDate = new Date(selectedDate);
+                    let m = 1;
+                    if (pkgVal === '3_months') m = 3;
+                    if (pkgVal === '6_months') m = 6;
+                    if (pkgVal === '9_months') m = 9;
+                    if (pkgVal === '12_months') m = 12;
 
-                const yyyy = maxEndDate.getFullYear();
-                const mm = String(maxEndDate.getMonth() + 1).padStart(2, '0');
-                const dd = String(maxEndDate.getDate()).padStart(2, '0');
+                    autoEndDate.setMonth(autoEndDate.getMonth() + m);
+                    autoEndDate.setDate(autoEndDate.getDate() - 1);
 
-                endDateInput.max = `${yyyy}-${mm}-${dd}`;
-                if (endDateInput.value && endDateInput.value > endDateInput.max) {
-                    endDateInput.value = endDateInput.max;
+                    if (endDateInput) {
+                        endDateInput.value = formatDate(autoEndDate);
+                    }
+                }
+            } else if (pkgVal === 'Custom') {
+                if (endDateInput) {
+                    endDateInput.readOnly = false;
+                    const maxEndDate = new Date(selectedDate);
+                    maxEndDate.setDate(maxEndDate.getDate() + 59);
+                    endDateInput.max = formatDate(maxEndDate);
+                    endDateInput.min = startDateInput.value;
+                    if (!isInitial || !endDateInput.value) {
+                        endDateInput.value = startDateInput.value;
+                    }
                 }
             }
         }
+
         updateEditBookingFee();
     }
 
@@ -309,102 +382,163 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const selected = [...dayCheckboxes].filter(cb => cb.checked).map(cb => cb.value);
         const persons = Math.max(parseInt(personsInput?.value || '1', 10), 1);
+        const pkgVal = pkg ? pkg.value : 'Single';
 
-        if (persons > 5) {
-            alert('Maximum 5 persons allowed.');
-            if (personsInput) personsInput.value = 5;
-            return updateEditBookingFee();
-        }
+        let finalFee = 0;
+        let quote = null;
 
-        const discountMap = { 1: 0, 2: 6, 3: 11, 4: 16, 5: 21 };
-        const discount = discountMap[persons] || 0;
-        let actualAmount = 0;
-
-        if (pkg.value === 'Demo') {
-            actualAmount = 500 * persons;
-        } else if (pkg.value === 'Single') {
-            actualAmount = 750 * persons;
-        } else if (pkg.value === 'Monthly') {
-            if (selected.length < 2 || selected.length > 3) {
-                feeInput.value = '';
-                feeInput.placeholder = 'Select 2 or 3 class days';
-                return;
-            }
-            actualAmount = (selected.length === 2 ? 6000 : 9000) * persons;
-        } else if (pkg.value === 'Custom') {
-            const startValue = startDateInput?.value;
-            const endValue = endDateInput?.value;
-
-            if (!startValue || !endValue || selected.length === 0) {
-                feeInput.value = 0;
-                feeInput.placeholder = '';
-                return;
-            }
-
-            const start = new Date(startValue + 'T00:00:00');
-            const end = new Date(endValue + 'T00:00:00');
-            const durationDays = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
-
-            const dayMap = {
-                'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6
-            };
-            const selectedWeekdays = selected.map(day => dayMap[day]);
-
-            let sessionCount = 0;
-            const current = new Date(start);
-
-            while (current <= end) {
-                if (selectedWeekdays.includes(current.getDay())) {
-                    sessionCount++;
+        if (typeof PricingEngine !== 'undefined') {
+            if (pkgVal === 'Demo') {
+                quote = PricingEngine.getPackageQuote('demo', persons);
+                finalFee = quote.totalBatchPrice;
+            } else if (pkgVal === 'Single') {
+                quote = PricingEngine.getPackageQuote('single', persons);
+                finalFee = quote.totalBatchPrice;
+            } else if (pkgVal === 'Monthly') {
+                if (selected.length < 2 || selected.length > 3) {
+                    feeInput.value = '';
+                    feeInput.placeholder = 'Select 2 or 3 class days';
+                    if (groupHint) groupHint.innerText = '(Monthly: Choose 2 or 3 days/week)';
+                    return;
                 }
-                current.setDate(current.getDate() + 1);
-            }
+                const pkgKey = selected.length === 2 ? 'monthly_2d' : 'monthly_3d';
+                quote = PricingEngine.getPackageQuote(pkgKey, persons);
+                finalFee = quote.totalBatchPrice;
+            } else if (pkgVal === '3_months') {
+                if (selected.length !== 3) {
+                    feeInput.value = '';
+                    feeInput.placeholder = 'Select exactly 3 class days';
+                    if (groupHint) groupHint.innerText = '(Long Term: Choose exactly 3 days/week)';
+                    return;
+                }
+                quote = PricingEngine.getPackageQuote('3_months', persons);
+                finalFee = quote.totalBatchPrice;
+            } else if (['6_months', '9_months', '12_months'].includes(pkgVal)) {
+                if (selected.length !== 3) {
+                    feeInput.value = '';
+                    feeInput.placeholder = 'Select exactly 3 class days';
+                    if (groupHint) groupHint.innerText = '(Long Term: Choose exactly 3 days/week)';
+                    return;
+                }
+                const mCount = { '6_months': 6, '9_months': 9, '12_months': 12 }[pkgVal] || 6;
+                quote = PricingEngine.getPackageQuote(pkgVal, persons, { customBasePrice: 6000 * mCount });
+                finalFee = quote.totalBatchPrice;
+            } else if (pkgVal === 'Custom') {
+                const startVal = startDateInput?.value;
+                const endVal = endDateInput?.value;
 
-            const monthlyCustomFees = { 1: 3000, 2: 6000, 3: 9000, 4: 11000, 5: 12000 };
-            const twoMonthCustomFees = { 1: 6000, 2: 12000, 3: 18000, 4: 22000, 5: 24000 };
-            const selectedDaysPerWeek = selected.length;
+                if (!startVal || !endVal || selected.length === 0) {
+                    feeInput.value = 0;
+                    feeInput.placeholder = '';
+                    return;
+                }
 
-            if (durationDays >= 1 && durationDays <= 23) {
-                actualAmount = sessionCount * 750 * persons;
-            } else if (durationDays >= 24 && durationDays <= 30) {
-                actualAmount = (monthlyCustomFees[selectedDaysPerWeek] || 0) * persons;
-            } else if (durationDays >= 31 && durationDays <= 53) {
-                actualAmount = sessionCount * 650 * persons;
-            } else if (durationDays >= 54 && durationDays <= 60) {
-                actualAmount = (twoMonthCustomFees[selectedDaysPerWeek] || 0) * persons;
-            } else {
-                feeInput.value = '';
-                feeInput.placeholder = 'Maximum 60 days allowed';
-                return;
+                const start = new Date(startVal + 'T00:00:00');
+                const end = new Date(endVal + 'T00:00:00');
+                const durationDays = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+                if (durationDays > 60) {
+                    feeInput.value = '';
+                    feeInput.placeholder = 'Maximum 60 days allowed';
+                    return;
+                }
+
+                const dayMap = {
+                    'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3,
+                    'Thursday': 4, 'Friday': 5, 'Saturday': 6
+                };
+                const selectedDayIndexes = selected.map(day => dayMap[day]);
+                let totalClasses = 0;
+                const current = new Date(start);
+                while (current <= end) {
+                    if (selectedDayIndexes.includes(current.getDay())) {
+                        totalClasses++;
+                    }
+                    current.setDate(current.getDate() + 1);
+                }
+
+                if (totalClasses > 14) {
+                    feeInput.value = '';
+                    feeInput.placeholder = `${totalClasses} sessions (Requires trainer discussion)`;
+                    return;
+                } else if (totalClasses >= 12 && totalClasses <= 14) {
+                    quote = PricingEngine.getPackageQuote('monthly_3d', persons);
+                    finalFee = quote.totalBatchPrice;
+                } else {
+                    quote = PricingEngine.getPackageQuote('custom', persons, { customBasePrice: totalClasses * 750 });
+                    finalFee = quote.totalBatchPrice;
+                }
             }
         }
 
-        const finalFee = Math.round(actualAmount * (100 - discount) / 100);
         feeInput.placeholder = '';
         feeInput.value = finalFee;
+
+        if (groupHint) {
+            if (quote && quote.isGroup) {
+                groupHint.innerText = `(${persons} swimmers • ${quote.savingsPerPersonPercent}% group discount applied)`;
+            } else {
+                groupHint.innerText = `(1-5 persons, group scaling up to 36% OFF)`;
+            }
+        }
     }
 
-    function validateSelectedDaysLimit() {
+    function validateSelectedDaysLimit(e) {
         const checked = [...dayCheckboxes].filter(cb => cb.checked);
+        const pkgVal = pkg ? pkg.value : 'Single';
 
-        if (pkg.value === 'Monthly' && checked.length > 3) {
-            alert('Monthly package allows maximum 3 class days');
-            checked[checked.length - 1].checked = false;
-        }
-        if (pkg.value === 'Custom' && checked.length > 5) {
-            alert('Maximum 5 class days allowed for Custom package');
-            checked[checked.length - 1].checked = false;
+        if (pkgVal === 'Monthly' && checked.length > 3) {
+            alert('Monthly package allows maximum 3 class days.');
+            if (e && e.target) e.target.checked = false;
+        } else if (['3_months', '6_months', '9_months', '12_months'].includes(pkgVal) && checked.length > 3) {
+            alert('Long Term packages allow exactly 3 class days.');
+            if (e && e.target) e.target.checked = false;
+        } else if (pkgVal === 'Custom' && checked.length > 5) {
+            alert('Maximum 5 class days allowed for Custom package.');
+            if (e && e.target) e.target.checked = false;
         }
         updateEditBookingFee();
     }
 
-    if (pkg) pkg.addEventListener('change', function() {
-        dayCheckboxes.forEach(cb => cb.checked = false);
-        updateEditBookingRules();
-    });
-    if (startDateInput) startDateInput.addEventListener('change', updateEditBookingRules);
-    if (endDateInput) endDateInput.addEventListener('change', updateEditBookingFee);
-    if (personsInput) personsInput.addEventListener('input', updateEditBookingFee);
+    if (btnMinusPerson && personsInput) {
+        btnMinusPerson.addEventListener('click', function() {
+            let val = parseInt(personsInput.value, 10) || 1;
+            if (val > 1) {
+                personsInput.value = val - 1;
+                updateEditBookingFee();
+            }
+        });
+    }
+
+    if (btnPlusPerson && personsInput) {
+        btnPlusPerson.addEventListener('click', function() {
+            let val = parseInt(personsInput.value, 10) || 1;
+            if (val < 5) {
+                personsInput.value = val + 1;
+                updateEditBookingFee();
+            } else {
+                alert('Maximum 5 persons allowed.');
+            }
+        });
+    }
+
+    if (pkg) {
+        pkg.addEventListener('change', function() {
+            // When user changes package, uncheck days so they can pick appropriate days
+            dayCheckboxes.forEach(cb => cb.checked = false);
+            updateEditBookingRules(false);
+        });
+    }
+
+    if (startDateInput) {
+        startDateInput.addEventListener('change', function() {
+            updateEditBookingRules(false);
+        });
+    }
+
+    if (endDateInput) {
+        endDateInput.addEventListener('change', updateEditBookingFee);
+    }
 
     if (dayCheckboxes.length > 0) {
         dayCheckboxes.forEach(cb => {
@@ -412,7 +546,42 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    updateEditBookingRules();
+    // Initial load: preserve pre-filled days and dates
+    updateEditBookingRules(true);
+
+    // Form submit validation & spinner
+    const editBookingForm = document.getElementById('editBookingForm');
+    if (editBookingForm) {
+        editBookingForm.addEventListener('submit', function(e) {
+            const pkgVal = pkg ? pkg.value : 'Single';
+            const checkedCount = [...dayCheckboxes].filter(cb => cb.checked).length;
+
+            if (pkgVal === 'Monthly' && (checkedCount < 2 || checkedCount > 3)) {
+                e.preventDefault();
+                alert('Monthly package requires choosing 2 or 3 training days per week.');
+                return;
+            }
+
+            if (['3_months', '6_months', '9_months', '12_months'].includes(pkgVal) && checkedCount !== 3) {
+                e.preventDefault();
+                alert('Long Term packages require exactly 3 training days per week.');
+                return;
+            }
+
+            if (pkgVal === 'Custom' && checkedCount === 0) {
+                e.preventDefault();
+                alert('Please select training days for Custom duration.');
+                return;
+            }
+
+            const updateBookingBtn = document.getElementById('updateBookingBtn');
+            const updateBookingSpinner = document.getElementById('updateBookingSpinner');
+            const updateBookingText = document.getElementById('updateBookingText');
+            if (updateBookingBtn) updateBookingBtn.disabled = true;
+            if (updateBookingSpinner) updateBookingSpinner.classList.remove('d-none');
+            if (updateBookingText) updateBookingText.textContent = 'Updating...';
+        });
+    }
 
     // Map picker
     const locationPickerBtn = document.getElementById('locationPickerBtn');
@@ -575,7 +744,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const label = `${String(displayHour).padStart(2, '0')}:${displayMin} ${ampm}`;
 
                     if (allowedSlots && Array.isArray(allowedSlots) && allowedSlots.length > 0) {
-                        if (!allowedSlots.includes(label)) continue;
+                        if (!allowedSlots.includes(label) && label !== previousValue) continue;
                     }
 
                     const option = document.createElement('option');
