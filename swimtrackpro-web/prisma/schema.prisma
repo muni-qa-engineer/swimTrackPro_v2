@@ -9,6 +9,7 @@ generator client {
 
 model Booking {
   id                         String    @id
+  booking_code               String?
   student_name               String?
   created_by                 String?
   start_date                 String?
@@ -23,6 +24,7 @@ model Booking {
   payment_request            String?
   owner_name                 String?
   owner_phone                String?
+  email                      String?
   trainer_username           String?
   pause_status               String?   @default("ACTIVE")
   pause_used                 Boolean?  @default(false)
