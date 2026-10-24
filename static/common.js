@@ -363,8 +363,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (e.defaultPrevented) {
                 return;
             }
-            // Skip forms with custom delete or confirmation handlers
-            if (this.classList.contains('delete-booking-form') || this.classList.contains('no-loading-spinner')) {
+            // Skip forms with custom delete or confirmation handlers or custom AJAX pricing forms
+            if (this.id === 'adminPricingForm' || this.classList.contains('delete-booking-form') || this.classList.contains('no-loading-spinner')) {
                 return;
             }
             // Check if form is valid before disabling button (if HTML5 validation is used)
