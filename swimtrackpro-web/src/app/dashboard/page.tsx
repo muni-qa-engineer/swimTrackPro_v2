@@ -2,6 +2,7 @@ import React from "react";
 import { Navbar } from "@/components/common/Navbar";
 import { AttendanceCalendar } from "@/components/dashboard/AttendanceCalendar";
 import { MembershipFlexibilityCard } from "@/components/dashboard/MembershipFlexibilityCard";
+import { MakeUpCreditsCard } from "@/components/dashboard/MakeUpCreditsCard";
 import { SwimmersCard } from "@/components/dashboard/SwimmersCard";
 import { NoticesCard } from "@/components/dashboard/NoticesCard";
 import {
@@ -103,6 +104,14 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Left Column (5 Cols) */}
           <div className="lg:col-span-5 space-y-6">
+            {/* Make-Up Session Card: only displays if make-up credits > 0 */}
+            {data.makeupCreditsCount > 0 && (
+              <MakeUpCreditsCard
+                creditsCount={data.makeupCreditsCount}
+                studentName={data.swimmers[0]?.name || data.ownerName}
+                packageName={data.activePackage?.packageName}
+              />
+            )}
             {data.activePackage && (
               <MembershipFlexibilityCard packageData={data.activePackage} />
             )}

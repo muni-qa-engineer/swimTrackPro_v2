@@ -122,6 +122,58 @@
                     {% endif %}
                 </div>
 
+                <!-- Dedicated Make-Up Classes Card (Displays ONLY if make-up credits > 0) -->
+                {% if total_makeup_credits and total_makeup_credits > 0 %}
+                <div class="glass-panel animate-fade-in" style="padding: 1.5rem; border: 1px solid rgba(6, 182, 212, 0.45); background: linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(15, 23, 42, 0.75) 100%);">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(6, 182, 212, 0.2); border: 1px solid rgba(6, 182, 212, 0.4); display: flex; align-items: center; justify-content: center; color: #38bdf8;">
+                                <i class="fa-solid fa-ticket-simple"></i>
+                            </div>
+                            <h3 class="font-display" style="font-size: 1.2rem; margin: 0; color: #fff;">
+                                Make-up Sessions Available
+                            </h3>
+                        </div>
+                        <span class="badge fw-bold" style="background: rgba(6, 182, 212, 0.25); color: #38bdf8; border: 1px solid rgba(6, 182, 212, 0.4); font-size: 0.85rem; padding: 0.4rem 0.75rem; border-radius: 9999px;">
+                            {{ total_makeup_credits }} Credit{{ 's' if total_makeup_credits > 1 else '' }}
+                        </span>
+                    </div>
+
+                    <p class="text-secondary small mb-3" style="font-size: 0.82rem;">
+                        You have <strong class="text-white">{{ total_makeup_credits }} make-up class credit{{ 's' if total_makeup_credits > 1 else '' }}</strong> available from missed sessions. Your package end date remains untouched and will not expire early.
+                    </p>
+
+                    <div class="d-flex flex-column gap-2 mb-3">
+                        {% for item in available_makeup_cards %}
+                        <div class="p-3 rounded d-flex justify-content-between align-items-center" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08);">
+                            <div>
+                                <div class="text-white fw-bold" style="font-size: 0.95rem;">
+                                    🏊 {{ item.student_name }}
+                                    <span class="badge ms-2" style="background: rgba(255, 255, 255, 0.08); color: #94a3b8; font-size: 0.7rem;">{{ item.package }}</span>
+                                </div>
+                                <div class="text-muted small mt-1" style="font-size: 0.76rem;">
+                                    <i class="fa-regular fa-calendar-xmark me-1 text-warning"></i> Missed Session: <span class="text-warning fw-semibold">{{ item.original_date }}</span>
+                                    • Valid until package expiry
+                                </div>
+                            </div>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 0.72rem; font-weight: 700;">
+                                <i class="fa-solid fa-circle-check me-1"></i> Available
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 pt-2" style="border-top: 1px solid rgba(255, 255, 255, 0.08);">
+                        <div class="text-muted" style="font-size: 0.75rem;">
+                            <i class="fa-solid fa-shield-halved text-cyan-400 me-1"></i> Package end date is unaffected.
+                        </div>
+                        <a href="/calendar" class="btn btn-sm w-100 w-sm-auto fw-bold px-3 py-1.5" style="background: #06b6d4; color: #020617; border-radius: 9999px; font-size: 0.8rem; box-shadow: 0 4px 15px rgba(6, 182, 212, 0.25);">
+                            <i class="fa-solid fa-calendar-plus me-1"></i> Reschedule Make-up
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+
                 <!-- Membership & Flexibility Card (Cult.fit Model) -->
                 <div class="glass-panel" style="padding: 1.5rem;">
                     <div class="d-flex justify-content-between align-items-center mb-2">

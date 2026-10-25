@@ -7,6 +7,7 @@ import {
   CheckCircle,
   XCircle,
   UserCheck,
+  Bell,
 } from "lucide-react";
 import { markAttendanceAction } from "@/app/actions/dashboard";
 
@@ -69,9 +70,28 @@ export function TrainerAttendanceTracker({
           </div>
         </div>
 
-        <span className="text-xs font-bold px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 self-start sm:self-auto">
-          {sessions.length} Session{sessions.length > 1 ? "s" : ""} Scheduled
-        </span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={async () => {
+              if ("Notification" in window) {
+                const res = await Notification.requestPermission();
+                if (res === "granted") {
+                  setMessage("Mobile PWA Push Notifications enabled!");
+                  setTimeout(() => setMessage(null), 3000);
+                }
+              }
+            }}
+            className="px-3 py-1 rounded-full text-xs font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/20 transition flex items-center gap-1.5"
+          >
+            <Bell className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Enable Push Alerts</span>
+          </button>
+
+          <span className="text-xs font-bold px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 self-start sm:self-auto">
+            {sessions.length} Session{sessions.length > 1 ? "s" : ""} Scheduled
+          </span>
+        </div>
       </div>
 
       {message && (
@@ -130,7 +150,7 @@ export function TrainerAttendanceTracker({
                   }`}
                 >
                   <CheckCircle className="w-4 h-4" />
-                  <span>Present</span>
+                  <span>Yes, Completed (+1)</span>
                 </button>
 
                 <button
@@ -143,7 +163,7 @@ export function TrainerAttendanceTracker({
                   }`}
                 >
                   <XCircle className="w-4 h-4" />
-                  <span>Absent</span>
+                  <span>No, Missed (+1 Make-up)</span>
                 </button>
               </div>
             </div>

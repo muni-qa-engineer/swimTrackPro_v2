@@ -776,9 +776,10 @@ export async function getTrainerDashboardData(
 export async function markAttendanceAction(
   bookingId: string,
   sessionDate: string,
-  status: "present" | "absent"
+  status: "present" | "absent" | "completed" | "missed"
 ) {
   try {
+    const isCompleted = status === "present" || status === "completed";
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
     });
@@ -789,20 +790,72 @@ export async function markAttendanceAction(
       ? booking.attended_sessions.split(",").filter(Boolean)
       : [];
 
-    if (status === "present" && !currentAttended.includes(sessionDate)) {
-      currentAttended.push(sessionDate);
+    if (isCompleted) {
+      if (!currentAttended.includes(sessionDate)) {
+        currentAttended.push(sessionDate);
+        await prisma.booking.update({
+          where: { id: bookingId },
+          data: {
+            attended_sessions: currentAttended.join(","),
+          },
+        });
+      }
+      // If a makeup credit was mistakenly added for this date, delete or update it
+      await prisma.makeupCredit.deleteMany({
+        where: {
+          booking_id: bookingId,
+          original_date: new Date(sessionDate),
+        },
+      });
+    } else {
+      // Missed: remove from attended sessions
+      const filteredAttended = currentAttended.filter((d) => d !== sessionDate);
       await prisma.booking.update({
         where: { id: bookingId },
         data: {
-          attended_sessions: currentAttended.join(","),
+          attended_sessions: filteredAttended.join(","),
         },
       });
+
+      // Swimmer receives 1 make-up credit. Package end date is unaffected!
+      const existingCredit = await prisma.makeupCredit.findFirst({
+        where: {
+          booking_id: bookingId,
+          original_date: new Date(sessionDate),
+        },
+      });
+
+      if (!existingCredit) {
+        await prisma.makeupCredit.create({
+          data: {
+            booking_id: bookingId,
+            original_date: new Date(sessionDate),
+            status: "available",
+            notes: "Missed session confirmed by coach",
+          },
+        });
+      }
     }
 
     revalidatePath("/trainer");
-    return { success: true, message: `Marked ${status} for ${sessionDate}` };
+    revalidatePath("/dashboard");
+    return {
+      success: true,
+      status: isCompleted ? "completed" : "missed",
+      message: isCompleted
+        ? `Marked completed for ${sessionDate} (+1 Class done)`
+        : `Marked missed for ${sessionDate} (+1 Make-up credit added, end date untouched)`,
+    };
   } catch (error) {
     console.error("Error marking attendance:", error);
     return { success: false, error: "Failed to update attendance" };
   }
+}
+
+export async function confirmCoachSessionAction(
+  bookingId: string,
+  sessionDate: string,
+  status: "completed" | "missed"
+) {
+  return markAttendanceAction(bookingId, sessionDate, status);
 }

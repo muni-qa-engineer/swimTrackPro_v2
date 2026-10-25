@@ -347,6 +347,7 @@ def ensure_database_tables():
     cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS pause_start_date TEXT")
     cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS pause_end_date TEXT")
     cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS original_end_date TEXT")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS attended_sessions TEXT")
     cursor.execute("UPDATE bookings SET pause_count = 1 WHERE pause_used = TRUE AND (pause_count IS NULL OR pause_count = 0)")
 
     cursor.execute("""
@@ -530,6 +531,12 @@ def load_data():
 
     for b_row in booking_rows:
         b = dict(zip(booking_colnames, b_row))
+        bid = str(b.get('id'))
+        booking_credits = credits_by_booking.get(bid, [])
+        skipped_dates = set(str(r[2]) for r in booking_credits)
+        attended_raw = b.get('attended_sessions')
+        attended_set = set(d.strip() for d in (attended_raw or '').split(',') if d.strip())
+
         calendar_override = b.get('calendar_dates_override')
         if calendar_override:
             calendar_dates = [d.strip() for d in calendar_override.split(',') if d.strip()]
@@ -541,8 +548,8 @@ def load_data():
             )
 
         # V0037.3 - Real-Time Class Progress Completion
-        # A class is considered completed when the current time is
-        # greater than or equal to the session start time + 1 hour.
+        # If marked attended by coach -> counted as completed (+1).
+        # If marked missed (in skipped_dates) -> NOT completed (makeup credit created).
         is_completed = False
         total_classes = len(calendar_dates)
         completed_classes = 0
@@ -556,6 +563,10 @@ def load_data():
                 booking_time = (b.get('time') or '06:00 AM').strip()
 
                 for class_date in calendar_dates:
+                    if class_date in skipped_dates:
+                        # Missed session that received make-up credit - not completed
+                        continue
+
                     class_datetime = datetime.strptime(
                         f"{class_date} {booking_time}",
                         '%Y-%m-%d %I:%M %p'
@@ -563,9 +574,13 @@ def load_data():
                     # Each session duration is 1 hour.
                     class_end_datetime = class_datetime + timedelta(hours=1)
 
-                    # Mark as completed immediately after session end time.
-                    if current_datetime >= class_end_datetime:
+                    if class_date in attended_set:
+                        # Confirmed completed by coach
                         completed_classes += 1
+                    elif attended_raw is None or attended_raw == '':
+                        # Legacy fallback for historical bookings
+                        if current_datetime >= class_end_datetime:
+                            completed_classes += 1
 
                 remaining_classes = max(
                     total_classes - completed_classes,
@@ -667,6 +682,18 @@ def load_data():
             first_available[0] if first_available else None
         )
         booking['has_available_makeup_credit'] = first_available is not None
+        booking['available_makeup_credits_count'] = len(available_credits)
+        booking['available_credits_list'] = [
+            {
+                'id': r[0],
+                'original_date': str(r[2]),
+                'status': r[3],
+                'created_at': str(r[4]) if len(r) > 4 and r[4] else ''
+            }
+            for r in available_credits
+        ]
+        booking['attended_sessions'] = list(attended_set)
+        booking['attended_sessions_str'] = attended_raw or ''
 
         # Skipped dates
         booking['skipped_dates'] = [

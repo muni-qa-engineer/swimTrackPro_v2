@@ -69,3 +69,72 @@ self.addEventListener('fetch', (event) => {
     );
   }
 });
+
+// --- PWA Push & Session Completion Action Handlers ---
+self.addEventListener('push', (event) => {
+  let data = { title: 'SwimTrackPro Alert', body: 'New session update available.' };
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch (e) {
+      data = { title: 'SwimTrackPro Alert', body: event.data.text() };
+    }
+  }
+
+  const options = {
+    body: data.body,
+    icon: data.icon || '/static/icons/icon-192.png',
+    badge: data.badge || '/static/icons/icon-192.png',
+    tag: data.tag || 'swimtrackpro-notice',
+    data: data.data || {},
+    actions: data.actions || [
+      { action: 'completed', title: '✅ Yes (Completed)' },
+      { action: 'missed', title: '❌ No (Make-up Credit)' }
+    ],
+    vibrate: [200, 100, 200]
+  };
+
+  event.waitUntil(self.registration.showNotification(data.title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const action = event.action;
+  const notifData = event.notification.data || {};
+  const bookingId = notifData.booking_id;
+  const sessionDate = notifData.session_date;
+
+  if ((action === 'completed' || action === 'missed') && bookingId && sessionDate) {
+    event.waitUntil(
+      fetch('/api/coach/confirm_session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          booking_id: bookingId,
+          session_date: sessionDate,
+          status: action
+        })
+      })
+      .then(() => clients.matchAll({ type: 'window', includeUncontrolled: true }))
+      .then((clientList) => {
+        for (const client of clientList) {
+          if ('focus' in client) {
+            client.postMessage({ type: 'SESSION_CONFIRMED', booking_id: bookingId, status: action });
+            return client.focus();
+          }
+        }
+        if (clients.openWindow) return clients.openWindow('/');
+      })
+      .catch((err) => console.error('Error handling notification action:', err))
+    );
+  } else {
+    event.waitUntil(
+      clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+        for (const client of clientList) {
+          if ('focus' in client) return client.focus();
+        }
+        if (clients.openWindow) return clients.openWindow('/');
+      })
+    );
+  }
+});

@@ -178,6 +178,113 @@ def toggle_favorite_coach():
         print("Error toggling favorite:", e)
         return jsonify({"status": "error", "message": "Database error"}), 500
 
+def confirm_coach_session():
+    """
+    Coach session completion confirmation endpoint.
+    - If status == 'completed': Marks session as attended in bookings.attended_sessions (+1 to progress).
+    - If status == 'missed': Adds 1 make-up credit in makeup_credits. Package end_date is untouched!
+    """
+    if 'user_name' not in session or session.get('role') not in ('trainer', 'admin'):
+        return jsonify({"success": False, "message": "Unauthorized. Coach login required."}), 401
+
+    payload = request.get_json(silent=True) or request.form.to_dict()
+    booking_id = (payload.get('booking_id') or '').strip()
+    session_date = (payload.get('session_date') or '').strip()
+    status_input = (payload.get('status') or '').strip().lower()
+
+    if not booking_id or not session_date or not status_input:
+        return jsonify({"success": False, "message": "booking_id, session_date, and status are required."}), 400
+
+    from services.makeup_service import create_makeup_credit
+
+    try:
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT trainer_username, attended_sessions, student_name, end_date FROM bookings WHERE id = %s", (booking_id,))
+        row = cursor.fetchone()
+        if not row:
+            conn.close()
+            return jsonify({"success": False, "message": "Booking not found."}), 404
+
+        assigned_trainer = (row[0] or '').strip().lower()
+        current_user = (session.get('user_name') or '').strip().lower()
+        current_trainer_user = (session.get('trainer_username') or '').strip().lower()
+
+        if session.get('role') != 'admin' and assigned_trainer not in (current_user, current_trainer_user):
+            conn.close()
+            return jsonify({"success": False, "message": "You are not assigned to this student."}), 403
+
+        attended_raw = row[1] or ''
+        attended_list = [d.strip() for d in attended_raw.split(',') if d.strip()]
+        student_name = row[2] or 'Swimmer'
+
+        if status_input in ('completed', 'yes', 'present'):
+            if session_date not in attended_list:
+                attended_list.append(session_date)
+            new_attended_str = ','.join(attended_list)
+            cursor.execute("UPDATE bookings SET attended_sessions = %s WHERE id = %s", (new_attended_str, booking_id))
+
+            # Remove any pending/mistaken makeup credit for this date
+            cursor.execute("DELETE FROM makeup_credits WHERE booking_id = %s AND original_date = %s", (booking_id, session_date))
+            conn.commit()
+            conn.close()
+
+            return jsonify({
+                "success": True,
+                "status": "completed",
+                "student_name": student_name,
+                "session_date": session_date,
+                "message": f"{student_name}'s session on {session_date} marked as completed (+1 Class done)."
+            })
+
+        elif status_input in ('missed', 'no', 'absent'):
+            # Remove from attended if it was present
+            if session_date in attended_list:
+                attended_list = [d for d in attended_list if d != session_date]
+                new_attended_str = ','.join(attended_list)
+                cursor.execute("UPDATE bookings SET attended_sessions = %s WHERE id = %s", (new_attended_str, booking_id))
+                conn.commit()
+            conn.close()
+
+            # Create Make-up credit for swimmer. Note: Package end_date is untouched!
+            created = create_makeup_credit(
+                booking_id=booking_id,
+                original_date=session_date,
+                notes=f"Missed session confirmed by coach {session.get('user_name')}"
+            )
+
+            return jsonify({
+                "success": True,
+                "status": "missed",
+                "student_name": student_name,
+                "session_date": session_date,
+                "credit_created": created,
+                "message": f"Session marked as missed. 1 Make-up credit added for {student_name}. Package end date is unaffected."
+            })
+        else:
+            conn.close()
+            return jsonify({"success": False, "message": f"Invalid status '{status_input}'. Use 'completed' or 'missed'."}), 400
+
+    except Exception as e:
+        print("Error confirming coach session:", e)
+        return jsonify({"success": False, "message": f"Server error: {str(e)}"}), 500
+
+def get_coach_pending_confirmations():
+    """Return list of pending session confirmations for the active coach."""
+    if 'user_name' not in session or session.get('role') not in ('trainer', 'admin'):
+        return jsonify({"success": False, "pending_confirmations": []}), 401
+
+    data = load_data()
+    trainer_username = session.get('trainer_username') or session.get('user_name') or 'asdf'
+    context = get_trainer_dashboard_data(trainer_username, data)
+    return jsonify({
+        "success": True,
+        "pending_confirmations": context.get('pending_confirmations', [])
+    })
+
 def register_dashboard_routes(app):
     app.add_url_rule('/', endpoint='index', view_func=index)
     app.add_url_rule('/api/toggle_favorite_coach', endpoint='toggle_favorite_coach', view_func=toggle_favorite_coach, methods=['POST'])
+    app.add_url_rule('/api/coach/confirm_session', endpoint='confirm_coach_session', view_func=confirm_coach_session, methods=['POST'])
+    app.add_url_rule('/api/coach/pending_confirmations', endpoint='get_coach_pending_confirmations', view_func=get_coach_pending_confirmations, methods=['GET'])

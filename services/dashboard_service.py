@@ -277,9 +277,50 @@ def get_trainer_dashboard_data(trainer_username, data):
     except Exception as e:
         print(f"Error fetching feedback: {e}")
 
+    # 4. Pending Session Confirmations for Coach (Triggered when session ends)
+    today_str = ist_now.strftime('%Y-%m-%d')
+    current_time_dt = ist_now.replace(tzinfo=None)
+    pending_confirmations = []
+
+    for b in user_bookings:
+        if str(b.get('pause_status', '')).upper() in ('PAUSED', 'PAUSE'):
+            continue
+        calendar_dates = b.get('calendar_dates', [])
+        b_time = (b.get('time') or '06:00 AM').strip()
+        attended_sessions = set(b.get('attended_sessions', []))
+        skipped_dates = set(b.get('skipped_dates', []))
+
+        for d in calendar_dates:
+            try:
+                session_dt = datetime.strptime(f"{d} {b_time}", '%Y-%m-%d %I:%M %p')
+                end_dt = session_dt + timedelta(hours=1)
+
+                # If session end time has passed
+                if current_time_dt >= end_dt:
+                    # Neither confirmed attended nor marked as makeup/skipped
+                    if d not in attended_sessions and d not in skipped_dates:
+                        diff_hours = (current_time_dt - end_dt).total_seconds() / 3600.0
+                        if 0 <= diff_hours <= 48:
+                            end_time_str = end_dt.strftime('%I:%M %p')
+                            pending_confirmations.append({
+                                'booking_id': str(b.get('id')),
+                                'student_name': b.get('student', '--'),
+                                'session_date': d,
+                                'session_date_display': session_dt.strftime('%d %b %Y'),
+                                'time': b_time,
+                                'end_time': end_time_str,
+                                'time_range': f"{b_time} - {end_time_str}",
+                                'location': b.get('location', '--'),
+                                'package': b.get('package', '--'),
+                                'is_today': (d == today_str)
+                            })
+            except Exception:
+                continue
+
     base_data.update({
         'pending_pauses': pending_pauses,
         'pending_payments': pending_payments,
+        'pending_confirmations': pending_confirmations,
         'monthly_earnings': monthly_earnings,
         'monthly_bookings': monthly_bookings,
         'total_earnings': total_earnings,
@@ -428,7 +469,21 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
     total_sessions = sum(int(b.get('total_classes', 0) or 0) for b in user_bookings)
     completed_sessions = sum(int(b.get('completed_classes', 0) or 0) for b in user_bookings)
     remaining_sessions = sum(int(b.get('remaining_classes', 0) or 0) for b in user_bookings)
-    makeup_sessions = sum(1 for b in user_bookings if b.get('has_available_makeup_credit', False))
+    total_makeup_credits = sum(b.get('available_makeup_credits_count', 0) for b in user_bookings)
+    makeup_sessions = total_makeup_credits
+    available_makeup_cards = []
+    for b in user_bookings:
+        for c in b.get('available_credits_list', []):
+            available_makeup_cards.append({
+                'credit_id': c['id'],
+                'booking_id': str(b.get('id')),
+                'student_name': b.get('student', '--'),
+                'package': b.get('package', '--'),
+                'original_date': c['original_date'],
+                'created_at': c.get('created_at'),
+                'trainer_username': b.get('trainer_username'),
+                'valid_until': b.get('end_date_display', '--')
+            })
     total_skips_remaining = sum(int(b.get('skip_remaining', 0) or 0) for b in user_bookings)
 
     booked_dates = set()
@@ -733,6 +788,8 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
         'completed_sessions': completed_sessions,
         'remaining_sessions': remaining_sessions,
         'makeup_sessions': makeup_sessions,
+        'total_makeup_credits': total_makeup_credits,
+        'available_makeup_cards': available_makeup_cards,
         'total_skips_remaining': total_skips_remaining,
         'location_suggestions': location_suggestions,
         'current_month_name': current_month_name,
