@@ -571,8 +571,10 @@
     </main>
     
     {% block footer %}
-    <!-- Footer Component -->
+    {% if not session.get('user_name') %}
+    <!-- Footer Component (Only displayed when user is not logged in) -->
     {% include 'components/footer.html' %}
+    {% endif %}
     {% endblock %}
 
     {% if session.get('user_name') %}

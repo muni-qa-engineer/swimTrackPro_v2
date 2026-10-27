@@ -137,7 +137,7 @@ export default async function MyBookingsPage({
           ].map((tabItem) => (
             <Link
               key={tabItem.id}
-              href={`/my-bookings?tab=${tabItem.id}`}
+              href={currentTab === tabItem.id && tabItem.id !== "all" ? "/my-bookings?tab=all" : `/my-bookings?tab=${tabItem.id}`}
               className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition ${
                 currentTab === tabItem.id
                   ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"

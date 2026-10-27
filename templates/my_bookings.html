@@ -82,6 +82,66 @@
         transform: translateY(-4px) !important;
     }
 
+    /* Filter toggle buttons styling */
+    .filter-btn-toggle {
+        font-weight: 600;
+        font-size: 0.92rem;
+        padding: 0.55rem 1.15rem;
+        border-radius: 50px;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        background: rgba(255, 255, 255, 0.04);
+        color: #94a3b8;
+        outline: none !important;
+        box-shadow: none !important;
+        cursor: pointer;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .filter-btn-toggle .filter-badge {
+        background: rgba(255, 255, 255, 0.12);
+        color: #cbd5e1;
+        transition: all 0.25s ease;
+    }
+    .filter-btn-toggle:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #f8fafc;
+        border-color: rgba(255, 255, 255, 0.2) !important;
+    }
+    /* HIGHLIGHTED ACTIVE STATES */
+    .filter-btn-toggle.active[data-filter="booked"] {
+        background: #2563eb !important;
+        color: #ffffff !important;
+        border-color: #3b82f6 !important;
+        box-shadow: 0 4px 16px rgba(37, 99, 235, 0.45) !important;
+    }
+    .filter-btn-toggle.active[data-filter="booked"] .filter-badge {
+        background: #ffffff !important;
+        color: #1e3a8a !important;
+    }
+
+    .filter-btn-toggle.active[data-filter="active"] {
+        background: #06b6d4 !important;
+        color: #020617 !important;
+        border-color: #22d3ee !important;
+        box-shadow: 0 4px 16px rgba(6, 182, 212, 0.45) !important;
+    }
+    .filter-btn-toggle.active[data-filter="active"] .filter-badge {
+        background: #020617 !important;
+        color: #06b6d4 !important;
+    }
+
+    .filter-btn-toggle.active[data-filter="completed"] {
+        background: #475569 !important;
+        color: #ffffff !important;
+        border-color: #64748b !important;
+        box-shadow: 0 4px 16px rgba(71, 85, 105, 0.45) !important;
+    }
+    .filter-btn-toggle.active[data-filter="completed"] .filter-badge {
+        background: #ffffff !important;
+        color: #0f172a !important;
+    }
+
     /* Modal styling for dark theme */
     .modal-content {
         background: rgba(24, 24, 27, 0.95) !important;
@@ -456,10 +516,16 @@
                 {% endfor %}
 
                 <div class="text-center mb-5 mt-2">
-                    <div class="d-inline-flex" style="background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 50px; border: 1px solid rgba(255,255,255,0.05);">
-                        <button class="btn btn-outline-primary border-0 rounded-pill px-3 px-sm-4 py-2 filter-btn" data-filter="booked" type="button" style="font-weight: 600; font-size: 0.95rem; transition: all 0.3s ease;"><i class="fa-solid fa-calendar-check me-1 me-sm-2"></i><span class="d-none d-sm-inline">Booked</span><span class="d-inline d-sm-none">Book</span> <span class="badge bg-light text-dark ms-1 ms-sm-2 rounded-pill">{{booked_all|length}}</span></button>
-                        <button class="btn btn-outline-info border-0 rounded-pill px-3 px-sm-4 py-2 filter-btn mx-1" data-filter="active" type="button" style="font-weight: 600; font-size: 0.95rem; transition: all 0.3s ease;"><i class="fa-solid fa-circle-play me-1 me-sm-2"></i><span class="d-none d-sm-inline">Active</span><span class="d-inline d-sm-none">Acti</span> <span class="badge bg-light text-dark ms-1 ms-sm-2 rounded-pill">{{active_all|length}}</span></button>
-                        <button class="btn btn-outline-secondary border-0 rounded-pill px-3 px-sm-4 py-2 filter-btn" data-filter="completed" type="button" style="font-weight: 600; font-size: 0.95rem; transition: all 0.3s ease;"><i class="fa-solid fa-check-double me-1 me-sm-2"></i><span class="d-none d-sm-inline">Completed</span><span class="d-inline d-sm-none">Comp</span> <span class="badge bg-light text-dark ms-1 ms-sm-2 rounded-pill">{{completed_all|length}}</span></button>
+                    <div class="d-inline-flex flex-wrap justify-content-center gap-1.5 p-1.5" style="background: rgba(0,0,0,0.3); border-radius: 50px; border: 1px solid rgba(255,255,255,0.08);">
+                        <button class="filter-btn-toggle filter-btn" data-filter="booked" type="button">
+                            <i class="fa-solid fa-calendar-check me-1 me-sm-2"></i><span class="d-none d-sm-inline">Booked</span><span class="d-inline d-sm-none">Book</span> <span class="badge filter-badge ms-1 ms-sm-2 rounded-pill">{{booked_all|length}}</span>
+                        </button>
+                        <button class="filter-btn-toggle filter-btn" data-filter="active" type="button">
+                            <i class="fa-solid fa-circle-play me-1 me-sm-2"></i><span class="d-none d-sm-inline">Active</span><span class="d-inline d-sm-none">Acti</span> <span class="badge filter-badge ms-1 ms-sm-2 rounded-pill">{{active_all|length}}</span>
+                        </button>
+                        <button class="filter-btn-toggle filter-btn" data-filter="completed" type="button">
+                            <i class="fa-solid fa-check-double me-1 me-sm-2"></i><span class="d-none d-sm-inline">Completed</span><span class="d-inline d-sm-none">Comp</span> <span class="badge filter-badge ms-1 ms-sm-2 rounded-pill">{{completed_all|length}}</span>
+                        </button>
                     </div>
                 </div>
 
@@ -574,37 +640,31 @@
         const emptyText = document.getElementById('filter-empty-text');
         
         filterBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
                 const isCurrentlyActive = this.classList.contains('active');
                 
-                // Remove active class from all buttons
+                // Always reset active class on all buttons and clear touch focus
                 filterBtns.forEach(b => {
                     b.classList.remove('active');
-                    b.style.backgroundColor = '';
-                    b.style.color = '';
+                    b.blur();
                 });
                 
                 let activeFilter = null;
                 
+                // Toggle action:
+                // First click (was not active): activate & highlight this button
+                // Second click (was active): leave unhighlighted (normal state) -> activeFilter is null (shows all)
                 if (!isCurrentlyActive) {
                     this.classList.add('active');
                     activeFilter = this.dataset.filter;
-                    // Add solid background to active button
-                    if (activeFilter === 'booked') {
-                        this.style.backgroundColor = '#0d6efd';
-                        this.style.color = 'white';
-                    } else if (activeFilter === 'active') {
-                        this.style.backgroundColor = '#0dcaf0';
-                        this.style.color = 'black';
-                    } else if (activeFilter === 'completed') {
-                        this.style.backgroundColor = '#6c757d';
-                        this.style.color = 'white';
-                    }
                 }
+                
+                this.blur();
                 
                 let totalVisible = 0;
                 
-                // Filter the cards
+                // Filter cards: If activeFilter is null (no button highlighted), show all bookings
                 cards.forEach(card => {
                     if (!activeFilter || card.dataset.bookingStatus === activeFilter) {
                         card.style.display = '';

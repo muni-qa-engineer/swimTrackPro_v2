@@ -364,7 +364,7 @@
                         {% endfor %}
                         
                         <div class="d-inline-flex" style="background: rgba(0,0,0,0.2); padding: 0.25rem; border-radius: 50px; border: 1px solid rgba(255,255,255,0.05);">
-                            <button class="btn btn-outline-primary border-0 rounded-pill px-3 py-1 admin-filter-btn active" data-filter="booked" type="button" style="font-weight: 600; font-size: 0.85rem; transition: all 0.3s ease;">Booked <span class="badge bg-light text-dark ms-1 rounded-pill">{{booked_all|length}}</span></button>
+                            <button class="btn btn-outline-primary border-0 rounded-pill px-3 py-1 admin-filter-btn" data-filter="booked" type="button" style="font-weight: 600; font-size: 0.85rem; transition: all 0.3s ease;">Booked <span class="badge bg-light text-dark ms-1 rounded-pill">{{booked_all|length}}</span></button>
                             <button class="btn btn-outline-info border-0 rounded-pill px-3 py-1 admin-filter-btn mx-1" data-filter="active" type="button" style="font-weight: 600; font-size: 0.85rem; transition: all 0.3s ease;">Active <span class="badge bg-light text-dark ms-1 rounded-pill">{{active_all|length}}</span></button>
                             <button class="btn btn-outline-secondary border-0 rounded-pill px-3 py-1 admin-filter-btn" data-filter="completed" type="button" style="font-weight: 600; font-size: 0.85rem; transition: all 0.3s ease;">Completed <span class="badge bg-light text-dark ms-1 rounded-pill">{{completed_all|length}}</span></button>
                         </div>
@@ -1786,40 +1786,47 @@
                 }, 700);
             });
         });
-        // Admin Bookings Filter logic
+        // Admin Bookings Filter logic (Toggle on click)
         const filterBtns = document.querySelectorAll('.admin-filter-btn');
         const bookingRows = document.querySelectorAll('.admin-booking-row');
         
-        // Initial setup - default to 'active' or 'booked' or first available
-        // Let's explicitly trigger click on the 'active' button if it exists and has items, otherwise 'booked'
-        let initialBtn = Array.from(filterBtns).find(btn => btn.dataset.filter === 'booked');
-        
         filterBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                // Update active state of buttons
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const isCurrentlyActive = this.classList.contains('active');
+                
+                // Update active state of buttons: clear all
                 filterBtns.forEach(b => {
                     b.classList.remove('active', 'btn-primary', 'btn-info', 'btn-secondary');
                     if (b.dataset.filter === 'booked') b.classList.add('btn-outline-primary');
                     if (b.dataset.filter === 'active') b.classList.add('btn-outline-info');
                     if (b.dataset.filter === 'completed') b.classList.add('btn-outline-secondary');
+                    b.blur();
                 });
                 
-                // Add filled styles to clicked button
-                const filter = this.dataset.filter;
-                if (filter === 'booked') {
-                    this.classList.remove('btn-outline-primary');
-                    this.classList.add('btn-primary', 'active');
-                } else if (filter === 'active') {
-                    this.classList.remove('btn-outline-info');
-                    this.classList.add('btn-info', 'active');
-                } else if (filter === 'completed') {
-                    this.classList.remove('btn-outline-secondary');
-                    this.classList.add('btn-secondary', 'active');
+                let activeFilter = null;
+                
+                // Toggle: if it wasn't active, activate it. If it was active, it remains deactivated (all rows shown).
+                if (!isCurrentlyActive) {
+                    const filter = this.dataset.filter;
+                    activeFilter = filter;
+                    if (filter === 'booked') {
+                        this.classList.remove('btn-outline-primary');
+                        this.classList.add('btn-primary', 'active');
+                    } else if (filter === 'active') {
+                        this.classList.remove('btn-outline-info');
+                        this.classList.add('btn-info', 'active');
+                    } else if (filter === 'completed') {
+                        this.classList.remove('btn-outline-secondary');
+                        this.classList.add('btn-secondary', 'active');
+                    }
                 }
                 
-                // Filter rows
+                this.blur();
+                
+                // Filter rows: if no button is active (activeFilter is null), show all bookings
                 bookingRows.forEach(row => {
-                    if (row.dataset.status === filter) {
+                    if (!activeFilter || row.dataset.status === activeFilter) {
                         row.style.display = '';
                     } else {
                         row.style.display = 'none';
@@ -1827,11 +1834,6 @@
                 });
             });
         });
-        
-        // Trigger initial filter
-        if (initialBtn) {
-            initialBtn.click();
-        }
 
     });
 
