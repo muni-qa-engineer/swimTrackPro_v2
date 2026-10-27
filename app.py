@@ -52,12 +52,20 @@ def favicon():
 def get_pg_connection():
     return psycopg2.connect(DATABASE_URL)
 
+_tables_ensured = False
+
 # V0033.0 - Make-Up Class Management
 def ensure_database_tables():
     """
     Creates and alters PostgreSQL tables required for core functionality, 
     makeup, multi-trainer support, and system defaults.
+    Runs once per process to prevent connection saturation, DDL table locks,
+    and deadlocks during concurrent queries.
     """
+    global _tables_ensured
+    if _tables_ensured:
+        return
+
     conn = get_pg_connection()
     cursor = conn.cursor()
 
@@ -476,9 +484,11 @@ def ensure_database_tables():
 
     conn.commit()
     conn.close()
+    _tables_ensured = True
 
 def load_data():
-    ensure_database_tables()
+    if not _tables_ensured:
+        ensure_database_tables()
     conn = get_pg_connection()
     cursor = conn.cursor()
 

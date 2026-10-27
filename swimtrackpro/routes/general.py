@@ -312,10 +312,24 @@ def reject_trainer(username):
 def admin_delete_booking(booking_id):
     conn = get_pg_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM bookings WHERE id = %s", (booking_id,))
-    conn.commit()
-    conn.close()
-    flash(f"Booking ID {booking_id} deleted successfully.", "success")
+    try:
+        for cleanup_query in [
+            'DELETE FROM makeup_requests WHERE booking_id = %s OR TRIM(booking_id::text) = TRIM(%s)',
+            'DELETE FROM makeup_credits WHERE booking_id = %s OR TRIM(booking_id::text) = TRIM(%s)',
+            'DELETE FROM package_pause_audit WHERE booking_id = %s OR TRIM(booking_id::text) = TRIM(%s)'
+        ]:
+            try:
+                cursor.execute(cleanup_query, (str(booking_id), str(booking_id)))
+            except Exception:
+                pass
+        cursor.execute("DELETE FROM bookings WHERE id = %s OR TRIM(id::text) = TRIM(%s)", (str(booking_id), str(booking_id)))
+        conn.commit()
+        flash(f"Booking ID {booking_id} deleted successfully.", "success")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Error deleting booking: {e}", "danger")
+    finally:
+        conn.close()
     return redirect(url_for("index"))
 
 

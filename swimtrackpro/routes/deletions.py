@@ -23,7 +23,10 @@ def delete_booking(booking_id):
            package,
            email,
            trainer_username,
-           created_by
+           created_by,
+           status,
+           package_status,
+           attended_sessions
     FROM bookings
     WHERE id = %s
     ''', (str(booking_id),))
@@ -42,13 +45,19 @@ def delete_booking(booking_id):
                    package,
                    email,
                    trainer_username,
-                   created_by
+                   created_by,
+                   status,
+                   package_status,
+                   attended_sessions
             FROM bookings
             WHERE TRIM(id::text) = TRIM(%s)
             ''', (str(booking_id).strip(),))
             row = cursor.fetchone()
         except Exception:
             pass
+
+    # Commit read transaction immediately to release PostgreSQL catalog / table locks
+    conn.commit()
 
     if not row:
         conn.close()
@@ -110,18 +119,24 @@ def delete_booking(booking_id):
             return jsonify({'success': False, 'error': 'Unauthorized action'}), 403
         return redirect(url_for('my_bookings_page'))
 
-    # Active booking guard for regular users
+    # Active booking guard for regular users: cannot delete active or conducted bookings
     if role not in ('admin', 'trainer'):
-        data = load_data()
-        b_data = next((b for b in data['bookings'] if str(b['id']) == str(booking_id)), None)
-        if b_data:
-            is_active_b = (b_data.get('completed_classes', 0) or 0) > 0 or str(b_data.get('status') or '').strip().lower() == 'active'
-            if is_active_b:
-                conn.close()
-                flash('Active bookings cannot be deleted.', 'warning')
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
-                    return jsonify({'success': False, 'error': 'Active bookings cannot be deleted.'}), 400
-                return redirect(url_for('my_bookings_page'))
+        bk_status = str(row[10] or '').strip().lower() if len(row) > 10 else ''
+        bk_pkg_status = str(row[11] or '').strip().lower() if len(row) > 11 else ''
+        attended_raw = str(row[12] or '').strip() if len(row) > 12 else ''
+        has_attended = bool(attended_raw and attended_raw not in ('[]', 'null', 'None', '""'))
+
+        is_active_b = (
+            bk_status in ('active', 'completed') or
+            has_attended or
+            (bk_pkg_status == 'active' and bk_status not in ('booked', 'not paid', 'pending', 'unconfirmed', ''))
+        )
+        if is_active_b:
+            conn.close()
+            flash('Active bookings cannot be deleted.', 'warning')
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+                return jsonify({'success': False, 'error': 'Active bookings cannot be deleted.'}), 400
+            return redirect(url_for('my_bookings_page'))
 
     booking_info = {
         'booking_code': row[0] or '',
@@ -140,13 +155,13 @@ def delete_booking(booking_id):
 
     # Delete related dependent records safely using SAVEPOINTs so any error does not abort transaction
     for cleanup_query in [
-        'DELETE FROM makeup_requests WHERE booking_id = %s',
-        'DELETE FROM makeup_credits WHERE booking_id = %s',
-        'DELETE FROM package_pause_audit WHERE booking_id = %s'
+        'DELETE FROM makeup_requests WHERE booking_id = %s OR TRIM(booking_id::text) = TRIM(%s)',
+        'DELETE FROM makeup_credits WHERE booking_id = %s OR TRIM(booking_id::text) = TRIM(%s)',
+        'DELETE FROM package_pause_audit WHERE booking_id = %s OR TRIM(booking_id::text) = TRIM(%s)'
     ]:
         try:
             cursor.execute('SAVEPOINT sp_del_dep')
-            cursor.execute(cleanup_query, (str(booking_id),))
+            cursor.execute(cleanup_query, (str(booking_id), str(booking_id)))
             cursor.execute('RELEASE SAVEPOINT sp_del_dep')
         except Exception as e:
             try:
@@ -158,7 +173,7 @@ def delete_booking(booking_id):
     # Delete booking record safely
     try:
         cursor.execute('SAVEPOINT sp_del_booking')
-        cursor.execute('DELETE FROM bookings WHERE id = %s', (str(booking_id),))
+        cursor.execute('DELETE FROM bookings WHERE id = %s OR TRIM(id::text) = TRIM(%s)', (str(booking_id), str(booking_id)))
         cursor.execute('RELEASE SAVEPOINT sp_del_booking')
     except Exception as e:
         try:
@@ -261,13 +276,13 @@ def approve_delete(booking_id):
 
     # Delete related dependent records first safely
     for cleanup_query in [
-        'DELETE FROM makeup_requests WHERE booking_id = %s',
-        'DELETE FROM makeup_credits WHERE booking_id = %s',
-        'DELETE FROM package_pause_audit WHERE booking_id = %s'
+        'DELETE FROM makeup_requests WHERE booking_id = %s OR TRIM(booking_id::text) = TRIM(%s)',
+        'DELETE FROM makeup_credits WHERE booking_id = %s OR TRIM(booking_id::text) = TRIM(%s)',
+        'DELETE FROM package_pause_audit WHERE booking_id = %s OR TRIM(booking_id::text) = TRIM(%s)'
     ]:
         try:
             cursor.execute('SAVEPOINT sp_appr_dep')
-            cursor.execute(cleanup_query, (str(booking_id),))
+            cursor.execute(cleanup_query, (str(booking_id), str(booking_id)))
             cursor.execute('RELEASE SAVEPOINT sp_appr_dep')
         except Exception as e:
             try:
@@ -277,7 +292,7 @@ def approve_delete(booking_id):
             print(f"Notice: approve_delete cleanup error: {e}")
 
     # Permanently delete the booking
-    cursor.execute('DELETE FROM bookings WHERE id = %s', (str(booking_id),))
+    cursor.execute('DELETE FROM bookings WHERE id = %s OR TRIM(id::text) = TRIM(%s)', (str(booking_id), str(booking_id)))
 
     # Check if swimmer still has any bookings
     try:
