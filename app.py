@@ -38,8 +38,12 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 @app.before_request
 def make_session_permanent():
-    session.permanent = True
     app.permanent_session_lifetime = timedelta(days=90)
+    # If the user explicitly unchecked "Remember me", session ends when browser closes
+    if session.get("remember_me") is False:
+        session.permanent = False
+    else:
+        session.permanent = True
 
 @app.route('/service-worker.js')
 def service_worker():
