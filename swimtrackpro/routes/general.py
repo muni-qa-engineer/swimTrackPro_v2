@@ -312,7 +312,27 @@ def reject_trainer(username):
 def admin_delete_booking(booking_id):
     conn = get_pg_connection()
     cursor = conn.cursor()
+    booking_info = None
     try:
+        # Load booking info for notification before deletion
+        cursor.execute("""
+            SELECT booking_code, student_name, owner_name, owner_phone, start_date, time, package, email
+            FROM bookings WHERE id = %s OR TRIM(id::text) = TRIM(%s)
+        """, (str(booking_id), str(booking_id)))
+        row = cursor.fetchone()
+        if row:
+            booking_info = {
+                'id': booking_id,
+                'booking_code': row[0] or str(booking_id),
+                'student': row[1] or '',
+                'owner_name': row[2] or '',
+                'owner_phone': row[3] or '',
+                'start_date': str(row[4]) if row[4] else '',
+                'time': row[5] or '',
+                'package': row[6] or '',
+                'email': row[7] or ''
+            }
+
         for cleanup_query in [
             'DELETE FROM makeup_requests WHERE booking_id = %s OR TRIM(booking_id::text) = TRIM(%s)',
             'DELETE FROM makeup_credits WHERE booking_id = %s OR TRIM(booking_id::text) = TRIM(%s)',
@@ -324,6 +344,16 @@ def admin_delete_booking(booking_id):
                 pass
         cursor.execute("DELETE FROM bookings WHERE id = %s OR TRIM(id::text) = TRIM(%s)", (str(booking_id), str(booking_id)))
         conn.commit()
+
+        # Send booking cancellation notification email to swimmer and admin alert
+        if booking_info:
+            try:
+                from services.email_service import send_booking_deleted_email, send_booking_deleted_alert
+                send_booking_deleted_email(booking_info)
+                send_booking_deleted_alert(booking_info)
+            except Exception as mail_err:
+                print("Admin delete booking email error:", mail_err)
+
         flash(f"Booking ID {booking_id} deleted successfully.", "success")
     except Exception as e:
         conn.rollback()

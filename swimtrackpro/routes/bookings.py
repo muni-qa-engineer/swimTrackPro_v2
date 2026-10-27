@@ -13,7 +13,10 @@ from services.booking_engine import (
     generate_booking_id,
     generate_recurring_dates,
 )
-from services.email_service import send_booking_confirmation_email
+from services.email_service import (
+    send_booking_confirmation_email,
+    send_booking_alert_email,
+)
 from services.pricing_service import calculate_discounted_fee
 from services.package_tier_service import get_package_tier_info
 from swimtrackpro.runtime import get_pg_connection, load_data
@@ -461,8 +464,23 @@ def book():
             cf_conn.commit()
             cf_conn.close()
 
-            # Send confirmation email
+            # Send confirmation and alert emails
             send_booking_confirmation_email({
+                'id': booking_id,
+                'booking_code': booking_code,
+                'student': student,
+                'date': date_str,
+                'time': time_str,
+                'fee': 0,
+                'persons': persons,
+                'package': package,
+                'location': request.form.get('location', '').strip(),
+                'email': email,
+                'owner_name': owner_name,
+                'owner_phone': owner_phone,
+                'trainer_username': trainer_username
+            })
+            send_booking_alert_email({
                 'id': booking_id,
                 'booking_code': booking_code,
                 'student': student,
@@ -488,6 +506,13 @@ def book():
         session['pending_guest_name'] = owner_name
         session['pending_guest_phone'] = owner_phone
         redirect_url = f'/payment_options/{booking_id}'
+
+        # Send booking confirmation email to swimmer and alert to admin
+        try:
+            send_booking_confirmation_email(new_booking)
+            send_booking_alert_email(new_booking)
+        except Exception as mail_err:
+            print("Booking email notification error:", mail_err)
 
     if is_ajax:
         return jsonify({

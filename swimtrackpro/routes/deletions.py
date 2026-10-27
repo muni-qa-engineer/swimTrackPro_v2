@@ -227,6 +227,14 @@ def delete_booking(booking_id):
     conn.commit()
     conn.close()
 
+    # Send booking cancellation notification email to swimmer and admin alert
+    try:
+        from services.email_service import send_booking_deleted_email, send_booking_deleted_alert
+        send_booking_deleted_email(booking_info)
+        send_booking_deleted_alert(booking_info)
+    except Exception as mail_err:
+        print("Booking deletion email notification error:", mail_err)
+
     flash(f'Booking for {deleted_student} deleted successfully.', 'success')
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
         return jsonify({'success': True, 'message': f'Booking for {deleted_student} deleted successfully.'})
@@ -243,7 +251,7 @@ def approve_delete(booking_id):
 
     # Load booking details before deletion
     cursor.execute('''
-    SELECT student_name, owner_name, owner_phone, trainer_username
+    SELECT student_name, owner_name, owner_phone, trainer_username, booking_code, email, start_date, time, package
     FROM bookings
     WHERE id = %s
     ''', (str(booking_id),))
@@ -332,6 +340,25 @@ def approve_delete(booking_id):
 
     conn.commit()
     conn.close()
+
+    # Send booking cancellation notification email to swimmer and admin alert
+    try:
+        from services.email_service import send_booking_deleted_email, send_booking_deleted_alert
+        approved_booking_info = {
+            'id': booking_id,
+            'booking_code': row[4] or str(booking_id),
+            'student': deleted_student,
+            'owner_name': owner_name,
+            'owner_phone': owner_phone,
+            'email': row[5] or '',
+            'start_date': str(row[6]) if row[6] else '',
+            'time': row[7] or '',
+            'package': row[8] or ''
+        }
+        send_booking_deleted_email(approved_booking_info)
+        send_booking_deleted_alert(approved_booking_info)
+    except Exception as mail_err:
+        print("Approve deletion email notification error:", mail_err)
 
     flash(f'Delete approved for {deleted_student}', 'success')
     return redirect(url_for('my_bookings_page'))
