@@ -283,37 +283,41 @@ def get_trainer_dashboard_data(trainer_username, data):
     pending_confirmations = []
 
     for b in user_bookings:
+        if b.get('is_completed'):
+            continue
         if str(b.get('pause_status', '')).upper() in ('PAUSED', 'PAUSE'):
             continue
+        if str(b.get('status', '')).lower() in ('cancelled', 'deleted'):
+            continue
+
         calendar_dates = b.get('calendar_dates', [])
         b_time = (b.get('time') or '06:00 AM').strip()
         attended_sessions = set(b.get('attended_sessions', []))
         skipped_dates = set(b.get('skipped_dates', []))
 
-        for d in calendar_dates:
+        # Only check today's scheduled sessions on active packages
+        if today_str in calendar_dates:
             try:
-                session_dt = datetime.strptime(f"{d} {b_time}", '%Y-%m-%d %I:%M %p')
+                session_dt = datetime.strptime(f"{today_str} {b_time}", '%Y-%m-%d %I:%M %p')
                 end_dt = session_dt + timedelta(hours=1)
 
                 # If session end time has passed
                 if current_time_dt >= end_dt:
                     # Neither confirmed attended nor marked as makeup/skipped
-                    if d not in attended_sessions and d not in skipped_dates:
-                        diff_hours = (current_time_dt - end_dt).total_seconds() / 3600.0
-                        if 0 <= diff_hours <= 48:
-                            end_time_str = end_dt.strftime('%I:%M %p')
-                            pending_confirmations.append({
-                                'booking_id': str(b.get('id')),
-                                'student_name': b.get('student', '--'),
-                                'session_date': d,
-                                'session_date_display': session_dt.strftime('%d %b %Y'),
-                                'time': b_time,
-                                'end_time': end_time_str,
-                                'time_range': f"{b_time} - {end_time_str}",
-                                'location': b.get('location', '--'),
-                                'package': b.get('package', '--'),
-                                'is_today': (d == today_str)
-                            })
+                    if today_str not in attended_sessions and today_str not in skipped_dates:
+                        end_time_str = end_dt.strftime('%I:%M %p')
+                        pending_confirmations.append({
+                            'booking_id': str(b.get('id')),
+                            'student_name': b.get('student', '--'),
+                            'session_date': today_str,
+                            'session_date_display': session_dt.strftime('%d %b %Y'),
+                            'time': b_time,
+                            'end_time': end_time_str,
+                            'time_range': f"{b_time} - {end_time_str}",
+                            'location': b.get('location', '--'),
+                            'package': b.get('package', '--'),
+                            'is_today': True
+                        })
             except Exception:
                 continue
 

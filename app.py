@@ -31,6 +31,15 @@ except ImportError:
     DATABASE_URL = os.getenv("DATABASE_URL", "")
 app.secret_key = SECRET_KEY
 app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=90)
+app.config['SESSION_COOKIE_NAME'] = 'swimtrackpro_session'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
+@app.before_request
+def make_session_permanent():
+    session.permanent = True
+    app.permanent_session_lifetime = timedelta(days=90)
 
 @app.route('/service-worker.js')
 def service_worker():
@@ -550,6 +559,9 @@ def load_data():
         # V0037.3 - Real-Time Class Progress Completion
         # If marked attended by coach -> counted as completed (+1).
         # If marked missed (in skipped_dates) -> NOT completed (makeup credit created).
+        # Historical past days (< today_str) -> completed as part of regular schedule.
+        # Today's date -> completed when confirmed by coach or legacy fallback.
+        # Future days (> today_str) -> not completed.
         is_completed = False
         total_classes = len(calendar_dates)
         completed_classes = 0
@@ -560,6 +572,7 @@ def load_data():
                 current_datetime = datetime.now(
                     ZoneInfo('Asia/Kolkata')
                 ).replace(tzinfo=None)
+                today_str = current_datetime.strftime('%Y-%m-%d')
                 booking_time = (b.get('time') or '06:00 AM').strip()
 
                 for class_date in calendar_dates:
@@ -574,21 +587,44 @@ def load_data():
                     # Each session duration is 1 hour.
                     class_end_datetime = class_datetime + timedelta(hours=1)
 
-                    if class_date in attended_set:
-                        # Confirmed completed by coach
+                    if class_date < today_str:
+                        # Historical past dates were conducted normally in schedule
                         completed_classes += 1
-                    elif attended_raw is None or attended_raw == '':
-                        # Legacy fallback for historical bookings
-                        if current_datetime >= class_end_datetime:
+                    elif class_date == today_str:
+                        # Today's session: completed if confirmed attended by coach, or legacy fallback
+                        if class_date in attended_set:
                             completed_classes += 1
+                        elif attended_raw is None or attended_raw == '':
+                            if current_datetime >= class_end_datetime:
+                                completed_classes += 1
+                    else:
+                        # Future dates: not completed yet
+                        pass
 
                 remaining_classes = max(
-                    total_classes - completed_classes,
+                    total_classes - completed_classes - len(skipped_dates),
                     0
                 )
 
-                if total_classes > 0 and completed_classes >= total_classes:
-                    is_completed = True
+                # Package completion check:
+                # 1. Total conducted (completed + skipped) >= total_classes, OR
+                # 2. Package end_date has passed
+                end_date_str = str(b.get('end_date') or '').strip()
+                is_expired = False
+                if end_date_str:
+                    try:
+                        exp_dt = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+                        if exp_dt < current_datetime.date():
+                            is_expired = True
+                    except Exception:
+                        pass
+
+                pause_status_val = str(b.get('pause_status') or 'ACTIVE').upper()
+                if pause_status_val not in ('PAUSED', 'PAUSE'):
+                    if total_classes > 0 and (completed_classes + len(skipped_dates)) >= total_classes:
+                        is_completed = True
+                    elif is_expired:
+                        is_completed = True
 
         except Exception as e:
             is_completed = False

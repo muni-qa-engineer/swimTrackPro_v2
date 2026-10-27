@@ -44,6 +44,7 @@ def register_authentication_routes(
                     flash("Your trainer registration is pending admin approval.", "warning")
                     return redirect(url_for("index"))
 
+                session.permanent = True
                 session["user_name"] = trainer_row[2]
                 session["role"] = "trainer"
                 session["trainer_username"] = trainer_row[0]
@@ -95,6 +96,7 @@ def register_authentication_routes(
 
         if role == "admin":
             if name == admin_username and password == admin_password:
+                session.permanent = True
                 session["user_name"] = "Super Admin"
                 session["role"] = "admin"
                 session["admin_username"] = "admin"
@@ -199,6 +201,7 @@ def register_authentication_routes(
             else:
                 display_name = name
 
+            session.permanent = True
             session["role"] = "guest"
             session["user_name"] = display_name
             session["phone"] = phone

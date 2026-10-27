@@ -363,6 +363,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (e.defaultPrevented) {
                 return;
             }
+            // Skip GET forms (search, filter, navigation) - they must never have submit spinners
+            if ((this.method || '').toUpperCase() === 'GET') {
+                return;
+            }
             // Skip forms with custom delete or confirmation handlers or custom AJAX pricing forms
             if (this.id === 'adminPricingForm' || this.classList.contains('delete-booking-form') || this.classList.contains('no-loading-spinner')) {
                 return;
@@ -390,6 +394,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitBtn.style.opacity = '0.8';
                 submitBtn.style.pointerEvents = 'none';
                 submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Loading...';
+            }
+        });
+    });
+
+    // Reset any stuck buttons when navigating back via browser history (bfcache)
+    window.addEventListener('pageshow', function() {
+        document.querySelectorAll('button[data-is-submitting="true"]').forEach(btn => {
+            btn.dataset.isSubmitting = 'false';
+            btn.style.opacity = '1';
+            btn.style.pointerEvents = 'auto';
+            btn.disabled = false;
+            if (btn.dataset.originalText) {
+                btn.innerHTML = btn.dataset.originalText;
             }
         });
     });

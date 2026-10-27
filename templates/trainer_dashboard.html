@@ -139,55 +139,65 @@
 
         <!-- Pending Session Confirmations (Coach Attendance Trigger) -->
         {% if pending_confirmations and pending_confirmations|length > 0 %}
-        <div id="pendingConfirmationsContainer" class="glass-panel mb-6" style="padding: 1.5rem; border: 1px solid rgba(245, 158, 11, 0.45); background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(15, 23, 42, 0.7) 100%);">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-warning text-dark px-2.5 py-1.5 fw-bold" style="font-size: 0.8rem;">
+        <div id="pendingConfirmationsContainer" class="glass-panel mb-4 p-3 p-md-4" style="border: 1px solid rgba(245, 158, 11, 0.45); background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(15, 23, 42, 0.85) 100%);">
+            <div class="d-flex flex-column gap-2 mb-3">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <span class="badge bg-warning text-dark px-2.5 py-1.5 fw-bold" style="font-size: 0.78rem;">
                         <i class="fa-solid fa-bell me-1"></i> ATTENDANCE ACTION REQUIRED
                     </span>
-                    <span class="text-white fw-bold" style="font-size: 1.05rem;">
-                        {{ pending_confirmations|length }} session{{ 's' if pending_confirmations|length > 1 else '' }} completed — confirm student attendance
-                    </span>
+                    <div id="pwaNotifStatus">
+                        <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-3 py-1 text-nowrap" style="font-size: 0.75rem;" onclick="requestCoachNotificationPermission()">
+                            <i class="fa-solid fa-mobile-screen-button me-1"></i> Enable Push Alerts
+                        </button>
+                    </div>
                 </div>
-                <div id="pwaNotifStatus" class="d-flex align-items-center gap-2">
-                    <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-3 py-1" onclick="requestCoachNotificationPermission()">
-                        <i class="fa-solid fa-mobile-screen-button me-1"></i> Enable Push Alerts
-                    </button>
+                <div class="text-white fw-bold" style="font-size: 1.05rem; line-height: 1.35;">
+                    {{ pending_confirmations|length }} session{{ 's' if pending_confirmations|length > 1 else '' }} completed — confirm student attendance
                 </div>
             </div>
-            <p class="text-secondary small mb-3">
-                When you click <strong>Yes (Completed)</strong>, the swimmer's class progress increments (+1). If you click <strong>No (Missed)</strong>, 1 make-up credit is credited to the swimmer and their package end date remains untouched.
+            <p class="text-secondary small mb-3" style="font-size: 0.8rem; line-height: 1.4;">
+                Click <strong>Yes (Completed)</strong> to increment class progress (+1). If you click <strong>No (Missed)</strong>, 1 make-up credit is credited to the swimmer and their package end date remains untouched.
             </p>
 
             <div class="d-flex flex-column gap-3">
                 {% for p in pending_confirmations %}
-                <div id="pending-card-{{ p.booking_id }}-{{ p.session_date }}" class="p-3 rounded d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
-                    <div class="d-flex align-items-center gap-3">
-                        <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.3); display: flex; align-items: center; justify-content: center; color: #06b6d4; font-size: 1.25rem;">
+                <div id="pending-card-{{ p.booking_id }}-{{ p.session_date }}" class="p-3 rounded d-flex flex-column gap-3" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
+                    <div class="d-flex align-items-start gap-3">
+                        <div style="width: 42px; height: 42px; min-width: 42px; border-radius: 12px; background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.3); display: flex; align-items: center; justify-content: center; color: #06b6d4; font-size: 1.2rem;">
                             <i class="fa-solid fa-person-swimming"></i>
                         </div>
-                        <div>
-                            <div class="text-white fw-bold" style="font-size: 1.05rem;">
-                                {{ p.student_name }}
-                                <span class="badge ms-2" style="background: rgba(255,255,255,0.1); color: #cbd5e1; font-size: 0.75rem;">{{ p.package }}</span>
+                        <div class="flex-grow-1" style="min-width: 0;">
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <span class="text-white fw-bold" style="font-size: 1.05rem;">{{ p.student_name }}</span>
+                                <span class="badge" style="background: rgba(255,255,255,0.1); color: #cbd5e1; font-size: 0.72rem;">{{ p.package }}</span>
                             </div>
-                            <div class="text-secondary small mt-0.5">
-                                <i class="fa-regular fa-clock me-1 text-cyan-400"></i>{{ p.time_range }} • <i class="fa-regular fa-calendar me-1"></i>{{ p.session_date_display }}
-                                {% if p.location and p.location != '--' %}
-                                • <i class="fa-solid fa-location-dot me-1 text-danger"></i>{{ p.location }}
-                                {% endif %}
+                            <div class="text-secondary small mt-1 d-flex flex-wrap align-items-center gap-2" style="font-size: 0.78rem;">
+                                <span><i class="fa-regular fa-clock me-1 text-cyan-400"></i>{{ p.time_range }}</span>
+                                <span>•</span>
+                                <span><i class="fa-regular fa-calendar me-1"></i>{{ p.session_date_display }}</span>
                             </div>
+                            {% if p.location and p.location != '--' %}
+                            <div class="text-secondary small mt-1 text-break" style="font-size: 0.75rem; line-height: 1.35; opacity: 0.85;">
+                                <i class="fa-solid fa-location-dot me-1 text-danger"></i>{{ p.location }}
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
 
-                    <div class="d-flex align-items-center gap-2 w-100 w-lg-auto justify-content-end">
-                        <span class="text-muted small me-2 d-none d-md-inline">Did {{ p.student_name }} complete this class?</span>
-                        <button type="button" class="btn btn-success btn-sm px-3 py-1.5 fw-bold" onclick="confirmCoachSession('{{ p.booking_id }}', '{{ p.session_date }}', 'completed', '{{ p.student_name }}')">
-                            <i class="fa-solid fa-circle-check me-1"></i> Yes, Completed (+1)
-                        </button>
-                        <button type="button" class="btn btn-outline-warning btn-sm px-3 py-1.5 fw-bold text-white" onclick="confirmCoachSession('{{ p.booking_id }}', '{{ p.session_date }}', 'missed', '{{ p.student_name }}')">
-                            <i class="fa-solid fa-ticket me-1"></i> No, Missed (+1 Make-up)
-                        </button>
+                    <!-- Action Buttons: responsive grid that NEVER overflows on mobile -->
+                    <div class="row g-2 pt-2 border-top border-secondary border-opacity-25 w-100 m-0">
+                        <div class="col-12 col-sm-6 p-0 pe-sm-1">
+                            <button type="button" class="btn btn-success w-100 py-2.5 fw-bold d-flex align-items-center justify-content-center gap-2" style="border-radius: 10px; font-size: 0.85rem;" onclick="confirmCoachSession('{{ p.booking_id }}', '{{ p.session_date }}', 'completed', '{{ p.student_name }}')">
+                                <i class="fa-solid fa-circle-check"></i>
+                                <span>Yes, Completed (+1)</span>
+                            </button>
+                        </div>
+                        <div class="col-12 col-sm-6 p-0 ps-sm-1">
+                            <button type="button" class="btn btn-outline-warning w-100 py-2.5 fw-bold text-white d-flex align-items-center justify-content-center gap-2" style="border-radius: 10px; font-size: 0.85rem; border-color: rgba(245, 158, 11, 0.6);" onclick="confirmCoachSession('{{ p.booking_id }}', '{{ p.session_date }}', 'missed', '{{ p.student_name }}')">
+                                <i class="fa-solid fa-ticket"></i>
+                                <span>No, Missed (+1 Make-up)</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 {% endfor %}
