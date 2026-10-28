@@ -365,6 +365,7 @@ def register_page_routes(app, *, get_pg_connection, load_data):
 
         upi_id = get_setting("upi_id", "")
         account_holder_name = get_setting("account_holder_name", "")
+        trainer_qr_code = ""
 
         trainer_username = booking.get("trainer_username")
         if trainer_username:
@@ -373,15 +374,18 @@ def register_page_routes(app, *, get_pg_connection, load_data):
                 conn = get_pg_connection()
                 cursor = conn.cursor()
                 cursor.execute(
-                    "SELECT upi_id, account_holder_name FROM trainers WHERE LOWER(username) = LOWER(%s)",
+                    "SELECT upi_id, account_holder_name, qr_code FROM trainers WHERE LOWER(username) = LOWER(%s)",
                     (trainer_username,)
                 )
                 t_row = cursor.fetchone()
                 conn.close()
-                if t_row and t_row[0]:
-                    upi_id = t_row[0]
+                if t_row:
+                    if t_row[0]:
+                        upi_id = t_row[0]
                     if t_row[1]:
                         account_holder_name = t_row[1]
+                    if t_row[2]:
+                        trainer_qr_code = t_row[2]
             except Exception:
                 pass
             
@@ -391,7 +395,8 @@ def register_page_routes(app, *, get_pg_connection, load_data):
             user_name=session.get("user_name") or session.get("pending_guest_name"),
             booking=booking,
             upi_id=upi_id,
-            account_holder_name=account_holder_name
+            account_holder_name=account_holder_name,
+            trainer_qr_code=trainer_qr_code
         )
 
     app.add_url_rule("/payment_options/<booking_id>", endpoint="payment_options_page", view_func=payment_options_page)

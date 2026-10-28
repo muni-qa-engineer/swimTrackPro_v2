@@ -38,7 +38,7 @@
     }
 
     .booking-summary-box {
-        background: rgba(0, 0, 0, 0.25);
+        background: rgba(0, 0, 0, 0.28);
         border-radius: var(--radius-md, 12px);
         border-left: 4px solid var(--color-primary);
         padding: 1.25rem;
@@ -98,10 +98,13 @@
         align-items: center;
         justify-content: center;
         margin: 0 auto;
+        position: relative;
     }
     .qr-img {
         max-width: 100%;
         max-height: 100%;
+        display: block;
+        border-radius: 4px;
     }
 
     .upi-info-card {
@@ -146,32 +149,47 @@
                     </button>
                 </div>
 
-                <!-- Booking Summary Box -->
-                <div class="booking-summary-box mb-4 shadow-sm" style="font-size: 0.9rem;">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-muted"><i class="fa-regular fa-user me-1.5"></i> Swimmer Name</span>
-                        <span class="text-white fw-bold">{{ booking.student }}</span>
+                <!-- Structured Booking Summary Box (Clean & non-clumsy) -->
+                <div class="booking-summary-box mb-4 shadow-sm">
+                    <div class="row g-2 pb-2.5 border-bottom border-secondary border-opacity-15">
+                        <div class="col-6">
+                            <span class="text-muted d-block small mb-1"><i class="fa-regular fa-user me-1 text-primary"></i> Swimmer Name</span>
+                            <span class="text-white fw-bold d-block" style="font-size: 0.98rem;">{{ booking.student }}</span>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted d-block small mb-1"><i class="fa-solid fa-layer-group me-1 text-primary"></i> Package</span>
+                            <span class="text-white fw-bold d-block" style="font-size: 0.98rem;">{{ booking.package }}</span>
+                        </div>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-muted"><i class="fa-solid fa-layer-group me-1.5"></i> Package</span>
-                        <span class="text-white fw-bold">{{ booking.package }}</span>
-                    </div>
-                    {% if booking.location %}
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-muted"><i class="fa-solid fa-location-dot me-1.5"></i> Location</span>
-                        <span class="text-white-50">{{ booking.location }}</span>
-                    </div>
-                    {% endif %}
+                    
                     {% if booking.start_date %}
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-muted"><i class="fa-regular fa-calendar me-1.5"></i> Start Date / Time</span>
-                        <span class="text-white-50">{{ booking.start_date }} {% if booking.time %}&bull; {{ booking.time }}{% endif %}</span>
+                    <div class="row g-2 py-2.5 border-bottom border-secondary border-opacity-15">
+                        <div class="col-12">
+                            <span class="text-muted d-block small mb-1"><i class="fa-regular fa-calendar-check me-1 text-primary"></i> Schedule &amp; Time</span>
+                            <span class="text-white-50 small d-block">
+                                <strong class="text-white">{{ booking.start_date }}</strong>{% if booking.time %} &bull; {{ booking.time }}{% endif %}{% if booking.selected_days %} ({{ booking.selected_days }}){% endif %}
+                            </span>
+                        </div>
                     </div>
                     {% endif %}
-                    <hr style="border-color: rgba(255,255,255,0.08); margin: 0.75rem 0;">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted fw-semibold">Total Amount Due</span>
-                        <span class="text-primary fw-bold" style="font-size: 1.4rem;">₹{{ booking.fee }}</span>
+
+                    {% if booking.location %}
+                    <div class="row g-2 py-2.5 border-bottom border-secondary border-opacity-15">
+                        <div class="col-12">
+                            <span class="text-muted d-block small mb-1"><i class="fa-solid fa-location-dot me-1 text-primary"></i> Session Location</span>
+                            <span class="text-white-50 small d-block" style="line-height: 1.45;">{{ booking.location }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between align-items-center pt-2.5 mt-1">
+                        <div>
+                            <span class="text-muted small d-block">Total Amount Due</span>
+                            <span class="text-xs text-muted" style="font-size: 0.72rem;">Coaching fee &amp; platform access</span>
+                        </div>
+                        <div class="text-end">
+                            <span class="text-primary fw-bold font-monospace" style="font-size: 1.55rem; letter-spacing: -0.02em;">₹{{ booking.fee }}</span>
+                        </div>
                     </div>
                 </div>
 
@@ -220,16 +238,20 @@
                             <i class="fa-solid fa-qrcode text-primary me-2"></i> Scan QR Code to Pay ₹{{ booking.fee }}
                         </h5>
                         
+                        <!-- High-Reliability QR Code Container -->
                         <div class="mb-3">
-                            <div class="qr-container">
-                                {% if upi_id %}
-                                    <img src="https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=upi://pay?pa={{ upi_id }}&pn={{ account_holder_name | urlencode }}&am={{ booking.fee }}&cu=INR" alt="UPI QR Code" class="qr-img">
+                            <div class="qr-container" id="qrContainer">
+                                {% if trainer_qr_code %}
+                                    <img src="{{ url_for('static', filename='uploads/qr_codes/' ~ trainer_qr_code) }}" alt="UPI QR Code" class="qr-img" id="upiQrImg">
+                                {% elif upi_id %}
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data={{ ('upi://pay?pa=' ~ upi_id ~ '&pn=' ~ account_holder_name ~ '&am=' ~ booking.fee ~ '&cu=INR&tn=SwimTrackPro Booking') | urlencode }}" alt="UPI QR Code" class="qr-img" id="upiQrImg" onerror="handleQrError()">
                                 {% else %}
-                                    <div class="text-muted small text-center px-3">
-                                        <i class="fa-solid fa-image fs-1 text-light mb-2"></i><br>
-                                        QR Code Not Available
+                                    <div class="text-muted small text-center px-3" id="qrFallbackText">
+                                        <i class="fa-solid fa-qrcode fs-1 text-light mb-2"></i><br>
+                                        QR Code Ready
                                     </div>
                                 {% endif %}
+                                <div id="qrCanvasWrapper" class="d-none"></div>
                             </div>
                         </div>
 
@@ -306,15 +328,7 @@
                     </form>
                 </div>
 
-                <!-- Footer Discard / Cancel Link -->
-                <div class="text-center mt-4 pt-3 border-top border-secondary border-opacity-10">
-                    <button type="button" class="btn btn-link text-danger text-decoration-none small d-inline-flex align-items-center gap-1.5" onclick="confirmCancelBooking(this)" style="opacity: 0.85; transition: opacity 0.2s;">
-                        <i class="fa-solid fa-xmark"></i>
-                        <span>Cancel &amp; Discard this Booking</span>
-                    </button>
-                </div>
-
-                <!-- Hidden Form for Cancel / Discard -->
+                <!-- Hidden Form for Cancel / Discard (Triggered exclusively via Top-Right 'X' mark) -->
                 <form action="/booking/cancel/{{ booking.id }}" method="POST" id="cancelBookingForm" class="d-none"></form>
 
             </div>
@@ -343,7 +357,31 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='common.js') }}?v=2.1.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Client-side QRCode fallback generator -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
+    // UPI payment string
+    const upiUri = "upi://pay?pa={{ upi_id }}&pn={{ account_holder_name | urlencode }}&am={{ booking.fee }}&cu=INR&tn=SwimTrackPro%20Booking";
+
+    // Fallback QR code generator in case external image proxy encounters any issue
+    function handleQrError() {
+        const upiImg = document.getElementById('upiQrImg');
+        const canvasWrapper = document.getElementById('qrCanvasWrapper');
+        if (canvasWrapper && typeof QRCode !== 'undefined') {
+            if (upiImg) upiImg.classList.add('d-none');
+            canvasWrapper.classList.remove('d-none');
+            canvasWrapper.innerHTML = '';
+            new QRCode(canvasWrapper, {
+                text: upiUri,
+                width: 200,
+                height: 200,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        }
+    }
+
     // Toggle between Pay Now and Pay Later options
     function selectPaymentMode(mode) {
         const optPayNow = document.getElementById('optCardPayNow');
@@ -502,7 +540,6 @@
             }
         }).catch(err => {
             console.error('Pay Now Error:', err);
-            // Fallback to normal submission
             this.submit();
         });
     });
