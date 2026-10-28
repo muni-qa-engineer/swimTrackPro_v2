@@ -255,17 +255,20 @@
                             </div>
                         </div>
 
-                        <!-- Direct App Launch for Mobile / UPI App -->
+                        <!-- Direct App Launch for Mobile / UPI App (Without pre-filled amount to avoid NPCI bank security blocks) -->
                         {% if upi_id %}
-                        <a href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name | urlencode }}&am={{ booking.fee }}&cu=INR" 
+                        <a href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name | urlencode }}&cu=INR" 
                            onclick="handleUpiAppLaunch('{{ upi_id }}')"
-                           class="btn btn-outline-info w-100 py-2.5 mb-2 d-flex align-items-center justify-content-center gap-2" 
-                           style="border-radius: var(--radius-sm, 8px); font-size: 0.9rem; font-weight: 600; border-color: rgba(6,182,212,0.4); color: #06b6d4; background: rgba(6,182,212,0.05);">
-                            <i class="fa-solid fa-mobile-screen-button"></i>
-                            <span>Pay via UPI App (GPay / PhonePe / Paytm)</span>
+                           class="btn btn-outline-info w-100 py-2.5 mb-2 d-flex flex-column align-items-center justify-content-center gap-1" 
+                           style="border-radius: var(--radius-sm, 8px); font-size: 0.92rem; font-weight: 700; border-color: rgba(6,182,212,0.4); color: #06b6d4; background: rgba(6,182,212,0.06);">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-mobile-screen-button"></i>
+                                <span>Pay via UPI App (GPay / PhonePe / Paytm)</span>
+                            </div>
+                            <span class="text-white-50" style="font-size: 0.74rem; font-weight: 500;">Opens app directly &bull; Enter ₹{{ booking.fee }} to pay</span>
                         </a>
                         <div class="text-start px-2.5 py-2 mb-3 rounded" style="background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.12); font-size: 0.75rem; color: #94a3b8; line-height: 1.45;">
-                            <i class="fa-solid fa-circle-info text-primary me-1"></i> <strong>Bank Note:</strong> If your UPI app blocks browser-initiated payments with <em>"declined for security reasons"</em>, simply <strong>Copy the UPI ID</strong> below and pay directly inside GPay/PhonePe, or scan the QR code.
+                            <i class="fa-solid fa-circle-info text-primary me-1"></i> When your UPI app opens, simply enter <strong>₹{{ booking.fee }}</strong> and complete payment. You can also scan the QR code or copy the UPI ID below.
                         </div>
                         {% endif %}
 
@@ -366,7 +369,7 @@
 <!-- Client-side QRCode fallback generator -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-    // UPI payment string
+    // UPI payment string (QR code keeps amount for camera scanning; mobile intent link removes amount for bank safety)
     const upiUri = "upi://pay?pa={{ upi_id }}&pn={{ account_holder_name | urlencode }}&am={{ booking.fee }}&cu=INR&tn=SwimTrackPro%20Booking";
 
     function handleUpiAppLaunch(upiId) {
