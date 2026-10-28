@@ -1,135 +1,322 @@
 {% extends 'base.html' %}
 
-{% block title %}Payment Options - SwimTrackPro{% endblock %}
+{% block title %}Payment & Confirmation - SwimTrackPro{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 <style>
-    .payment-card {
-        border-radius: var(--radius-md);
-        background: rgba(24, 24, 27, 0.6);
-        border: 1px solid rgba(255,255,255,0.05);
-        backdrop-filter: var(--backdrop-blur);
+    .payment-wrapper {
+        background: rgba(24, 24, 27, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: var(--radius-lg, 16px);
+        backdrop-filter: var(--backdrop-blur, blur(16px));
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        position: relative;
+        overflow: hidden;
     }
-    
+
+    .btn-discard-x {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: #94a3b8;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        text-decoration: none;
+        padding: 0;
+    }
+    .btn-discard-x:hover {
+        background: rgba(239, 68, 68, 0.18);
+        border-color: rgba(239, 68, 68, 0.5);
+        color: #ef4444;
+        transform: scale(1.08);
+    }
+
+    .booking-summary-box {
+        background: rgba(0, 0, 0, 0.25);
+        border-radius: var(--radius-md, 12px);
+        border-left: 4px solid var(--color-primary);
+        padding: 1.25rem;
+    }
+
+    /* Option selection cards inspired by modern event checkout */
+    .payment-option-card {
+        border: 2px solid rgba(255, 255, 255, 0.08);
+        border-radius: var(--radius-md, 12px);
+        background: rgba(255, 255, 255, 0.02);
+        padding: 1.15rem;
+        cursor: pointer;
+        position: relative;
+        transition: all 0.25s ease-out;
+        user-select: none;
+    }
+    .payment-option-card:hover {
+        border-color: rgba(6, 182, 212, 0.4);
+        background: rgba(255, 255, 255, 0.04);
+        transform: translateY(-2px);
+    }
+    .payment-option-card.active {
+        border-color: var(--color-primary);
+        background: rgba(6, 182, 212, 0.08);
+        box-shadow: 0 0 20px rgba(6, 182, 212, 0.18);
+    }
+
+    .badge-recommended {
+        background: rgba(6, 182, 212, 0.15);
+        color: #06b6d4;
+        border: 1px solid rgba(6, 182, 212, 0.3);
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        padding: 0.25rem 0.6rem;
+        border-radius: 9999px;
+    }
+    .badge-flexible {
+        background: rgba(245, 158, 11, 0.15);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        padding: 0.25rem 0.6rem;
+        border-radius: 9999px;
+    }
+
     .qr-container {
         width: 220px;
         height: 220px;
         background-color: white;
-        border-radius: var(--radius-sm);
+        border-radius: var(--radius-sm, 8px);
         padding: 10px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.4);
         display: flex;
         align-items: center;
         justify-content: center;
         margin: 0 auto;
     }
-    
     .qr-img {
         max-width: 100%;
         max-height: 100%;
     }
-    
-    .booking-summary-box {
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: var(--radius-sm);
-        border-left: 4px solid var(--color-primary);
-        padding: 1.25rem;
+
+    .upi-info-card {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: var(--radius-sm, 8px);
+        padding: 1rem;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container py-5 px-3">
+<div class="container py-4 py-md-5 px-3">
+    <!-- Stepper Navigation -->
     <div class="row justify-content-center mb-2">
         <div class="col-12 col-md-8 col-lg-6">
             {% set current_step = 4 %}
             {% include 'components/booking_stepper.html' %}
         </div>
     </div>
+
+    <!-- Main Payment Section -->
     <div class="row justify-content-center mt-2" id="paymentMainContent">
         <div class="col-12 col-md-8 col-lg-6 animate-slide-up">
-
-            <!-- Header Section -->
-            <div class="text-center mb-4">
-                <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle mb-3" style="width: 64px; height: 64px; background: rgba(6,182,212,0.1);">
-                    <i class="fa-solid fa-wallet fs-3 text-primary"></i>
-                </div>
-                <h3 class="font-display text-white" style="font-weight: 800; font-size: 1.8rem; margin: 0 0 0.5rem 0;">Complete Your Booking</h3>
-                <p class="text-muted">Choose how you'd like to pay for your session.</p>
-            </div>
-
-            <!-- Booking Summary -->
-            <div class="booking-summary-box mb-4 shadow-sm" style="font-size: 0.9rem;">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="text-muted">Swimmer Name</span>
-                    <span class="text-white fw-bold">{{ booking.student }}</span>
-                </div>
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="text-muted">Package</span>
-                    <span class="text-white fw-bold">{{ booking.package }}</span>
-                </div>
-                <hr style="border-color: rgba(255,255,255,0.08); margin: 0.75rem 0;">
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="text-muted">Total Amount</span>
-                    <span class="text-primary fw-bold" style="font-size: 1.3rem;">₹{{ booking.fee }}</span>
-                </div>
-            </div>
-
-            <!-- QR Code Section -->
-            <div class="payment-card mb-4 p-4 text-center">
-                <h5 class="font-display mb-3 text-white" style="font-size: 1.1rem;"><i class="fa-solid fa-qrcode text-primary me-2"></i> Scan to Pay</h5>
+            
+            <div class="payment-wrapper p-3 p-sm-4 p-md-5">
                 
-                <div class="mb-4">
-                    <div class="qr-container">
-                        {% if upi_id %}
-                            <img src="https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=upi://pay?pa={{ upi_id }}&pn={{ account_holder_name | urlencode }}&am={{ booking.fee }}&cu=INR" alt="UPI QR Code" class="qr-img">
-                        {% else %}
-                            <div class="text-muted small text-center px-3">
-                                <i class="fa-solid fa-image fs-1 text-light mb-2"></i><br>
-                                QR Code Not Available
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-                
-                {% if upi_id %}
-                <div class="text-start p-3" style="background: rgba(0, 0, 0, 0.2); border-radius: var(--radius-sm); font-size: 0.85rem;">
-                    <div class="mb-2">
-                        <span class="text-muted d-block mb-1">UPI ID</span>
-                        <div class="d-flex align-items-center justify-content-between">
-                            <span class="text-white fw-bold" id="upiIdText">{{ upi_id }}</span>
-                            <button class="btn btn-secondary py-1 px-2.5" onclick="navigator.clipboard.writeText('{{ upi_id }}'); alert('UPI ID copied!');" title="Copy UPI ID" style="font-size: 0.75rem;"><i class="fa-regular fa-copy"></i> Copy</button>
+                <!-- Card Header with Top-Right 'X' Mark for Cancel/Discard -->
+                <div class="d-flex align-items-start justify-content-between mb-4 pb-3 border-bottom border-secondary border-opacity-25">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle flex-shrink-0" style="width: 48px; height: 48px; background: rgba(6,182,212,0.12);">
+                            <i class="fa-solid fa-wallet fs-4 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-display text-white mb-0" style="font-weight: 800; font-size: 1.45rem;">Payment &amp; Confirmation</h3>
+                            <p class="text-muted small mb-0">Choose how you'd like to pay for your session</p>
                         </div>
                     </div>
-                    {% if account_holder_name %}
-                    <div>
-                        <span class="text-muted d-block mb-1">Account Name</span>
-                        <span class="text-white fw-bold">{{ account_holder_name }}</span>
+                    <!-- Top-Right 'X' Cancel/Discard Button -->
+                    <button type="button" class="btn-discard-x ms-2" onclick="confirmCancelBooking(this)" title="Cancel and discard this booking" aria-label="Cancel and discard booking">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Booking Summary Box -->
+                <div class="booking-summary-box mb-4 shadow-sm" style="font-size: 0.9rem;">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted"><i class="fa-regular fa-user me-1.5"></i> Swimmer Name</span>
+                        <span class="text-white fw-bold">{{ booking.student }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted"><i class="fa-solid fa-layer-group me-1.5"></i> Package</span>
+                        <span class="text-white fw-bold">{{ booking.package }}</span>
+                    </div>
+                    {% if booking.location %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted"><i class="fa-solid fa-location-dot me-1.5"></i> Location</span>
+                        <span class="text-white-50">{{ booking.location }}</span>
                     </div>
                     {% endif %}
+                    {% if booking.start_date %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted"><i class="fa-regular fa-calendar me-1.5"></i> Start Date / Time</span>
+                        <span class="text-white-50">{{ booking.start_date }} {% if booking.time %}&bull; {{ booking.time }}{% endif %}</span>
+                    </div>
+                    {% endif %}
+                    <hr style="border-color: rgba(255,255,255,0.08); margin: 0.75rem 0;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted fw-semibold">Total Amount Due</span>
+                        <span class="text-primary fw-bold" style="font-size: 1.4rem;">₹{{ booking.fee }}</span>
+                    </div>
                 </div>
-                {% endif %}
-            </div>
 
-            <!-- Action Buttons in a Single Row -->
-            <div class="row g-2 g-sm-3 mt-1">
-                <div class="col-6">
-                    <form action="/booking/cancel/{{ booking.id }}" method="POST" class="w-100 m-0" id="cancelBookingForm">
-                        <button type="button" class="btn btn-outline text-danger border-danger-subtle w-100 py-3 d-flex align-items-center justify-content-center gap-1.5" style="border-radius: var(--radius-sm); font-size: 0.92rem; font-weight: 700; background: rgba(239, 68, 68, 0.06); height: 50px;" onclick="confirmCancelBooking(this)">
-                            <i class="fa-solid fa-xmark me-1"></i>
-                            <span class="text-truncate">Cancel Booking</span>
+                <!-- Payment Method Selection Cards (Side-by-Side or Stacked) -->
+                <div class="mb-4">
+                    <label class="text-muted small fw-bold text-uppercase mb-2 d-block" style="letter-spacing: 0.05em;">Select Payment Option</label>
+                    <div class="row g-3">
+                        <!-- Option 1: Pay Now (UPI) -->
+                        <div class="col-12 col-sm-6">
+                            <div class="payment-option-card active h-100 d-flex flex-column justify-content-between" id="optCardPayNow" onclick="selectPaymentMode('paynow')">
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="fa-solid fa-circle-dot text-primary fs-5" id="radioIconPayNow"></i>
+                                            <span class="text-white fw-bold" style="font-size: 1.05rem;">Pay Now (UPI)</span>
+                                        </div>
+                                        <span class="badge-recommended">RECOMMENDED</span>
+                                    </div>
+                                    <p class="text-muted small mb-0" style="font-size: 0.8rem; line-height: 1.4;">Instant verification via UPI QR code or any payment app.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Option 2: Pay Later -->
+                        <div class="col-12 col-sm-6">
+                            <div class="payment-option-card h-100 d-flex flex-column justify-content-between" id="optCardPayLater" onclick="selectPaymentMode('paylater')">
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="fa-regular fa-circle text-muted fs-5" id="radioIconPayLater"></i>
+                                            <span class="text-white fw-bold" style="font-size: 1.05rem;">Pay Later</span>
+                                        </div>
+                                        <span class="badge-flexible">FLEXIBLE</span>
+                                    </div>
+                                    <p class="text-muted small mb-0" style="font-size: 0.8rem; line-height: 1.4;">Pay in person via Cash or UPI to your coach at first session.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 1: PAY NOW (UPI) DETAILS -->
+                <div id="sectionPayNow">
+                    <div class="payment-card p-3 p-sm-4 text-center mb-4" style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius-md, 12px);">
+                        <h5 class="text-white mb-3" style="font-size: 1.05rem; font-weight: 700;">
+                            <i class="fa-solid fa-qrcode text-primary me-2"></i> Scan QR Code to Pay ₹{{ booking.fee }}
+                        </h5>
+                        
+                        <div class="mb-3">
+                            <div class="qr-container">
+                                {% if upi_id %}
+                                    <img src="https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=upi://pay?pa={{ upi_id }}&pn={{ account_holder_name | urlencode }}&am={{ booking.fee }}&cu=INR" alt="UPI QR Code" class="qr-img">
+                                {% else %}
+                                    <div class="text-muted small text-center px-3">
+                                        <i class="fa-solid fa-image fs-1 text-light mb-2"></i><br>
+                                        QR Code Not Available
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Direct App Launch for Mobile / UPI App -->
+                        {% if upi_id %}
+                        <a href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name | urlencode }}&am={{ booking.fee }}&cu=INR" class="btn btn-outline-info w-100 py-2.5 mb-3 d-flex align-items-center justify-content-center gap-2" style="border-radius: var(--radius-sm, 8px); font-size: 0.9rem; font-weight: 600; border-color: rgba(6,182,212,0.4); color: #06b6d4; background: rgba(6,182,212,0.05);">
+                            <i class="fa-solid fa-mobile-screen-button"></i>
+                            <span>Pay via UPI App (GPay / PhonePe / Paytm)</span>
+                        </a>
+                        {% endif %}
+
+                        <!-- UPI ID & Account Holder Details -->
+                        {% if upi_id %}
+                        <div class="upi-info-card text-start" style="font-size: 0.85rem;">
+                            <div class="mb-2">
+                                <span class="text-muted d-block mb-1" style="font-size: 0.78rem;">UPI ID</span>
+                                <div class="d-flex align-items-center justify-content-between bg-dark p-2 rounded border border-secondary border-opacity-25">
+                                    <span class="text-white font-monospace fw-bold" id="upiIdText">{{ upi_id }}</span>
+                                    <button type="button" class="btn btn-sm btn-primary py-1 px-2.5 d-flex align-items-center gap-1" id="btnCopyUpi" onclick="copyUpiId('{{ upi_id }}')" style="font-size: 0.75rem; border-radius: 4px;">
+                                        <i class="fa-regular fa-copy" id="copyIcon"></i>
+                                        <span id="copyText">Copy</span>
+                                    </button>
+                                </div>
+                            </div>
+                            {% if account_holder_name %}
+                            <div>
+                                <span class="text-muted d-block mb-1" style="font-size: 0.78rem;">Account Holder</span>
+                                <span class="text-white fw-bold">{{ account_holder_name }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Pay Now Submission Form -->
+                    <form action="/booking/confirm_paynow/{{ booking.id }}" method="POST" id="payNowForm">
+                        <div class="mb-3 text-start">
+                            <label class="text-muted small mb-1" for="payment_reference">UTR / Transaction Reference (Optional)</label>
+                            <input type="text" class="form-control" name="payment_reference" id="payment_reference" placeholder="e.g. 12-digit UTR or Transaction ID" style="background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.12); color: white; border-radius: var(--radius-sm, 8px);">
+                            <div class="text-muted mt-1" style="font-size: 0.75rem;">
+                                <i class="fa-solid fa-shield-halved text-primary me-1"></i> Once submitted, your slot is reserved and status is marked <strong>Pending Verification</strong> until verified by your coach.
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-3 d-flex align-items-center justify-content-center gap-2 shadow-lg" id="payNowBtn" style="border-radius: var(--radius-sm, 8px); font-size: 0.98rem; font-weight: 700; height: 52px;">
+                            <span id="payNowSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            <i class="fa-solid fa-circle-check" id="payNowIcon"></i>
+                            <span id="payNowText">I Have Paid ₹{{ booking.fee }} &bull; Submit for Verification</span>
                         </button>
                     </form>
                 </div>
-                <div class="col-6">
-                    <form action="/booking/confirm_paylater/{{ booking.id }}" method="POST" class="w-100 m-0" id="payLaterForm">
-                        <button type="submit" class="btn btn-primary w-100 py-3 d-flex align-items-center justify-content-center gap-1.5" id="payLaterBtn" style="border-radius: var(--radius-sm); font-size: 0.92rem; font-weight: 700; height: 50px;">
-                            <span id="payLaterSpinner" class="spinner-border spinner-border-sm me-1 d-none" role="status" aria-hidden="true"></span>
-                            <span id="payLaterText" class="text-truncate">Confirm &amp; Pay Later</span>
+
+                <!-- VIEW 2: PAY LATER DETAILS -->
+                <div id="sectionPayLater" class="d-none">
+                    <div class="p-3 p-sm-4 rounded mb-4 text-start" style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-left: 4px solid #f59e0b; border-radius: var(--radius-md, 12px);">
+                        <div class="d-flex gap-3">
+                            <div class="text-warning fs-3 mt-1"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+                            <div>
+                                <h6 class="text-white mb-1" style="font-weight: 700; font-size: 1.05rem;">Pay At Your First Class</h6>
+                                <p class="text-muted small mb-0" style="line-height: 1.5;">
+                                    No upfront payment is required right now. Your swimming slot for <strong>{{ booking.student }}</strong> is guaranteed and reserved. You can pay <strong>₹{{ booking.fee }}</strong> directly to your coach during your first session via Cash or UPI.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pay Later Submission Form -->
+                    <form action="/booking/confirm_paylater/{{ booking.id }}" method="POST" id="payLaterForm">
+                        <button type="submit" class="btn btn-primary w-100 py-3 d-flex align-items-center justify-content-center gap-2 shadow-lg" id="payLaterBtn" style="border-radius: var(--radius-sm, 8px); font-size: 0.98rem; font-weight: 700; height: 52px;">
+                            <span id="payLaterSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            <i class="fa-regular fa-clock" id="payLaterIcon"></i>
+                            <span id="payLaterText">Confirm &amp; Pay Later</span>
                         </button>
                     </form>
                 </div>
+
+                <!-- Footer Discard / Cancel Link -->
+                <div class="text-center mt-4 pt-3 border-top border-secondary border-opacity-10">
+                    <button type="button" class="btn btn-link text-danger text-decoration-none small d-inline-flex align-items-center gap-1.5" onclick="confirmCancelBooking(this)" style="opacity: 0.85; transition: opacity 0.2s;">
+                        <i class="fa-solid fa-xmark"></i>
+                        <span>Cancel &amp; Discard this Booking</span>
+                    </button>
+                </div>
+
+                <!-- Hidden Form for Cancel / Discard -->
+                <form action="/booking/cancel/{{ booking.id }}" method="POST" id="cancelBookingForm" class="d-none"></form>
+
             </div>
             
         </div>
@@ -138,12 +325,12 @@
     <!-- Success Overlay (Initially Hidden) -->
     <div id="paymentSuccessOverlay" class="d-none row justify-content-center mt-4">
         <div class="col-12 col-md-8 col-lg-6">
-            <div class="glass-panel text-center animate-slide-down" style="padding: 3rem 2rem; background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.2);">
+            <div class="glass-panel text-center animate-slide-down" style="padding: 3rem 2rem; background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.2); border-radius: var(--radius-lg, 16px);">
                 <div class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success rounded-circle mb-4" style="width: 80px; height: 80px;">
                     <i class="fa-solid fa-check fs-1 text-success"></i>
                 </div>
                 <h2 class="font-display text-white mb-3" style="font-weight: 800; font-size: 2rem;">Booking Confirmed!</h2>
-                <p class="text-muted" style="max-width: 400px; margin: 0 auto;">Your session has been successfully booked. Redirecting to your bookings...</p>
+                <p class="text-muted" id="successOverlayMsg" style="max-width: 420px; margin: 0 auto;">Your session has been successfully booked. Redirecting to your bookings...</p>
             </div>
         </div>
     </div>
@@ -157,86 +344,201 @@
 <script src="{{ url_for('static', filename='common.js') }}?v=2.1.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    function confirmCancelBooking(btn) {
-        showConfirmToast({
-            title: 'Cancel Booking?',
-            message: 'Are you sure you want to cancel this booking?',
-            confirmText: 'Yes',
-            cancelText: 'No',
-            type: 'danger',
-            onConfirm: function() {
-                if (btn) {
-                    btn.disabled = true;
-                    btn.style.pointerEvents = 'none';
-                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Cancelling...';
-                }
-                const form = document.getElementById('cancelBookingForm') || (btn ? btn.closest('form') : null);
-                if (form) {
-                    form.submit();
-                }
+    // Toggle between Pay Now and Pay Later options
+    function selectPaymentMode(mode) {
+        const optPayNow = document.getElementById('optCardPayNow');
+        const optPayLater = document.getElementById('optCardPayLater');
+        const radioIconPayNow = document.getElementById('radioIconPayNow');
+        const radioIconPayLater = document.getElementById('radioIconPayLater');
+        const secPayNow = document.getElementById('sectionPayNow');
+        const secPayLater = document.getElementById('sectionPayLater');
+
+        if (mode === 'paynow') {
+            optPayNow.classList.add('active');
+            optPayLater.classList.remove('active');
+            radioIconPayNow.className = 'fa-solid fa-circle-dot text-primary fs-5';
+            radioIconPayLater.className = 'fa-regular fa-circle text-muted fs-5';
+            secPayNow.classList.remove('d-none');
+            secPayLater.classList.add('d-none');
+        } else {
+            optPayLater.classList.add('active');
+            optPayNow.classList.remove('active');
+            radioIconPayLater.className = 'fa-solid fa-circle-dot text-primary fs-5';
+            radioIconPayNow.className = 'fa-regular fa-circle text-muted fs-5';
+            secPayLater.classList.remove('d-none');
+            secPayNow.classList.add('d-none');
+        }
+    }
+
+    // Copy UPI ID helper with feedback
+    function copyUpiId(text) {
+        if (!text) return;
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.getElementById('btnCopyUpi');
+            const icon = document.getElementById('copyIcon');
+            const label = document.getElementById('copyText');
+            if (icon && label) {
+                icon.className = 'fa-solid fa-check text-white';
+                label.textContent = 'Copied!';
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-success');
+                setTimeout(() => {
+                    icon.className = 'fa-regular fa-copy';
+                    label.textContent = 'Copy';
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-primary');
+                }, 2000);
             }
+        }).catch(() => {
+            alert('UPI ID: ' + text);
         });
     }
 
-    // Ensure page starts at top (browsers sometimes restore scroll position on redirect)
+    // Confirmation dialog for cancel / discard booking
+    function confirmCancelBooking(btn) {
+        if (typeof showConfirmToast === 'function') {
+            showConfirmToast({
+                title: 'Discard Booking?',
+                message: 'Are you sure you want to cancel and discard this booking? All unsaved reservation details will be removed.',
+                confirmText: 'Yes, Discard',
+                cancelText: 'Keep Booking',
+                type: 'danger',
+                onConfirm: function() {
+                    executeCancelBooking(btn);
+                }
+            });
+        } else {
+            if (confirm('Are you sure you want to cancel and discard this booking?')) {
+                executeCancelBooking(btn);
+            }
+        }
+    }
+
+    function executeCancelBooking(btn) {
+        if (btn) {
+            btn.disabled = true;
+            btn.style.pointerEvents = 'none';
+        }
+        const cancelForm = document.getElementById('cancelBookingForm');
+        if (cancelForm) {
+            cancelForm.submit();
+        } else {
+            window.location.href = '/booking/cancel/{{ booking.id }}';
+        }
+    }
+
+    // Ensure scroll starts at top
     document.addEventListener("DOMContentLoaded", function() {
         window.scrollTo(0, 0);
     });
 
-    document.getElementById('payLaterForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        // Show processing state
-        const btn = document.getElementById('payLaterBtn');
-        const spinner = document.getElementById('payLaterSpinner');
-        const text = document.getElementById('payLaterText');
-        
-        btn.disabled = true;
-        spinner.classList.remove('d-none');
-        text.textContent = 'Processing...';
-        btn.classList.add('btn-action-loading');
+    // Helper to handle completion state & UI transition
+    function handleBookingSuccess(customMessage, redirectUrl) {
+        const mainContent = document.getElementById('paymentMainContent');
+        if (mainContent) mainContent.classList.add('d-none');
 
-        // Submit form via fetch
+        const successOverlay = document.getElementById('paymentSuccessOverlay');
+        if (successOverlay) {
+            if (customMessage) {
+                const msgEl = document.getElementById('successOverlayMsg');
+                if (msgEl) msgEl.textContent = customMessage;
+            }
+            successOverlay.classList.remove('d-none');
+        }
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Update stepper step 4 to completed
+        const step4 = document.getElementById('step-indicator-4');
+        if (step4) {
+            step4.classList.remove('active');
+            step4.classList.add('completed');
+            const num = step4.querySelector('.step-num');
+            if (num) {
+                num.classList.remove('bg-primary', 'text-black');
+                num.classList.add('bg-success', 'text-white');
+                num.innerHTML = '<i class="fa-solid fa-check"></i>';
+            }
+            const label = step4.querySelector('.step-label');
+            if (label) {
+                label.classList.remove('text-white');
+                label.classList.add('text-success');
+            }
+        }
+
+        setTimeout(() => {
+            window.location.href = redirectUrl || '/my-bookings?booking_success=true';
+        }, 1800);
+    }
+
+    // Handle Pay Now Form Submit
+    document.getElementById('payNowForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const btn = document.getElementById('payNowBtn');
+        const spinner = document.getElementById('payNowSpinner');
+        const icon = document.getElementById('payNowIcon');
+        const text = document.getElementById('payNowText');
+
+        btn.disabled = true;
+        if (spinner) spinner.classList.remove('d-none');
+        if (icon) icon.classList.add('d-none');
+        if (text) text.textContent = 'Submitting Payment...';
+
         fetch(this.action, {
             method: this.method,
-            body: new FormData(this)
-        }).then(response => {
-            // Hide main content, show success overlay
-            const mainContent = document.getElementById('paymentMainContent');
-            if (mainContent) mainContent.classList.add('d-none');
-            const successOverlay = document.getElementById('paymentSuccessOverlay');
-            successOverlay.classList.remove('d-none');
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            
-            // Update stepper step 4 to completed
-            const step4 = document.getElementById('step-indicator-4');
-            if (step4) {
-                step4.classList.remove('active');
-                step4.classList.add('completed');
-                const num = step4.querySelector('.step-num');
-                if (num) {
-                    num.classList.remove('bg-primary', 'text-black');
-                    num.classList.add('bg-success', 'text-white');
-                    num.innerHTML = '<i class="fa-solid fa-check"></i>';
-                }
-                const label = step4.querySelector('.step-label');
-                if (label) {
-                    label.classList.remove('text-white');
-                    label.classList.add('text-success');
-                }
+            body: new FormData(this),
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                handleBookingSuccess('Payment submitted! Your spot is reserved and status is marked Pending Verification until confirmed by your coach.', data.redirect);
+            } else {
+                alert(data.error || 'Failed to submit payment.');
+                btn.disabled = false;
+                if (spinner) spinner.classList.add('d-none');
+                if (icon) icon.classList.remove('d-none');
+                if (text) text.textContent = 'I Have Paid ₹{{ booking.fee }} • Submit for Verification';
             }
-            
-            // Redirect after 2 seconds
-            setTimeout(() => {
-                window.location.href = '/my-bookings';
-            }, 2000);
         }).catch(err => {
-            console.error(err);
-            alert('An error occurred while confirming booking.');
-            btn.disabled = false;
-            spinner.classList.add('d-none');
-            text.textContent = 'Confirm & Pay Later';
+            console.error('Pay Now Error:', err);
+            // Fallback to normal submission
+            this.submit();
+        });
+    });
+
+    // Handle Pay Later Form Submit
+    document.getElementById('payLaterForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const btn = document.getElementById('payLaterBtn');
+        const spinner = document.getElementById('payLaterSpinner');
+        const icon = document.getElementById('payLaterIcon');
+        const text = document.getElementById('payLaterText');
+
+        btn.disabled = true;
+        if (spinner) spinner.classList.remove('d-none');
+        if (icon) icon.classList.add('d-none');
+        if (text) text.textContent = 'Confirming Booking...';
+
+        fetch(this.action, {
+            method: this.method,
+            body: new FormData(this),
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                handleBookingSuccess('Booking confirmed with Pay Later! You can pay your coach directly at your first swimming class.', data.redirect);
+            } else {
+                alert(data.error || 'Failed to confirm booking.');
+                btn.disabled = false;
+                if (spinner) spinner.classList.add('d-none');
+                if (icon) icon.classList.remove('d-none');
+                if (text) text.textContent = 'Confirm & Pay Later';
+            }
+        }).catch(err => {
+            console.error('Pay Later Error:', err);
+            this.submit();
         });
     });
 </script>

@@ -165,6 +165,26 @@ def update_trainer_payment_details():
     flash('Payment details updated successfully.')
     return redirect('/payments')
 
+def verify_admin_payment(booking_id):
+    """Admin/Trainer verification endpoint for pending booking payments."""
+    if session.get('role') not in ('admin', 'trainer'):
+        flash("Unauthorized action", "danger")
+        return redirect(url_for('index'))
+
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE bookings
+        SET status = 'Paid', payment_request = 'Paid'
+        WHERE id = %s
+    """, (booking_id,))
+    conn.commit()
+    conn.close()
+
+    flash("Payment marked as verified and paid.", "success")
+    return redirect(request.referrer or url_for('admin_dashboard'))
+
 def register_payments_routes(app):
     app.add_url_rule('/update_payment_status/<booking_id>', endpoint='update_payment_status', view_func=update_payment_status, methods=['POST'])
+    app.add_url_rule('/admin/verify_payment/<booking_id>', endpoint='verify_admin_payment', view_func=verify_admin_payment, methods=['POST'])
     app.add_url_rule('/update_trainer_payment_details', endpoint='update_trainer_payment_details', view_func=update_trainer_payment_details, methods=['POST'])

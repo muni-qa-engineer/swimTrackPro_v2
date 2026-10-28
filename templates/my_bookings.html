@@ -280,8 +280,8 @@
                                             <div>
                                                 {% if b.status == 'Paid' %}
                                                     <span class="badge badge-success">💰 Paid</span>
-                                                {% elif b.status == 'Pending' %}
-                                                    <span class="badge badge-warning">💰 Pending</span>
+                                                {% elif b.status == 'Pending' or b.status == 'Pending Verification' %}
+                                                    <span class="badge badge-warning">💰 Verification Pending</span>
                                                 {% else %}
                                                     <span class="badge badge-danger">💰 Unpaid</span>
                                                 {% endif %}

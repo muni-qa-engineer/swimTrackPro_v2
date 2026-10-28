@@ -362,14 +362,36 @@ def register_page_routes(app, *, get_pg_connection, load_data):
         if not booking:
             flash("Booking not found.")
             return redirect(url_for("index"))
+
+        upi_id = get_setting("upi_id", "")
+        account_holder_name = get_setting("account_holder_name", "")
+
+        trainer_username = booking.get("trainer_username")
+        if trainer_username:
+            try:
+                from swimtrackpro.runtime import get_pg_connection
+                conn = get_pg_connection()
+                cursor = conn.cursor()
+                cursor.execute(
+                    "SELECT upi_id, account_holder_name FROM trainers WHERE LOWER(username) = LOWER(%s)",
+                    (trainer_username,)
+                )
+                t_row = cursor.fetchone()
+                conn.close()
+                if t_row and t_row[0]:
+                    upi_id = t_row[0]
+                    if t_row[1]:
+                        account_holder_name = t_row[1]
+            except Exception:
+                pass
             
         return render_template(
             "payment_options.html",
             role=current_role,
             user_name=session.get("user_name") or session.get("pending_guest_name"),
             booking=booking,
-            upi_id=get_setting("upi_id", ""),
-            account_holder_name=get_setting("account_holder_name", "")
+            upi_id=upi_id,
+            account_holder_name=account_holder_name
         )
 
     app.add_url_rule("/payment_options/<booking_id>", endpoint="payment_options_page", view_func=payment_options_page)

@@ -1449,15 +1449,18 @@ def register_bookings_routes(app):
     app.add_url_rule('/booking/resume', endpoint='resume_booking', view_func=resume_booking, methods=['POST'])
     app.add_url_rule('/booking/approve_pause', endpoint='approve_pause', view_func=approve_pause, methods=['POST'])
     app.add_url_rule('/booking/reject_pause', endpoint='reject_pause', view_func=reject_pause, methods=['POST'])
+    app.add_url_rule('/booking/confirm_paynow/<booking_id>', endpoint='confirm_paynow', view_func=confirm_paynow, methods=['POST'])
     app.add_url_rule('/booking/confirm_paylater/<booking_id>', endpoint='confirm_paylater', view_func=confirm_paylater, methods=['POST'])
     app.add_url_rule('/booking/cancel/<booking_id>', endpoint='cancel_booking', view_func=cancel_booking, methods=['GET', 'POST'])
     app.add_url_rule('/booking/renew', endpoint='renew_booking', view_func=renew_booking, methods=['POST'])
 
-def confirm_paylater(booking_id):
+def confirm_paynow(booking_id):
     data = load_data()
     booking = next((b for b in data.get('bookings', []) if str(b['id']) == str(booking_id)), None)
     
     if not booking:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+            return jsonify({'success': False, 'error': 'Booking not found'}), 404
         flash("Booking not found", "danger")
         return redirect(url_for('index'))
         
@@ -1476,6 +1479,115 @@ def confirm_paylater(booking_id):
     )
 
     if not is_authorized:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+            return jsonify({'success': False, 'error': 'Unauthorized action'}), 403
+        flash("Unauthorized action", "danger")
+        return redirect(url_for('index'))
+        
+    payment_ref = (request.form.get('payment_reference') or '').strip()
+
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+    
+    # Mark as Pending Verification (Swimmer has initiated / made UPI payment, awaiting coach confirmation)
+    cursor.execute("UPDATE bookings SET payment_request = 'Paid', status = 'Pending Verification' WHERE id = %s", (booking_id,))
+    
+    # 1. Ensure student exists in students table
+    cursor.execute(
+        "SELECT id FROM students WHERE LOWER(student_name) = LOWER(%s) AND LOWER(owner_name) = LOWER(%s) AND owner_phone = %s",
+        (student, owner_name, owner_phone)
+    )
+    if not cursor.fetchone():
+        cursor.execute('''
+        INSERT INTO students (student_name, owner_name, owner_phone, skill_level)
+        VALUES (%s, %s, %s, %s)
+        ''', (student, owner_name, owner_phone, 'Beginner'))
+
+    # 2. Create guest account & session if not already logged in
+    if not session.get('user_name'):
+        session['role'] = 'guest'
+        session['user_name'] = owner_name
+        session['phone'] = owner_phone
+
+        cursor.execute(
+            "SELECT id, current_login, id_number FROM user_activity WHERE LOWER(user_name) = LOWER(%s) AND role = %s ORDER BY current_login DESC",
+            (owner_name.lower(), "guest")
+        )
+        act_rows = cursor.fetchall()
+        if act_rows:
+            act_row = act_rows[0]
+            session["id_number"] = act_row[2] or "STPS0000"
+            cursor.execute(
+                "UPDATE user_activity SET previous_login = %s, current_login = CURRENT_TIMESTAMP, phone = %s WHERE id = %s",
+                (act_row[1], owner_phone, act_row[0])
+            )
+        else:
+            cursor.execute("SELECT MAX(CAST(SUBSTRING(id_number FROM 5) AS INTEGER)) FROM user_activity WHERE id_number LIKE 'STPS%'")
+            max_guest_val = cursor.fetchone()[0] or 0
+            new_id_number = f"STPS{max_guest_val + 1:04d}"
+            session["id_number"] = new_id_number
+
+            cursor.execute(
+                "INSERT INTO user_activity (user_name, phone, role, current_login, previous_login, id_number) VALUES (%s, %s, %s, CURRENT_TIMESTAMP, NULL, %s)",
+                (owner_name, owner_phone, "guest", new_id_number)
+            )
+
+    conn.commit()
+    conn.close()
+    
+    # Clear pending state
+    session.pop('pending_booking_id', None)
+    session.pop('pending_guest_name', None)
+    session.pop('pending_guest_phone', None)
+
+    # Update dict so email has correct status
+    booking['payment_request'] = 'Paid'
+    booking['status'] = 'Pending Verification'
+    if payment_ref:
+        booking['payment_reference'] = payment_ref
+    
+    try:
+        send_booking_confirmation_email(booking)
+    except Exception as mail_err:
+        print("Booking confirmation email error:", mail_err)
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+        return jsonify({
+            'success': True,
+            'message': 'Payment submitted for verification. Booking confirmed!',
+            'redirect': '/my-bookings?booking_success=true&payment=submitted'
+        })
+
+    flash("Payment submitted! Your booking is reserved and awaiting coach verification.", "success")
+    return redirect('/my-bookings?booking_success=true&payment=submitted')
+
+def confirm_paylater(booking_id):
+    data = load_data()
+    booking = next((b for b in data.get('bookings', []) if str(b['id']) == str(booking_id)), None)
+    
+    if not booking:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+            return jsonify({'success': False, 'error': 'Booking not found'}), 404
+        flash("Booking not found", "danger")
+        return redirect(url_for('index'))
+        
+    owner_name = (booking.get('owner_name') or '').strip()
+    owner_phone = (booking.get('owner_phone') or '').strip()
+    student = (booking.get('student') or owner_name).strip()
+    current_user = (session.get('user_name') or '').strip().lower()
+    b_owner = owner_name.lower()
+    b_created = (booking.get('created_by') or '').strip().lower()
+    pending_id = str(session.get('pending_booking_id') or '')
+
+    is_authorized = (
+        (current_user and (current_user == b_owner or current_user == b_created or session.get('role') == 'admin')) or
+        (pending_id == str(booking_id)) or
+        (session.get('pending_guest_phone') == owner_phone)
+    )
+
+    if not is_authorized:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+            return jsonify({'success': False, 'error': 'Unauthorized action'}), 403
         flash("Unauthorized action", "danger")
         return redirect(url_for('index'))
         
@@ -1535,7 +1647,17 @@ def confirm_paylater(booking_id):
     booking['payment_request'] = 'Not Paid'
     booking['status'] = 'Not Paid'
     
-    send_booking_confirmation_email(booking)
+    try:
+        send_booking_confirmation_email(booking)
+    except Exception as mail_err:
+        print("Booking confirmation email error:", mail_err)
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+        return jsonify({
+            'success': True,
+            'message': 'Booking confirmed with Pay Later!',
+            'redirect': '/my-bookings?booking_success=true'
+        })
     
     return redirect('/my-bookings?booking_success=true')
 
@@ -1544,11 +1666,23 @@ def cancel_booking(booking_id):
     try:
         conn = get_pg_connection()
         cursor = conn.cursor()
-        cursor.execute(
-            "DELETE FROM bookings WHERE id = %s AND (status = 'unconfirmed' OR payment_request = 'unconfirmed')",
-            (booking_id,)
-        )
-        conn.commit()
+        cursor.execute("SELECT owner_name, owner_phone, created_by, status, payment_request FROM bookings WHERE id = %s", (booking_id,))
+        row = cursor.fetchone()
+        if row:
+            b_owner, b_phone, b_creator, b_status, b_preq = row
+            current_user = (session.get('user_name') or '').strip().lower()
+            pending_id = str(session.get('pending_booking_id') or '')
+            
+            is_authorized = (
+                (pending_id == str(booking_id)) or
+                (session.get('pending_guest_phone') == b_phone) or
+                (current_user and (current_user == (b_owner or '').lower() or current_user == (b_creator or '').lower() or session.get('role') == 'admin')) or
+                (b_status == 'unconfirmed' or b_preq == 'unconfirmed')
+            )
+            
+            if is_authorized:
+                cursor.execute("DELETE FROM bookings WHERE id = %s", (booking_id,))
+                conn.commit()
         conn.close()
     except Exception as e:
         print("Cancel booking error:", e)
@@ -1557,6 +1691,9 @@ def cancel_booking(booking_id):
     session.pop('pending_booking_id', None)
     session.pop('pending_guest_name', None)
     session.pop('pending_guest_phone', None)
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+        return jsonify({'success': True, 'redirect': url_for('index')})
 
     flash("Your pending booking was cancelled.", "info")
     return redirect(url_for('index'))
