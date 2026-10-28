@@ -137,6 +137,29 @@ def ensure_database_tables():
     )
     """)
 
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS admin_pricing (
+        package_key VARCHAR(50) PRIMARY KEY,
+        base_price INTEGER NOT NULL,
+        updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    # Seed default base pricing if empty
+    cursor.execute("SELECT COUNT(*) FROM admin_pricing")
+    if cursor.fetchone()[0] == 0:
+        default_base_rates = [
+            ('demo', 500),
+            ('single', 750),
+            ('monthly_2d', 5000),
+            ('monthly_3d', 7500),
+            ('3_months', 18000)
+        ]
+        cursor.executemany(
+            "INSERT INTO admin_pricing (package_key, base_price) VALUES (%s, %s) ON CONFLICT (package_key) DO NOTHING",
+            default_base_rates
+        )
+
     # Seed default packages if empty
     cursor.execute("SELECT COUNT(*) FROM packages")
     if cursor.fetchone()[0] == 0:

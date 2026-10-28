@@ -631,6 +631,7 @@
             <div class="d-md-none text-center text-muted small mb-3">
                 <i class="fa-solid fa-arrows-left-right me-1" style="color: var(--color-primary);"></i> Swipe horizontally to compare all plans
             </div>
+            {% set bp = pricing_config.base_prices if pricing_config and pricing_config.base_prices else {'demo': 500, 'single': 750, 'monthly_2d': 5000, 'monthly_3d': 7500, '3_months': 18000} %}
             <div class="cg-pricing-grid mb-5">
                 <!-- 1. Demo Session -->
                 <div class="cg-pricing-card">
@@ -644,7 +645,7 @@
                     <div class="cg-price-wrap flex-column align-items-start mb-3" style="min-height: 64px;">
                         <div class="d-flex align-items-baseline gap-1">
                             <span class="cg-currency">₹</span>
-                            <span class="cg-amount" id="plan-demo-amount">500</span>
+                            <span class="cg-amount" id="plan-demo-amount">{{ "{:,}".format(bp.get('demo', 500)) }}</span>
                             <span class="cg-period" id="plan-demo-period">/ session</span>
                         </div>
                         <div class="plan-subcaption text-muted small mt-1" id="plan-demo-subcaption" style="display: none; font-size: 0.8rem;"></div>
@@ -693,7 +694,7 @@
                     <div class="cg-price-wrap flex-column align-items-start mb-3" style="min-height: 64px;">
                         <div class="d-flex align-items-baseline gap-1">
                             <span class="cg-currency">₹</span>
-                            <span class="cg-amount" id="plan-single-amount">750</span>
+                            <span class="cg-amount" id="plan-single-amount">{{ "{:,}".format(bp.get('single', 750)) }}</span>
                             <span class="cg-period" id="plan-single-period">/ session</span>
                         </div>
                         <div class="plan-subcaption text-muted small mt-1" id="plan-single-subcaption" style="display: none; font-size: 0.8rem;"></div>
@@ -753,7 +754,7 @@
                     <div class="cg-price-wrap flex-column align-items-start mb-3" style="min-height: 64px;">
                         <div class="d-flex align-items-baseline gap-1">
                             <span class="cg-currency">₹</span>
-                            <span class="cg-amount" id="plan-monthly-amount">7,500</span>
+                            <span class="cg-amount" id="plan-monthly-amount">{{ "{:,}".format(bp.get('monthly_3d', 7500)) }}</span>
                             <span class="cg-period" id="plan-monthly-period">/ month</span>
                             <span class="badge bg-info-subtle text-info border border-info-subtle plan-discount-badge ms-1" id="plan-monthly-badge" style="display: none; font-size: 0.68rem; font-weight: 700;">15.0% OFF</span>
                         </div>
@@ -806,7 +807,7 @@
                             <span class="cg-amount" id="plan-custom-amount" style="font-size: 2.1rem;">Dynamic</span>
                             <span class="cg-period">/ flexible</span>
                         </div>
-                        <div class="plan-subcaption text-muted small mt-1" id="plan-custom-subcaption" style="font-size: 0.8rem;">₹750/sess anchor rate • Group scaling</div>
+                        <div class="plan-subcaption text-muted small mt-1" id="plan-custom-subcaption" style="font-size: 0.8rem;">₹{{ "{:,}".format(bp.get('single', 750)) }}/sess anchor rate • Group scaling</div>
                     </div>
                     
                     <button type="button" class="cg-btn cg-btn-dark w-100 btn-book-session" onclick="bookFromPricingCard('Custom')">Configure</button>

@@ -87,13 +87,51 @@ def _get_settings_path():
     return os.path.join(os.path.dirname(__file__), 'settings.json')
 
 
+def _get_db_connection():
+    """
+    Returns a PostgreSQL connection either via runtime or directly via DATABASE_URL.
+    """
+    try:
+        from swimtrackpro.runtime import get_pg_connection
+        return get_pg_connection()
+    except Exception:
+        pass
+
+    import psycopg2
+    try:
+        from config import DATABASE_URL
+    except ImportError:
+        DATABASE_URL = os.getenv("DATABASE_URL")
+    if DATABASE_URL:
+        return psycopg2.connect(DATABASE_URL)
+    raise RuntimeError("No database connection available")
+
+
 def get_base_prices():
     """
-    Returns configured base prices, merging defaults with any
-    persisted admin overrides in settings.json.
+    Returns configured base prices.
+    Authoritative source: PostgreSQL (Neon DB) admin_pricing table.
+    Fallback: settings.json / DEFAULT_BASE_PRICES.
     """
-    settings_file = _get_settings_path()
     prices = dict(DEFAULT_BASE_PRICES)
+
+    # 1. Primary: PostgreSQL (Persistent across Render container restarts and redeployments)
+    try:
+        conn = _get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT package_key, base_price FROM admin_pricing")
+        rows = cursor.fetchall()
+        conn.close()
+        if rows:
+            for k, v in rows:
+                if k in prices and isinstance(v, (int, float)) and v >= 0:
+                    prices[k] = int(v)
+            return prices
+    except Exception:
+        pass
+
+    # 2. Secondary fallback: settings.json
+    settings_file = _get_settings_path()
     if os.path.exists(settings_file):
         try:
             with open(settings_file, 'r', encoding='utf-8') as f:
@@ -105,35 +143,67 @@ def get_base_prices():
                         prices[k] = int(v)
         except Exception:
             pass
+
     return prices
 
 
 def update_base_prices(new_prices):
     """
-    Admin helper to update base prices in settings.json.
+    Admin helper to update base prices in PostgreSQL (persistent) and settings.json (backup).
     """
     if not isinstance(new_prices, dict):
         return False
-    settings_file = _get_settings_path()
-    data = {}
-    if os.path.exists(settings_file):
-        try:
-            with open(settings_file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-        except Exception:
-            data = {}
 
-    if 'pricing' not in data:
-        data['pricing'] = {}
-    if 'base_prices' not in data['pricing']:
-        data['pricing']['base_prices'] = dict(DEFAULT_BASE_PRICES)
+    # 1. Primary: Persist to PostgreSQL (Neon DB)
+    try:
+        conn = _get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS admin_pricing (
+                package_key VARCHAR(50) PRIMARY KEY,
+                base_price INTEGER NOT NULL,
+                updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        for k, v in new_prices.items():
+            if k in DEFAULT_BASE_PRICES and isinstance(v, (int, float)) and v >= 0:
+                cursor.execute("""
+                    INSERT INTO admin_pricing (package_key, base_price, updated_at)
+                    VALUES (%s, %s, CURRENT_TIMESTAMP)
+                    ON CONFLICT (package_key) DO UPDATE
+                    SET base_price = EXCLUDED.base_price,
+                        updated_at = CURRENT_TIMESTAMP
+                """, (k, int(v)))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Error persisting pricing to PostgreSQL: {e}")
 
-    for k, v in new_prices.items():
-        if k in DEFAULT_BASE_PRICES and isinstance(v, (int, float)) and v >= 0:
-            data['pricing']['base_prices'][k] = int(v)
+    # 2. Secondary: Persist to settings.json backup
+    try:
+        settings_file = _get_settings_path()
+        data = {}
+        if os.path.exists(settings_file):
+            try:
+                with open(settings_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+            except Exception:
+                data = {}
 
-    with open(settings_file, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+        if 'pricing' not in data:
+            data['pricing'] = {}
+        if 'base_prices' not in data['pricing']:
+            data['pricing']['base_prices'] = dict(DEFAULT_BASE_PRICES)
+
+        for k, v in new_prices.items():
+            if k in DEFAULT_BASE_PRICES and isinstance(v, (int, float)) and v >= 0:
+                data['pricing']['base_prices'][k] = int(v)
+
+        with open(settings_file, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"Error updating settings.json: {e}")
+
     return True
 
 
