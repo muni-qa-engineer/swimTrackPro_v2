@@ -502,17 +502,11 @@ def book():
         redirect_url = url_for('index')
     else:
         # Paid package: do NOT create user_activity account or permanent guest session yet!
+        # Do NOT send confirmation email yet — booking is unconfirmed until swimmer confirms on payment_options page.
         session['pending_booking_id'] = booking_id
         session['pending_guest_name'] = owner_name
         session['pending_guest_phone'] = owner_phone
         redirect_url = f'/payment_options/{booking_id}'
-
-        # Send booking confirmation email to swimmer and alert to admin
-        try:
-            send_booking_confirmation_email(new_booking)
-            send_booking_alert_email(new_booking)
-        except Exception as mail_err:
-            print("Booking email notification error:", mail_err)
 
     if is_ajax:
         return jsonify({
@@ -1548,6 +1542,7 @@ def confirm_paynow(booking_id):
     
     try:
         send_booking_confirmation_email(booking)
+        send_booking_alert_email(booking)
     except Exception as mail_err:
         print("Booking confirmation email error:", mail_err)
     
@@ -1649,6 +1644,7 @@ def confirm_paylater(booking_id):
     
     try:
         send_booking_confirmation_email(booking)
+        send_booking_alert_email(booking)
     except Exception as mail_err:
         print("Booking confirmation email error:", mail_err)
     

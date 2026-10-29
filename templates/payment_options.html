@@ -197,32 +197,32 @@
                 <div class="mb-4">
                     <label class="text-muted small fw-bold text-uppercase mb-2 d-block" style="letter-spacing: 0.05em;">Select Payment Option</label>
                     <div class="row g-3">
-                        <!-- Option 1: Pay Now (UPI) -->
+                        <!-- Option 1: Pay Now (UPI) - Disabled / On Hold -->
                         <div class="col-12 col-sm-6">
-                            <div class="payment-option-card active h-100 d-flex flex-column justify-content-between" id="optCardPayNow" onclick="selectPaymentMode('paynow')">
+                            <div class="payment-option-card h-100 d-flex flex-column justify-content-between opacity-50" id="optCardPayNow" onclick="selectPaymentMode('paynow')" style="cursor: not-allowed;" title="Pay Now is temporarily on hold. Please choose Pay Later.">
                                 <div>
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <div class="d-flex align-items-center gap-2">
-                                            <i class="fa-solid fa-circle-dot text-primary fs-5" id="radioIconPayNow"></i>
-                                            <span class="text-white fw-bold" style="font-size: 1.05rem;">Pay Now (UPI)</span>
+                                            <i class="fa-regular fa-circle text-muted fs-5" id="radioIconPayNow"></i>
+                                            <span class="text-white fw-bold" style="font-size: 1.05rem; text-decoration: line-through;">Pay Now (UPI)</span>
                                         </div>
-                                        <span class="badge-recommended">RECOMMENDED</span>
+                                        <span class="badge bg-secondary text-white-50" style="font-size: 0.68rem; font-weight: 700; border-radius: 9999px; padding: 0.25rem 0.6rem;">ON HOLD</span>
                                     </div>
-                                    <p class="text-muted small mb-0" style="font-size: 0.8rem; line-height: 1.4;">Instant verification via UPI QR code or any payment app.</p>
+                                    <p class="text-muted small mb-0" style="font-size: 0.8rem; line-height: 1.4;">Online UPI payment is temporarily on hold. Please use Pay Later.</p>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Option 2: Pay Later -->
+                        <!-- Option 2: Pay Later - Active Default -->
                         <div class="col-12 col-sm-6">
-                            <div class="payment-option-card h-100 d-flex flex-column justify-content-between" id="optCardPayLater" onclick="selectPaymentMode('paylater')">
+                            <div class="payment-option-card active h-100 d-flex flex-column justify-content-between" id="optCardPayLater" onclick="selectPaymentMode('paylater')">
                                 <div>
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <div class="d-flex align-items-center gap-2">
-                                            <i class="fa-regular fa-circle text-muted fs-5" id="radioIconPayLater"></i>
+                                            <i class="fa-solid fa-circle-dot text-primary fs-5" id="radioIconPayLater"></i>
                                             <span class="text-white fw-bold" style="font-size: 1.05rem;">Pay Later</span>
                                         </div>
-                                        <span class="badge-flexible">FLEXIBLE</span>
+                                        <span class="badge-flexible">ACTIVE</span>
                                     </div>
                                     <p class="text-muted small mb-0" style="font-size: 0.8rem; line-height: 1.4;">Pay in person via Cash or UPI to your coach at first session.</p>
                                 </div>
@@ -231,8 +231,8 @@
                     </div>
                 </div>
 
-                <!-- VIEW 1: PAY NOW (UPI) DETAILS -->
-                <div id="sectionPayNow">
+                <!-- VIEW 1: PAY NOW (UPI) DETAILS - ON HOLD -->
+                <div id="sectionPayNow" class="d-none">
                     <div class="payment-card p-3 p-sm-4 text-center mb-4" style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius-md, 12px);">
                         <h5 class="text-white mb-3" style="font-size: 1.05rem; font-weight: 700;">
                             <i class="fa-solid fa-qrcode text-primary me-2"></i> Scan QR Code to Pay ₹{{ booking.fee }}
@@ -255,21 +255,14 @@
                             </div>
                         </div>
 
-                        <!-- Direct App Launch for Mobile / UPI App (Without pre-filled amount to avoid NPCI bank security blocks) -->
+                        <!-- Direct App Launch for Mobile / UPI App (Disabled / On Hold) -->
                         {% if upi_id %}
-                        <a href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name | urlencode }}&cu=INR" 
-                           onclick="handleUpiAppLaunch('{{ upi_id }}')"
-                           class="btn btn-outline-info w-100 py-2.5 mb-2 d-flex flex-column align-items-center justify-content-center gap-1" 
-                           style="border-radius: var(--radius-sm, 8px); font-size: 0.92rem; font-weight: 700; border-color: rgba(6,182,212,0.4); color: #06b6d4; background: rgba(6,182,212,0.06);">
+                        <button type="button" class="btn btn-outline-secondary w-100 py-2.5 mb-2 d-flex flex-column align-items-center justify-content-center gap-1" disabled style="border-radius: var(--radius-sm, 8px); font-size: 0.9rem; font-weight: 600; opacity: 0.5; cursor: not-allowed;">
                             <div class="d-flex align-items-center gap-2">
-                                <i class="fa-solid fa-mobile-screen-button"></i>
-                                <span>Pay via UPI App (GPay / PhonePe / Paytm)</span>
+                                <i class="fa-solid fa-pause"></i>
+                                <span>Pay via UPI App (Temporarily on Hold)</span>
                             </div>
-                            <span class="text-white-50" style="font-size: 0.74rem; font-weight: 500;">Opens app directly &bull; Enter ₹{{ booking.fee }} to pay</span>
-                        </a>
-                        <div class="text-start px-2.5 py-2 mb-3 rounded" style="background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.12); font-size: 0.75rem; color: #94a3b8; line-height: 1.45;">
-                            <i class="fa-solid fa-circle-info text-primary me-1"></i> When your UPI app opens, simply enter <strong>₹{{ booking.fee }}</strong> and complete payment. You can also scan the QR code or copy the UPI ID below.
-                        </div>
+                        </button>
                         {% endif %}
 
                         <!-- UPI ID & Account Holder Details -->
@@ -295,26 +288,15 @@
                         {% endif %}
                     </div>
 
-                    <!-- Pay Now Submission Form -->
-                    <form action="/booking/confirm_paynow/{{ booking.id }}" method="POST" id="payNowForm">
-                        <div class="mb-3 text-start">
-                            <label class="text-muted small mb-1" for="payment_reference">UTR / Transaction Reference (Optional)</label>
-                            <input type="text" class="form-control" name="payment_reference" id="payment_reference" placeholder="e.g. 12-digit UTR or Transaction ID" style="background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.12); color: white; border-radius: var(--radius-sm, 8px);">
-                            <div class="text-muted mt-1" style="font-size: 0.75rem;">
-                                <i class="fa-solid fa-shield-halved text-primary me-1"></i> Once submitted, your slot is reserved and status is marked <strong>Pending Verification</strong> until verified by your coach.
-                            </div>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary w-100 py-3 d-flex align-items-center justify-content-center gap-2 shadow-lg" id="payNowBtn" style="border-radius: var(--radius-sm, 8px); font-size: 0.98rem; font-weight: 700; height: 52px;">
-                            <span id="payNowSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                            <i class="fa-solid fa-circle-check" id="payNowIcon"></i>
-                            <span id="payNowText">I Have Paid ₹{{ booking.fee }} &bull; Submit for Verification</span>
-                        </button>
-                    </form>
+                    <!-- Pay Now Button (Disabled / On Hold) -->
+                    <button type="button" class="btn btn-secondary w-100 py-3 d-flex align-items-center justify-content-center gap-2" id="payNowBtn" disabled style="border-radius: var(--radius-sm, 8px); font-size: 0.98rem; font-weight: 700; height: 52px; opacity: 0.5; cursor: not-allowed;">
+                        <i class="fa-solid fa-pause"></i>
+                        <span>Pay Now (Temporarily on Hold)</span>
+                    </button>
                 </div>
 
-                <!-- VIEW 2: PAY LATER DETAILS -->
-                <div id="sectionPayLater" class="d-none">
+                <!-- VIEW 2: PAY LATER DETAILS - ACTIVE DEFAULT -->
+                <div id="sectionPayLater">
                     <div class="p-3 p-sm-4 rounded mb-4 text-start" style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-left: 4px solid #f59e0b; border-radius: var(--radius-md, 12px);">
                         <div class="d-flex gap-3">
                             <div class="text-warning fs-3 mt-1"><i class="fa-solid fa-hand-holding-dollar"></i></div>
@@ -399,6 +381,21 @@
 
     // Toggle between Pay Now and Pay Later options
     function selectPaymentMode(mode) {
+        if (mode === 'paynow') {
+            if (typeof showConfirmToast === 'function') {
+                showConfirmToast({
+                    title: 'Payment on Hold',
+                    message: 'Online UPI payment is temporarily on hold. Please confirm your booking using Pay Later (cash or UPI in person at first class).',
+                    confirmText: 'Got It',
+                    cancelText: '',
+                    type: 'info'
+                });
+            } else {
+                alert('Online UPI payment is temporarily on hold. Please confirm using Pay Later.');
+            }
+            return;
+        }
+
         const optPayNow = document.getElementById('optCardPayNow');
         const optPayLater = document.getElementById('optCardPayLater');
         const radioIconPayNow = document.getElementById('radioIconPayNow');
@@ -406,21 +403,12 @@
         const secPayNow = document.getElementById('sectionPayNow');
         const secPayLater = document.getElementById('sectionPayLater');
 
-        if (mode === 'paynow') {
-            optPayNow.classList.add('active');
-            optPayLater.classList.remove('active');
-            radioIconPayNow.className = 'fa-solid fa-circle-dot text-primary fs-5';
-            radioIconPayLater.className = 'fa-regular fa-circle text-muted fs-5';
-            secPayNow.classList.remove('d-none');
-            secPayLater.classList.add('d-none');
-        } else {
-            optPayLater.classList.add('active');
-            optPayNow.classList.remove('active');
-            radioIconPayLater.className = 'fa-solid fa-circle-dot text-primary fs-5';
-            radioIconPayNow.className = 'fa-regular fa-circle text-muted fs-5';
-            secPayLater.classList.remove('d-none');
-            secPayNow.classList.add('d-none');
-        }
+        optPayLater.classList.add('active');
+        if (optPayNow) optPayNow.classList.remove('active');
+        if (radioIconPayLater) radioIconPayLater.className = 'fa-solid fa-circle-dot text-primary fs-5';
+        if (radioIconPayNow) radioIconPayNow.className = 'fa-regular fa-circle text-muted fs-5';
+        if (secPayLater) secPayLater.classList.remove('d-none');
+        if (secPayNow) secPayNow.classList.add('d-none');
     }
 
     // Copy UPI ID helper with feedback
