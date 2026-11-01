@@ -63,6 +63,14 @@ def _bookings_for_session(data):
     current_phone = (session.get("phone") or "").strip()
     current_role = session.get("role", "guest")
 
+    if current_role == "admin":
+        all_confirmed_bookings = [
+            booking
+            for booking in data.get("bookings", [])
+            if booking.get('payment_request') != 'unconfirmed' and booking.get('status') != 'unconfirmed'
+        ]
+        return sort_bookings_latest_active_first(all_confirmed_bookings)
+
     if current_role == "trainer":
         trainer_user = (session.get("trainer_username") or "asdf").strip().lower()
         trainer_bookings = [

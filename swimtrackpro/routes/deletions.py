@@ -410,7 +410,279 @@ def reject_delete(booking_id):
     return redirect(url_for('my_bookings_page'))
 
 
+def force_delete_booking(booking_id):
+    """
+    Force delete an active booking by Coach or Admin.
+    Prompts for and logs:
+    - classes_done (updated attendance)
+    - amount_collected (financial tracking)
+    Logs action to booking_actions_audit and permanently removes booking.
+    """
+    role = session.get('role')
+    if role not in ('admin', 'trainer'):
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+            return jsonify({'success': False, 'error': 'Unauthorized action'}), 403
+        flash('Unauthorized action', 'danger')
+        return redirect(url_for('my_bookings_page'))
+
+    payload = request.get_json(silent=True) or request.form.to_dict()
+    try:
+        classes_done = int(payload.get('classes_done', 0))
+    except (ValueError, TypeError):
+        classes_done = 0
+
+    try:
+        amount_collected = float(payload.get('amount_collected', 0.0))
+    except (ValueError, TypeError):
+        amount_collected = 0.0
+
+    notes = (payload.get('notes') or '').strip()
+
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+
+    cursor.execute('''
+    SELECT booking_code,
+           student_name,
+           owner_name,
+           owner_phone,
+           start_date,
+           time,
+           package,
+           email,
+           trainer_username,
+           fee
+    FROM bookings
+    WHERE id = %s OR TRIM(id::text) = TRIM(%s)
+    ''', (str(booking_id), str(booking_id)))
+    row = cursor.fetchone()
+
+    if not row:
+        conn.close()
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+            return jsonify({'success': False, 'error': 'Booking not found'}), 404
+        flash('Booking not found', 'warning')
+        return redirect(url_for('my_bookings_page'))
+
+    # Trainer authorization: verify coach assignment if not admin
+    if role == 'trainer':
+        trainer_user = (session.get('trainer_username') or '').strip().lower()
+        trainer_name = (session.get('user_name') or '').strip().lower()
+        booking_trainer = (row[8] or '').strip().lower()
+        is_coach_authorized = (
+            (bool(trainer_user) and (booking_trainer == trainer_user or trainer_user in booking_trainer or booking_trainer in trainer_user)) or
+            (bool(trainer_name) and (booking_trainer == trainer_name or trainer_name in booking_trainer or booking_trainer in trainer_name)) or
+            booking_trainer in ('', 'asdf', 'unassigned') or
+            not bool(booking_trainer)
+        )
+        if not is_coach_authorized:
+            conn.close()
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+                return jsonify({'success': False, 'error': 'You are not assigned to this booking'}), 403
+            flash('Unauthorized action', 'danger')
+            return redirect(url_for('my_bookings_page'))
+
+    student_name = row[1] or 'Swimmer'
+    owner_name = row[2] or ''
+    owner_phone = row[3] or ''
+    performed_by = session.get('user_name') or session.get('trainer_username') or role
+
+    # 1. Log audit trail
+    try:
+        cursor.execute('''
+        INSERT INTO booking_actions_audit (
+            booking_id, student_name, owner_name, owner_phone,
+            action, performed_by, role, classes_done, amount_collected, notes
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ''', (
+            str(booking_id), student_name, owner_name, owner_phone,
+            'FORCE_DELETE', performed_by, role, classes_done, amount_collected, notes
+        ))
+    except Exception as audit_err:
+        print("Notice: booking_actions_audit logging error:", audit_err)
+
+    # 2. Cleanup dependent records safely
+    for cleanup_query in [
+        'DELETE FROM makeup_requests WHERE booking_id = %s OR TRIM(booking_id::text) = TRIM(%s)',
+        'DELETE FROM makeup_credits WHERE booking_id = %s OR TRIM(booking_id::text) = TRIM(%s)',
+        'DELETE FROM package_pause_audit WHERE booking_id = %s OR TRIM(booking_id::text) = TRIM(%s)'
+    ]:
+        try:
+            cursor.execute('SAVEPOINT sp_force_del_dep')
+            cursor.execute(cleanup_query, (str(booking_id), str(booking_id)))
+            cursor.execute('RELEASE SAVEPOINT sp_force_del_dep')
+        except Exception:
+            try:
+                cursor.execute('ROLLBACK TO SAVEPOINT sp_force_del_dep')
+            except Exception:
+                pass
+
+    # 3. Delete booking record
+    cursor.execute('DELETE FROM bookings WHERE id = %s OR TRIM(id::text) = TRIM(%s)', (str(booking_id), str(booking_id)))
+
+    # 4. Cleanup student if no other bookings remain
+    try:
+        cursor.execute('''
+        SELECT COUNT(*) FROM bookings
+        WHERE TRIM(student_name) = TRIM(%s) AND owner_name = %s AND owner_phone = %s
+        ''', (student_name, owner_name, owner_phone))
+        rem = cursor.fetchone()[0]
+        if rem == 0:
+            cursor.execute('''
+            DELETE FROM students
+            WHERE TRIM(student_name) = TRIM(%s) AND owner_name = %s AND owner_phone = %s
+            ''', (student_name, owner_name, owner_phone))
+    except Exception as st_err:
+        print("Notice: student cleanup check error:", st_err)
+
+    conn.commit()
+    conn.close()
+
+    flash(f"Booking for {student_name} was force-deleted (Classes done: {classes_done}, Collected: ₹{amount_collected:,.2f}).", "info")
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+        return jsonify({
+            'success': True,
+            'message': f"Booking for {student_name} force-deleted successfully.",
+            'booking_id': str(booking_id)
+        })
+    return redirect(request.referrer or url_for('my_bookings_page'))
+
+
+def force_complete_booking(booking_id):
+    """
+    Force complete an active booking by Coach or Admin.
+    Prompts for and logs:
+    - classes_done (updated attendance)
+    - amount_collected (financial tracking)
+    Updates booking to completed status, paid status, and records audit trail.
+    """
+    role = session.get('role')
+    if role not in ('admin', 'trainer'):
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+            return jsonify({'success': False, 'error': 'Unauthorized action'}), 403
+        flash('Unauthorized action', 'danger')
+        return redirect(url_for('my_bookings_page'))
+
+    payload = request.get_json(silent=True) or request.form.to_dict()
+    try:
+        classes_done = int(payload.get('classes_done', 0))
+    except (ValueError, TypeError):
+        classes_done = 0
+
+    try:
+        amount_collected = float(payload.get('amount_collected', 0.0))
+    except (ValueError, TypeError):
+        amount_collected = 0.0
+
+    notes = (payload.get('notes') or '').strip()
+
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+
+    cursor.execute('''
+    SELECT booking_code,
+           student_name,
+           owner_name,
+           owner_phone,
+           start_date,
+           time,
+           package,
+           email,
+           trainer_username,
+           fee,
+           attended_sessions
+    FROM bookings
+    WHERE id = %s OR TRIM(id::text) = TRIM(%s)
+    ''', (str(booking_id), str(booking_id)))
+    row = cursor.fetchone()
+
+    if not row:
+        conn.close()
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+            return jsonify({'success': False, 'error': 'Booking not found'}), 404
+        flash('Booking not found', 'warning')
+        return redirect(url_for('my_bookings_page'))
+
+    # Trainer authorization
+    if role == 'trainer':
+        trainer_user = (session.get('trainer_username') or '').strip().lower()
+        trainer_name = (session.get('user_name') or '').strip().lower()
+        booking_trainer = (row[8] or '').strip().lower()
+        is_coach_authorized = (
+            (bool(trainer_user) and (booking_trainer == trainer_user or trainer_user in booking_trainer or booking_trainer in trainer_user)) or
+            (bool(trainer_name) and (booking_trainer == trainer_name or trainer_name in booking_trainer or booking_trainer in trainer_name)) or
+            booking_trainer in ('', 'asdf', 'unassigned') or
+            not bool(booking_trainer)
+        )
+        if not is_coach_authorized:
+            conn.close()
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+                return jsonify({'success': False, 'error': 'You are not assigned to this booking'}), 403
+            flash('Unauthorized action', 'danger')
+            return redirect(url_for('my_bookings_page'))
+
+    student_name = row[1] or 'Swimmer'
+    owner_name = row[2] or ''
+    owner_phone = row[3] or ''
+    performed_by = session.get('user_name') or session.get('trainer_username') or role
+
+    # 1. Log audit trail
+    try:
+        cursor.execute('''
+        INSERT INTO booking_actions_audit (
+            booking_id, student_name, owner_name, owner_phone,
+            action, performed_by, role, classes_done, amount_collected, notes
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ''', (
+            str(booking_id), student_name, owner_name, owner_phone,
+            'FORCE_COMPLETE', performed_by, role, classes_done, amount_collected, notes
+        ))
+    except Exception as audit_err:
+        print("Notice: booking_actions_audit logging error:", audit_err)
+
+    # 2. Update booking status to completed
+    # Set status='Paid' and payment_request='Paid' if amount_collected > 0
+    payment_status_val = 'Paid' if amount_collected > 0 else 'Not Paid'
+    today_str = datetime.now().strftime('%Y-%m-%d')
+
+    cursor.execute('''
+    UPDATE bookings
+    SET
+        package_status = 'COMPLETED',
+        is_force_completed = TRUE,
+        force_completed_classes = %s,
+        status = %s,
+        payment_request = %s,
+        fee = %s,
+        end_date = %s,
+        pause_status = 'ACTIVE'
+    WHERE id = %s OR TRIM(id::text) = TRIM(%s)
+    ''', (
+        classes_done,
+        payment_status_val,
+        payment_status_val,
+        int(amount_collected),
+        today_str,
+        str(booking_id),
+        str(booking_id)
+    ))
+
+    conn.commit()
+    conn.close()
+
+    flash(f"Booking for {student_name} marked as Force Completed! (Classes done: {classes_done}, Collected: ₹{amount_collected:,.2f}).", "success")
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+        return jsonify({
+            'success': True,
+            'message': f"Booking for {student_name} marked as Completed.",
+            'booking_id': str(booking_id)
+        })
+    return redirect(request.referrer or url_for('my_bookings_page'))
+
+
 def register_deletions_routes(app):
     app.add_url_rule('/delete/<booking_id>', endpoint='delete_booking', view_func=delete_booking, methods=['GET', 'POST'])
     app.add_url_rule('/approve_delete/<booking_id>', endpoint='approve_delete', view_func=approve_delete, methods=['POST'])
     app.add_url_rule('/reject_delete/<booking_id>', endpoint='reject_delete', view_func=reject_delete, methods=['POST'])
+    app.add_url_rule('/booking/force_delete/<booking_id>', endpoint='force_delete_booking', view_func=force_delete_booking, methods=['POST'])
+    app.add_url_rule('/booking/force_complete/<booking_id>', endpoint='force_complete_booking', view_func=force_complete_booking, methods=['POST'])

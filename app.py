@@ -392,6 +392,8 @@ def ensure_database_tables():
     cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS pause_end_date TEXT")
     cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS original_end_date TEXT")
     cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS attended_sessions TEXT")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS is_force_completed BOOLEAN DEFAULT FALSE")
+    cursor.execute("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS force_completed_classes INTEGER")
     cursor.execute("UPDATE bookings SET pause_count = 1 WHERE pause_used = TRUE AND (pause_count IS NULL OR pause_count = 0)")
 
     cursor.execute("""
@@ -405,6 +407,23 @@ def ensure_database_tables():
         is_auto_resume BOOLEAN DEFAULT FALSE,
         reason TEXT,
         ip_address TEXT,
+        created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS booking_actions_audit (
+        id SERIAL PRIMARY KEY,
+        booking_id TEXT NOT NULL,
+        student_name TEXT,
+        owner_name TEXT,
+        owner_phone TEXT,
+        action TEXT NOT NULL,
+        performed_by TEXT NOT NULL,
+        role TEXT NOT NULL,
+        classes_done INTEGER DEFAULT 0,
+        amount_collected NUMERIC(10, 2) DEFAULT 0.00,
+        notes TEXT,
         created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
     )
     """)
@@ -658,7 +677,15 @@ def load_data():
 
                 pause_status_val = str(b.get('pause_status') or 'ACTIVE').upper()
                 if pause_status_val not in ('PAUSED', 'PAUSE'):
-                    if total_classes > 0 and (completed_classes + len(skipped_dates)) >= total_classes:
+                    if b.get('is_force_completed') or str(b.get('package_status') or '').upper() == 'COMPLETED':
+                        is_completed = True
+                        if b.get('force_completed_classes') is not None:
+                            try:
+                                completed_classes = int(b.get('force_completed_classes'))
+                                remaining_classes = 0
+                            except (ValueError, TypeError):
+                                pass
+                    elif total_classes > 0 and (completed_classes + len(skipped_dates)) >= total_classes:
                         is_completed = True
                     elif is_expired:
                         is_completed = True
@@ -714,6 +741,8 @@ def load_data():
             'pause_other_reason': b.get('pause_other_reason'),
             'paused_days': b.get('paused_days', 0),
             'package_status': b.get('package_status') or 'ACTIVE',
+            'is_force_completed': b.get('is_force_completed', False),
+            'force_completed_classes': b.get('force_completed_classes'),
             'last_status_change': b.get('last_status_change'),
             # V0052.0 - New pause workflow properties
             'pause_count': b.get('pause_count', 0),

@@ -447,6 +447,26 @@
                                                 <i class="fa-solid fa-trash me-1"></i> Delete
                                             </button>
                                         </form>
+
+                                        {% if b_status == 'active' %}
+                                        <div class="dropdown d-inline-block align-middle ms-1">
+                                            <button class="btn btn-outline d-flex align-items-center justify-content-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Active Booking Options" style="font-size: 0.85rem; padding: 0.35rem 0.6rem; border-radius: var(--radius-full); border-color: rgba(255,255,255,0.2); color: #cbd5e1; height: 32px; width: 32px;">
+                                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow-lg" style="background: rgba(24, 24, 27, 0.96); border: 1px solid rgba(255,255,255,0.1); font-size: 0.82rem; min-width: 170px;">
+                                                <li>
+                                                    <a class="dropdown-item py-2 text-danger d-flex align-items-center gap-2" href="javascript:void(0)" onclick="openForceActionModal('{{ booking.id }}', '{{ booking.student|escape }}', 'force_delete', '{{ booking.completed_classes or 0 }}', '{{ booking.fee or 0 }}')">
+                                                        <i class="fa-solid fa-trash-can text-danger"></i> Force Delete
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item py-2 text-success d-flex align-items-center gap-2" href="javascript:void(0)" onclick="openForceActionModal('{{ booking.id }}', '{{ booking.student|escape }}', 'force_complete', '{{ booking.completed_classes or 0 }}', '{{ booking.fee or 0 }}')">
+                                                        <i class="fa-solid fa-circle-check text-success"></i> Force Complete
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        {% endif %}
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -2204,5 +2224,138 @@
             });
         }
     });
+</script>
+
+<!-- Force Action Modal (Force Delete / Force Complete) -->
+<div class="modal fade" id="forceActionModal" tabindex="-1" aria-labelledby="forceActionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: #121824; border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-lg); box-shadow: 0 20px 40px rgba(0,0,0,0.6);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.08);">
+                <h5 class="modal-title fw-bold" id="forceActionModalLabel"></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="forceActionForm" onsubmit="submitForceActionForm(event)">
+                <div class="modal-body pt-3">
+                    <p class="text-secondary small mb-3" id="forceActionDesc"></p>
+                    
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 0.85rem; border-radius: var(--radius-md); font-size: 0.85rem;" class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Swimmer:</span>
+                            <span id="forceModalStudent" class="fw-bold text-white"></span>
+                        </div>
+                    </div>
+                    
+                    <input type="hidden" id="forceBookingId" name="booking_id">
+                    <input type="hidden" id="forceActionType" name="action_type">
+                    
+                    <div class="form-group mb-3">
+                        <label for="forceClassesDone" class="form-label" style="font-size: 0.85rem; font-weight: 600;">Number of Classes Done <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="forceClassesDone" name="classes_done" min="0" required style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: white; border-radius: var(--radius-sm);">
+                        <small class="text-muted" style="font-size: 0.75rem;">Total classes completed up to this action.</small>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="forceAmountCollected" class="form-label" style="font-size: 0.85rem; font-weight: 600;">Amount Collected (₹) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="forceAmountCollected" name="amount_collected" min="0" step="any" required style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: white; border-radius: var(--radius-sm);">
+                        <small class="text-muted" style="font-size: 0.75rem;">Actual fee collected for this swimmer's package.</small>
+                    </div>
+
+                    <div class="form-group mb-2">
+                        <label for="forceNotes" class="form-label" style="font-size: 0.85rem;">Reason / Notes (Optional)</label>
+                        <textarea class="form-control" id="forceNotes" name="notes" rows="2" placeholder="Optional notes for record and audit..." style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: white; border-radius: var(--radius-sm);"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.08);">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn" id="forceActionSubmitBtn">Confirm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let forceActionModalObj = null;
+window.openForceActionModal = function(bookingId, studentName, actionType, currentClasses, currentFee) {
+    if (!forceActionModalObj) {
+        const el = document.getElementById('forceActionModal');
+        if (el) {
+            forceActionModalObj = new bootstrap.Modal(el);
+        }
+    }
+    document.getElementById('forceBookingId').value = bookingId;
+    document.getElementById('forceActionType').value = actionType;
+    document.getElementById('forceModalStudent').textContent = studentName || 'Swimmer';
+    document.getElementById('forceClassesDone').value = (currentClasses !== undefined && currentClasses !== null && currentClasses !== '') ? currentClasses : 0;
+    document.getElementById('forceAmountCollected').value = (currentFee !== undefined && currentFee !== null && currentFee !== '') ? currentFee : 0;
+    document.getElementById('forceNotes').value = '';
+
+    const label = document.getElementById('forceActionModalLabel');
+    const desc = document.getElementById('forceActionDesc');
+    const btn = document.getElementById('forceActionSubmitBtn');
+
+    if (actionType === 'force_delete') {
+        label.innerHTML = '<i class="fa-solid fa-trash-can text-danger me-2"></i> Force Delete Booking';
+        desc.innerHTML = 'This will permanently delete this active booking, record the completed classes and collected amount in the audit trail, and free up slots.';
+        btn.className = 'btn btn-danger';
+        btn.innerHTML = '<i class="fa-solid fa-trash-can me-1"></i> Confirm Force Delete';
+    } else {
+        label.innerHTML = '<i class="fa-solid fa-circle-check text-success me-2"></i> Force Complete Booking';
+        desc.innerHTML = 'This will mark the package as <strong>Completed</strong>, update the total classes conducted, record amount collected, and move this booking to the Completed list.';
+        btn.className = 'btn btn-success';
+        btn.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> Confirm Force Complete';
+    }
+
+    if (forceActionModalObj) {
+        forceActionModalObj.show();
+    }
+};
+
+window.submitForceActionForm = function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('forceActionSubmitBtn');
+    const bookingId = document.getElementById('forceBookingId').value;
+    const actionType = document.getElementById('forceActionType').value;
+    const classesDone = document.getElementById('forceClassesDone').value;
+    const amountCollected = document.getElementById('forceAmountCollected').value;
+    const notes = document.getElementById('forceNotes').value;
+
+    btn.disabled = true;
+    const origHtml = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Processing...';
+
+    const endpoint = actionType === 'force_delete' 
+        ? `/booking/force_delete/${encodeURIComponent(bookingId)}`
+        : `/booking/force_complete/${encodeURIComponent(bookingId)}`;
+
+    fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            classes_done: classesDone,
+            amount_collected: amountCollected,
+            notes: notes
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            window.location.reload();
+        } else {
+            alert(data.error || 'Failed to process action.');
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+        }
+    })
+    .catch(err => {
+        console.error('Force action error:', err);
+        alert('An unexpected error occurred. Please try again.');
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+    });
+};
 </script>
 {% endblock %}
