@@ -73,6 +73,21 @@
     .time-slot-badge.active-slot .drag-handle {
         color: rgba(6, 182, 212, 0.5);
     }
+    #coachEarningsMetricCard {
+        cursor: grab;
+        transition: transform var(--transition-bounce), box-shadow var(--transition-normal), border-color var(--transition-normal);
+    }
+    #coachEarningsMetricCard:active {
+        cursor: grabbing;
+    }
+    #coachEarningsMetricCard:hover .carousel-control-prev,
+    #coachEarningsMetricCard:hover .carousel-control-next {
+        opacity: 0.75 !important;
+    }
+    #coachEarningsMetricCard .carousel-control-prev:hover,
+    #coachEarningsMetricCard .carousel-control-next:hover {
+        opacity: 1 !important;
+    }
 </style>
 {% endblock %}
 
@@ -127,12 +142,99 @@
                 </div>
             </div>
 
-            <div class="metric-card" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3);">
-                <div class="metric-icon" style="color: #10b981; background: rgba(16, 185, 129, 0.2);"><i class="fa-solid fa-indian-rupee-sign"></i></div>
-                <div>
-                    <div class="text-muted" style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Total Payment</div>
-                    <div style="font-size: 1.8rem; font-weight: 800; line-height: 1; margin-bottom: 0.25rem;">₹{{ total_earnings }}</div>
-                    <div class="text-secondary" style="font-size: 0.75rem;">Lifetime Earnings</div>
+            <!-- Carousel Metric Card: Earnings (Monthly / Yearly / Overall) -->
+            <div class="metric-card p-0 position-relative overflow-hidden" id="coachEarningsMetricCard" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.3); display: flex; flex-direction: column; justify-content: center; min-height: 110px;">
+                <div id="coachEarningsCarousel" class="carousel slide w-100" data-bs-ride="false" data-bs-touch="true" data-bs-interval="false">
+                    
+                    <!-- Carousel Indicators (Pill Dots) -->
+                    <div class="carousel-indicators" style="position: absolute; top: 10px; right: 12px; margin: 0; justify-content: flex-end; gap: 4px; z-index: 5;">
+                        <button type="button" data-bs-target="#coachEarningsCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Monthly" style="width: 16px; height: 5px; border-radius: 4px; margin: 0; background: #10b981; border: none; opacity: 0.9; transition: all 0.3s ease;"></button>
+                        <button type="button" data-bs-target="#coachEarningsCarousel" data-bs-slide-to="1" aria-label="Yearly" style="width: 6px; height: 5px; border-radius: 4px; margin: 0; background: rgba(255,255,255,0.4); border: none; opacity: 0.35; transition: all 0.3s ease;"></button>
+                        <button type="button" data-bs-target="#coachEarningsCarousel" data-bs-slide-to="2" aria-label="Overall" style="width: 6px; height: 5px; border-radius: 4px; margin: 0; background: rgba(255,255,255,0.4); border: none; opacity: 0.35; transition: all 0.3s ease;"></button>
+                    </div>
+
+                    <!-- Carousel Slides -->
+                    <div class="carousel-inner w-100">
+                        
+                        <!-- 1. Monthly Amount Received -->
+                        <div class="carousel-item active" style="padding: 1.15rem 1.35rem 1.35rem 1.35rem;">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="metric-icon flex-shrink-0" style="color: #10b981; background: rgba(16, 185, 129, 0.2);">
+                                    <i class="fa-solid fa-calendar-check"></i>
+                                </div>
+                                <div class="flex-grow-1" style="min-width: 0;">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <span class="text-muted" style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;">Monthly Received</span>
+                                    </div>
+                                    <div style="font-size: 1.75rem; font-weight: 800; line-height: 1.15; margin-bottom: 0.2rem; color: #10b981; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                        ₹{{ '{:,}'.format(month_earnings or 0) }}
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between" style="font-size: 0.75rem;">
+                                        <span class="text-secondary">{{ current_month_name }} {{ current_year }}</span>
+                                        <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 0.65rem; padding: 2px 6px; border-radius: 6px;">Month</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Year-wise Amount Received -->
+                        <div class="carousel-item" style="padding: 1.15rem 1.35rem 1.35rem 1.35rem;">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="metric-icon flex-shrink-0" style="color: #06b6d4; background: rgba(6, 182, 212, 0.2);">
+                                    <i class="fa-solid fa-chart-line"></i>
+                                </div>
+                                <div class="flex-grow-1" style="min-width: 0;">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <span class="text-muted" style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;">Year-wise Received</span>
+                                    </div>
+                                    <div style="font-size: 1.75rem; font-weight: 800; line-height: 1.15; margin-bottom: 0.2rem; color: #06b6d4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                        ₹{{ '{:,}'.format(yearly_earnings or 0) }}
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between" style="font-size: 0.75rem;">
+                                        <span class="text-secondary">Year {{ current_year }}</span>
+                                        <span class="badge" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4; font-size: 0.65rem; padding: 2px 6px; border-radius: 6px;">Year</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Overall Amount Received -->
+                        <div class="carousel-item" style="padding: 1.15rem 1.35rem 1.35rem 1.35rem;">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="metric-icon flex-shrink-0" style="color: #a855f7; background: rgba(168, 85, 247, 0.2);">
+                                    <i class="fa-solid fa-indian-rupee-sign"></i>
+                                </div>
+                                <div class="flex-grow-1" style="min-width: 0;">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <span class="text-muted" style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;">Overall Amount</span>
+                                    </div>
+                                    <div style="font-size: 1.75rem; font-weight: 800; line-height: 1.15; margin-bottom: 0.2rem; color: #a855f7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                        ₹{{ '{:,}'.format(total_earnings or 0) }}
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between" style="font-size: 0.75rem;">
+                                        <span class="text-secondary">All-time Earnings</span>
+                                        <span class="badge" style="background: rgba(168, 85, 247, 0.15); color: #a855f7; font-size: 0.65rem; padding: 2px 6px; border-radius: 6px;">Lifetime</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Mini Navigation Chevrons -->
+                    <button class="carousel-control-prev" type="button" data-bs-target="#coachEarningsCarousel" data-bs-slide="prev" style="width: 22px; opacity: 0; transition: opacity 0.2s ease; z-index: 6;" title="Previous">
+                        <i class="fa-solid fa-chevron-left" style="font-size: 0.7rem; color: rgba(255,255,255,0.7);"></i>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#coachEarningsCarousel" data-bs-slide="next" style="width: 22px; opacity: 0; transition: opacity 0.2s ease; z-index: 6;" title="Next">
+                        <i class="fa-solid fa-chevron-right" style="font-size: 0.7rem; color: rgba(255,255,255,0.7);"></i>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+
+                    <!-- Subtle Swipe Hint -->
+                    <div class="position-absolute bottom-0 start-0 end-0 d-flex justify-content-center align-items-center" style="font-size: 0.62rem; color: rgba(255,255,255,0.3); padding-bottom: 2px; pointer-events: none;">
+                        <span><i class="fa-solid fa-arrows-left-right me-1" style="font-size: 0.55rem;"></i>Swipe</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -817,6 +919,53 @@ document.addEventListener('DOMContentLoaded', function() {
                 statusEl.innerHTML = '<span class="badge bg-success-subtle text-success border border-success-subtle"><i class="fa-solid fa-check me-1"></i> Push Alerts Active</span>';
             }
             triggerPendingPushNotifications();
+        }
+
+        // Initialize Coach Earnings Carousel with indicator updating and drag gestures
+        const earningsCarousel = document.getElementById('coachEarningsCarousel');
+        if (earningsCarousel && window.bootstrap && bootstrap.Carousel) {
+            const bsCarousel = bootstrap.Carousel.getOrCreateInstance(earningsCarousel, {
+                interval: false,
+                touch: true,
+                wrap: true
+            });
+
+            const indicatorColors = ['#10b981', '#06b6d4', '#a855f7'];
+            earningsCarousel.addEventListener('slide.bs.carousel', function(e) {
+                const indicators = earningsCarousel.querySelectorAll('.carousel-indicators button');
+                indicators.forEach((btn, idx) => {
+                    if (idx === e.to) {
+                        btn.style.width = '16px';
+                        btn.style.opacity = '0.9';
+                        btn.style.backgroundColor = indicatorColors[idx] || '#10b981';
+                    } else {
+                        btn.style.width = '6px';
+                        btn.style.opacity = '0.35';
+                        btn.style.backgroundColor = 'rgba(255,255,255,0.4)';
+                    }
+                });
+            });
+
+            // Desktop mouse drag swiping support
+            let startX = 0;
+            let isDragging = false;
+            earningsCarousel.addEventListener('mousedown', function(e) {
+                startX = e.clientX;
+                isDragging = true;
+            });
+            earningsCarousel.addEventListener('mouseup', function(e) {
+                if (!isDragging) return;
+                isDragging = false;
+                const diffX = e.clientX - startX;
+                if (diffX < -35) {
+                    bsCarousel.next();
+                } else if (diffX > 35) {
+                    bsCarousel.prev();
+                }
+            });
+            earningsCarousel.addEventListener('mouseleave', function() {
+                isDragging = false;
+            });
         }
     });
 </script>

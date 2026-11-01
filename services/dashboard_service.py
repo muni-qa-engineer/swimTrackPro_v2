@@ -214,7 +214,7 @@ def get_trainer_dashboard_data(trainer_username, data):
             fee = int(b.get('fee', 0) or 0)
             total_earnings += fee
             
-        start_date_str = b.get('start_date')
+        start_date_str = (b.get('start_date') or '').strip().split('T')[0].split(' ')[0]
         if start_date_str:
             try:
                 dt = datetime.strptime(start_date_str, '%Y-%m-%d')
@@ -327,7 +327,11 @@ def get_trainer_dashboard_data(trainer_username, data):
         'pending_confirmations': pending_confirmations,
         'monthly_earnings': monthly_earnings,
         'monthly_bookings': monthly_bookings,
+        'month_earnings': monthly_earnings[current_month - 1],
+        'yearly_earnings': sum(monthly_earnings),
         'total_earnings': total_earnings,
+        'current_month_name': ist_now.strftime('%B'),
+        'current_year': current_year,
         'trend_growth': trend_growth,
         'students_this_month': students_this_month,
         'lifetime_students': len(assigned_student_keys),
