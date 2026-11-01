@@ -88,6 +88,41 @@
     #coachEarningsMetricCard .carousel-control-next:hover {
         opacity: 1 !important;
     }
+    .btn-period-nav {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: #cbd5e1;
+        border-radius: 4px;
+        width: 17px;
+        height: 17px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        font-size: 0.58rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        line-height: 1;
+    }
+    .btn-period-nav:hover {
+        background: rgba(255, 255, 255, 0.22);
+        color: #ffffff;
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+    @keyframes periodSlideUp {
+        0% { transform: translateY(10px); opacity: 0; }
+        100% { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes periodSlideDown {
+        0% { transform: translateY(-10px); opacity: 0; }
+        100% { transform: translateY(0); opacity: 1; }
+    }
+    .anim-slide-up {
+        animation: periodSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .anim-slide-down {
+        animation: periodSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
 </style>
 {% endblock %}
 
@@ -166,11 +201,15 @@
                                     <div class="d-flex align-items-center justify-content-between">
                                         <span class="text-muted" style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;">Monthly Received</span>
                                     </div>
-                                    <div style="font-size: 1.75rem; font-weight: 800; line-height: 1.15; margin-bottom: 0.2rem; color: #10b981; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    <div id="coachMonthAmount" class="period-amount" style="font-size: 1.75rem; font-weight: 800; line-height: 1.15; margin-bottom: 0.2rem; color: #10b981; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                         ₹{{ '{:,}'.format(month_earnings or 0) }}
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between" style="font-size: 0.75rem;">
-                                        <span class="text-secondary">{{ current_month_name }} {{ current_year }}</span>
+                                        <div class="d-flex align-items-center gap-1.5" style="z-index: 7;">
+                                            <button type="button" class="btn-period-nav" onclick="stepPeriodMonth(-1, event)" title="Previous Month (Swipe Down)"><i class="fa-solid fa-chevron-down"></i></button>
+                                            <span id="coachMonthDisplay" class="text-secondary fw-semibold">{{ current_month_name }} {{ current_year }}</span>
+                                            <button type="button" class="btn-period-nav" onclick="stepPeriodMonth(1, event)" title="Next Month (Swipe Up)"><i class="fa-solid fa-chevron-up"></i></button>
+                                        </div>
                                         <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 0.65rem; padding: 2px 6px; border-radius: 6px;">Month</span>
                                     </div>
                                 </div>
@@ -187,11 +226,15 @@
                                     <div class="d-flex align-items-center justify-content-between">
                                         <span class="text-muted" style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;">Year-wise Received</span>
                                     </div>
-                                    <div style="font-size: 1.75rem; font-weight: 800; line-height: 1.15; margin-bottom: 0.2rem; color: #06b6d4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    <div id="coachYearAmount" class="period-amount" style="font-size: 1.75rem; font-weight: 800; line-height: 1.15; margin-bottom: 0.2rem; color: #06b6d4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                         ₹{{ '{:,}'.format(yearly_earnings or 0) }}
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between" style="font-size: 0.75rem;">
-                                        <span class="text-secondary">Year {{ current_year }}</span>
+                                        <div class="d-flex align-items-center gap-1.5" style="z-index: 7;">
+                                            <button type="button" class="btn-period-nav" onclick="stepPeriodYear(-1, event)" title="Previous Year (Swipe Down)"><i class="fa-solid fa-chevron-down"></i></button>
+                                            <span id="coachYearDisplay" class="text-secondary fw-semibold">Year {{ current_year }}</span>
+                                            <button type="button" class="btn-period-nav" onclick="stepPeriodYear(1, event)" title="Next Year (Swipe Up)"><i class="fa-solid fa-chevron-up"></i></button>
+                                        </div>
                                         <span class="badge" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4; font-size: 0.65rem; padding: 2px 6px; border-radius: 6px;">Year</span>
                                     </div>
                                 </div>
@@ -212,7 +255,7 @@
                                         ₹{{ '{:,}'.format(total_earnings or 0) }}
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between" style="font-size: 0.75rem;">
-                                        <span class="text-secondary">All-time Earnings</span>
+                                        <span class="text-secondary">All-time Lifetime</span>
                                         <span class="badge" style="background: rgba(168, 85, 247, 0.15); color: #a855f7; font-size: 0.65rem; padding: 2px 6px; border-radius: 6px;">Lifetime</span>
                                     </div>
                                 </div>
@@ -231,9 +274,11 @@
                         <span class="visually-hidden">Next</span>
                     </button>
 
-                    <!-- Subtle Swipe Hint -->
-                    <div class="position-absolute bottom-0 start-0 end-0 d-flex justify-content-center align-items-center" style="font-size: 0.62rem; color: rgba(255,255,255,0.3); padding-bottom: 2px; pointer-events: none;">
-                        <span><i class="fa-solid fa-arrows-left-right me-1" style="font-size: 0.55rem;"></i>Swipe</span>
+                    <!-- Subtle Swipe Hint (Horizontal + Vertical) -->
+                    <div class="position-absolute bottom-0 start-0 end-0 d-flex justify-content-center align-items-center" style="font-size: 0.6rem; color: rgba(255,255,255,0.38); padding-bottom: 2px; pointer-events: none; gap: 6px;">
+                        <span><i class="fa-solid fa-arrows-left-right me-0.5"></i> 3 Views</span>
+                        <span style="opacity: 0.4;">&bull;</span>
+                        <span><i class="fa-solid fa-arrows-up-down me-0.5"></i> Swipe Up/Down Date</span>
                     </div>
                 </div>
             </div>
@@ -921,17 +966,88 @@ document.addEventListener('DOMContentLoaded', function() {
             triggerPendingPushNotifications();
         }
 
-        // Initialize Coach Earnings Carousel with indicator updating and drag gestures
+        // 2D Swiping & Period Selection for Coach Earnings Card
         const earningsCarousel = document.getElementById('coachEarningsCarousel');
+        const earningsByMonth = {{ earnings_by_month|tojson if earnings_by_month is defined else '{}' }};
+        const earningsByYear = {{ earnings_by_year|tojson if earnings_by_year is defined else '{}' }};
+
+        let selectedYear = {{ current_year }};
+        let selectedMonth = {{ current_month }};
+        let selectedYearOnly = {{ current_year }};
+        let currentSlideIndex = 0;
+
+        const monthNames = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+
+        function triggerPeriodAnimation(element, direction) {
+            if (!element) return;
+            element.classList.remove('anim-slide-up', 'anim-slide-down');
+            void element.offsetWidth; // Force CSS reflow
+            element.classList.add(direction > 0 ? 'anim-slide-up' : 'anim-slide-down');
+        }
+
+        window.stepPeriodMonth = function(direction, e) {
+            if (e) e.stopPropagation();
+            // direction > 0: Next Month (Swipe Up / Click Up)
+            // direction < 0: Prev Month (Swipe Down / Click Down)
+            selectedMonth += direction;
+            if (selectedMonth > 12) {
+                selectedMonth = 1;
+                selectedYear += 1;
+            } else if (selectedMonth < 1) {
+                selectedMonth = 12;
+                selectedYear -= 1;
+            }
+
+            const key = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
+            const amount = earningsByMonth[key] || 0;
+
+            const amtEl = document.getElementById('coachMonthAmount');
+            const dispEl = document.getElementById('coachMonthDisplay');
+
+            if (amtEl) {
+                amtEl.textContent = '₹' + Number(amount).toLocaleString('en-IN');
+                triggerPeriodAnimation(amtEl, direction);
+            }
+            if (dispEl) {
+                dispEl.textContent = `${monthNames[selectedMonth - 1]} ${selectedYear}`;
+                triggerPeriodAnimation(dispEl, direction);
+            }
+        };
+
+        window.stepPeriodYear = function(direction, e) {
+            if (e) e.stopPropagation();
+            // direction > 0: Next Year (Swipe Up / Click Up)
+            // direction < 0: Prev Year (Swipe Down / Click Down)
+            selectedYearOnly += direction;
+            const key = String(selectedYearOnly);
+            const amount = earningsByYear[key] || 0;
+
+            const amtEl = document.getElementById('coachYearAmount');
+            const dispEl = document.getElementById('coachYearDisplay');
+
+            if (amtEl) {
+                amtEl.textContent = '₹' + Number(amount).toLocaleString('en-IN');
+                triggerPeriodAnimation(amtEl, direction);
+            }
+            if (dispEl) {
+                dispEl.textContent = `Year ${selectedYearOnly}`;
+                triggerPeriodAnimation(dispEl, direction);
+            }
+        };
+
         if (earningsCarousel && window.bootstrap && bootstrap.Carousel) {
             const bsCarousel = bootstrap.Carousel.getOrCreateInstance(earningsCarousel, {
                 interval: false,
-                touch: true,
+                touch: false, // Custom 2D touch handler avoids conflict with vertical swipe
                 wrap: true
             });
 
             const indicatorColors = ['#10b981', '#06b6d4', '#a855f7'];
             earningsCarousel.addEventListener('slide.bs.carousel', function(e) {
+                currentSlideIndex = e.to;
                 const indicators = earningsCarousel.querySelectorAll('.carousel-indicators button');
                 indicators.forEach((btn, idx) => {
                     if (idx === e.to) {
@@ -946,26 +1062,90 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             });
 
-            // Desktop mouse drag swiping support
-            let startX = 0;
-            let isDragging = false;
-            earningsCarousel.addEventListener('mousedown', function(e) {
-                startX = e.clientX;
-                isDragging = true;
-            });
-            earningsCarousel.addEventListener('mouseup', function(e) {
-                if (!isDragging) return;
-                isDragging = false;
-                const diffX = e.clientX - startX;
-                if (diffX < -35) {
-                    bsCarousel.next();
-                } else if (diffX > 35) {
-                    bsCarousel.prev();
+            // 2D Gesture Dispatcher
+            function handle2DGesture(deltaX, deltaY) {
+                const absX = Math.abs(deltaX);
+                const absY = Math.abs(deltaY);
+
+                if (absX > absY && absX > 30) {
+                    // Horizontal swipe: switch carousel view
+                    if (deltaX < 0) {
+                        bsCarousel.next();
+                    } else {
+                        bsCarousel.prev();
+                    }
+                } else if (absY > absX && absY > 25) {
+                    // Vertical swipe: change period
+                    // deltaY < 0 is Swipe UP -> Next Month / Next Year
+                    // deltaY > 0 is Swipe DOWN -> Previous Month / Previous Year
+                    const dir = deltaY < 0 ? 1 : -1;
+                    if (currentSlideIndex === 0) {
+                        stepPeriodMonth(dir);
+                    } else if (currentSlideIndex === 1) {
+                        stepPeriodYear(dir);
+                    }
                 }
+            }
+
+            // Desktop Mouse Drag Support
+            let startMouseX = 0;
+            let startMouseY = 0;
+            let isMouseDragging = false;
+
+            earningsCarousel.addEventListener('mousedown', function(e) {
+                if (e.target.closest('button') || e.target.closest('a')) return;
+                startMouseX = e.clientX;
+                startMouseY = e.clientY;
+                isMouseDragging = true;
             });
+
+            earningsCarousel.addEventListener('mouseup', function(e) {
+                if (!isMouseDragging) return;
+                isMouseDragging = false;
+                const diffX = e.clientX - startMouseX;
+                const diffY = e.clientY - startMouseY;
+                handle2DGesture(diffX, diffY);
+            });
+
             earningsCarousel.addEventListener('mouseleave', function() {
-                isDragging = false;
+                isMouseDragging = false;
             });
+
+            // Mobile Touch Support with Direction Lock
+            let startTouchX = 0;
+            let startTouchY = 0;
+            let isTouching = false;
+
+            earningsCarousel.addEventListener('touchstart', function(e) {
+                if (e.target.closest('button') || e.target.closest('a')) return;
+                if (e.touches.length === 1) {
+                    startTouchX = e.touches[0].clientX;
+                    startTouchY = e.touches[0].clientY;
+                    isTouching = true;
+                }
+            }, { passive: true });
+
+            earningsCarousel.addEventListener('touchmove', function(e) {
+                if (!isTouching || e.touches.length !== 1) return;
+                const diffX = e.touches[0].clientX - startTouchX;
+                const diffY = e.touches[0].clientY - startTouchY;
+
+                if (Math.abs(diffX) > 10 || Math.abs(diffY) > 10) {
+                    if (e.cancelable) {
+                        e.preventDefault();
+                    }
+                }
+            }, { passive: false });
+
+            earningsCarousel.addEventListener('touchend', function(e) {
+                if (!isTouching) return;
+                isTouching = false;
+                if (e.changedTouches.length === 1) {
+                    const diffX = e.changedTouches[0].clientX - startTouchX;
+                    const diffY = e.changedTouches[0].clientY - startTouchY;
+                    handle2DGesture(diffX, diffY);
+                }
+            }, { passive: true });
         }
     });
 </script>

@@ -208,20 +208,28 @@ def get_trainer_dashboard_data(trainer_username, data):
     monthly_earnings = [0] * 12
     monthly_bookings = [0] * 12
     total_earnings = 0
+    earnings_by_month = {}
+    earnings_by_year = {}
     for b in user_bookings:
         status = str(b.get('status', '')).lower()
+        fee = int(b.get('fee', 0) or 0)
         if status == 'paid':
-            fee = int(b.get('fee', 0) or 0)
             total_earnings += fee
             
-        start_date_str = (b.get('start_date') or '').strip().split('T')[0].split(' ')[0]
+        start_date_str = (b.get('start_date') or b.get('created_at') or '').strip().split('T')[0].split(' ')[0]
         if start_date_str:
             try:
                 dt = datetime.strptime(start_date_str, '%Y-%m-%d')
                 if dt.year == current_year:
                     if status == 'paid':
-                        monthly_earnings[dt.month - 1] += int(b.get('fee', 0) or 0)
+                        monthly_earnings[dt.month - 1] += fee
                     monthly_bookings[dt.month - 1] += 1
+                
+                if status == 'paid':
+                    ym_key = dt.strftime('%Y-%m')
+                    y_key = str(dt.year)
+                    earnings_by_month[ym_key] = earnings_by_month.get(ym_key, 0) + fee
+                    earnings_by_year[y_key] = earnings_by_year.get(y_key, 0) + fee
             except ValueError:
                 pass
                     
@@ -330,6 +338,9 @@ def get_trainer_dashboard_data(trainer_username, data):
         'month_earnings': monthly_earnings[current_month - 1],
         'yearly_earnings': sum(monthly_earnings),
         'total_earnings': total_earnings,
+        'earnings_by_month': earnings_by_month,
+        'earnings_by_year': earnings_by_year,
+        'current_month': current_month,
         'current_month_name': ist_now.strftime('%B'),
         'current_year': current_year,
         'trend_growth': trend_growth,
