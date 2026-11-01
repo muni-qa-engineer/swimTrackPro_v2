@@ -92,22 +92,22 @@
         background: rgba(255, 255, 255, 0.08);
         border: 1px solid rgba(255, 255, 255, 0.12);
         color: #cbd5e1;
-        border-radius: 4px;
-        width: 17px;
-        height: 17px;
+        border-radius: 3px;
+        width: 18px;
+        height: 11px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         padding: 0;
-        font-size: 0.58rem;
+        font-size: 0.52rem;
         cursor: pointer;
         transition: all 0.2s ease;
         line-height: 1;
     }
     .btn-period-nav:hover {
-        background: rgba(255, 255, 255, 0.22);
+        background: rgba(255, 255, 255, 0.25);
         color: #ffffff;
-        border-color: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.35);
     }
     @keyframes periodSlideUp {
         0% { transform: translateY(10px); opacity: 0; }
@@ -206,9 +206,15 @@
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between" style="font-size: 0.75rem;">
                                         <div class="d-flex align-items-center gap-1.5" style="z-index: 7;">
-                                            <button type="button" class="btn-period-nav" onclick="stepPeriodMonth(-1, event)" title="Previous Month (Swipe Down)"><i class="fa-solid fa-chevron-down"></i></button>
                                             <span id="coachMonthDisplay" class="text-secondary fw-semibold">{{ current_month_name }} {{ current_year }}</span>
-                                            <button type="button" class="btn-period-nav" onclick="stepPeriodMonth(1, event)" title="Next Month (Swipe Up)"><i class="fa-solid fa-chevron-up"></i></button>
+                                            <div class="d-inline-flex flex-column align-items-center" style="gap: 2px;">
+                                                <button type="button" class="btn-period-nav" onclick="stepPeriodMonth(1, event)" title="Next Month">
+                                                    <i class="fa-solid fa-chevron-up"></i>
+                                                </button>
+                                                <button type="button" class="btn-period-nav" onclick="stepPeriodMonth(-1, event)" title="Previous Month">
+                                                    <i class="fa-solid fa-chevron-down"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                         <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 0.65rem; padding: 2px 6px; border-radius: 6px;">Month</span>
                                     </div>
@@ -231,9 +237,15 @@
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between" style="font-size: 0.75rem;">
                                         <div class="d-flex align-items-center gap-1.5" style="z-index: 7;">
-                                            <button type="button" class="btn-period-nav" onclick="stepPeriodYear(-1, event)" title="Previous Year (Swipe Down)"><i class="fa-solid fa-chevron-down"></i></button>
                                             <span id="coachYearDisplay" class="text-secondary fw-semibold">Year {{ current_year }}</span>
-                                            <button type="button" class="btn-period-nav" onclick="stepPeriodYear(1, event)" title="Next Year (Swipe Up)"><i class="fa-solid fa-chevron-up"></i></button>
+                                            <div class="d-inline-flex flex-column align-items-center" style="gap: 2px;">
+                                                <button type="button" class="btn-period-nav" onclick="stepPeriodYear(1, event)" title="Next Year">
+                                                    <i class="fa-solid fa-chevron-up"></i>
+                                                </button>
+                                                <button type="button" class="btn-period-nav" onclick="stepPeriodYear(-1, event)" title="Previous Year">
+                                                    <i class="fa-solid fa-chevron-down"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                         <span class="badge" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4; font-size: 0.65rem; padding: 2px 6px; border-radius: 6px;">Year</span>
                                     </div>
@@ -273,13 +285,6 @@
                         <i class="fa-solid fa-chevron-right" style="font-size: 0.7rem; color: rgba(255,255,255,0.7);"></i>
                         <span class="visually-hidden">Next</span>
                     </button>
-
-                    <!-- Subtle Swipe Hint (Horizontal + Vertical) -->
-                    <div class="position-absolute bottom-0 start-0 end-0 d-flex justify-content-center align-items-center" style="font-size: 0.6rem; color: rgba(255,255,255,0.38); padding-bottom: 2px; pointer-events: none; gap: 6px;">
-                        <span><i class="fa-solid fa-arrows-left-right me-0.5"></i> 3 Views</span>
-                        <span style="opacity: 0.4;">&bull;</span>
-                        <span><i class="fa-solid fa-arrows-up-down me-0.5"></i> Swipe Up/Down Date</span>
-                    </div>
                 </div>
             </div>
         </div>
