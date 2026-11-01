@@ -370,8 +370,8 @@
                                                {% endif %}
                                           {% else %}
                                               {% set is_active_booking = ((b.completed_classes or 0) > 0) or ((b.status or '')|lower == 'active') %}
-                                              {% set show_user_actions = (role == 'trainer') or (not is_active_booking) %}
-                                              <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mt-1">
+                                              {% set show_user_actions = (role in ['trainer', 'admin']) or (not is_active_booking) %}
+                                              <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mt-1 w-100">
                                                   {% if show_user_actions %}
                                                   <div class="d-flex align-items-center gap-2">
                                                       <a href="/edit/{{ b.id }}" class="btn btn-outline" style="font-size: 0.75rem; padding: 0.25rem 0.75rem; border-radius: var(--radius-sm);">
@@ -384,26 +384,26 @@
                                                           </button>
                                                       </form>
                                                       {% endif %}
+                                                  </div>
+                                                  {% endif %}
 
-                                                      {% if is_active_booking and (role == 'admin' or role == 'trainer') %}
-                                                      <div class="dropdown d-inline-block">
-                                                          <button class="btn btn-outline d-flex align-items-center justify-content-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Active Booking Options" style="font-size: 0.85rem; padding: 0.25rem 0.6rem; border-radius: var(--radius-sm); border-color: rgba(255,255,255,0.15); color: #cbd5e1; height: 30px;">
-                                                              <i class="fa-solid fa-ellipsis-vertical"></i>
-                                                          </button>
-                                                          <ul class="dropdown-menu dropdown-menu-end shadow-lg" style="background: rgba(24, 24, 27, 0.96); border: 1px solid rgba(255,255,255,0.1); font-size: 0.82rem; min-width: 170px;">
-                                                              <li>
-                                                                  <a class="dropdown-item py-2 text-danger d-flex align-items-center gap-2" href="javascript:void(0)" onclick="openForceActionModal('{{ b.id }}', '{{ b.student|escape }}', 'force_delete', '{{ b.completed_classes or 0 }}', '{{ b.fee or 0 }}')">
-                                                                      <i class="fa-solid fa-trash-can text-danger"></i> Force Delete
-                                                                  </a>
-                                                              </li>
-                                                              <li>
-                                                                  <a class="dropdown-item py-2 text-success d-flex align-items-center gap-2" href="javascript:void(0)" onclick="openForceActionModal('{{ b.id }}', '{{ b.student|escape }}', 'force_complete', '{{ b.completed_classes or 0 }}', '{{ b.fee or 0 }}')">
-                                                                      <i class="fa-solid fa-circle-check text-success"></i> Force Complete
-                                                                  </a>
-                                                              </li>
-                                                          </ul>
-                                                      </div>
-                                                      {% endif %}
+                                                  {% if is_active_booking and (role == 'admin' or role == 'trainer') %}
+                                                  <div class="dropdown d-inline-block ms-auto">
+                                                      <button class="btn btn-outline d-flex align-items-center justify-content-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Active Booking Options" style="font-size: 0.85rem; padding: 0.25rem 0.6rem; border-radius: var(--radius-sm); border-color: rgba(255,255,255,0.15); color: #cbd5e1; height: 30px;">
+                                                          <i class="fa-solid fa-ellipsis-vertical"></i>
+                                                      </button>
+                                                      <ul class="dropdown-menu dropdown-menu-end shadow-lg" style="background: rgba(24, 24, 27, 0.96); border: 1px solid rgba(255,255,255,0.1); font-size: 0.82rem; min-width: 170px;">
+                                                          <li>
+                                                              <a class="dropdown-item py-2 text-danger d-flex align-items-center gap-2" href="javascript:void(0)" onclick="openForceActionModal('{{ b.id }}', '{{ b.student|escape }}', 'force_delete', '{{ b.completed_classes or 0 }}', '{{ b.fee or 0 }}')">
+                                                                  <i class="fa-solid fa-trash-can text-danger"></i> Force Delete
+                                                              </a>
+                                                          </li>
+                                                          <li>
+                                                              <a class="dropdown-item py-2 text-success d-flex align-items-center gap-2" href="javascript:void(0)" onclick="openForceActionModal('{{ b.id }}', '{{ b.student|escape }}', 'force_complete', '{{ b.completed_classes or 0 }}', '{{ b.fee or 0 }}')">
+                                                                  <i class="fa-solid fa-circle-check text-success"></i> Force Complete
+                                                              </a>
+                                                          </li>
+                                                      </ul>
                                                   </div>
                                                   {% endif %}
 
