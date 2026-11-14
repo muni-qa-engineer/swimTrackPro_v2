@@ -369,7 +369,7 @@
                                                   </div>
                                                {% endif %}
                                           {% else %}
-                                              {% set is_active_booking = ((b.completed_classes or 0) > 0) or ((b.status or '')|lower == 'active') %}
+                                              {% set is_active_booking = ((b.completed_classes or 0) > 0) or ((b.status or '')|lower == 'active') or ((b.pause_status or '')|lower in ['paused', 'pause']) %}
                                               {% set show_user_actions = (role in ['trainer', 'admin']) or (not is_active_booking) %}
                                               <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mt-1 w-100">
                                                   {% if show_user_actions %}
@@ -393,6 +393,13 @@
                                                           <i class="fa-solid fa-ellipsis-vertical"></i>
                                                       </button>
                                                       <ul class="dropdown-menu dropdown-menu-end shadow-lg" style="background: rgba(24, 24, 27, 0.96); border: 1px solid rgba(255,255,255,0.1); font-size: 0.82rem; min-width: 170px;">
+                                                          {% if b.pause_status not in ('Paused', 'PAUSED') %}
+                                                          <li>
+                                                              <a class="dropdown-item py-2 text-warning d-flex align-items-center gap-2" href="javascript:void(0)" onclick="openForceActionModal('{{ b.id }}', '{{ b.student|escape }}', 'force_pause', '{{ b.completed_classes or 0 }}', '{{ b.fee or 0 }}')">
+                                                                  <i class="fa-solid fa-pause text-warning"></i> Pause Forcely
+                                                              </a>
+                                                          </li>
+                                                          {% endif %}
                                                           <li>
                                                               <a class="dropdown-item py-2 text-danger d-flex align-items-center gap-2" href="javascript:void(0)" onclick="openForceActionModal('{{ b.id }}', '{{ b.student|escape }}', 'force_delete', '{{ b.completed_classes or 0 }}', '{{ b.fee or 0 }}')">
                                                                   <i class="fa-solid fa-trash-can text-danger"></i> Force Delete
@@ -414,7 +421,7 @@
                                                   {% endif %}
                                               </div>
                                               
-                                              {% if role != 'trainer' and b.package in ('Monthly', 'Custom') and not b.is_completed and not b.delete_requested and (b.completed_classes or 0) > 0 and (b.remaining_classes or 0) > 0 %}
+                                              {% if (b.pause_status in ('Paused', 'PAUSED') or role != 'trainer') and b.package in ('Monthly', 'Custom') and not b.is_completed and not b.delete_requested and (b.completed_classes or 0) > 0 and (b.remaining_classes or 0) > 0 %}
                                                   {% if b.pause_status == 'Paused' or b.pause_status == 'PAUSED' %}
                                                       <button type="button" class="btn btn-primary w-100 py-2.5" onclick="showResumeModal('{{ b.id }}')">
                                                           <i class="fa-solid fa-play"></i> Resume Package
@@ -670,6 +677,12 @@
                         <label for="forceClassesDone" class="form-label" style="font-size: 0.85rem; font-weight: 600;">Number of Classes Done <span class="text-danger">*</span></label>
                         <input type="number" class="form-control" id="forceClassesDone" name="classes_done" min="0" required style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: white; border-radius: var(--radius-sm);">
                         <small class="text-muted" style="font-size: 0.75rem;">Total classes completed up to this action.</small>
+                    </div>
+
+                    <div class="form-group mb-3" id="forcePauseDaysGroup" style="display: none;">
+                        <label for="forcePauseDays" class="form-label" style="font-size: 0.85rem; font-weight: 600;">Pause Duration (Days) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="forcePauseDays" name="pause_days" min="1" max="90" value="7" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: white; border-radius: var(--radius-sm);">
+                        <small class="text-muted" style="font-size: 0.75rem;">Days to pause before auto-resuming (default: 7 days).</small>
                     </div>
 
                     <div class="form-group mb-3">
@@ -947,6 +960,13 @@ window.openForceActionModal = function(bookingId, studentName, actionType, curre
     document.getElementById('forceAmountCollected').value = (currentFee !== undefined && currentFee !== null && currentFee !== '') ? currentFee : 0;
     document.getElementById('forceNotes').value = '';
 
+    const pauseDaysGroup = document.getElementById('forcePauseDaysGroup');
+    const pauseDaysInput = document.getElementById('forcePauseDays');
+    if (pauseDaysGroup) {
+        pauseDaysGroup.style.display = (actionType === 'force_pause') ? 'block' : 'none';
+        if (pauseDaysInput) pauseDaysInput.value = 7;
+    }
+
     const label = document.getElementById('forceActionModalLabel');
     const desc = document.getElementById('forceActionDesc');
     const btn = document.getElementById('forceActionSubmitBtn');
@@ -956,11 +976,16 @@ window.openForceActionModal = function(bookingId, studentName, actionType, curre
         desc.innerHTML = 'This will permanently delete this active booking, record the completed classes and collected amount in the audit trail, and free up slots.';
         btn.className = 'btn btn-danger';
         btn.innerHTML = '<i class="fa-solid fa-trash-can me-1"></i> Confirm Force Delete';
-    } else {
+    } else if (actionType === 'force_complete') {
         label.innerHTML = '<i class="fa-solid fa-circle-check text-success me-2"></i> Force Complete Booking';
         desc.innerHTML = 'This will mark the package as <strong>Completed</strong>, update the total classes conducted, record amount collected, and move this booking to the Completed list.';
         btn.className = 'btn btn-success';
         btn.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> Confirm Force Complete';
+    } else if (actionType === 'force_pause') {
+        label.innerHTML = '<i class="fa-solid fa-pause text-warning me-2"></i> Pause Forcely';
+        desc.innerHTML = 'This will immediately <strong>Pause</strong> this booking, lock conducted classes, reschedule remaining sessions after the pause duration, and record the action in the audit trail.';
+        btn.className = 'btn btn-warning text-dark fw-bold';
+        btn.innerHTML = '<i class="fa-solid fa-pause me-1"></i> Confirm Force Pause';
     }
 
     if (forceActionModalObj) {
@@ -981,9 +1006,22 @@ window.submitForceActionForm = function(e) {
     const origHtml = btn.innerHTML;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Processing...';
 
-    const endpoint = actionType === 'force_delete' 
-        ? `/booking/force_delete/${encodeURIComponent(bookingId)}`
-        : `/booking/force_complete/${encodeURIComponent(bookingId)}`;
+    let endpoint = `/booking/force_complete/${encodeURIComponent(bookingId)}`;
+    if (actionType === 'force_delete') {
+        endpoint = `/booking/force_delete/${encodeURIComponent(bookingId)}`;
+    } else if (actionType === 'force_pause') {
+        endpoint = `/booking/force_pause/${encodeURIComponent(bookingId)}`;
+    }
+
+    const payload = {
+        classes_done: classesDone,
+        amount_collected: amountCollected,
+        notes: notes
+    };
+    const pauseDaysInput = document.getElementById('forcePauseDays');
+    if (actionType === 'force_pause' && pauseDaysInput) {
+        payload.pause_days = parseInt(pauseDaysInput.value, 10) || 7;
+    }
 
     fetch(endpoint, {
         method: 'POST',
@@ -991,11 +1029,8 @@ window.submitForceActionForm = function(e) {
             'Content-Type': 'application/json',
             'X-Requested-With': 'XMLHttpRequest'
         },
-        body: JSON.stringify({
-            classes_done: classesDone,
-            amount_collected: amountCollected,
-            notes: notes
-        })
+        body: JSON.stringify(payload)
+    })
     })
     .then(res => res.json())
     .then(data => {

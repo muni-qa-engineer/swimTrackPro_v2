@@ -1170,8 +1170,8 @@ def pause_booking():
 @login_required
 def resume_booking():
     current_role = session.get("role", "guest")
-    if current_role == "trainer":
-        return jsonify({"success": False, "error": "Coaches cannot resume bookings."}), 403
+    user_name = session.get("user_name")
+    trainer_user = session.get("trainer_username")
 
     booking_id = request.form.get("booking_id")
     if not booking_id:
@@ -1183,8 +1183,24 @@ def resume_booking():
     if not booking:
         return jsonify({"success": False, "error": "Booking not found."}), 404
         
-    if booking.get("owner_name") != session.get("user_name"):
-        return jsonify({"success": False, "error": "Unauthorized action."}), 403
+    # Authorization: Admin can resume any, Coach can resume assigned/unassigned, Swimmer can resume own
+    if current_role == "admin":
+        pass
+    elif current_role == "trainer":
+        booking_trainer = (booking.get('trainer_username') or booking.get('trainer') or '').strip().lower()
+        trainer_user_clean = (trainer_user or '').strip().lower()
+        trainer_name_clean = (user_name or '').strip().lower()
+        is_coach_authorized = (
+            (bool(trainer_user_clean) and (booking_trainer == trainer_user_clean or trainer_user_clean in booking_trainer or booking_trainer in trainer_user_clean)) or
+            (bool(trainer_name_clean) and (booking_trainer == trainer_name_clean or trainer_name_clean in booking_trainer or booking_trainer in trainer_name_clean)) or
+            booking_trainer in ('', 'asdf', 'unassigned') or
+            not bool(booking_trainer)
+        )
+        if not is_coach_authorized:
+            return jsonify({"success": False, "error": "You are not assigned to this booking."}), 403
+    else:
+        if booking.get("owner_name") != user_name:
+            return jsonify({"success": False, "error": "Unauthorized action."}), 403
         
     if str(booking.get("pause_status", "")).upper() not in ("PAUSED", "PAUSE"):
         return jsonify({"success": False, "error": "Package is not currently paused."}), 400

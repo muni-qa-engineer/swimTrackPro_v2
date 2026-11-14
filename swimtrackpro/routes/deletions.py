@@ -680,9 +680,241 @@ def force_complete_booking(booking_id):
     return redirect(request.referrer or url_for('my_bookings_page'))
 
 
+def force_pause_booking(booking_id):
+    """
+    Force pause an active booking by Coach or Admin.
+    Prompts for and logs:
+    - classes_done (conducted classes)
+    - amount_collected (financial tracking)
+    - pause_days (number of pause days, default 7 or custom)
+    - notes (reason for force pause)
+    Logs action to booking_actions_audit and package_pause_audit, updates booking to PAUSED.
+    """
+    role = session.get('role')
+    if role not in ('admin', 'trainer'):
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+            return jsonify({'success': False, 'error': 'Unauthorized action'}), 403
+        flash('Unauthorized action', 'danger')
+        return redirect(url_for('my_bookings_page'))
+
+    payload = request.get_json(silent=True) or request.form.to_dict()
+    try:
+        classes_done = int(payload.get('classes_done', 0))
+    except (ValueError, TypeError):
+        classes_done = 0
+
+    try:
+        amount_collected = float(payload.get('amount_collected', 0.0))
+    except (ValueError, TypeError):
+        amount_collected = 0.0
+
+    try:
+        pause_days = int(payload.get('pause_days', 7))
+        if pause_days <= 0:
+            pause_days = 7
+    except (ValueError, TypeError):
+        pause_days = 7
+
+    notes = (payload.get('notes') or '').strip()
+
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+
+    cursor.execute('''
+    SELECT booking_code,
+           student_name,
+           owner_name,
+           owner_phone,
+           start_date,
+           time,
+           package,
+           email,
+           trainer_username,
+           fee,
+           selected_days,
+           calendar_dates_override,
+           end_date,
+           pause_status,
+           status,
+           payment_request
+    FROM bookings
+    WHERE id = %s OR TRIM(id::text) = TRIM(%s)
+    ''', (str(booking_id), str(booking_id)))
+    row = cursor.fetchone()
+
+    if not row:
+        conn.close()
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+            return jsonify({'success': False, 'error': 'Booking not found'}), 404
+        flash('Booking not found', 'warning')
+        return redirect(url_for('my_bookings_page'))
+
+    # Trainer authorization
+    if role == 'trainer':
+        trainer_user = (session.get('trainer_username') or '').strip().lower()
+        trainer_name = (session.get('user_name') or '').strip().lower()
+        booking_trainer = (row[8] or '').strip().lower()
+        is_coach_authorized = (
+            (bool(trainer_user) and (booking_trainer == trainer_user or trainer_user in booking_trainer or booking_trainer in trainer_user)) or
+            (bool(trainer_name) and (booking_trainer == trainer_name or trainer_name in booking_trainer or booking_trainer in trainer_name)) or
+            booking_trainer in ('', 'asdf', 'unassigned') or
+            not bool(booking_trainer)
+        )
+        if not is_coach_authorized:
+            conn.close()
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+                return jsonify({'success': False, 'error': 'You are not assigned to this booking'}), 403
+            flash('Unauthorized action', 'danger')
+            return redirect(url_for('my_bookings_page'))
+
+    student_name = row[1] or 'Swimmer'
+    owner_name = row[2] or ''
+    owner_phone = row[3] or ''
+    performed_by = session.get('user_name') or session.get('trainer_username') or role
+
+    # 1. Log audit trail
+    try:
+        cursor.execute('''
+        INSERT INTO booking_actions_audit (
+            booking_id, student_name, owner_name, owner_phone,
+            action, performed_by, role, classes_done, amount_collected, notes
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ''', (
+            str(booking_id), student_name, owner_name, owner_phone,
+            'FORCE_PAUSE', performed_by, role, classes_done, amount_collected, notes
+        ))
+    except Exception as audit_err:
+        print("Notice: booking_actions_audit logging error:", audit_err)
+
+    # 2. Compute pause dates and reschedule remaining classes
+    from zoneinfo import ZoneInfo
+    from services.booking_engine import parse_selected_days
+    from swimtrackpro.routes.bookings import is_date_holiday_or_closed
+
+    today_dt = datetime.now(ZoneInfo('Asia/Kolkata')).date()
+    today_str = today_dt.strftime('%Y-%m-%d')
+    auto_resume_dt = today_dt + timedelta(days=pause_days)
+    auto_resume_date = auto_resume_dt.strftime('%Y-%m-%d')
+
+    selected_days_str = row[10] or ''
+    weekday_map = {'mon': 0, 'tue': 1, 'wed': 2, 'thu': 3, 'fri': 4, 'sat': 5, 'sun': 6}
+    valid_days = {
+        weekday_map[d]
+        for d in parse_selected_days(selected_days_str)
+        if d in weekday_map
+    }
+
+    calendar_override = row[11]
+    if calendar_override:
+        calendar_dates = [d.strip() for d in calendar_override.split(',') if d.strip()]
+    else:
+        calendar_dates = []
+
+    # Completed dates up to today or classes_done
+    completed_dates = [d for d in calendar_dates if d < today_str][:classes_done] if calendar_dates else []
+    total_expected = len(calendar_dates) if calendar_dates else (classes_done + 8)
+    remaining_count = max(total_expected - classes_done, 1)
+
+    rescheduled_dates = []
+    temp_date = auto_resume_dt
+    while len(rescheduled_dates) < remaining_count:
+        if (not valid_days) or (temp_date.weekday() in valid_days):
+            date_cand = temp_date.strftime('%Y-%m-%d')
+            if not is_date_holiday_or_closed(date_cand):
+                rescheduled_dates.append(date_cand)
+        temp_date += timedelta(days=1)
+        if (temp_date - auto_resume_dt).days > 730:
+            break
+
+    new_calendar = completed_dates + rescheduled_dates
+    new_end_date = new_calendar[-1] if new_calendar else auto_resume_date
+
+    pause_reason_text = f"Force Paused by {role.title()}" + (f": {notes}" if notes else "")
+
+    existing_fee = int(row[9] or 0)
+    existing_status = row[14] or 'Paid'
+    existing_payment_request = row[15] or 'Paid'
+
+    new_fee = int(amount_collected) if amount_collected > 0 else existing_fee
+    new_status = 'Paid' if amount_collected > 0 else existing_status
+    new_payment_request = 'Paid' if amount_collected > 0 else existing_payment_request
+
+    cursor.execute('''
+    UPDATE bookings
+    SET
+        pause_status = 'PAUSED',
+        package_status = 'PAUSED',
+        pause_used = TRUE,
+        pause_count = COALESCE(pause_count, 0) + 1,
+        pause_date = %s,
+        pause_start_date = %s,
+        auto_resume_date = %s,
+        pause_end_date = %s,
+        paused_days = %s,
+        pause_reason = %s,
+        pause_other_reason = %s,
+        last_status_change = CURRENT_TIMESTAMP,
+        calendar_dates_override = %s,
+        end_date = %s,
+        original_end_date = COALESCE(original_end_date, %s),
+        remaining_classes_at_pause = %s,
+        fee = %s,
+        status = %s,
+        payment_request = %s
+    WHERE id = %s OR TRIM(id::text) = TRIM(%s)
+    ''', (
+        today_str,
+        today_str,
+        auto_resume_date,
+        auto_resume_date,
+        pause_days,
+        pause_reason_text,
+        notes,
+        ",".join(new_calendar),
+        new_end_date,
+        row[12],
+        remaining_count,
+        new_fee,
+        new_status,
+        new_payment_request,
+        str(booking_id),
+        str(booking_id)
+    ))
+
+    # Log to package_pause_audit
+    try:
+        ip_address = request.remote_addr or ""
+        cursor.execute('''
+        INSERT INTO package_pause_audit (booking_id, action, performed_by, pause_date, resume_date, reason, ip_address)
+        VALUES (%s, 'FORCE_PAUSE', %s, %s, %s, %s, %s)
+        ''', (
+            str(booking_id),
+            performed_by,
+            today_str,
+            auto_resume_date,
+            f"Force Paused ({pause_days} days). Classes done: {classes_done}. Reason: {notes or 'Force Paused'}",
+            ip_address
+        ))
+    except Exception as pp_err:
+        print("Notice: package_pause_audit insert error:", pp_err)
+
+    conn.commit()
+    conn.close()
+
+    flash(f"Booking for {student_name} was Force Paused for {pause_days} days (Classes done: {classes_done}, Collected: ₹{amount_collected:,.2f}).", "warning")
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+        return jsonify({
+            'success': True,
+            'message': f"Booking for {student_name} Force Paused successfully for {pause_days} days.",
+            'booking_id': str(booking_id)
+        })
+    return redirect(request.referrer or url_for('my_bookings_page'))
+
+
 def register_deletions_routes(app):
     app.add_url_rule('/delete/<booking_id>', endpoint='delete_booking', view_func=delete_booking, methods=['GET', 'POST'])
     app.add_url_rule('/approve_delete/<booking_id>', endpoint='approve_delete', view_func=approve_delete, methods=['POST'])
     app.add_url_rule('/reject_delete/<booking_id>', endpoint='reject_delete', view_func=reject_delete, methods=['POST'])
     app.add_url_rule('/booking/force_delete/<booking_id>', endpoint='force_delete_booking', view_func=force_delete_booking, methods=['POST'])
     app.add_url_rule('/booking/force_complete/<booking_id>', endpoint='force_complete_booking', view_func=force_complete_booking, methods=['POST'])
+    app.add_url_rule('/booking/force_pause/<booking_id>', endpoint='force_pause_booking', view_func=force_pause_booking, methods=['POST'])
