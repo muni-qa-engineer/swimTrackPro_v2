@@ -33,8 +33,12 @@
 {% block header %}
 <header class="site-header" style="background: rgba(9, 9, 11, 0.95);">
     <div class="container nav-container">
-        <a href="/" class="logo animate-fade-in text-decoration-none">
-            <span class="logo-icon">🏊🏼‍♂️</span> <span class="text-white fw-bold">SwimTrackPro</span>
+        <a href="/" class="logo animate-fade-in text-decoration-none" style="display: inline-flex; align-items: center; gap: 0.55rem;">
+            <span class="logo-icon" style="font-size: 1.55rem; line-height: 1;">🏊🏼‍♂️</span>
+            <span class="d-inline-flex flex-column justify-content-center" style="line-height: 1.15;">
+                <span class="brand-title text-white fw-bold" style="font-size: 1.35rem; letter-spacing: -0.3px;">SwimTrackPro</span>
+                <span class="nav-live-datetime" style="font-size: 0.65rem; font-weight: 500; color: rgba(255, 255, 255, 0.65); letter-spacing: 0.25px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; white-space: nowrap;"></span>
+            </span>
         </a>
         <nav class="nav-links animate-fade-in d-none d-lg-flex gap-4">
             <a href="/" class="nav-link text-white text-decoration-none">Home</a>
