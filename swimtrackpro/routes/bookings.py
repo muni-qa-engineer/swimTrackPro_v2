@@ -29,6 +29,8 @@ def book():
     data = load_data()
     # Enhanced validation and logic for booking
     student = (request.form.get('student') or request.form.get('name') or request.form.get('owner_name') or '').strip()
+    if student:
+        student = ' '.join(w.capitalize() for w in student.split())
     if not student:
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json or request.form.get('is_ajax') == 'true':
             return jsonify({'success': False, 'error': 'Please enter the swimmer / full name.'}), 400

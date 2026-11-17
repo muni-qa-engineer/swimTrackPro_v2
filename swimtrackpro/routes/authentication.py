@@ -223,6 +223,9 @@ def register_authentication_routes(
             else:
                 display_name = name
 
+            if display_name:
+                display_name = ' '.join(w.capitalize() for w in str(display_name).strip().split())
+
             session["remember_me"] = remember_me
             session.permanent = remember_me
             session["role"] = "guest"

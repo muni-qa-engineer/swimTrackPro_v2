@@ -85,7 +85,7 @@
                             {% for session in guest_upcoming_sessions %}
                             <div class="next-session-slide" {% if not loop.first %}style="display:none;"{% endif %}>
                                 <div style="font-weight: 700; font-size: 1rem; margin-top: 0.25rem;">
-                                    🏊 <span style="background: linear-gradient(135deg, {{ session.color_code }}, {{ session.color_code }}aa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{{ session.name }}</span>
+                                    🏊 <span style="background: linear-gradient(135deg, {{ session.color_code }}, {{ session.color_code }}aa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{{ session.name|title }}</span>
                                 </div>
                                 {% if session.completed_classes == 0 %}
                                 <div class="text-secondary" style="font-size: 0.85rem; margin-top: 0.1rem;">
@@ -101,7 +101,7 @@
                         </div>
                     {% elif next_session_name and next_session_name != '--' %}
                         <div class="text-muted" style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Next Session</div>
-                        <div style="font-weight: 700; font-size: 1rem; margin-top: 0.25rem;">🏊 {{ next_session_name }}</div>
+                        <div style="font-weight: 700; font-size: 1rem; margin-top: 0.25rem;">🏊 {{ next_session_name|title }}</div>
                         <div class="text-secondary" style="font-size: 0.85rem; margin-top: 0.1rem;">
                             {{ next_session_date }} {% if next_session_time and next_session_time != '--' %}• {{ next_session_time }}{% endif %}
                         </div>
@@ -194,12 +194,12 @@
                         You have <strong class="text-white">{{ total_makeup_credits }} make-up class credit{{ 's' if total_makeup_credits > 1 else '' }}</strong> available from missed sessions. Your package end date remains untouched and will not expire early.
                     </p>
 
-                    <div class="d-flex flex-column gap-2 mb-3">
+                    <div class="d-flex flex-column gap-2 mb-3 custom-scrollbar" style="max-height: 232px; overflow-y: auto; overflow-x: hidden; padding-right: 4px;">
                         {% for item in available_makeup_cards %}
-                        <div class="p-3 rounded d-flex justify-content-between align-items-center" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08);">
+                        <div class="p-3 rounded d-flex justify-content-between align-items-center" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); flex-shrink: 0;">
                             <div>
                                 <div class="text-white fw-bold" style="font-size: 0.95rem;">
-                                    🏊 {{ item.student_name }}
+                                    🏊 {{ item.student_name|title }}
                                     <span class="badge ms-2" style="background: rgba(255, 255, 255, 0.08); color: #94a3b8; font-size: 0.7rem;">{{ item.package }}</span>
                                 </div>
                                 <div class="text-muted small mt-1" style="font-size: 0.76rem;">
@@ -248,7 +248,7 @@
                                 <div class="p-3 rounded" style="background: rgba(255, 255, 255, 0.03); border: 1px solid {% if is_paused %}rgba(245, 158, 11, 0.45){% else %}rgba(255, 255, 255, 0.08){% endif %};">
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <div class="d-flex align-items-center gap-2">
-                                            <span style="font-weight: 700; color: #fff; font-size: 1rem;">🏊 {{ b.student }}</span>
+                                            <span style="font-weight: 700; color: #fff; font-size: 1rem;">🏊 {{ b.student|title }}</span>
                                             <span class="badge" style="background: rgba(255, 255, 255, 0.08); color: #e2e8f0; font-size: 0.72rem;">{{ b.package }}</span>
                                         </div>
                                         {% if is_paused %}
@@ -362,8 +362,8 @@
 
                                 <!-- Column 2: Swimmer Name & Skill Level Badge -->
                                 <div class="swimmer-col-info min-w-0" style="min-width: 0;">
-                                    <div class="text-white fw-bold text-truncate" style="font-size: 0.95rem; line-height: 1.25;" title="{{ s.name }}">
-                                        {{ s.name }}
+                                    <div class="text-white fw-bold text-truncate" style="font-size: 0.95rem; line-height: 1.25;" title="{{ s.name|title }}">
+                                        {{ s.name|title }}
                                     </div>
                                     <div class="mt-1">
                                         <span class="badge" style="background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.25); font-size: 0.65rem; padding: 2px 7px; letter-spacing: 0.4px; font-weight: 600; text-transform: uppercase;">
@@ -611,8 +611,8 @@
                             <option value="" disabled selected>-- Select an active package --</option>
                             {% for b in bookings %}
                                 {% if b.is_long_term and not b.is_completed and not b.is_paused %}
-                                    <option value="{{ b.id }}" data-avail="{{ b.available_pause_days }}" data-alloc="{{ b.allocated_pause_days }}" data-end="{{ b.end_date }}" data-student="{{ b.student }}" data-pkg="{{ b.package }}">
-                                        {{ b.package }} ({{ b.student }}) — {{ b.available_pause_days }} pause days left
+                                    <option value="{{ b.id }}" data-avail="{{ b.available_pause_days }}" data-alloc="{{ b.allocated_pause_days }}" data-end="{{ b.end_date }}" data-student="{{ b.student|title }}" data-pkg="{{ b.package }}">
+                                        {{ b.package }} ({{ b.student|title }}) — {{ b.available_pause_days }} pause days left
                                     </option>
                                 {% endif %}
                             {% endfor %}
@@ -711,7 +711,7 @@
                             <select class="form-select" id="skipSessionSelect" required style="background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.15); color: white;" onchange="updateSkipFormAction()">
                                 {% for s in guest_all_future %}
                                     <option value="{{ s.booking_id }}|{{ s.raw_date }}" data-skip-rem="{{ s.skip_remaining }}" data-eligible="{{ 'true' if s.skip_eligible else 'false' }}">
-                                        {{ s.date }} - {{ s.time }} ({{ s.name }})
+                                        {{ s.date }} - {{ s.time }} ({{ s.name|title }})
                                     </option>
                                 {% endfor %}
                             </select>

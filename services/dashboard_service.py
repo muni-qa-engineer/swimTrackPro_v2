@@ -465,6 +465,9 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
     has_pausable_package = any(not b.get('is_completed', False) and b.get('is_long_term', False) for b in user_bookings)
 
     for b in user_bookings:
+        raw_s = b.get('student')
+        if raw_s:
+            b['student'] = ' '.join(w.capitalize() for w in str(raw_s).split())
         b['is_paused'] = str(b.get('pause_status', '')).upper() in ('PAUSED', 'PAUSE')
         if b.get('end_date'):
             try:
@@ -492,11 +495,13 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
     makeup_sessions = total_makeup_credits
     available_makeup_cards = []
     for b in user_bookings:
+        raw_student = b.get('student', '--')
+        formatted_student = ' '.join(w.capitalize() for w in str(raw_student).split()) if raw_student else '--'
         for c in b.get('available_credits_list', []):
             available_makeup_cards.append({
                 'credit_id': c['id'],
                 'booking_id': str(b.get('id')),
-                'student_name': b.get('student', '--'),
+                'student_name': formatted_student,
                 'package': b.get('package', '--'),
                 'original_date': c['original_date'],
                 'created_at': c.get('created_at'),
@@ -715,6 +720,7 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
             active_pkg = active_bkg.get('package', '')
             
         swimmer_copy = dict(swimmer)
+        swimmer_copy['name'] = ' '.join(w.capitalize() for w in swimmer_name.split()) if swimmer_name else ''
         swimmer_copy['completed_sessions'] = completed_total
         swimmer_copy['total_sessions'] = sessions_total
         swimmer_copy['next_session'] = next_session_dt
