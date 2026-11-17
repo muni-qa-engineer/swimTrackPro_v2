@@ -121,6 +121,27 @@
                 </div>
             </div>
 
+            <!-- Make-up Sessions Credit Metric Card -->
+            <div class="metric-card warning" id="tourMakeupCreditsMetricCard">
+                <div class="metric-icon" style="background: rgba(6, 182, 212, 0.15); color: #38bdf8;">
+                    <i class="fa-solid fa-ticket-simple"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div class="text-muted" style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Make-up Credits</div>
+                    <div class="d-flex align-items-baseline gap-2 mt-1">
+                        <span style="font-size: 1.8rem; font-weight: 800; line-height: 1; color: #38bdf8;">
+                            {{ total_makeup_credits if total_makeup_credits is defined else 0 }}
+                        </span>
+                        <span class="text-secondary small" style="font-size: 0.75rem;">Available</span>
+                        <span class="text-muted mx-0.5">•</span>
+                        <span style="font-size: 1.15rem; font-weight: 700; line-height: 1; color: {% if expired_makeup_credits and expired_makeup_credits > 0 %}#f87171{% else %}#94a3b8{% endif %};">
+                            {{ expired_makeup_credits if expired_makeup_credits is defined else 0 }}
+                        </span>
+                        <span class="text-secondary small" style="font-size: 0.75rem;">Expired</span>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <!-- Dashboard Widgets Layout -->
@@ -173,30 +194,68 @@
                     {% endif %}
                 </div>
 
-                <!-- Dedicated Make-Up Classes Card (Displays ONLY if make-up credits > 0) -->
-                {% if total_makeup_credits and total_makeup_credits > 0 %}
-                <div class="glass-panel animate-fade-in" style="padding: 1.5rem; border: 1px solid rgba(6, 182, 212, 0.45); background: linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(15, 23, 42, 0.75) 100%);">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
+                <!-- Dedicated Make-Up Sessions Credit Card -->
+                <div class="glass-panel animate-fade-in" id="tourMakeupSessionsCard" style="padding: 1.5rem; border: 1px solid rgba(6, 182, 212, 0.35); background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(15, 23, 42, 0.85) 100%);">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
                         <div class="d-flex align-items-center gap-2">
-                            <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(6, 182, 212, 0.2); border: 1px solid rgba(6, 182, 212, 0.4); display: flex; align-items: center; justify-content: center; color: #38bdf8;">
+                            <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(6, 182, 212, 0.18); border: 1px solid rgba(6, 182, 212, 0.4); display: flex; align-items: center; justify-content: center; color: #38bdf8; font-size: 1.1rem;">
                                 <i class="fa-solid fa-ticket-simple"></i>
                             </div>
                             <h3 class="font-display" style="font-size: 1.2rem; margin: 0; color: #fff;">
-                                Make-up Sessions Available
+                                Make-up Sessions Credit
                             </h3>
                         </div>
-                        <span class="badge fw-bold" style="background: rgba(6, 182, 212, 0.25); color: #38bdf8; border: 1px solid rgba(6, 182, 212, 0.4); font-size: 0.85rem; padding: 0.4rem 0.75rem; border-radius: 9999px;">
-                            {{ total_makeup_credits }} Credit{{ 's' if total_makeup_credits > 1 else '' }}
-                        </span>
+                        <div class="d-flex align-items-center gap-1.5 flex-wrap justify-content-end">
+                            <span class="badge fw-bold" style="background: rgba(6, 182, 212, 0.2); color: #38bdf8; border: 1px solid rgba(6, 182, 212, 0.35); font-size: 0.72rem; padding: 0.35rem 0.65rem; border-radius: 9999px;">
+                                <i class="fa-solid fa-circle-check me-1"></i> {{ total_makeup_credits if total_makeup_credits is defined else 0 }} Available
+                            </span>
+                            <span class="badge fw-bold" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); font-size: 0.72rem; padding: 0.35rem 0.65rem; border-radius: 9999px;">
+                                <i class="fa-solid fa-clock-rotate-left me-1"></i> {{ expired_makeup_credits if expired_makeup_credits is defined else 0 }} Expired
+                            </span>
+                        </div>
                     </div>
 
-                    <p class="text-secondary small mb-3" style="font-size: 0.82rem;">
-                        You have <strong class="text-white">{{ total_makeup_credits }} make-up class credit{{ 's' if total_makeup_credits > 1 else '' }}</strong> available from missed sessions. Your package end date remains untouched and will not expire early.
+                    <!-- Quick Stats: Available vs Expired Credits -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <div class="p-2.5 rounded text-center" style="background: rgba(6, 182, 212, 0.08); border: 1px solid rgba(6, 182, 212, 0.25); border-radius: 12px;">
+                                <div class="text-muted" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Available Credits</div>
+                                <div class="d-flex align-items-baseline justify-content-center gap-1 my-0.5">
+                                    <span style="font-size: 1.6rem; font-weight: 800; color: #38bdf8; line-height: 1;">
+                                        {{ total_makeup_credits if total_makeup_credits is defined else 0 }}
+                                    </span>
+                                    <span class="text-secondary" style="font-size: 0.75rem;">credit{{ 's' if total_makeup_credits != 1 else '' }}</span>
+                                </div>
+                                <div style="font-size: 0.7rem; color: #10b981; font-weight: 600;">
+                                    <i class="fa-solid fa-circle-check me-0.5"></i> Valid to reschedule
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2.5 rounded text-center" style="background: rgba(239, 68, 68, 0.06); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 12px;">
+                                <div class="text-muted" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Expired Credits</div>
+                                <div class="d-flex align-items-baseline justify-content-center gap-1 my-0.5">
+                                    <span style="font-size: 1.6rem; font-weight: 800; color: {% if expired_makeup_credits and expired_makeup_credits > 0 %}#f87171{% else %}#94a3b8{% endif %}; line-height: 1;">
+                                        {{ expired_makeup_credits if expired_makeup_credits is defined else 0 }}
+                                    </span>
+                                    <span class="text-secondary" style="font-size: 0.75rem;">credit{{ 's' if expired_makeup_credits != 1 else '' }}</span>
+                                </div>
+                                <div style="font-size: 0.7rem; color: {% if expired_makeup_credits and expired_makeup_credits > 0 %}#f87171{% else %}#94a3b8{% endif %}; font-weight: 600;">
+                                    <i class="fa-solid fa-clock-rotate-left me-0.5"></i> Package ended
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="text-secondary small mb-3" style="font-size: 0.8rem; line-height: 1.45;">
+                        You have <strong class="text-white">{{ total_makeup_credits if total_makeup_credits is defined else 0 }} make-up class credit{{ 's' if total_makeup_credits != 1 else '' }}</strong> available from missed sessions. Credits remain valid until your package expiry date.
                     </p>
 
+                    <!-- Sessions List (Available & Expired) -->
+                    {% if (available_makeup_cards and available_makeup_cards|length > 0) or (expired_makeup_cards and expired_makeup_cards|length > 0) %}
                     <div class="d-flex flex-column gap-2 mb-3 custom-scrollbar" style="max-height: 232px; overflow-y: auto; overflow-x: hidden; padding-right: 4px;">
                         {% for item in available_makeup_cards %}
-                        <div class="p-3 rounded d-flex justify-content-between align-items-center" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); flex-shrink: 0;">
+                        <div class="p-3 rounded d-flex justify-content-between align-items-center" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(6, 182, 212, 0.2); flex-shrink: 0;">
                             <div>
                                 <div class="text-white fw-bold" style="font-size: 0.95rem;">
                                     🏊 {{ item.student_name|title }}
@@ -212,18 +271,48 @@
                             </span>
                         </div>
                         {% endfor %}
+
+                        {% for item in expired_makeup_cards %}
+                        <div class="p-3 rounded d-flex justify-content-between align-items-center" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(239, 68, 68, 0.18); opacity: 0.75; flex-shrink: 0;">
+                            <div>
+                                <div class="text-white fw-bold" style="font-size: 0.95rem;">
+                                    🏊 {{ item.student_name|title }}
+                                    <span class="badge ms-2" style="background: rgba(255, 255, 255, 0.06); color: #94a3b8; font-size: 0.7rem;">{{ item.package }}</span>
+                                </div>
+                                <div class="text-muted small mt-1" style="font-size: 0.76rem;">
+                                    <i class="fa-regular fa-calendar-xmark me-1 text-secondary"></i> Missed: <span class="text-secondary fw-semibold">{{ item.original_date }}</span>
+                                    • Package expired ({{ item.valid_until }})
+                                </div>
+                            </div>
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" style="font-size: 0.72rem; font-weight: 700;">
+                                <i class="fa-solid fa-circle-xmark me-1"></i> Expired
+                            </span>
+                        </div>
+                        {% endfor %}
                     </div>
+                    {% else %}
+                    <div class="text-center py-3 my-2" style="background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.08);">
+                        <i class="fa-solid fa-circle-check text-success fs-3 mb-2 d-block" style="opacity: 0.85;"></i>
+                        <div class="text-white fw-semibold small">No make-up credits currently available</div>
+                        <small class="text-muted">If you miss a scheduled class, your make-up credit will appear here.</small>
+                    </div>
+                    {% endif %}
 
                     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 pt-2" style="border-top: 1px solid rgba(255, 255, 255, 0.08);">
                         <div class="text-muted" style="font-size: 0.75rem;">
                             <i class="fa-solid fa-shield-halved text-cyan-400 me-1"></i> Package end date is unaffected.
                         </div>
+                        {% if total_makeup_credits and total_makeup_credits > 0 %}
                         <a href="/calendar" class="btn btn-sm w-100 w-sm-auto fw-bold px-3 py-1.5" style="background: #06b6d4; color: #020617; border-radius: 9999px; font-size: 0.8rem; box-shadow: 0 4px 15px rgba(6, 182, 212, 0.25);">
                             <i class="fa-solid fa-calendar-plus me-1"></i> Reschedule Make-up
                         </a>
+                        {% else %}
+                        <button type="button" class="btn btn-sm w-100 w-sm-auto text-muted px-3 py-1.5" disabled style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 9999px; font-size: 0.8rem; cursor: not-allowed;">
+                            <i class="fa-solid fa-calendar-plus me-1"></i> No Credits to Reschedule
+                        </button>
+                        {% endif %}
                     </div>
                 </div>
-                {% endif %}
 
                 <!-- Membership & Flexibility Card (Cult.fit Model) -->
                 <div class="glass-panel" id="tourMembershipCard" style="padding: 1.5rem;">

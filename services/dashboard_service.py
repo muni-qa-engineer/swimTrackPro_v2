@@ -492,8 +492,11 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
     completed_sessions = sum(int(b.get('completed_classes', 0) or 0) for b in user_bookings)
     remaining_sessions = sum(int(b.get('remaining_classes', 0) or 0) for b in user_bookings)
     total_makeup_credits = sum(b.get('available_makeup_credits_count', 0) for b in user_bookings)
+    expired_makeup_credits = sum(b.get('expired_makeup_credits_count', 0) for b in user_bookings)
     makeup_sessions = total_makeup_credits
     available_makeup_cards = []
+    expired_makeup_cards = []
+
     for b in user_bookings:
         raw_student = b.get('student', '--')
         formatted_student = ' '.join(w.capitalize() for w in str(raw_student).split()) if raw_student else '--'
@@ -506,7 +509,20 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
                 'original_date': c['original_date'],
                 'created_at': c.get('created_at'),
                 'trainer_username': b.get('trainer_username'),
-                'valid_until': b.get('end_date_display', '--')
+                'valid_until': b.get('end_date_display', '--'),
+                'status': 'available'
+            })
+        for c in b.get('expired_credits_list', []):
+            expired_makeup_cards.append({
+                'credit_id': c['id'],
+                'booking_id': str(b.get('id')),
+                'student_name': formatted_student,
+                'package': b.get('package', '--'),
+                'original_date': c['original_date'],
+                'created_at': c.get('created_at'),
+                'trainer_username': b.get('trainer_username'),
+                'valid_until': b.get('end_date_display', '--'),
+                'status': 'expired'
             })
     total_skips_remaining = sum(int(b.get('skip_remaining', 0) or 0) for b in user_bookings)
 
@@ -814,7 +830,10 @@ def _process_common_dashboard_data(user_bookings, user_students, current_role, c
         'remaining_sessions': remaining_sessions,
         'makeup_sessions': makeup_sessions,
         'total_makeup_credits': total_makeup_credits,
+        'available_makeup_credits': total_makeup_credits,
+        'expired_makeup_credits': expired_makeup_credits,
         'available_makeup_cards': available_makeup_cards,
+        'expired_makeup_cards': expired_makeup_cards,
         'total_skips_remaining': total_skips_remaining,
         'location_suggestions': location_suggestions,
         'current_month_name': current_month_name,

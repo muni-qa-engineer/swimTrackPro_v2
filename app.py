@@ -776,26 +776,38 @@ def load_data():
         # Total credits created for this booking
         booking['makeup_credits_used'] = len(booking_credits)
 
-        # First available credit
-        available_credits = [
-            r for r in booking_credits if r[3] == 'available'
-        ]
-        first_available = available_credits[0] if available_credits else None
+        # Separate credits into available vs expired
+        # If the package has expired (is_expired is True), any unused credit is expired
+        available_credits = []
+        expired_credits = []
+        used_credits = []
 
-        booking['available_makeup_credit_id'] = (
-            first_available[0] if first_available else None
-        )
-        booking['has_available_makeup_credit'] = first_available is not None
-        booking['available_makeup_credits_count'] = len(available_credits)
-        booking['available_credits_list'] = [
-            {
+        for r in booking_credits:
+            c_dict = {
                 'id': r[0],
                 'original_date': str(r[2]),
                 'status': r[3],
                 'created_at': str(r[4]) if len(r) > 4 and r[4] else ''
             }
-            for r in available_credits
-        ]
+            if r[3] == 'used':
+                used_credits.append(c_dict)
+            elif r[3] == 'expired' or (is_expired and r[3] == 'available'):
+                c_dict['status'] = 'expired'
+                expired_credits.append(c_dict)
+            elif r[3] == 'available':
+                available_credits.append(c_dict)
+
+        first_available = available_credits[0] if available_credits else None
+
+        booking['available_makeup_credit_id'] = (
+            first_available['id'] if first_available else None
+        )
+        booking['has_available_makeup_credit'] = first_available is not None
+        booking['available_makeup_credits_count'] = len(available_credits)
+        booking['available_credits_list'] = available_credits
+        booking['expired_makeup_credits_count'] = len(expired_credits)
+        booking['expired_credits_list'] = expired_credits
+        booking['all_credits_list'] = available_credits + expired_credits + used_credits
         booking['attended_sessions'] = list(attended_set)
         booking['attended_sessions_str'] = attended_raw or ''
 
