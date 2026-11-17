@@ -501,17 +501,17 @@
             <div class="desktop-right-nav animate-fade-in" style="display: flex; align-items: center; gap: 1rem;">
                 {% if session.get('user_name') %}
                     {% if session.get('role') in ['guest', 'trainer'] %}
-                    <!-- Quick Guided Tour Button -->
-                    <button type="button" class="btn btn-sm btn-outline-info rounded-pill d-inline-flex align-items-center gap-1.5 px-3 py-1" onclick="startAppTour('{{ session.get('role') }}', '{{ session.get('user_name')|escape }}')" title="Start Guided Tour" style="font-size: 0.8rem; border-color: rgba(6, 182, 212, 0.45); color: #38bdf8; background: rgba(6, 182, 212, 0.08); transition: all 0.2s;">
-                        <i class="fa-solid fa-compass"></i> <span class="d-none d-md-inline">Tour</span>
-                    </button>
+                    <!-- Quick Guided Tour Trigger Icon (Sized to match bell & profile avatar) -->
+                    <div id="tourTriggerNavIcon" style="position: relative; cursor: pointer; color: var(--color-text-secondary); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all 0.2s; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);" onclick="startAppTour('{{ session.get('role') }}', '{{ session.get('user_name')|escape }}')" title="Start Guided Tour" onmouseover="this.style.color='#38bdf8'; this.style.borderColor='rgba(6, 182, 212, 0.45)';" onmouseout="this.style.color='var(--color-text-secondary)'; this.style.borderColor='rgba(255, 255, 255, 0.1)';">
+                        <i class="fa-solid fa-compass" style="font-size: 1.15rem;"></i>
+                    </div>
                     {% endif %}
 
                     <!-- Notification Bell (Global) -->
-                    <div style="position: relative; cursor: pointer; color: var(--color-text-secondary); margin-right: 0.5rem;" data-bs-toggle="modal" data-bs-target="#notificationsModal" onclick="markNoticesAsRead()">
+                    <div id="notificationBellNavIcon" style="position: relative; cursor: pointer; color: var(--color-text-secondary); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all 0.2s; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);" data-bs-toggle="modal" data-bs-target="#notificationsModal" onclick="markNoticesAsRead()" title="Notifications" onmouseover="this.style.color='#ffffff'; this.style.borderColor='rgba(255, 255, 255, 0.2)';" onmouseout="this.style.color='var(--color-text-secondary)'; this.style.borderColor='rgba(255, 255, 255, 0.1)';">
                         <i class="fa-solid fa-bell" style="font-size: 1.15rem;"></i>
                         {% if unread_notices_count is defined and unread_notices_count > 0 %}
-                        <span id="unreadNoticeBadge" style="position: absolute; top: -5px; right: -8px; background: var(--color-danger); color: white; font-size: 0.6rem; font-weight: bold; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">{{ unread_notices_count }}</span>
+                        <span id="unreadNoticeBadge" style="position: absolute; top: -3px; right: -3px; background: var(--color-danger); color: white; font-size: 0.6rem; font-weight: bold; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid #0f172a;">{{ unread_notices_count }}</span>
                         {% endif %}
                     </div>
 
@@ -598,9 +598,16 @@
     <div class="modal fade" id="notificationsModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content glass-panel" style="background: rgba(15, 15, 18, 0.95); border: 1px solid rgba(255,255,255,0.1);">
-                <div class="modal-header border-bottom-0 pb-0">
+                <div class="modal-header border-bottom-0 pb-0 d-flex align-items-center justify-content-between">
                     <h5 class="modal-title font-display text-white"><i class="fa-solid fa-bullhorn text-accent me-2"></i> Notice Board</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="d-flex align-items-center gap-2">
+                        {% if all_notices is defined and all_notices|length > 0 %}
+                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-2.5 py-0.5" onclick="clearAllNotices()" id="clearAllNoticesBoardBtn" style="font-size: 0.75rem;">
+                            <i class="fa-solid fa-trash-can me-1"></i> Clear All
+                        </button>
+                        {% endif %}
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
                 </div>
                 <div class="modal-body">
                     {% if all_notices is defined and all_notices|length > 0 %}
@@ -619,8 +626,9 @@
                                         <span class="text-muted" style="font-size: 0.75rem;">{{ n.created_at.strftime('%d %b %Y, %I:%M %p') }}</span>
                                         {% if (session.get('role') == 'admin' and n.author_type == 'admin') or (session.get('role') == 'trainer' and n.author_type == 'trainer' and n.author_id == session.get('trainer_username')) %}
                                             <button class="btn btn-sm btn-link text-danger ms-2 p-0" onclick="deleteNotice({{ n.id }}, this)" title="Delete Announcement"><i class="fa-solid fa-trash-can"></i></button>
+                                        {% else %}
+                                            <button class="btn btn-sm btn-link text-danger ms-2 p-0" onclick="dismissNotice({{ n.id }}, this)" title="Delete Notification"><i class="fa-solid fa-trash-can"></i></button>
                                         {% endif %}
-                                        <button class="btn btn-sm btn-link text-secondary ms-2 p-0" onclick="dismissNotice({{ n.id }}, this)" title="Dismiss Notification"><i class="fa-solid fa-xmark"></i></button>
                                     </div>
                                 </div>
                                 <div class="text-secondary" style="font-size: 0.85rem; line-height: 1.5; white-space: pre-line;">{{ n.message }}</div>
@@ -871,6 +879,28 @@
                 btnElem.disabled = false;
                 btnElem.innerHTML = '<i class="fa-solid fa-xmark"></i>';
             });
+        }
+        
+        function clearAllNotices() {
+            const modal = document.getElementById('notificationsModal');
+            if (!modal) return;
+            const cards = modal.querySelectorAll('.notice-card');
+            cards.forEach(c => {
+                const id = c.dataset.noticeId;
+                if (id) {
+                    fetch('/api/notices/' + id + '/dismiss', { method: 'POST' }).catch(() => {});
+                }
+                c.style.transition = 'all 0.25s ease';
+                c.style.opacity = '0';
+                c.style.transform = 'scale(0.95)';
+            });
+            setTimeout(() => {
+                cards.forEach(c => c.remove());
+                const badge = document.getElementById('unreadNoticeBadge');
+                if (badge) badge.style.display = 'none';
+                const clearBtn = document.getElementById('clearAllNoticesBoardBtn');
+                if (clearBtn) clearBtn.remove();
+            }, 250);
         }
         
         function ensureConfirmToastStyles() {
@@ -1330,7 +1360,7 @@
             setInterval(updateClock, 1000);
         })();
     </script>
-    <script src="{{ url_for('static', filename='js/app_tour.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app_tour.js') }}?v=20261117_05"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -524,27 +524,45 @@
 
 <!-- Notifications Modal -->
 <div class="modal fade" id="notificationsModal" tabindex="-1" aria-labelledby="notificationsModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content rounded-4 border-0 shadow" style="background: var(--color-surface); color: white;">
-      <div class="modal-header border-bottom-0 pb-0">
-        <h5 class="modal-title fw-bold" id="notificationsModalLabel"><i class="fa-solid fa-bell text-primary"></i> Notifications</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content rounded-4 border-0 shadow" style="background: #111827; border: 1px solid rgba(255,255,255,0.12) !important; color: white;">
+      <div class="modal-header border-bottom border-white-10 pb-2.5">
+        <div class="d-flex align-items-center gap-2">
+            <h5 class="modal-title fw-bold mb-0" id="notificationsModalLabel" style="font-size: 1.15rem;">
+                <i class="fa-solid fa-bell text-primary me-1.5"></i> Notifications
+            </h5>
+            {% if notification_list %}
+            <span class="badge bg-primary rounded-pill px-2" id="notifModalCountBadge" style="font-size: 0.72rem;">{{ notification_list|length }}</span>
+            {% endif %}
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            {% if notification_list %}
+            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-2.5 py-1" onclick="clearAllNotifications()" id="clearAllNotifsBtn" style="font-size: 0.75rem;">
+                <i class="fa-solid fa-trash-can me-1"></i> Clear All
+            </button>
+            {% endif %}
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
       </div>
-      <div class="modal-body pt-3">
-        <div class="d-flex flex-column gap-2">
+      <div class="modal-body pt-3 pb-3">
+        <div class="d-flex flex-column gap-2" id="notificationsListContainer">
           {% if notification_list %}
             {% for notification in notification_list %}
-              <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); font-size: 0.95rem;">
-                {{ notification }}
+              <div class="notif-item-card p-3 rounded-3 d-flex align-items-start justify-content-between gap-2.5" id="notif-item-{{ loop.index0 }}" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); font-size: 0.92rem; transition: all 0.25s ease;">
+                <div class="text-white flex-grow-1 notif-item-text" style="line-height: 1.45;">
+                  {{ notification }}
+                </div>
+                <button type="button" class="btn btn-sm text-danger p-0 ms-2 notif-delete-btn" onclick="deleteNotificationItem('{{ loop.index0 }}', this)" title="Delete Notification" style="background: transparent; border: none; font-size: 1rem; opacity: 0.8; transition: all 0.2s;" onmouseover="this.style.opacity='1'; this.style.transform='scale(1.2)';" onmouseout="this.style.opacity='0.8'; this.style.transform='scale(1)';">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
               </div>
             {% endfor %}
-          {% else %}
-            <div class="text-center py-4 text-muted">
-              <div class="fs-1 mb-2"><i class="fa-solid fa-bell-slash"></i></div>
-              <p class="mb-0 fw-semibold">All caught up!</p>
-              <small>No new notifications at this time.</small>
-            </div>
           {% endif %}
+          <div id="noNotifsState" class="text-center py-4 text-muted" style="{% if notification_list %}display: none;{% endif %}">
+            <div class="fs-1 mb-2"><i class="fa-solid fa-bell-slash"></i></div>
+            <p class="mb-0 fw-semibold text-white">All caught up!</p>
+            <small class="text-secondary">No new notifications at this time.</small>
+          </div>
         </div>
       </div>
     </div>
@@ -707,10 +725,105 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/app_tour.js') }}"></script>
 <script>
     window.__SWIMTRACK_USER_ROLE = 'guest';
     window.__SWIMTRACK_USER_NAME = '{{ session.get("user_name")|escape }}';
+
+    // Notifications deletion and clear-all handling
+    function deleteNotificationItem(id, btnElem) {
+        const card = btnElem ? btnElem.closest('.notif-item-card') : document.getElementById('notif-item-' + id);
+        if (card) {
+            const text = card.querySelector('.notif-item-text')?.innerText.trim() || '';
+            card.style.transition = 'all 0.25s ease';
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.92)';
+            setTimeout(() => {
+                card.remove();
+                saveDismissedNotification(text);
+                updateNotifBadgeCount();
+            }, 250);
+        }
+    }
+
+    function clearAllNotifications() {
+        const container = document.getElementById('notificationsListContainer');
+        if (!container) return;
+        const cards = container.querySelectorAll('.notif-item-card');
+        cards.forEach(c => {
+            const text = c.querySelector('.notif-item-text')?.innerText.trim() || '';
+            saveDismissedNotification(text);
+            c.style.transition = 'all 0.25s ease';
+            c.style.opacity = '0';
+            c.style.transform = 'scale(0.92)';
+        });
+        setTimeout(() => {
+            cards.forEach(c => c.remove());
+            updateNotifBadgeCount();
+            const clearBtn = document.getElementById('clearAllNotifsBtn');
+            if (clearBtn) clearBtn.remove();
+        }, 250);
+    }
+
+    function saveDismissedNotification(text) {
+        if (!text) return;
+        try {
+            const user = '{{ session.get("user_name")|escape }}';
+            const key = 'stp_dismissed_notifs_' + user;
+            const dismissed = JSON.parse(localStorage.getItem(key) || '[]');
+            if (!dismissed.includes(text)) {
+                dismissed.push(text);
+                localStorage.setItem(key, JSON.stringify(dismissed));
+            }
+        } catch(e) {}
+    }
+
+    function updateNotifBadgeCount() {
+        const container = document.getElementById('notificationsListContainer');
+        const remaining = container ? container.querySelectorAll('.notif-item-card').length : 0;
+        const badge = document.getElementById('unreadNoticeBadge');
+        const modalBadge = document.getElementById('notifModalCountBadge');
+        if (badge) {
+            if (remaining > 0) {
+                badge.textContent = remaining;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+        if (modalBadge) {
+            if (remaining > 0) {
+                modalBadge.textContent = remaining;
+                modalBadge.style.display = 'inline-block';
+            } else {
+                modalBadge.style.display = 'none';
+            }
+        }
+        const emptyState = document.getElementById('noNotifsState');
+        if (emptyState) {
+            emptyState.style.display = remaining === 0 ? 'block' : 'none';
+        }
+    }
+
+    // Hide previously dismissed notifications on page load
+    document.addEventListener("DOMContentLoaded", function() {
+        try {
+            const user = '{{ session.get("user_name")|escape }}';
+            const key = 'stp_dismissed_notifs_' + user;
+            const dismissed = JSON.parse(localStorage.getItem(key) || '[]');
+            if (dismissed.length > 0) {
+                const container = document.getElementById('notificationsListContainer');
+                if (container) {
+                    container.querySelectorAll('.notif-item-card').forEach(card => {
+                        const text = card.querySelector('.notif-item-text')?.innerText.trim() || '';
+                        if (dismissed.includes(text)) {
+                            card.remove();
+                        }
+                    });
+                    updateNotifBadgeCount();
+                }
+            }
+        } catch(e) {}
+    });
 
     // Upcoming sessions carousel
     document.addEventListener('DOMContentLoaded', function() {
