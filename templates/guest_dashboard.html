@@ -782,6 +782,12 @@
         const remaining = container ? container.querySelectorAll('.notif-item-card').length : 0;
         const badge = document.getElementById('unreadNoticeBadge');
         const modalBadge = document.getElementById('notifModalCountBadge');
+        const clearBtn = document.getElementById('clearAllNotifsBtn');
+
+        if (clearBtn) {
+            clearBtn.style.display = remaining > 0 ? 'inline-flex' : 'none';
+        }
+
         if (badge) {
             if (remaining > 0) {
                 badge.textContent = remaining;
@@ -821,8 +827,12 @@
                     });
                     updateNotifBadgeCount();
                 }
+            } else {
+                updateNotifBadgeCount();
             }
-        } catch(e) {}
+        } catch(e) {
+            updateNotifBadgeCount();
+        }
     });
 
     // Upcoming sessions carousel

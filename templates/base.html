@@ -611,7 +611,7 @@
                 </div>
                 <div class="modal-body">
                     {% if all_notices is defined and all_notices|length > 0 %}
-                        <div class="d-flex flex-column gap-3">
+                        <div class="d-flex flex-column gap-3" id="noticeCardsContainer">
                         {% for n in all_notices %}
                             <div class="notice-card" style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 1rem; border-left: 3px solid {% if n.author_type == 'admin' %}var(--color-danger){% else %}var(--color-primary){% endif %};" data-notice-id="{{ n.id }}">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -638,10 +638,16 @@
                             </div>
                         {% endfor %}
                         </div>
-                    {% else %}
-                        <div class="text-center text-muted py-4">
+                        <div id="noticeBoardEmptyState" class="text-center text-muted py-4" style="display: none;">
                             <i class="fa-solid fa-envelope-open mb-2" style="font-size: 2rem; opacity: 0.5;"></i>
-                            <p class="mb-0">You're all caught up! No notices here.</p>
+                            <p class="mb-0 text-white fw-semibold">You're all caught up!</p>
+                            <small class="text-secondary">No notices here.</small>
+                        </div>
+                    {% else %}
+                        <div id="noticeBoardEmptyState" class="text-center text-muted py-4">
+                            <i class="fa-solid fa-envelope-open mb-2" style="font-size: 2rem; opacity: 0.5;"></i>
+                            <p class="mb-0 text-white fw-semibold">You're all caught up!</p>
+                            <small class="text-secondary">No notices here.</small>
                         </div>
                     {% endif %}
                 </div>
@@ -832,7 +838,10 @@
                         card.style.transition = 'all 0.3s ease';
                         card.style.opacity = '0';
                         card.style.transform = 'scale(0.95)';
-                        setTimeout(() => card.remove(), 300);
+                        setTimeout(() => {
+                            card.remove();
+                            updateNoticeBoardState();
+                        }, 300);
                     }
                 } else {
                     alert('Failed to delete notice: ' + data.error);
@@ -867,7 +876,10 @@
                         card.style.transition = 'all 0.3s ease';
                         card.style.opacity = '0';
                         card.style.transform = 'scale(0.95)';
-                        setTimeout(() => card.remove(), 300);
+                        setTimeout(() => {
+                            card.remove();
+                            updateNoticeBoardState();
+                        }, 300);
                     }
                 } else {
                     alert('Failed to dismiss notice: ' + data.error);
@@ -881,10 +893,31 @@
             });
         }
         
+        function updateNoticeBoardState() {
+            const container = document.getElementById('noticeCardsContainer');
+            const remaining = container ? container.querySelectorAll('.notice-card').length : 0;
+            const clearBtn = document.getElementById('clearAllNoticesBoardBtn');
+            if (clearBtn) {
+                clearBtn.style.display = remaining > 0 ? 'inline-flex' : 'none';
+            }
+            const emptyState = document.getElementById('noticeBoardEmptyState');
+            if (emptyState) {
+                emptyState.style.display = remaining === 0 ? 'block' : 'none';
+            }
+            const badge = document.getElementById('unreadNoticeBadge');
+            if (badge) {
+                if (remaining > 0) {
+                    badge.textContent = remaining;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+        
         function clearAllNotices() {
-            const modal = document.getElementById('notificationsModal');
-            if (!modal) return;
-            const cards = modal.querySelectorAll('.notice-card');
+            const container = document.getElementById('noticeCardsContainer');
+            const cards = container ? container.querySelectorAll('.notice-card') : [];
             cards.forEach(c => {
                 const id = c.dataset.noticeId;
                 if (id) {
@@ -896,12 +929,13 @@
             });
             setTimeout(() => {
                 cards.forEach(c => c.remove());
-                const badge = document.getElementById('unreadNoticeBadge');
-                if (badge) badge.style.display = 'none';
-                const clearBtn = document.getElementById('clearAllNoticesBoardBtn');
-                if (clearBtn) clearBtn.remove();
+                updateNoticeBoardState();
             }, 250);
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateNoticeBoardState();
+        });
         
         function ensureConfirmToastStyles() {
             if (document.getElementById('confirmToastStyles')) return;
