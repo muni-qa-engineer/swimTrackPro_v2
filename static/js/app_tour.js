@@ -2,6 +2,7 @@
  * SwimTrackPro - Modern Interactive Guided Product Tour & Welcome Experience
  * Designed with modern SaaS UX standards (inspired by Linear, Stripe, Driver.js)
  * High-precision SVG spotlight overlay anchored directly at specific options/elements/tags.
+ * Covers both Dashboard features and Mobile/Desktop Menu Bar navigation.
  */
 
 (function() {
@@ -36,12 +37,12 @@
                 z-index: 100020;
                 background: linear-gradient(145deg, #0f172a, #1e293b);
                 border: 1px solid rgba(6, 182, 212, 0.45);
-                border-radius: 20px;
+                border-radius: 18px;
                 box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(6, 182, 212, 0.25);
                 color: #ffffff;
-                width: 380px;
+                width: 340px;
                 max-width: calc(100vw - 32px);
-                padding: 1.45rem;
+                padding: 1.25rem 1.35rem;
                 pointer-events: auto;
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                 transition: opacity 0.25s ease, transform 0.25s ease;
@@ -72,7 +73,7 @@
                 border: 1px solid rgba(6, 182, 212, 0.45);
                 font-size: 0.72rem;
                 font-weight: 700;
-                padding: 0.25rem 0.65rem;
+                padding: 0.2rem 0.55rem;
                 border-radius: 6px;
                 letter-spacing: 0.3px;
             }
@@ -80,8 +81,13 @@
                 background: rgba(255, 255, 255, 0.08);
                 color: #94a3b8;
                 font-size: 0.72rem;
-                padding: 0.25rem 0.65rem;
+                padding: 0.2rem 0.55rem;
                 border-radius: 6px;
+            }
+            .tour-category-badge.menu-badge {
+                background: rgba(16, 185, 129, 0.15);
+                color: #34d399;
+                border: 1px solid rgba(16, 185, 129, 0.35);
             }
             .tour-close-btn {
                 background: rgba(255, 255, 255, 0.08);
@@ -107,7 +113,7 @@
                 background: rgba(255, 255, 255, 0.1);
                 border-radius: 4px;
                 overflow: hidden;
-                margin: 0.85rem 0 1rem 0;
+                margin: 0.75rem 0 0.9rem 0;
             }
             .tour-progress-bar {
                 height: 100%;
@@ -125,13 +131,13 @@
                 -webkit-backdrop-filter: blur(12px);
                 border: 1px solid rgba(255, 255, 255, 0.3);
                 box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(16, 185, 129, 0.3);
-                padding: 1rem 1.8rem;
+                padding: 0.9rem 1.6rem;
                 border-radius: 18px;
                 color: white;
                 transition: all 0.35s ease;
                 display: flex;
                 align-items: center;
-                gap: 0.85rem;
+                gap: 0.8rem;
                 font-family: inherit;
             }
         `;
@@ -163,82 +169,157 @@
         getDefaultSteps(role) {
             if (role === 'trainer') {
                 return [
+                    // Dashboard Core Features (5 steps)
                     {
                         element: '#tourCoachActiveBookings',
                         fallback: '.metrics-grid .metric-card.primary',
-                        title: '👥 Active Bookings & Swimmers',
-                        badge: 'Students',
-                        description: 'View all students currently enrolled in your training sessions. Tap on this card anytime to inspect swimmer progress, package details, and parent contact information.'
+                        title: '👥 Active Bookings',
+                        badge: 'Dashboard',
+                        description: 'View and manage all swimmers currently assigned to your coaching sessions.'
                     },
                     {
                         element: '#coachEarningsMetricCard',
                         fallback: '#coachEarningsCarousel',
-                        title: '💰 Real-Time Earnings Carousel',
-                        badge: 'Finances',
-                        description: 'Swipe or click arrows to cycle through Monthly, Yearly, and Lifetime earnings. Revenue earned from every conducted session updates right here in real time!'
+                        title: '💰 Earnings Carousel',
+                        badge: 'Dashboard',
+                        description: 'Swipe to view real-time monthly, yearly, and lifetime earnings.'
                     },
                     {
                         element: '#tourCoachUpcomingSessions',
                         fallback: '.dashboard-main .glass-panel',
-                        title: '📋 Daily Sessions & Attendance',
-                        badge: 'Schedule',
-                        description: 'Your complete daily coaching schedule. Confirm student attendance or mark completed sessions with a single tap as soon as your lesson ends.'
+                        title: '📋 Daily Sessions',
+                        badge: 'Dashboard',
+                        description: 'Mark student attendance with one tap right after class finishes.'
                     },
                     {
                         element: '#tourCoachTimeSlots',
                         fallback: '.glass-panel.mb-6',
-                        title: '⏰ Manage Working Hours & Slots',
-                        badge: 'Availability',
-                        description: 'Set and toggle your active weekly coaching slots (morning & evening) so students and academy managers can book lessons during your available hours.'
+                        title: '⏰ Manage Time Slots',
+                        badge: 'Dashboard',
+                        description: 'Set your morning and evening availability for student bookings.'
                     },
                     {
                         element: '#tourCoachNoticeBoard',
                         fallback: '#coachNoticeBoard',
-                        title: '📢 Notice Board & Alerts',
-                        badge: 'Updates',
-                        description: 'Stay updated with official academy announcements, student session pause alerts, and holiday notifications all gathered in one clear feed.'
+                        title: '📢 Notice Board',
+                        badge: 'Dashboard',
+                        description: 'Stay updated on academy announcements and reschedule requests.'
+                    },
+                    // Menu Bar Navigation Options (3 steps)
+                    {
+                        element: ['#mobileNavBookings', '#desktopNavBookings', 'a[href="/my-bookings"]'],
+                        title: '📋 All Bookings',
+                        badge: 'Menu Bar',
+                        description: 'View your complete calendar of upcoming and past coaching sessions.'
+                    },
+                    {
+                        element: ['#mobileNavPayments', '#desktopNavPayments', 'a[href="/payments"]'],
+                        title: '💳 Payments',
+                        badge: 'Menu Bar',
+                        description: 'Track student fee collections, receipts, and pending payments.'
+                    },
+                    {
+                        element: ['#mobileNavProfile', '#desktopNavProfile', 'a[href*="profile"]'],
+                        title: '👤 Coach Profile',
+                        badge: 'Menu Bar',
+                        description: 'Update your coaching bio, specialties, and contact details.'
                     }
                 ];
             } else {
                 // Swimmer / Guest Steps
                 return [
+                    // Dashboard Core Features (5 steps)
                     {
                         element: '#tourNextSessionCard',
                         fallback: '.metrics-grid .metric-card.primary',
-                        title: '📅 Next Scheduled Session',
-                        badge: 'Upcoming',
-                        description: 'Quickly see your upcoming swim class time, lane assignment, and coach details. Eligible sessions can be skipped or rescheduled directly ahead of time.'
+                        title: '📅 Next Session',
+                        badge: 'Dashboard',
+                        description: 'Check your upcoming class timing, lane assignment, and coach details.'
                     },
                     {
                         element: '#tourProgressTracker',
                         fallback: '.glass-panel:has(.progress-circle)',
-                        title: '📈 Progress & Attendance Tracker',
-                        badge: 'Attendance',
-                        description: 'Monitor how many sessions you’ve completed out of your total package. Progress updates automatically each time your coach confirms a completed lesson.'
+                        title: '📈 Progress Tracker',
+                        badge: 'Dashboard',
+                        description: 'Track attended classes against your total package.'
                     },
                     {
                         element: '#tourMembershipCard',
                         fallback: '.glass-panel:has(.fa-circle-pause)',
-                        title: '💳 Membership Freeze & Perks',
-                        badge: 'Package',
-                        description: 'Review active pass validity dates, remaining sessions, and doorstep perks. Freeze your membership during travel or illness so your sessions never expire.'
+                        title: '💳 Membership Freeze',
+                        badge: 'Dashboard',
+                        description: 'Pause your package during travel or illness so sessions never expire.'
                     },
                     {
                         element: '#tourMySwimmersCard',
                         fallback: '.glass-panel:has(.fa-users)',
-                        title: '🏊 Swimmer Profiles & Learning',
-                        badge: 'Profiles',
-                        description: 'Manage family swimmer profiles, track individual stroke proficiency, and celebrate verified swimming milestones as you progress.'
+                        title: '🏊 Swimmer Profiles',
+                        badge: 'Dashboard',
+                        description: 'Manage family member profiles and track individual stroke milestones.'
                     },
                     {
                         element: '#tourMiniCalendar',
                         fallback: '.mini-calendar',
-                        title: '🗓️ Monthly Training Calendar',
-                        badge: 'Calendar',
-                        description: 'Get a quick month-at-a-glance view of your training days and completed sessions. Click Full View to explore comprehensive class histories.'
+                        title: '🗓️ Training Calendar',
+                        badge: 'Dashboard',
+                        description: 'View monthly scheduled dates and attendance history at a glance.'
+                    },
+                    // Menu Bar Navigation Options (4 steps)
+                    {
+                        element: ['#mobileNavBookSession', '#desktopNavBookSession', 'a[href="/booking"]'],
+                        title: '➕ Book Session',
+                        badge: 'Menu Bar',
+                        description: 'Book new swimming classes and select your preferred coach or slot.'
+                    },
+                    {
+                        element: ['#mobileNavBookings', '#desktopNavBookings', 'a[href="/my-bookings"]'],
+                        title: '📋 My Bookings',
+                        badge: 'Menu Bar',
+                        description: 'Track upcoming classes, skip dates, or reschedule sessions.'
+                    },
+                    {
+                        element: ['#mobileNavPayments', '#desktopNavPayments', 'a[href="/payments"]'],
+                        title: '💳 Payments',
+                        badge: 'Menu Bar',
+                        description: 'View package invoices, receipts, and pending fees.'
+                    },
+                    {
+                        element: ['#mobileNavProfile', '#desktopNavProfile', 'a[href*="trainer"]'],
+                        title: '🏅 About Coach',
+                        badge: 'Menu Bar',
+                        description: 'Learn about your assigned coach’s certifications and background.'
                     }
                 ];
             }
+        }
+
+        findTargetElement(step) {
+            const selectors = Array.isArray(step.element) ? step.element : (step.element ? [step.element] : []);
+            if (step.fallback) {
+                selectors.push(step.fallback);
+            }
+
+            // First check visible elements (e.g. mobile bottom nav on mobile, desktop nav on desktop)
+            for (const sel of selectors) {
+                try {
+                    const matches = document.querySelectorAll(sel);
+                    for (const el of matches) {
+                        const style = window.getComputedStyle(el);
+                        if (style.display !== 'none' && style.visibility !== 'hidden' && el.offsetWidth > 0 && el.offsetHeight > 0) {
+                            return el;
+                        }
+                    }
+                } catch(e) {}
+            }
+
+            // Fallback to first existing element if visibility check was too strict
+            for (const sel of selectors) {
+                try {
+                    const el = document.querySelector(sel);
+                    if (el) return el;
+                } catch(e) {}
+            }
+            return null;
         }
 
         start(customSteps = null) {
@@ -311,10 +392,10 @@
             popover.setAttribute('aria-modal', 'true');
             popover.innerHTML = `
                 <div class="tour-pointer-arrow" id="tourPointerArrow"></div>
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem;">
+                    <div style="display: flex; align-items: center; gap: 0.45rem;">
                         <span class="tour-step-badge" id="tourStepBadge">Step 1 of 5</span>
-                        <span class="tour-category-badge" id="tourCategoryBadge">Overview</span>
+                        <span class="tour-category-badge" id="tourCategoryBadge">Dashboard</span>
                     </div>
                     <button type="button" class="tour-close-btn" onclick="SwimTrackTourInstance.close()" aria-label="Close tour">
                         <i class="fa-solid fa-xmark"></i>
@@ -323,15 +404,15 @@
                 <div class="tour-progress-bar-container">
                     <div class="tour-progress-bar" id="tourProgressBar" style="width: 20%;"></div>
                 </div>
-                <h4 style="font-size: 1.15rem; font-weight: 800; color: #ffffff; margin-bottom: 0.45rem; letter-spacing: -0.2px;" id="tourStepTitle"></h4>
-                <p style="font-size: 0.88rem; color: #94a3b8; line-height: 1.5; margin-bottom: 1.25rem;" id="tourStepDesc"></p>
-                <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 0.85rem; border-top: 1px solid rgba(255, 255, 255, 0.08);">
-                    <button type="button" onclick="SwimTrackTourInstance.close()" style="background: transparent; border: none; color: #64748b; font-size: 0.82rem; cursor: pointer; padding: 0.25rem 0; text-decoration: none; transition: color 0.2s;">Skip tour</button>
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <button type="button" id="tourPrevBtn" onclick="SwimTrackTourInstance.prev()" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #e2e8f0; font-size: 0.82rem; font-weight: 600; padding: 0.4rem 0.9rem; border-radius: 9999px; cursor: pointer; display: flex; align-items: center; gap: 0.35rem; transition: all 0.2s;">
+                <h4 style="font-size: 1.1rem; font-weight: 800; color: #ffffff; margin-bottom: 0.35rem; letter-spacing: -0.2px;" id="tourStepTitle"></h4>
+                <p style="font-size: 0.86rem; color: #94a3b8; line-height: 1.45; margin-bottom: 1.15rem;" id="tourStepDesc"></p>
+                <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 0.75rem; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+                    <button type="button" onclick="SwimTrackTourInstance.close()" style="background: transparent; border: none; color: #64748b; font-size: 0.82rem; cursor: pointer; padding: 0.2rem 0; text-decoration: none; transition: color 0.2s;">Skip tour</button>
+                    <div style="display: flex; align-items: center; gap: 0.45rem;">
+                        <button type="button" id="tourPrevBtn" onclick="SwimTrackTourInstance.prev()" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #e2e8f0; font-size: 0.8rem; font-weight: 600; padding: 0.35rem 0.85rem; border-radius: 9999px; cursor: pointer; display: flex; align-items: center; gap: 0.3rem; transition: all 0.2s;">
                             <i class="fa-solid fa-arrow-left"></i> Back
                         </button>
-                        <button type="button" id="tourNextBtn" onclick="SwimTrackTourInstance.next()" style="background: linear-gradient(135deg, #06b6d4, #0284c7); border: none; color: #020617; font-size: 0.82rem; font-weight: 700; padding: 0.4rem 1.05rem; border-radius: 9999px; cursor: pointer; display: flex; align-items: center; gap: 0.35rem; box-shadow: 0 4px 14px rgba(6, 182, 212, 0.35); transition: all 0.2s;">
+                        <button type="button" id="tourNextBtn" onclick="SwimTrackTourInstance.next()" style="background: linear-gradient(135deg, #06b6d4, #0284c7); border: none; color: #020617; font-size: 0.8rem; font-weight: 700; padding: 0.35rem 0.95rem; border-radius: 9999px; cursor: pointer; display: flex; align-items: center; gap: 0.3rem; box-shadow: 0 4px 14px rgba(6, 182, 212, 0.35); transition: all 0.2s;">
                             Next <i class="fa-solid fa-arrow-right"></i>
                         </button>
                     </div>
@@ -347,16 +428,7 @@
             const step = this.steps[index];
 
             // Find target element on page
-            let target = null;
-            if (step.element) {
-                target = document.querySelector(step.element);
-            }
-            if (!target && step.fallback) {
-                try {
-                    target = document.querySelector(step.fallback);
-                } catch(e) {}
-            }
-
+            const target = this.findTargetElement(step);
             this.currentTarget = target;
 
             // Update Popover content
@@ -369,7 +441,14 @@
             const nextBtn = document.getElementById('tourNextBtn');
 
             if (badge) badge.textContent = `Step ${index + 1} of ${this.steps.length}`;
-            if (catBadge) catBadge.textContent = step.badge || 'Feature';
+            if (catBadge) {
+                catBadge.textContent = step.badge || 'Feature';
+                if (step.badge === 'Menu Bar') {
+                    catBadge.className = 'tour-category-badge menu-badge';
+                } else {
+                    catBadge.className = 'tour-category-badge';
+                }
+            }
             if (title) title.innerHTML = step.title;
             if (desc) desc.textContent = step.description;
             if (progBar) progBar.style.width = `${((index + 1) / this.steps.length) * 100}%`;
@@ -391,13 +470,16 @@
             }
 
             if (target) {
-                // Smoothly scroll target element into center of viewport
-                target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-
-                // Position spotlight hole and popover once scroll settles
-                setTimeout(() => {
+                // If element is not fixed in place (like bottom nav), scroll it into center view
+                const isFixed = target.closest('.mobile-bottom-nav') || target.closest('header') || window.getComputedStyle(target).position === 'fixed';
+                if (!isFixed) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+                    setTimeout(() => {
+                        this.updateSpotlightAndPopover(target);
+                    }, 240);
+                } else {
                     this.updateSpotlightAndPopover(target);
-                }, 260);
+                }
             } else {
                 this.centerPopover();
             }
@@ -406,7 +488,7 @@
         updateSpotlightAndPopover(target) {
             if (!target) return;
             const rect = target.getBoundingClientRect();
-            const pad = 10;
+            const pad = 8;
             const x = Math.max(0, rect.left - pad);
             const y = Math.max(0, rect.top - pad);
             const w = rect.width + (pad * 2);
@@ -420,16 +502,16 @@
                 hole.setAttribute('y', y);
                 hole.setAttribute('width', w);
                 hole.setAttribute('height', h);
-                hole.setAttribute('rx', 16);
-                hole.setAttribute('ry', 16);
+                hole.setAttribute('rx', 14);
+                hole.setAttribute('ry', 14);
             }
             if (border) {
                 border.setAttribute('x', x);
                 border.setAttribute('y', y);
                 border.setAttribute('width', w);
                 border.setAttribute('height', h);
-                border.setAttribute('rx', 16);
-                border.setAttribute('ry', 16);
+                border.setAttribute('rx', 14);
+                border.setAttribute('ry', 14);
                 border.style.display = 'block';
             }
 
@@ -443,7 +525,7 @@
             const arrow = document.getElementById('tourPointerArrow');
             const vw = window.innerWidth;
             const vh = window.innerHeight;
-            const margin = 18;
+            const margin = 16;
 
             let top, left;
             let arrowClass = 'arrow-top';
@@ -457,7 +539,7 @@
                 top = rect.bottom + margin;
                 arrowClass = 'arrow-top';
             } else {
-                // Place Above
+                // Place Above (especially for mobile bottom nav)
                 top = rect.top - popRect.height - margin;
                 arrowClass = 'arrow-bottom';
             }
@@ -465,7 +547,7 @@
             // Align horizontally with target center
             left = rect.left + (rect.width / 2) - (popRect.width / 2);
 
-            // Constrain left within viewport
+            // Constrain within viewport boundaries
             left = Math.max(16, Math.min(left, vw - popRect.width - 16));
             top = Math.max(16, Math.min(top, vh - popRect.height - 16));
 
@@ -476,9 +558,10 @@
 
             // Position arrow pointing at target center
             if (arrow) {
+                arrow.style.display = 'block';
                 arrow.className = `tour-pointer-arrow ${arrowClass}`;
                 const targetCenter = rect.left + (rect.width / 2);
-                const arrowLeft = Math.max(20, Math.min(targetCenter - left - 7, popRect.width - 27));
+                const arrowLeft = Math.max(18, Math.min(targetCenter - left - 7, popRect.width - 25));
                 arrow.style.left = `${arrowLeft}px`;
                 arrow.style.right = 'auto';
             }
@@ -575,10 +658,10 @@
             const toast = document.createElement('div');
             toast.className = 'tour-celebrate-toast';
             toast.innerHTML = `
-                <span style="font-size: 1.85rem;">🎉</span>
+                <span style="font-size: 1.7rem;">🎉</span>
                 <div>
                     <div style="font-weight: 800; font-size: 0.95rem; color: #ffffff;">Tour Completed!</div>
-                    <div style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.88); line-height: 1.3;">You're ready to make the most of SwimTrackPro!</div>
+                    <div style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.88); line-height: 1.3;">You're ready to use SwimTrackPro!</div>
                 </div>
             `;
             document.body.appendChild(toast);
@@ -586,7 +669,7 @@
                 toast.style.opacity = '0';
                 toast.style.transform = 'translate(-50%, -20px)';
                 setTimeout(() => toast.remove(), 400);
-            }, 3200);
+            }, 3000);
         }
     }
 

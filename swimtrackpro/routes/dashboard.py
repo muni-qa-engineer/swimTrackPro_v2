@@ -142,10 +142,10 @@ def index():
     if current_role == 'trainer':
         if is_first_login:
             welcome_title = f"Welcome Coach {user_display_name}! 👋"
-            welcome_subtitle = "Welcome to the SwimTrackPro Coaching Team! Everything you need to view your schedule, track student attendance, and monitor earnings is right here."
+            welcome_subtitle = "Take a quick 1-minute tour of your dashboard and menu."
         else:
             welcome_title = f"Welcome back, Coach {user_display_name}! 😊👋"
-            welcome_subtitle = "Great to see you again! Ready for today's coaching sessions?"
+            welcome_subtitle = "Ready for today's coaching sessions?"
     elif current_role == 'admin':
         welcome_title = f"Welcome back, {user_display_name}! 😊👋"
         welcome_subtitle = "Super Admin Portal • Academy Operations"
@@ -153,10 +153,10 @@ def index():
         # Swimmer / Guest
         if is_first_login:
             welcome_title = f"Welcome {user_display_name}! 👋"
-            welcome_subtitle = "We're excited to have you on board! Everything you need to track your swim sessions, monitor your progress, and manage your coach is right here."
+            welcome_subtitle = "Take a quick 1-minute tour of your dashboard and menu."
         else:
             welcome_title = f"Welcome back, {user_display_name}! 😊👋"
-            welcome_subtitle = "Great to see you again! Ready for your next swim session?"
+            welcome_subtitle = "Ready for your next swim session?"
 
     welcome_text = welcome_title
 

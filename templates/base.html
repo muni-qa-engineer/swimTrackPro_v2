@@ -479,16 +479,16 @@
             <nav class="nav-links animate-fade-in">
                 {% if session.get('role') != 'admin' %}
                     {% if session.get('user_name') %}
-                        <a href="/" class="nav-link">Dashboard</a>
+                        <a href="/" class="nav-link" id="desktopNavDashboard">Dashboard</a>
                         {% if session.get('role') != 'trainer' %}
-                        <a href="/booking" class="nav-link">Book Session</a>
+                        <a href="/booking" class="nav-link" id="desktopNavBookSession">Book Session</a>
                         {% endif %}
-                        <a href="/my-bookings" class="nav-link">Bookings</a>
-                        <a href="/payments" class="nav-link">Payments</a>
+                        <a href="/my-bookings" class="nav-link" id="desktopNavBookings">Bookings</a>
+                        <a href="/payments" class="nav-link" id="desktopNavPayments">Payments</a>
                         {% if session.get('role') == 'trainer' %}
-                        <a href="{{ url_for('profile_page') }}" class="nav-link">Update My Profile</a>
+                        <a href="{{ url_for('profile_page') }}" class="nav-link" id="desktopNavProfile">Update My Profile</a>
                         {% else %}
-                        <a href="{{ url_for('about_trainer') }}" class="nav-link">About Coach</a>
+                        <a href="{{ url_for('about_trainer') }}" class="nav-link" id="desktopNavProfile">About Coach</a>
                         {% endif %}
                     {% else %}
                         <a href="#features" class="nav-link">Why Choose Us</a>
@@ -720,26 +720,26 @@
     </script>
     <!-- Mobile Bottom Navigation -->
     {% if session.get('user_name') and session.get('role') != 'admin' %}
-    <nav class="mobile-bottom-nav">
-        <a href="/" class="nav-item">
+    <nav class="mobile-bottom-nav" id="mobileBottomNav">
+        <a href="/" class="nav-item" id="mobileNavDashboard">
             <i class="fa-solid fa-house"></i>
             <span>Dashboard</span>
         </a>
         {% if session.get('role') != 'trainer' %}
-            <a href="/booking" class="nav-item">
+            <a href="/booking" class="nav-item" id="mobileNavBookSession">
                 <i class="fa-solid fa-calendar-plus"></i>
                 <span>Book Session</span>
             </a>
         {% endif %}
-        <a href="/my-bookings" class="nav-item">
+        <a href="/my-bookings" class="nav-item" id="mobileNavBookings">
             <i class="fa-solid fa-clipboard-list"></i>
             <span>Bookings</span>
         </a>
-        <a href="/payments" class="nav-item">
+        <a href="/payments" class="nav-item" id="mobileNavPayments">
             <i class="fa-solid fa-credit-card"></i>
             <span>Payments</span>
         </a>
-        <a href="{{ url_for('about_trainer') }}" class="nav-item">
+        <a href="{{ url_for('profile_page') if session.get('role') == 'trainer' else url_for('about_trainer') }}" class="nav-item" id="mobileNavProfile">
             <i class="fa-solid fa-user-tie"></i>
             <span>{% if session.get('role') == 'trainer' %}Profile{% else %}Coach{% endif %}</span>
         </a>
