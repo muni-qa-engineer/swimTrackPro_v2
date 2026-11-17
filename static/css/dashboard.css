@@ -266,13 +266,18 @@
 /* Swimmer Card Row */
 .swimmer-row {
     display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    flex-direction: column;
+    padding: 0.85rem 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: var(--radius-md);
     margin-bottom: 0.75rem;
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.swimmer-row:hover {
+    border-color: rgba(6, 182, 212, 0.35) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
 }
 
 .swimmer-avatar {

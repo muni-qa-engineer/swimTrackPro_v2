@@ -342,33 +342,51 @@
                 </div>
 
                 <!-- My Swimmers Interactive -->
-                <div class="glass-panel" id="tourMySwimmersCard" style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column;">
+                <div class="glass-panel" id="tourMySwimmersCard" style="padding: 1.25rem; flex: 1; display: flex; flex-direction: column;">
                     <div class="flex justify-between items-center mb-2">
                         <h3 class="font-display" style="font-size: 1.25rem; margin: 0;"><i class="fa-solid fa-users text-accent"></i> My Swimmers</h3>
                         <span class="badge badge-success">{{ students|length if students else 0 }}</span>
                     </div>
                     <p class="text-muted small mb-3">Your swimmers are here to learn and their progress is steadily going up! <i class="fa-solid fa-arrow-trend-up text-success ms-1"></i></p>
-                    <div style="flex: 1; overflow-y: auto; padding-right: 5px;">
+                    <div style="flex: 1; overflow-y: auto; overflow-x: hidden; padding-right: 2px;">
                         {% if students and students|length > 0 %}
                             {% for s in students %}
                             {% set pct = ((s.completed_sessions / s.total_sessions) * 100) if s.total_sessions and s.total_sessions > 0 else 0 %}
-                            <div class="swimmer-row mb-3 d-flex align-items-center" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 1rem; border-radius: var(--radius-md); transition: transform 0.2s;" onmouseover="this.style.transform='translateX(5px)'" onmouseout="this.style.transform='translateX(0)'">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="swimmer-avatar flex-shrink-0" style="width: 40px; height: 40px; background: linear-gradient(135deg, {{ s.color_code|default('#06b6d4') }}, {{ s.color_code|default('#06b6d4') }}aa); display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: bold; color: white;">{{ s.name[:1]|upper }}</div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <span style="font-weight: 700; font-size: 1rem; white-space: nowrap;">{{ s.name }}</span>
-                                        <span class="badge" style="background: rgba(16,185,129,0.1); color: #10b981;">{{ s.skill_level if s.skill_level else 'Beginner' }}</span>
+                            <div class="swimmer-row mb-3" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); padding: 0.85rem 1rem; border-radius: var(--radius-md); transition: transform 0.2s ease, border-color 0.2s ease;" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='translateX(0)'">
+                                <div class="d-flex align-items-center justify-content-between gap-2 w-100">
+                                    <div class="d-flex align-items-center gap-2.5 min-w-0" style="min-width: 0;">
+                                        <div class="swimmer-avatar flex-shrink-0" style="width: 38px; height: 38px; background: linear-gradient(135deg, {{ s.color_code|default('#06b6d4') }}, {{ s.color_code|default('#06b6d4') }}aa); display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 700; color: white; font-size: 0.95rem;">
+                                            {{ s.name[:1]|upper }}
+                                        </div>
+                                        <div class="min-w-0" style="min-width: 0;">
+                                            <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                                                <span class="text-white fw-bold text-truncate" style="font-size: 0.95rem; max-width: 140px;" title="{{ s.name }}">{{ s.name }}</span>
+                                                <span class="badge" style="background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.25); font-size: 0.68rem; padding: 2px 7px; letter-spacing: 0.3px;">
+                                                    {{ s.skill_level if s.skill_level else 'Beginner' }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-end flex-shrink-0">
+                                        {% if s.total_sessions is defined and s.total_sessions > 0 %}
+                                            <div class="text-nowrap" style="font-size: 0.82rem; font-weight: 600;">
+                                                <span style="color: #38bdf8; font-weight: 700;">{{ s.completed_sessions }}</span><span class="text-secondary"> / {{ s.total_sessions }}</span>
+                                                <span class="text-muted small ms-0.5">Sessions</span>
+                                            </div>
+                                        {% else %}
+                                            <div class="text-muted small text-nowrap">
+                                                <i class="fa-solid fa-person-swimming text-primary me-1"></i> Active
+                                            </div>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 {% if s.total_sessions is defined and s.total_sessions > 0 %}
-                                <div class="progress flex-grow-1 mx-3 d-none d-md-flex" style="height: 6px; background: rgba(255,255,255,0.1);">
-                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ pct }}%;" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                <div class="d-flex align-items-center gap-2 mt-2 pt-1 w-100">
+                                    <div class="progress flex-grow-1" style="height: 5px; background: rgba(255,255,255,0.08); border-radius: 9999px; overflow: hidden;">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ pct }}%; transition: width 0.4s ease;" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <span class="text-secondary flex-shrink-0" style="font-size: 0.72rem; font-weight: 600; min-width: 28px; text-align: right;">{{ pct|round(0,'floor') }}%</span>
                                 </div>
-                                <div class="text-end text-muted ms-auto text-nowrap" style="font-size: 0.8rem; font-weight: 500;">
-                                    {{ s.completed_sessions }} / {{ s.total_sessions }} Sessions
-                                </div>
-                                {% else %}
-                                <div class="text-muted small ms-auto text-nowrap"><i class="fa-solid fa-person-swimming text-primary"></i> Active & Learning</div>
                                 {% endif %}
                             </div>
                             {% endfor %}
