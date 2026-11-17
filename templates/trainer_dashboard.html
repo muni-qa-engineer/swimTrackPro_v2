@@ -134,67 +134,61 @@
         
 
 
-        <!-- Coach Dashboard Top Header Bar with Tour Trigger Button -->
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-            <div>
-                <h2 class="font-display fw-bold text-white mb-0" style="font-size: 1.35rem;">
-                    {{ welcome_title }}
-                </h2>
-                <p class="text-secondary small mb-0">{{ welcome_subtitle }}</p>
-            </div>
-            <button type="button" class="btn btn-sm btn-outline-info rounded-pill d-inline-flex align-items-center gap-1.5 px-3 py-1.5" onclick="startAppTour('trainer', '{{ session.get('user_name')|escape }}')" title="Take an interactive tour of your coach dashboard">
-                <i class="fa-solid fa-compass"></i> Coach Tour
-            </button>
-        </div>
-
         {% if is_first_login %}
-        <!-- First-Time Welcome Modal for Coach (Does NOT disappear fast; has "X" and "Make a Tour" primary button) -->
-        <div id="welcomeModalFTUE" class="welcome-ftue-backdrop show">
-            <div class="welcome-ftue-card">
-                <button type="button" class="welcome-close-btn" onclick="dismissWelcomeModal()" aria-label="Close welcome banner">
+        <!-- First-Time Floating Welcome Modal for Coach (Centered, does NOT disappear fast; has "X" and "Make a Tour" primary button) -->
+        <div id="welcomeModalFTUE" style="position: fixed; inset: 0; z-index: 100000; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 1.25rem;">
+            <div style="background: linear-gradient(145deg, #0f172a, #1e293b); border: 1px solid rgba(6, 182, 212, 0.45); border-radius: 24px; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(6, 182, 212, 0.25); max-width: 440px; width: 100%; padding: 2.2rem 1.85rem; position: relative; text-align: center; color: #ffffff;">
+                <!-- Close "X" Button -->
+                <button type="button" onclick="dismissWelcomeModal()" aria-label="Close" style="position: absolute; top: 16px; right: 16px; width: 34px; height: 34px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15); color: #cbd5e1; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 15px; transition: all 0.2s;">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
-                <div class="welcome-badge-icon">
-                    <span>👋</span>
+
+                <!-- Icon -->
+                <div style="width: 64px; height: 64px; margin: 0 auto 1.25rem; border-radius: 18px; background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(16, 185, 129, 0.2)); border: 1px solid rgba(6, 182, 212, 0.4); display: flex; align-items: center; justify-content: center; font-size: 2.1rem; box-shadow: 0 10px 25px rgba(6, 182, 212, 0.2);">
+                    👋
                 </div>
-                <h3 class="font-display fw-bold text-white mb-2" style="font-size: 1.5rem;">
+
+                <!-- Title & Subtitle -->
+                <h3 style="font-size: 1.45rem; font-weight: 800; margin-bottom: 0.5rem; color: #ffffff; letter-spacing: -0.3px;">
                     {{ welcome_title }}
                 </h3>
-                <p class="text-secondary mb-3" style="font-size: 0.92rem; line-height: 1.5;">
+                <p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.5; margin-bottom: 1.5rem;">
                     {{ welcome_subtitle }}
                 </p>
 
-                <div class="welcome-features-list">
-                    <div class="welcome-feature-item">
-                        <i class="fa-solid fa-users" style="color: #06b6d4;"></i>
+                <!-- Feature Highlights -->
+                <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 0.9rem 1.15rem; margin-bottom: 1.5rem; text-align: left; display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.86rem; color: #e2e8f0;">
+                    <div style="display: flex; align-items: center; gap: 0.65rem;">
+                        <i class="fa-solid fa-users" style="color: #06b6d4; font-size: 0.95rem;"></i>
                         <span>Assigned Students & Live Attendance</span>
                     </div>
-                    <div class="welcome-feature-item">
-                        <i class="fa-solid fa-chart-line" style="color: #10b981;"></i>
+                    <div style="display: flex; align-items: center; gap: 0.65rem;">
+                        <i class="fa-solid fa-chart-line" style="color: #10b981; font-size: 0.95rem;"></i>
                         <span>Real-Time Earnings Carousel (Month/Year/Lifetime)</span>
                     </div>
-                    <div class="welcome-feature-item">
-                        <i class="fa-solid fa-clock" style="color: #a855f7;"></i>
+                    <div style="display: flex; align-items: center; gap: 0.65rem;">
+                        <i class="fa-solid fa-clock" style="color: #a855f7; font-size: 0.95rem;"></i>
                         <span>Flexible Time Slots & Availability Management</span>
                     </div>
                 </div>
 
-                <div class="d-flex flex-column align-items-center gap-2">
-                    <button type="button" class="btn btn-primary welcome-tour-cta d-inline-flex align-items-center justify-content-center gap-2 w-100" onclick="startAppTour('trainer', '{{ session.get('user_name')|escape }}')">
+                <!-- Action Buttons -->
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <button type="button" class="btn btn-primary" onclick="startAppTour('trainer', '{{ session.get('user_name')|escape }}')" style="background: linear-gradient(135deg, #06b6d4, #0284c7); border: none; color: #020617; font-weight: 700; padding: 0.75rem 1.5rem; border-radius: 9999px; font-size: 0.95rem; box-shadow: 0 10px 25px rgba(6, 182, 212, 0.35); display: flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%;">
                         <i class="fa-solid fa-compass"></i> Make a Tour
                     </button>
-                    <button type="button" class="btn btn-link text-muted small text-decoration-none mt-1" onclick="dismissWelcomeModal()">
+                    <button type="button" class="btn btn-link text-muted" onclick="dismissWelcomeModal()" style="font-size: 0.85rem; text-decoration: none; padding: 0.25rem;">
                         Explore on my own
                     </button>
                 </div>
             </div>
         </div>
         {% else %}
-        <!-- Returning Coach Welcome Toast (Auto-dismisses smoothly after 2.5s) -->
-        <div id="welcomeToastReturning" onclick="this.classList.remove('show')">
-            <div style="font-size: 2.2rem; margin-bottom: 0.4rem;">😊👋</div>
-            <h4 style="font-weight: 700; margin-bottom: 0.25rem;">{{ welcome_title }}</h4>
-            <p style="margin-bottom: 0; font-size: 0.92rem; opacity: 0.9;">{{ welcome_subtitle }}</p>
+        <!-- Returning Coach Floating Welcome Toast (Auto-dismisses smoothly after 2.5s) -->
+        <div id="welcomeToastReturning" onclick="this.style.opacity='0'; setTimeout(() => this.remove(), 300);" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 100000; background: linear-gradient(135deg, rgba(16, 185, 129, 0.96), rgba(6, 182, 212, 0.96)); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 1.5rem 2.25rem; border-radius: 20px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 35px rgba(16, 185, 129, 0.35); color: white; border: 1px solid rgba(255, 255, 255, 0.25); text-align: center; width: 88%; max-width: 400px; transition: opacity 0.4s ease, transform 0.4s ease; cursor: pointer;">
+            <div style="font-size: 2.3rem; margin-bottom: 0.4rem;">😊👋</div>
+            <h4 style="font-weight: 700; margin-bottom: 0.3rem; font-size: 1.25rem; color: #ffffff;">{{ welcome_title }}</h4>
+            <p style="margin-bottom: 0; font-size: 0.92rem; opacity: 0.95; line-height: 1.4;">{{ welcome_subtitle }}</p>
         </div>
         {% endif %}
 
@@ -892,21 +886,22 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener("DOMContentLoaded", function() {
         {% if is_first_login %}
         // First-Time Coach: Modal does NOT disappear fast.
-        // Stays visible until dismissed via 'X', 'Explore on my own', or 'Make a Tour'.
         const ftueModal = document.getElementById('welcomeModalFTUE');
         if (ftueModal) {
-            ftueModal.classList.add('show');
+            ftueModal.style.display = 'flex';
         }
         {% else %}
         // Returning Coach: Greet with 'Welcome back, Coach' + Hi/Smile emoji, auto-dismisses after 2.5s
         if (!sessionStorage.getItem('greeted_{{ session.get("user_name") }}')) {
             const toast = document.getElementById('welcomeToastReturning');
             if (toast) {
-                toast.classList.add('show');
+                toast.style.display = 'block';
+                toast.style.opacity = '1';
                 sessionStorage.setItem('greeted_{{ session.get("user_name") }}', 'true');
                 
                 setTimeout(() => {
-                    toast.classList.remove('show');
+                    toast.style.opacity = '0';
+                    setTimeout(() => toast.remove(), 400);
                 }, 2500);
             }
         }
