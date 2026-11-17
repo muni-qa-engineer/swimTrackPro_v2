@@ -431,6 +431,8 @@ def ensure_database_tables():
     cursor.execute("ALTER TABLE user_activity ADD COLUMN IF NOT EXISTS current_login TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP")
     cursor.execute("ALTER TABLE user_activity ADD COLUMN IF NOT EXISTS previous_login TIMESTAMP WITHOUT TIME ZONE")
     cursor.execute("ALTER TABLE user_activity ADD COLUMN IF NOT EXISTS id_number TEXT")
+    cursor.execute("ALTER TABLE user_activity ADD COLUMN IF NOT EXISTS login_count INTEGER DEFAULT 0")
+    cursor.execute("ALTER TABLE user_activity ADD COLUMN IF NOT EXISTS tour_completed BOOLEAN DEFAULT FALSE")
 
     cursor.execute("SELECT MAX(CAST(SUBSTRING(id_number FROM 5) AS INTEGER)) FROM user_activity WHERE id_number LIKE 'STPS%'")
     max_guest_val = cursor.fetchone()[0] or 0

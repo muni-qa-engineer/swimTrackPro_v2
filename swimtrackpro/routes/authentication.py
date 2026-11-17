@@ -68,22 +68,41 @@ def register_authentication_routes(
                     conn = get_pg_connection()
                     cursor = conn.cursor()
                     cursor.execute(
-                        "SELECT id, current_login FROM user_activity WHERE LOWER(user_name) = LOWER(%s) AND role = %s ORDER BY current_login DESC",
+                        """SELECT id, current_login, 
+                                  COALESCE(login_count, 0), 
+                                  COALESCE(tour_completed, FALSE),
+                                  previous_login 
+                           FROM user_activity 
+                           WHERE LOWER(user_name) = LOWER(%s) AND role = %s 
+                           ORDER BY current_login DESC""",
                         (trainer_row[2], "trainer")
                     )
                     rows = cursor.fetchall()
                     if rows:
                         act_row = rows[0]
+                        prev_count = act_row[2] or 0
+                        is_tour_done = bool(act_row[3])
+                        has_prev_login = act_row[4] is not None
+                        is_first = (prev_count == 0 and not is_tour_done) or (not has_prev_login and not is_tour_done)
+                        session["is_first_login"] = is_first
                         cursor.execute(
-                            "UPDATE user_activity SET previous_login = %s, current_login = CURRENT_TIMESTAMP, phone = %s WHERE id = %s",
-                            (act_row[1], "", act_row[0])
+                            """UPDATE user_activity 
+                               SET previous_login = COALESCE(previous_login, current_login), 
+                                   current_login = CURRENT_TIMESTAMP, 
+                                   phone = %s,
+                                   login_count = COALESCE(login_count, 0) + 1 
+                               WHERE id = %s""",
+                            ("", act_row[0])
                         )
                         if len(rows) > 1:
                             duplicate_ids = tuple([r[0] for r in rows[1:]])
                             cursor.execute("DELETE FROM user_activity WHERE id IN %s", (duplicate_ids,))
                     else:
+                        session["is_first_login"] = True
                         cursor.execute(
-                            "INSERT INTO user_activity (user_name, phone, role, current_login, previous_login) VALUES (%s, %s, %s, CURRENT_TIMESTAMP, NULL)",
+                            """INSERT INTO user_activity 
+                               (user_name, phone, role, current_login, previous_login, login_count, tour_completed) 
+                               VALUES (%s, %s, %s, CURRENT_TIMESTAMP, NULL, 1, FALSE)""",
                             (trainer_row[2], "", "trainer")
                         )
                     conn.commit()
@@ -214,16 +233,32 @@ def register_authentication_routes(
                 conn = get_pg_connection()
                 cursor = conn.cursor()
                 cursor.execute(
-                    "SELECT id, current_login, id_number FROM user_activity WHERE LOWER(user_name) = LOWER(%s) AND role = %s ORDER BY current_login DESC",
+                    """SELECT id, current_login, id_number, 
+                              COALESCE(login_count, 0), 
+                              COALESCE(tour_completed, FALSE),
+                              previous_login 
+                       FROM user_activity 
+                       WHERE LOWER(user_name) = LOWER(%s) AND role = %s 
+                       ORDER BY current_login DESC""",
                     (normalized_name, "guest")
                 )
                 rows = cursor.fetchall()
                 if rows:
                     act_row = rows[0]
                     session["id_number"] = act_row[2] or "STPS0000"
+                    prev_count = act_row[3] or 0
+                    is_tour_done = bool(act_row[4])
+                    has_prev_login = act_row[5] is not None
+                    is_first = (prev_count == 0 and not is_tour_done) or (not has_prev_login and not is_tour_done)
+                    session["is_first_login"] = is_first
                     cursor.execute(
-                        "UPDATE user_activity SET previous_login = %s, current_login = CURRENT_TIMESTAMP, phone = %s WHERE id = %s",
-                        (act_row[1], phone, act_row[0])
+                        """UPDATE user_activity 
+                           SET previous_login = COALESCE(previous_login, current_login), 
+                               current_login = CURRENT_TIMESTAMP, 
+                               phone = %s,
+                               login_count = COALESCE(login_count, 0) + 1 
+                           WHERE id = %s""",
+                        (phone, act_row[0])
                     )
                     if len(rows) > 1:
                         duplicate_ids = tuple([r[0] for r in rows[1:]])
@@ -233,9 +268,12 @@ def register_authentication_routes(
                     max_guest_val = cursor.fetchone()[0] or 0
                     new_id_number = f"STPS{max_guest_val + 1:04d}"
                     session["id_number"] = new_id_number
+                    session["is_first_login"] = True
 
                     cursor.execute(
-                        "INSERT INTO user_activity (user_name, phone, role, current_login, previous_login, id_number) VALUES (%s, %s, %s, CURRENT_TIMESTAMP, NULL, %s)",
+                        """INSERT INTO user_activity 
+                           (user_name, phone, role, current_login, previous_login, id_number, login_count, tour_completed) 
+                           VALUES (%s, %s, %s, CURRENT_TIMESTAMP, NULL, %s, 1, FALSE)""",
                         (display_name, phone, "guest", new_id_number)
                     )
                 conn.commit()

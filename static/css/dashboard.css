@@ -318,3 +318,266 @@
 .content-section.active {
     display: block;
 }
+
+
+/* ==========================================================================
+   Welcome Greeting Modal (First-Time User) & Returning Toast + Tour Styles
+   ========================================================================== */
+
+/* First-Time Welcome Modal Backdrop & Card */
+.welcome-ftue-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: rgba(0, 0, 0, 0.78);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    opacity: 0;
+    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.welcome-ftue-backdrop.show {
+    opacity: 1;
+}
+
+.welcome-ftue-card {
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(24, 34, 58, 0.98));
+    border: 1px solid rgba(6, 182, 212, 0.35);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 40px rgba(6, 182, 212, 0.2);
+    border-radius: 24px;
+    max-width: 500px;
+    width: 100%;
+    padding: 2.25rem 2rem;
+    position: relative;
+    text-align: center;
+    color: #ffffff;
+    transform: scale(0.92) translateY(12px);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.welcome-ftue-backdrop.show .welcome-ftue-card {
+    transform: scale(1) translateY(0);
+}
+
+.welcome-close-btn {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    padding: 0;
+}
+
+.welcome-close-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    transform: scale(1.08);
+}
+
+.welcome-badge-icon {
+    width: 68px;
+    height: 68px;
+    margin: 0 auto 1.25rem;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(16, 185, 129, 0.2));
+    border: 1px solid rgba(6, 182, 212, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    box-shadow: 0 10px 25px rgba(6, 182, 212, 0.25);
+    animation: waveHand 2s infinite ease-in-out;
+}
+
+@keyframes waveHand {
+    0%, 100% { transform: rotate(0deg); }
+    20%, 60% { transform: rotate(14deg); }
+    40%, 80% { transform: rotate(-10deg); }
+}
+
+.welcome-features-list {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1rem 1.25rem;
+    margin: 1.25rem 0 1.5rem 0;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.welcome-feature-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.88rem;
+    color: #e2e8f0;
+}
+
+.welcome-feature-item i {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.welcome-tour-cta {
+    background: linear-gradient(135deg, #06b6d4, #0284c7) !important;
+    border: none !important;
+    color: #020617 !important;
+    font-weight: 700 !important;
+    padding: 0.75rem 1.75rem !important;
+    font-size: 0.95rem !important;
+    border-radius: 9999px !important;
+    box-shadow: 0 10px 25px rgba(6, 182, 212, 0.35) !important;
+    transition: all 0.25s ease !important;
+    text-decoration: none !important;
+}
+
+.welcome-tour-cta:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 15px 30px rgba(6, 182, 212, 0.45) !important;
+    color: #000000 !important;
+}
+
+/* Returning User Welcome Toast */
+#welcomeToastReturning {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.92);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 99999;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.96), rgba(6, 182, 212, 0.96));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 1.5rem 2.25rem;
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 35px rgba(16, 185, 129, 0.35);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    text-align: center;
+    width: 88%;
+    max-width: 420px;
+    transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#welcomeToastReturning.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    pointer-events: auto;
+}
+
+/* Tour Backdrop & Popover Card */
+.tour-backdrop-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10001;
+    background: rgba(9, 9, 11, 0.82);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    transition: opacity 0.3s ease;
+}
+
+.tour-highlighted-element {
+    position: relative !important;
+    z-index: 10002 !important;
+    box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.8), 0 0 35px rgba(6, 182, 212, 0.45) !important;
+    border-radius: 16px !important;
+    transition: box-shadow 0.3s ease !important;
+    background-color: rgba(15, 23, 42, 0.98) !important;
+}
+
+.tour-popover-card {
+    position: fixed;
+    z-index: 10003;
+    background: rgba(15, 23, 42, 0.98);
+    border: 1px solid rgba(6, 182, 212, 0.45);
+    border-radius: 18px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.85), 0 0 35px rgba(6, 182, 212, 0.25);
+    color: #ffffff;
+    width: 360px;
+    max-width: calc(100vw - 32px);
+    padding: 1.5rem;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tour-step-badge {
+    background: rgba(6, 182, 212, 0.2);
+    color: #38bdf8;
+    border: 1px solid rgba(6, 182, 212, 0.4);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+}
+
+.tour-category-badge {
+    background: rgba(255, 255, 255, 0.08);
+    color: #94a3b8;
+    font-size: 0.72rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+}
+
+.tour-close-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: color 0.2s;
+}
+
+.tour-close-btn:hover {
+    color: #ffffff;
+}
+
+.tour-progress-bar-container {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.tour-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #06b6d4, #10b981);
+    transition: width 0.3s ease;
+}
+
+.tour-celebrate-toast {
+    position: fixed;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10005;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(6, 182, 212, 0.95));
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+    padding: 1rem 1.75rem;
+    border-radius: 16px;
+    color: white;
+    transition: all 0.35s ease;
+}

@@ -100,42 +100,81 @@ def index():
     check_and_perform_auto_resumes()
     data = load_data()
     
-    current_user = session.get('user_name')
-    current_phone = session.get('phone')
+    current_user = session.get('user_name', '')
+    current_phone = session.get('phone', '')
     current_role = session.get('role', 'guest')
 
-    welcome_text = f"Welcome Back, {current_user.title()}"
-
-    if current_role == 'admin':
-        admin_context = get_admin_dashboard_data(current_user, data)
-        admin_context['welcome_text'] = welcome_text
-        return render_template('admin_dashboard.html', **admin_context)
-
-    # Fetch previous login for non-admin to customize welcome text
+    # Query user_activity to check first-time vs returning status and tour status
+    is_first_login = False
+    tour_completed = False
     try:
         conn = get_pg_connection()
         cursor = conn.cursor()
         cursor.execute(
             '''
-            SELECT previous_login
+            SELECT COALESCE(login_count, 0), COALESCE(tour_completed, FALSE), previous_login
             FROM user_activity
             WHERE LOWER(user_name) = LOWER(%s)
               AND role = %s
+            ORDER BY current_login DESC
+            LIMIT 1
             ''',
             (current_user, current_role)
         )
         row = cursor.fetchone()
         conn.close()
 
-        if not row or row[0] is None:
-            welcome_text = f"Hi {current_user.title()}, Welcome"
-    except Exception:
-        pass
+        if row:
+            login_count = row[0]
+            tour_completed = bool(row[1])
+            prev_login = row[2]
+            if 'is_first_login' in session:
+                is_first_login = bool(session['is_first_login'])
+            else:
+                is_first_login = (login_count <= 1 and not tour_completed) or (prev_login is None and not tour_completed)
+        else:
+            is_first_login = session.get('is_first_login', True)
+    except Exception as e:
+        print("Error checking user activity in dashboard:", e)
+        is_first_login = session.get('is_first_login', False)
+
+    user_display_name = current_user.title()
+    if current_role == 'trainer':
+        if is_first_login:
+            welcome_title = f"Welcome Coach {user_display_name}! 👋"
+            welcome_subtitle = "Welcome to the SwimTrackPro Coaching Team! Everything you need to view your schedule, track student attendance, and monitor earnings is right here."
+        else:
+            welcome_title = f"Welcome back, Coach {user_display_name}! 😊👋"
+            welcome_subtitle = "Great to see you again! Ready for today's coaching sessions?"
+    elif current_role == 'admin':
+        welcome_title = f"Welcome back, {user_display_name}! 😊👋"
+        welcome_subtitle = "Super Admin Portal • Academy Operations"
+    else:
+        # Swimmer / Guest
+        if is_first_login:
+            welcome_title = f"Welcome {user_display_name}! 👋"
+            welcome_subtitle = "We're excited to have you on board! Everything you need to track your swim sessions, monitor your progress, and manage your coach is right here."
+        else:
+            welcome_title = f"Welcome back, {user_display_name}! 😊👋"
+            welcome_subtitle = "Great to see you again! Ready for your next swim session?"
+
+    welcome_text = welcome_title
+
+    if current_role == 'admin':
+        admin_context = get_admin_dashboard_data(current_user, data)
+        admin_context['welcome_text'] = welcome_text
+        admin_context['welcome_title'] = welcome_title
+        admin_context['welcome_subtitle'] = welcome_subtitle
+        admin_context['is_first_login'] = is_first_login
+        return render_template('admin_dashboard.html', **admin_context)
 
     if current_role == 'trainer':
         trainer_username = session.get('trainer_username') or 'asdf'
         context = get_trainer_dashboard_data(trainer_username, data)
         context['welcome_text'] = welcome_text
+        context['welcome_title'] = welcome_title
+        context['welcome_subtitle'] = welcome_subtitle
+        context['is_first_login'] = is_first_login
         context['user_name'] = session['user_name']
         context['role'] = current_role
         return render_template('trainer_dashboard.html', **context)
@@ -143,6 +182,9 @@ def index():
     # Guest
     context = get_guest_dashboard_data(current_user, current_phone, data)
     context['welcome_text'] = welcome_text
+    context['welcome_title'] = welcome_title
+    context['welcome_subtitle'] = welcome_subtitle
+    context['is_first_login'] = is_first_login
     context['user_name'] = session['user_name']
     context['role'] = current_role
     return render_template('guest_dashboard.html', **context)
@@ -283,8 +325,31 @@ def get_coach_pending_confirmations():
         "pending_confirmations": context.get('pending_confirmations', [])
     })
 
+def complete_tour():
+    """Mark tour as completed for current user in session and database."""
+    user_name = session.get("user_name")
+    role = session.get("role")
+    session['is_first_login'] = False
+    if user_name and role:
+        try:
+            conn = get_pg_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE user_activity
+                SET tour_completed = TRUE
+                WHERE LOWER(user_name) = LOWER(%s) AND role = %s
+            """, (user_name, role))
+            conn.commit()
+            conn.close()
+            return jsonify({"success": True})
+        except Exception as e:
+            return jsonify({"success": True, "notice": str(e)})
+    return jsonify({"success": True})
+
+
 def register_dashboard_routes(app):
     app.add_url_rule('/', endpoint='index', view_func=index)
     app.add_url_rule('/api/toggle_favorite_coach', endpoint='toggle_favorite_coach', view_func=toggle_favorite_coach, methods=['POST'])
     app.add_url_rule('/api/coach/confirm_session', endpoint='confirm_coach_session', view_func=confirm_coach_session, methods=['POST'])
     app.add_url_rule('/api/coach/pending_confirmations', endpoint='get_coach_pending_confirmations', view_func=get_coach_pending_confirmations, methods=['GET'])
+    app.add_url_rule('/api/complete_tour', endpoint='complete_tour', view_func=complete_tour, methods=['POST'])
