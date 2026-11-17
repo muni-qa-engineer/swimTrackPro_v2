@@ -196,23 +196,13 @@
 
                 <!-- Dedicated Make-Up Sessions Credit Card -->
                 <div class="glass-panel animate-fade-in" id="tourMakeupSessionsCard" style="padding: 1.5rem; border: 1px solid rgba(6, 182, 212, 0.35); background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(15, 23, 42, 0.85) 100%);">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="d-flex align-items-center gap-2">
-                            <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(6, 182, 212, 0.18); border: 1px solid rgba(6, 182, 212, 0.4); display: flex; align-items: center; justify-content: center; color: #38bdf8; font-size: 1.1rem;">
-                                <i class="fa-solid fa-ticket-simple"></i>
-                            </div>
-                            <h3 class="font-display" style="font-size: 1.2rem; margin: 0; color: #fff;">
-                                Make-up Sessions Credit
-                            </h3>
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(6, 182, 212, 0.18); border: 1px solid rgba(6, 182, 212, 0.4); display: flex; align-items: center; justify-content: center; color: #38bdf8; font-size: 1.1rem;">
+                            <i class="fa-solid fa-ticket-simple"></i>
                         </div>
-                        <div class="d-flex align-items-center gap-1.5 flex-wrap justify-content-end">
-                            <span class="badge fw-bold" style="background: rgba(6, 182, 212, 0.2); color: #38bdf8; border: 1px solid rgba(6, 182, 212, 0.35); font-size: 0.72rem; padding: 0.35rem 0.65rem; border-radius: 9999px;">
-                                <i class="fa-solid fa-circle-check me-1"></i> {{ total_makeup_credits if total_makeup_credits is defined else 0 }} Available
-                            </span>
-                            <span class="badge fw-bold" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); font-size: 0.72rem; padding: 0.35rem 0.65rem; border-radius: 9999px;">
-                                <i class="fa-solid fa-clock-rotate-left me-1"></i> {{ expired_makeup_credits if expired_makeup_credits is defined else 0 }} Expired
-                            </span>
-                        </div>
+                        <h3 class="font-display" style="font-size: 1.2rem; margin: 0; color: #fff;">
+                            Make-up Sessions Credit
+                        </h3>
                     </div>
 
                     <!-- Quick Stats: Available vs Expired Credits -->
@@ -247,8 +237,8 @@
                         </div>
                     </div>
 
-                    <p class="text-secondary small mb-3" style="font-size: 0.8rem; line-height: 1.45;">
-                        You have <strong class="text-white">{{ total_makeup_credits if total_makeup_credits is defined else 0 }} make-up class credit{{ 's' if total_makeup_credits != 1 else '' }}</strong> available from missed sessions. Credits remain valid until your package expiry date.
+                    <p class="text-muted small mb-3" style="font-size: 0.8rem;">
+                        Credits remain valid until your package expiry date.
                     </p>
 
                     <!-- Sessions List (Available & Expired) -->
