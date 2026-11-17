@@ -65,10 +65,57 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 <style>
+    html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 85px;
+    }
+
     body {
         background: var(--color-background);
         color: var(--color-text);
         overflow-x: hidden;
+    }
+
+    /* Prevent sticky header clipping & provide smooth anchor scrolling */
+    #features,
+    #plans,
+    #coaches,
+    #what-you-get,
+    .features-section,
+    .plans-section,
+    .coaches-section {
+        scroll-margin-top: 85px;
+    }
+
+    /* Enhanced Navigation Links UX */
+    .site-header .nav-links .nav-link {
+        position: relative;
+        padding: 0.4rem 0.8rem;
+        border-radius: var(--radius-sm);
+        transition: all 0.25s ease;
+        color: var(--color-text-secondary);
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    .site-header .nav-links .nav-link:hover {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.06);
+    }
+    .site-header .nav-links .nav-link.active {
+        color: var(--color-primary) !important;
+        font-weight: 700;
+        background: rgba(6, 182, 212, 0.08);
+    }
+    .site-header .nav-links .nav-link.active::after {
+        content: '';
+        position: absolute;
+        bottom: -4px;
+        left: 0.8rem;
+        right: 0.8rem;
+        height: 2.5px;
+        background: var(--color-primary);
+        border-radius: 999px;
+        box-shadow: 0 0 10px rgba(6, 182, 212, 0.8);
     }
     
     /* Hero Section */
@@ -117,18 +164,18 @@
     
     /* Features */
     .features-section {
-        padding: 3rem 1rem;
+        padding: 4rem 1rem 3.5rem;
         background: rgba(24, 24, 27, 0.3);
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
     
     .what-you-get-section {
-        padding: 3rem 1rem;
+        padding: 3.5rem 1rem;
     }
     
     /* Comparison Table / Column Layout */
     .plans-section {
-        padding: 3rem 1rem;
+        padding: 4rem 1rem 3.5rem;
     }
     
     .comparison-wrapper {
@@ -303,6 +350,9 @@
 <div class="features-section" id="features">
     <div class="container">
         <div class="text-center mb-5">
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-2" style="background: rgba(6, 182, 212, 0.12); border: 1px solid rgba(6, 182, 212, 0.3); color: var(--color-primary); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;">
+                <i class="fa-solid fa-lightbulb"></i> Our Concept
+            </div>
             <h2 class="font-display text-white" style="font-weight: 800; font-size: 2.2rem; margin-bottom: 0.5rem;">How It Works</h2>
             <p class="text-muted">High-performance private training, delivered at your personal pool site.</p>
         </div>
@@ -600,6 +650,9 @@
 <div class="plans-section" id="plans">
     <div class="container">
         <div class="text-center mb-5">
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-2" style="background: rgba(6, 182, 212, 0.12); border: 1px solid rgba(6, 182, 212, 0.3); color: var(--color-primary); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;">
+                <i class="fa-solid fa-tags"></i> Coaching Plans
+            </div>
             <h2 class="font-display text-white" style="font-weight: 800; font-size: 2.2rem; margin-bottom: 0.5rem;">Choose Your Training Plan</h2>
             <div id="swimmer-cohort-caption" class="text-muted small">
                 <i class="fa-solid fa-user-check text-primary me-1"></i> Dedicated 1-on-1 personalized private instruction and Group Coaching at your doorstep pool.
@@ -1385,9 +1438,106 @@
         openQuickBookingModal(pkgParam, '', currentSwimmerCount);
     }
 
+    // Smooth navigation with sticky header offset & dynamic active state
+    function scrollToSection(targetId) {
+        if (!targetId || targetId === '#') return;
+        const targetEl = document.querySelector(targetId);
+        if (!targetEl) return;
+        
+        const header = document.querySelector('.site-header');
+        const headerHeight = header ? header.offsetHeight : 72;
+        // Position with comfortable breathing room below header
+        const targetPosition = targetEl.getBoundingClientRect().top + window.pageYOffset - headerHeight - 16;
+        
+        window.scrollTo({
+            top: targetPosition,
+            behavior: 'smooth'
+        });
+        
+        // Immediate active class update
+        document.querySelectorAll('.site-header .nav-links .nav-link').forEach(link => {
+            if (link.getAttribute('href') === targetId) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+        });
+        
+        if (history.pushState) {
+            history.pushState(null, null, targetId);
+        }
+    }
+
+    // ScrollSpy to highlight active nav link on scroll
+    function updateLandingScrollSpy() {
+        const header = document.querySelector('.site-header');
+        const headerHeight = header ? header.offsetHeight : 72;
+        const scrollTrigger = window.pageYOffset + headerHeight + 60;
+        
+        const conceptSection = document.getElementById('features');
+        const plansSection = document.getElementById('plans');
+        const conceptLink = document.querySelector('.site-header a[href="#features"]');
+        const plansLink = document.querySelector('.site-header a[href="#plans"]');
+
+        if (!conceptSection || !plansSection) return;
+
+        const conceptTop = conceptSection.offsetTop;
+        const plansTop = plansSection.offsetTop;
+        const plansBottom = plansTop + plansSection.offsetHeight;
+
+        if (window.pageYOffset + headerHeight < conceptTop - 60) {
+            // In hero banner
+            if (conceptLink) conceptLink.classList.remove('active');
+            if (plansLink) plansLink.classList.remove('active');
+        } else if (scrollTrigger >= plansTop && scrollTrigger <= plansBottom + 80) {
+            if (plansLink) plansLink.classList.add('active');
+            if (conceptLink) conceptLink.classList.remove('active');
+        } else if (scrollTrigger >= conceptTop && scrollTrigger < plansTop) {
+            if (conceptLink) conceptLink.classList.add('active');
+            if (plansLink) plansLink.classList.remove('active');
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         if (typeof PricingEngine !== 'undefined') {
             updatePricingCardsUI();
+        }
+
+        // Attach smooth click handlers to header anchor links
+        document.querySelectorAll('.site-header a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                const href = this.getAttribute('href');
+                if (href && href.startsWith('#') && href.length > 1) {
+                    e.preventDefault();
+                    scrollToSection(href);
+                }
+            });
+        });
+
+        // Logo smooth scroll to top when already on landing page
+        const logoLink = document.querySelector('.site-header .logo');
+        if (logoLink) {
+            logoLink.addEventListener('click', function(e) {
+                if (window.location.pathname === '/' || window.location.pathname === '') {
+                    e.preventDefault();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    if (history.pushState) {
+                        history.pushState(null, null, '/');
+                    }
+                    document.querySelectorAll('.site-header .nav-links .nav-link').forEach(l => l.classList.remove('active'));
+                }
+            });
+        }
+
+        // Initialize ScrollSpy
+        window.addEventListener('scroll', updateLandingScrollSpy, { passive: true });
+        updateLandingScrollSpy();
+
+        // Handle URL hash on initial page load with proper header offset
+        if (window.location.hash) {
+            setTimeout(function() {
+                scrollToSection(window.location.hash);
+            }, 150);
         }
     });
 </script>
