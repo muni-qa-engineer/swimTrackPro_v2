@@ -599,34 +599,10 @@
 <!-- ChatGPT-Style Pricing Plan Section -->
 <div class="plans-section" id="plans">
     <div class="container">
-        <div class="text-center mb-4">
+        <div class="text-center mb-5">
             <h2 class="font-display text-white" style="font-weight: 800; font-size: 2.2rem; margin-bottom: 0.5rem;">Choose Your Training Plan</h2>
-        </div>
-
-        <!-- Dynamic Swimmer Cohort Selector (1 to 5 Swimmers) -->
-        <div class="cg-swimmer-selector-wrap text-center mb-5">
-            <div class="small text-uppercase text-muted fw-bold mb-2" style="letter-spacing: 0.8px; font-size: 0.75rem;">
-                Select Cohort Size:
-            </div>
-            <div class="d-inline-flex flex-wrap justify-content-center gap-2 p-1.5 rounded-pill" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); backdrop-filter: blur(12px);">
-                <button type="button" class="btn btn-sm swimmer-pill active" id="pill-swimmer-1" onclick="selectSwimmerCount(1)">
-                    1 Swimmer <span class="badge bg-secondary ms-1" style="font-size: 0.68rem;">Solo</span>
-                </button>
-                <button type="button" class="btn btn-sm swimmer-pill" id="pill-swimmer-2" onclick="selectSwimmerCount(2)">
-                    2 Swimmers <span class="badge bg-primary text-black ms-1 fw-bold" style="font-size: 0.68rem;">15.0% OFF</span>
-                </button>
-                <button type="button" class="btn btn-sm swimmer-pill" id="pill-swimmer-3" onclick="selectSwimmerCount(3)">
-                    3 Swimmers <span class="badge bg-primary text-black ms-1 fw-bold" style="font-size: 0.68rem;">23.3% OFF</span>
-                </button>
-                <button type="button" class="btn btn-sm swimmer-pill" id="pill-swimmer-4" onclick="selectSwimmerCount(4)">
-                    4 Swimmers <span class="badge bg-primary text-black ms-1 fw-bold" style="font-size: 0.68rem;">30.0% OFF</span>
-                </button>
-                <button type="button" class="btn btn-sm swimmer-pill" id="pill-swimmer-5" onclick="selectSwimmerCount(5)">
-                    5 Swimmers <span class="badge bg-primary text-black ms-1 fw-bold" style="font-size: 0.68rem;">36.0% OFF</span>
-                </button>
-            </div>
-            <div id="swimmer-cohort-caption" class="text-muted small mt-2">
-                <i class="fa-solid fa-user-check text-primary me-1"></i> Dedicated 1-on-1 personalized private instruction at your doorstep pool.
+            <div id="swimmer-cohort-caption" class="text-muted small">
+                <i class="fa-solid fa-user-check text-primary me-1"></i> Dedicated 1-on-1 personalized private instruction and Group Coaching at your doorstep pool.
             </div>
         </div>
         
@@ -1243,7 +1219,7 @@
         if (caption && typeof PricingEngine !== 'undefined') {
             const quote = PricingEngine.getPackageQuote('monthly_3d', currentSwimmerCount);
             if (currentSwimmerCount === 1) {
-                caption.innerHTML = '<i class="fa-solid fa-user-check text-primary me-1"></i> Dedicated 1-on-1 personalized private instruction at your doorstep pool.';
+                caption.innerHTML = '<i class="fa-solid fa-user-check text-primary me-1"></i> Dedicated 1-on-1 personalized private instruction and Group Coaching at your doorstep pool.';
             } else {
                 caption.innerHTML = `👥 Small Cohort: <strong>${currentSwimmerCount} Swimmers</strong> &bull; <span class="text-primary fw-bold">${quote.savingsPerPersonPercent}% OFF</span> per swimmer &bull; Coach Yield +${quote.coachBonusPercent}%`;
             }
