@@ -170,6 +170,69 @@
         z-index: 9999;
         box-shadow: var(--shadow-glow);
     }
+
+    /* Mobile-only horizontal slider / carousel for bookings per user */
+    @media (max-width: 767.98px) {
+        .trainer-group-body {
+            padding: 1rem 0.75rem !important;
+            overflow: hidden;
+        }
+
+        .bookings-cards-slider {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            scroll-snap-type: x mandatory !important;
+            -webkit-overflow-scrolling: touch !important;
+            gap: 1rem !important;
+            padding: 0.35rem 0.25rem 0.75rem 0.25rem !important;
+            margin: 0 -0.25rem !important;
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+        }
+
+        .bookings-cards-slider::-webkit-scrollbar {
+            display: none !important;
+        }
+
+        .bookings-cards-slider > .booking-card {
+            flex: 0 0 86% !important;
+            min-width: 86% !important;
+            max-width: 86% !important;
+            scroll-snap-align: start !important;
+            margin-bottom: 0 !important;
+        }
+
+        .bookings-cards-slider > .booking-card:hover {
+            transform: none !important;
+        }
+
+        .bookings-cards-slider.single-booking > .booking-card {
+            flex: 0 0 100% !important;
+            min-width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        .bookings-cards-slider > .renew-card-col {
+            flex: 0 0 86% !important;
+            min-width: 86% !important;
+            max-width: 86% !important;
+            scroll-snap-align: start !important;
+            margin-bottom: 0 !important;
+        }
+
+        .bookings-cards-slider > .renew-card-col .border-dashed {
+            min-height: 100% !important;
+            height: 100% !important;
+        }
+
+        .carousel-dot {
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+    }
 </style>
 
 
@@ -499,14 +562,14 @@
             </div>
 
             <div class="trainer-group-body" style="padding: 1.5rem; {% if role == 'trainer' and not loop.first %}display:none;{% endif %}">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bookings-cards-slider {% if group_items|length == 1 and not ns.show_add_card %}single-booking{% endif %}">
                     {% for b in group_items %}
                         {{ render_booking_card(b, role, trainer_map, upi_id, account_holder_name) }}
                     {% endfor %}
 
                     {% if ns.show_add_card and role != 'trainer' %}
                     {% set latest_booking = group_items[0] %}
-                    <div class="col-12 mb-2">
+                    <div class="col-12 mb-2 renew-card-col">
                         <a href="#" class="border-dashed h-100" onclick="openRenewModal('{{ latest_booking.id }}', '{{ latest_booking.start_date }}'); return false;" style="display:block; padding:2rem;">
                             <div class="card-body d-flex flex-column align-items-center justify-content-center h-100">
                                 <div style="font-size: 2.5rem; color: var(--color-primary); font-weight: 300;">+</div>
@@ -517,6 +580,22 @@
                     </div>
                     {% endif %}
                 </div>
+
+                {% if (group_items|length > 1) or (group_items|length == 1 and ns.show_add_card and role != 'trainer') %}
+                <div class="d-md-none d-flex justify-content-between align-items-center mt-2 pt-1 px-1">
+                    <span class="text-muted small" style="font-size: 0.75rem;">
+                        <i class="fa-solid fa-arrows-left-right text-primary me-1"></i> Swipe cards to explore
+                    </span>
+                    <div class="d-flex align-items-center gap-1.5 booking-carousel-dots" data-group-carousel="{{ group_key }}-{{ loop.index }}">
+                        {% for b in group_items %}
+                        <span class="carousel-dot" style="width: {% if loop.first %}16px{% else %}6px{% endif %}; height: 6px; border-radius: {% if loop.first %}4px{% else %}50%{% endif %}; background: {% if loop.first %}var(--color-primary){% else %}rgba(255,255,255,0.25){% endif %}; transition: all 0.25s ease;"></span>
+                        {% endfor %}
+                        {% if ns.show_add_card and role != 'trainer' %}
+                        <span class="carousel-dot" style="width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.25); transition: all 0.25s ease;"></span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -786,8 +865,78 @@
                         }
                     }
                 });
+                // Reset slider scroll and update dots on filter change
+                document.querySelectorAll('.bookings-cards-slider').forEach(slider => {
+                    slider.scrollLeft = 0;
+                    updateSliderDots(slider);
+                });
             });
         });
+
+    // Mobile carousel scroll listener & dot updater
+    function updateSliderDots(slider) {
+        const groupBody = slider.closest('.trainer-group-body');
+        if (!groupBody) return;
+        const dotsWrap = groupBody.querySelector('.booking-carousel-dots');
+        if (!dotsWrap) return;
+
+        const visibleCards = Array.from(slider.querySelectorAll('.booking-card, .renew-card-col')).filter(c => c.style.display !== 'none');
+        const dots = dotsWrap.querySelectorAll('.carousel-dot');
+
+        if (visibleCards.length <= 1) {
+            dotsWrap.parentElement.classList.add('d-none');
+            return;
+        } else {
+            dotsWrap.parentElement.classList.remove('d-none');
+        }
+
+        const scrollLeft = slider.scrollLeft;
+        const cardEl = visibleCards[0];
+        const cardWidth = cardEl ? (cardEl.offsetWidth + 16) : 1;
+        const activeIndex = Math.min(visibleCards.length - 1, Math.max(0, Math.round(scrollLeft / cardWidth)));
+
+        dots.forEach((dot, idx) => {
+            if (idx >= visibleCards.length) {
+                dot.style.display = 'none';
+            } else {
+                dot.style.display = 'inline-block';
+                if (idx === activeIndex) {
+                    dot.style.background = 'var(--color-primary)';
+                    dot.style.width = '16px';
+                    dot.style.borderRadius = '4px';
+                } else {
+                    dot.style.background = 'rgba(255, 255, 255, 0.25)';
+                    dot.style.width = '6px';
+                    dot.style.borderRadius = '50%';
+                }
+            }
+        });
+    }
+
+    function initBookingSliders() {
+        document.querySelectorAll('.bookings-cards-slider').forEach(slider => {
+            slider.addEventListener('scroll', () => updateSliderDots(slider), { passive: true });
+            updateSliderDots(slider);
+        });
+
+        document.querySelectorAll('.booking-carousel-dots').forEach(dotsWrap => {
+            dotsWrap.querySelectorAll('.carousel-dot').forEach((dot, idx) => {
+                dot.addEventListener('click', () => {
+                    const groupBody = dotsWrap.closest('.trainer-group-body');
+                    const slider = groupBody ? groupBody.querySelector('.bookings-cards-slider') : null;
+                    if (slider) {
+                        const visibleCards = Array.from(slider.querySelectorAll('.booking-card, .renew-card-col')).filter(c => c.style.display !== 'none');
+                        if (visibleCards[idx]) {
+                            visibleCards[idx].scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+                        }
+                    }
+                });
+            });
+        });
+    }
+
+    initBookingSliders();
+
     // Trainer group collapse
     const headers = document.querySelectorAll('.trainer-group-header');
     headers.forEach(header => {
@@ -809,6 +958,8 @@
                 currentBody.style.display = 'block';
                 arrow.innerHTML = '▼';
                 sessionStorage.setItem('trainerOpenGroup', this.dataset.groupKey);
+                const slider = currentBody.querySelector('.bookings-cards-slider');
+                if (slider) setTimeout(() => updateSliderDots(slider), 50);
             } else {
                 currentBody.style.display = 'none';
                 arrow.innerHTML = '<i class="fa-solid fa-play"></i>';
@@ -824,7 +975,11 @@
             document.querySelectorAll('.trainer-group-body').forEach(body => body.style.display = 'none');
             document.querySelectorAll('.trainer-group-arrow').forEach(arrow => arrow.innerHTML = '<i class="fa-solid fa-play"></i>');
             const body = savedHeader.parentElement.querySelector('.trainer-group-body');
-            if (body) body.style.display = 'block';
+            if (body) {
+                body.style.display = 'block';
+                const slider = body.querySelector('.bookings-cards-slider');
+                if (slider) setTimeout(() => updateSliderDots(slider), 50);
+            }
             const arrow = savedHeader.querySelector('.trainer-group-arrow');
             if (arrow) arrow.innerHTML = '▼';
         }
