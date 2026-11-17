@@ -792,18 +792,27 @@
     const headers = document.querySelectorAll('.trainer-group-header');
     headers.forEach(header => {
         header.addEventListener('click', function () {
+            // Only collapsible if an arrow indicator is present (e.g. trainer view)
+            const arrow = this.querySelector('.trainer-group-arrow');
+            if (!arrow) return;
+
             const currentBody = this.parentElement.querySelector('.trainer-group-body');
             if (!currentBody) return;
 
-            const isOpen = currentBody.style.display !== 'none';
-            document.querySelectorAll('.trainer-group-body').forEach(body => body.style.display = 'none');
-            document.querySelectorAll('.trainer-group-arrow').forEach(arrow => arrow.innerHTML = '<i class="fa-solid fa-play"></i>');
+            const isClosed = currentBody.style.display === 'none';
 
-            if (!isOpen) {
-                currentBody.style.display = '';
-                const arrow = this.querySelector('.trainer-group-arrow');
-                if (arrow) arrow.textContent = '▼';
+            // Close all other groups
+            document.querySelectorAll('.trainer-group-body').forEach(body => body.style.display = 'none');
+            document.querySelectorAll('.trainer-group-arrow').forEach(a => a.innerHTML = '<i class="fa-solid fa-play"></i>');
+
+            if (isClosed) {
+                currentBody.style.display = 'block';
+                arrow.innerHTML = '▼';
                 sessionStorage.setItem('trainerOpenGroup', this.dataset.groupKey);
+            } else {
+                currentBody.style.display = 'none';
+                arrow.innerHTML = '<i class="fa-solid fa-play"></i>';
+                sessionStorage.removeItem('trainerOpenGroup');
             }
         });
     });
@@ -815,9 +824,9 @@
             document.querySelectorAll('.trainer-group-body').forEach(body => body.style.display = 'none');
             document.querySelectorAll('.trainer-group-arrow').forEach(arrow => arrow.innerHTML = '<i class="fa-solid fa-play"></i>');
             const body = savedHeader.parentElement.querySelector('.trainer-group-body');
-            if (body) body.style.display = '';
+            if (body) body.style.display = 'block';
             const arrow = savedHeader.querySelector('.trainer-group-arrow');
-            if (arrow) arrow.textContent = '▼';
+            if (arrow) arrow.innerHTML = '▼';
         }
     }
 });
@@ -1030,7 +1039,6 @@ window.submitForceActionForm = function(e) {
             'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify(payload)
-    })
     })
     .then(res => res.json())
     .then(data => {

@@ -2374,7 +2374,6 @@ window.submitForceActionForm = function(e) {
         },
         body: JSON.stringify(payload)
     })
-    })
     .then(res => res.json())
     .then(data => {
         if (data.success) {
