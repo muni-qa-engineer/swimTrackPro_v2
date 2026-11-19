@@ -173,7 +173,7 @@ def register_page_routes(app, *, get_pg_connection, load_data):
         conn.close()
 
         renew_booking = None
-        renew_from_id = request.args.get('renew_from')
+        renew_from_id = request.args.get('renew_from') or request.args.get('edit_from')
         renew_start_date = request.args.get('start_date')
         if renew_from_id:
             booking_obj = next((b for b in data.get('bookings', []) if str(b.get('id')) == str(renew_from_id)), None)
@@ -189,8 +189,16 @@ def register_page_routes(app, *, get_pg_connection, load_data):
                     'email': booking_obj.get('email'),
                     'persons': booking_obj.get('persons', 1),
                     'trainer_username': booking_obj.get('trainer_username'),
-                    'fee': booking_obj.get('fee')
+                    'fee': booking_obj.get('fee'),
+                    'phone': booking_obj.get('owner_phone', ''),
+                    'skill_level': booking_obj.get('skill_level', 'Beginner'),
+                    'booking_id': str(booking_obj.get('id', ''))
                 }
+
+        initial_step = 1
+        step_arg = request.args.get('step')
+        if step_arg in ('1', '2'):
+            initial_step = int(step_arg)
 
         packages = get_all_packages()
         preselected_package = request.args.get('package', '')
@@ -209,7 +217,8 @@ def register_page_routes(app, *, get_pg_connection, load_data):
             packages=packages,
             preselected_package=preselected_package,
             packages_json=json.dumps(packages),
-            pricing_config=get_pricing_config_dict()
+            pricing_config=get_pricing_config_dict(),
+            initial_step=initial_step,
         )
 
     @login_required

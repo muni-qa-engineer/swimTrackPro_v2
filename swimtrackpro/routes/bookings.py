@@ -374,6 +374,17 @@ def book():
             else:
                 flash(f'You are swimming along with {name1}, {name2}.', 'info')
 
+    # Clean up prior unconfirmed booking if resubmitting from back/edit flow
+    existing_unconfirmed_id = request.form.get('existing_booking_id') or session.get('pending_booking_id')
+    if existing_unconfirmed_id:
+        try:
+            cursor.execute(
+                "DELETE FROM bookings WHERE id = %s AND (status = 'unconfirmed' OR payment_request = 'unconfirmed')",
+                (existing_unconfirmed_id,)
+            )
+        except Exception as e:
+            print("Error cleaning up prior unconfirmed booking:", e)
+
     cursor.execute('''
     INSERT INTO bookings (
         id,
@@ -2017,6 +2028,17 @@ def renew_booking():
     conn = get_pg_connection()
     cursor = conn.cursor()
     booking_code = generate_booking_code(cursor)
+
+    # Clean up prior unconfirmed booking if resubmitting from back/edit flow
+    existing_unconfirmed_id = request.form.get('existing_booking_id') or session.get('pending_booking_id')
+    if existing_unconfirmed_id:
+        try:
+            cursor.execute(
+                "DELETE FROM bookings WHERE id = %s AND (status = 'unconfirmed' OR payment_request = 'unconfirmed')",
+                (existing_unconfirmed_id,)
+            )
+        except Exception as e:
+            print("Error cleaning up prior unconfirmed booking:", e)
 
     cursor.execute('''
     INSERT INTO bookings (

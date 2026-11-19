@@ -123,7 +123,7 @@
 <div class="container py-4">
     
     <div style="max-width: 800px; margin: 0 auto;">
-        {% set current_step = 1 %}
+        {% set current_step = initial_step | default(1) %}
         {% include 'components/booking_stepper.html' %}
     </div>
 
@@ -133,9 +133,10 @@
     
     <form action="{{ url_for('book') }}" method="POST" id="bookingForm">
         <input type="hidden" name="active_tab" value="book_slot">
+        <input type="hidden" name="existing_booking_id" value="{{ renew_booking.booking_id if renew_booking and renew_booking.booking_id else '' }}">
         
         <!-- STEP 1: Session Details -->
-        <div class="booking-step-pane" id="step-pane-1">
+        <div class="booking-step-pane {{ 'd-none' if current_step != 1 else '' }}" id="step-pane-1">
             <div class="glass-panel animate-slide-up" style="padding: 2rem; max-width: 800px; margin: 0 auto;">
                 <h3 class="font-display mb-4" style="font-size: 1.4rem; color: var(--color-primary);">1. Session Details</h3>
                 
@@ -242,7 +243,7 @@
         </div>
 
         <!-- STEP 2: Swimmer Details -->
-        <div class="booking-step-pane d-none" id="step-pane-2">
+        <div class="booking-step-pane {{ 'd-none' if current_step != 2 else '' }}" id="step-pane-2">
             <div class="glass-panel animate-slide-up" style="padding: 2rem; max-width: 800px; margin: 0 auto;">
                 <h3 class="font-display mb-4" style="font-size: 1.4rem; color: var(--color-primary);">2. Swimmer Details</h3>
                 
@@ -251,23 +252,23 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div class="form-group" style="position: relative;">
                         <label for="studentSelect" class="form-label">Swimmer Name <span class="text-danger">*</span></label>
-                        <input type="text" id="studentSelect" name="student" class="form-control" placeholder="Enter swimmer name" value="{{ session.get('user_name', '') }}" autocomplete="off" required>
+                        <input type="text" id="studentSelect" name="student" class="form-control" placeholder="Enter swimmer name" value="{{ renew_booking.student if renew_booking and renew_booking.student else session.get('user_name', '') }}" autocomplete="off" required>
                         <div class="custom-autocomplete-list" id="swimmerAutoList"></div>
                     </div>
                     
                     <div class="form-group">
                         <label for="skillLevelSelect" class="form-label">Skill Level <span class="text-danger">*</span></label>
                         <select id="skillLevelSelect" name="skill_level" class="form-select bg-dark text-white" style="border-color: rgba(255,255,255,0.1);" required>
-                            <option value="Beginner">Beginner</option>
-                            <option value="Intermediate">Intermediate</option>
-                            <option value="Regular">Regular</option>
-                            <option value="Competitor">Competitor</option>
+                            <option value="Beginner" {% if renew_booking and renew_booking.skill_level == 'Beginner' %}selected{% endif %}>Beginner</option>
+                            <option value="Intermediate" {% if renew_booking and renew_booking.skill_level == 'Intermediate' %}selected{% endif %}>Intermediate</option>
+                            <option value="Regular" {% if renew_booking and renew_booking.skill_level == 'Regular' %}selected{% endif %}>Regular</option>
+                            <option value="Competitor" {% if renew_booking and renew_booking.skill_level == 'Competitor' %}selected{% endif %}>Competitor</option>
                         </select>
                     </div>
 
                     <div class="form-group">
                         <label for="bookingPhoneInput" class="form-label">Contact Number <span class="text-danger">*</span></label>
-                        <input type="tel" id="bookingPhoneInput" name="phone" class="form-control" placeholder="10-digit mobile number" value="{{ session.get('phone', '') }}" maxlength="10" required autocomplete="tel">
+                        <input type="tel" id="bookingPhoneInput" name="phone" class="form-control" placeholder="10-digit mobile number" value="{{ renew_booking.phone if renew_booking and renew_booking.phone else session.get('phone', '') }}" maxlength="10" required autocomplete="tel">
                         {% if not session.get('phone') %}
                         <small class="text-muted" style="font-size: 0.75rem;">Your account will be auto-created with this number.</small>
                         {% endif %}
@@ -275,7 +276,7 @@
 
                     <div class="form-group">
                         <label for="emailInput" class="form-label">Email Address <span class="text-muted small fw-normal">(Optional)</span></label>
-                        <input type="email" id="emailInput" name="email" class="form-control" placeholder="parent@example.com - for alerts" value="{{ session.get('email', '') }}" autocomplete="email">
+                        <input type="email" id="emailInput" name="email" class="form-control" placeholder="parent@example.com - for alerts" value="{{ renew_booking.email if renew_booking and renew_booking.email else session.get('email', '') }}" autocomplete="email">
                     </div>
                 </div>
 
@@ -285,7 +286,7 @@
                         <div class="d-flex align-items-center">
                             <div class="input-group input-group-sm" style="width: 120px;">
                                 <button class="btn btn-outline-secondary" type="button" id="btn-minus-person" style="background-color: var(--color-bg-alt); border-color: rgba(255,255,255,0.1); color: white; width: 36px;"><i class="fa-solid fa-minus"></i></button>
-                                <input type="text" id="personsInput" name="persons" class="form-control text-center fw-bold px-0" value="1" readonly style="background-color: rgba(0,0,0,0.4); color: white; pointer-events: none; min-width: 40px;">
+                                <input type="text" id="personsInput" name="persons" class="form-control text-center fw-bold px-0" value="{{ renew_booking.persons if renew_booking and renew_booking.persons else '1' }}" readonly style="background-color: rgba(0,0,0,0.4); color: white; pointer-events: none; min-width: 40px;">
                                 <button class="btn btn-outline-secondary" type="button" id="btn-plus-person" style="background-color: var(--color-bg-alt); border-color: rgba(255,255,255,0.1); color: white; width: 36px;"><i class="fa-solid fa-plus"></i></button>
                             </div>
                         </div>
@@ -321,7 +322,7 @@
                         <label for="feeInput" class="form-label">Calculated Fee (Total Batch)</label>
                         <div style="position: relative;">
                             <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 700; color: var(--color-primary);">₹</span>
-                            <input type="number" id="feeInput" name="fee" class="form-control" value="750" readonly style="padding-left: 2rem; font-weight: 700; font-size: 1.2rem; color: white !important;">
+                            <input type="number" id="feeInput" name="fee" class="form-control" value="{{ renew_booking.fee if renew_booking and renew_booking.fee else '750' }}" readonly style="padding-left: 2rem; font-weight: 700; font-size: 1.2rem; color: white !important;">
                         </div>
                         <div id="bookingPerSwimmerShare" class="text-primary small fw-semibold mt-1" style="display: none; font-size: 0.85rem;"></div>
                     </div>
