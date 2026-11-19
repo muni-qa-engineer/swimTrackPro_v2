@@ -1031,31 +1031,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 8. Pre-fill Swimmer Details
-        if (studentSelect && window.renewBookingData.student) {
+        if (studentSelect) {
             studentSelect.value = window.renewBookingData.student;
             studentSelect.dispatchEvent(new Event('input', { bubbles: true }));
         }
-        const phoneInput = document.getElementById('bookingPhoneInput');
-        if (phoneInput && window.renewBookingData.phone) {
-            phoneInput.value = window.renewBookingData.phone;
-            phoneInput.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-        const skillSelect = document.getElementById('skillLevelSelect');
-        if (skillSelect && window.renewBookingData.skill_level) {
-            skillSelect.value = window.renewBookingData.skill_level;
-            skillSelect.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-        if (emailInput && window.renewBookingData.email) {
-            emailInput.value = window.renewBookingData.email;
+        if (emailInput) {
+            emailInput.value = window.renewBookingData.email || '';
             emailInput.dispatchEvent(new Event('input', { bubbles: true }));
         }
-        if (personsInput && window.renewBookingData.persons) {
-            personsInput.value = window.renewBookingData.persons;
+        if (personsInput) {
+            personsInput.value = window.renewBookingData.persons || 1;
             personsInput.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-        const feeInput = document.getElementById('feeInput');
-        if (feeInput && window.renewBookingData.fee) {
-            feeInput.value = window.renewBookingData.fee;
         }
     }
 });
