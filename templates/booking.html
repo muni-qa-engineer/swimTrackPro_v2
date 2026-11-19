@@ -218,16 +218,13 @@
                 <div class="form-group mb-4" style="position: relative;">
                     <label class="form-label">Pool Location <span class="text-danger">*</span></label>
                     <div style="display: flex; gap: 0.5rem;">
-                        <button type="button" id="locationPickerBtn" class="btn btn-outline" style="border-radius: var(--radius-sm); border-color: rgba(255,255,255,0.1); color: var(--color-primary); padding: 0.6rem 0.85rem;" title="Pick location on map">
-                            <i class="fa-solid fa-map-location-dot"></i>
-                        </button>
                         <input type="text" name="location" id="locationInput" class="form-control" placeholder="e.g. My Home, Gachibowli" autocomplete="off" required style="flex: 1;">
                         <button type="button" id="locateBtn" class="btn btn-outline" style="border-radius: var(--radius-sm); border-color: rgba(255,255,255,0.1); color: var(--color-primary); font-size: 0.85rem; font-weight: 600; padding: 0.6rem 1rem; white-space: nowrap; display: flex; align-items: center; gap: 0.35rem;" title="Detect Current Location">
                             <i class="fa-solid fa-location-crosshairs"></i> <span>Detect</span>
                         </button>
                     </div>
                     <div class="custom-autocomplete-list" id="locationAutoList"></div>
-                    <small class="text-muted mt-1 d-block" style="font-size: 0.78rem;">Society, apartment, or pool address. Use Detect or Map to auto-fill.</small>
+                    <small class="text-muted mt-1 d-block" style="font-size: 0.78rem;">Society, apartment, or pool address. Use Detect to auto-fill.</small>
                 </div>
                 
                 <!-- Hidden fields for Leaflet coords -->
@@ -519,7 +516,12 @@
         function applyGeoLocationData(fullAddress, lat, lng) {
             if (locationInput) {
                 locationInput.value = fullAddress;
-                locationInput.dispatchEvent(new Event('input', { bubbles: true }));
+                // Close and clear autocomplete suggestions so they don't pop up on location detect
+                const autoList = document.getElementById('locationAutoList');
+                if (autoList) {
+                    autoList.classList.remove('active');
+                    autoList.innerHTML = '';
+                }
                 locationInput.dispatchEvent(new Event('change', { bubbles: true }));
             }
             if (latitudeInput) latitudeInput.value = lat;
@@ -529,6 +531,12 @@
         // Detect Current GPS Location
         if (locateBtn && locationInput) {
             locateBtn.addEventListener('click', function() {
+                // Close any open suggestion list immediately
+                const autoList = document.getElementById('locationAutoList');
+                if (autoList) {
+                    autoList.classList.remove('active');
+                    autoList.innerHTML = '';
+                }
                 if (!navigator.geolocation) {
                     alert('Geolocation is not supported by your browser.');
                     return;
@@ -1049,12 +1057,28 @@
         const listEl = document.getElementById(listId);
         if (!input || !listEl) return;
 
-        input.addEventListener('input', function() {
+        // Display suggestions ONLY while user is actively typing
+        input.addEventListener('input', function(e) {
+            // Ignore programmatic events (e.g. from locateBtn or script)
+            if (e && e.isTrusted === false) {
+                listEl.classList.remove('active');
+                listEl.innerHTML = '';
+                return;
+            }
+
             const val = this.value.toLowerCase().trim();
             listEl.innerHTML = '';
-            if (!val) { listEl.classList.remove('active'); return; }
+            if (!val) {
+                listEl.classList.remove('active');
+                return;
+            }
+
             const matches = dataArray.filter(item => item.toLowerCase().includes(val));
-            if (matches.length === 0) { listEl.classList.remove('active'); return; }
+            if (matches.length === 0) {
+                listEl.classList.remove('active');
+                return;
+            }
+
             matches.forEach(m => {
                 const div = document.createElement('div');
                 div.className = 'custom-autocomplete-item';
@@ -1063,6 +1087,7 @@
                     e.preventDefault();
                     input.value = m;
                     listEl.classList.remove('active');
+                    listEl.innerHTML = '';
                     input.dispatchEvent(new Event('change', { bubbles: true }));
                 });
                 listEl.appendChild(div);
@@ -1070,12 +1095,17 @@
             listEl.classList.add('active');
         });
 
-        input.addEventListener('focus', function() {
-            if (this.value.trim()) this.dispatchEvent(new Event('input'));
+        // Close suggestions on blur or when clicking outside
+        input.addEventListener('blur', function() {
+            setTimeout(() => {
+                listEl.classList.remove('active');
+            }, 200);
         });
 
-        input.addEventListener('blur', function() {
-            setTimeout(() => listEl.classList.remove('active'), 150);
+        document.addEventListener('click', function(e) {
+            if (!input.contains(e.target) && !listEl.contains(e.target)) {
+                listEl.classList.remove('active');
+            }
         });
     }
 
