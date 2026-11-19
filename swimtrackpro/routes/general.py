@@ -911,6 +911,190 @@ def delete_carousel_image(img_id):
         conn.close()
     return redirect(url_for("index"))
 
+@login_required
+def delete_account():
+    """Permanently delete a swimmer/guest account, personal data, and preferences.
+    Preserves coach earnings and completed booking records under swimmer's real name.
+    """
+    import os
+    import re
+
+    current_role = session.get("role", "guest")
+    if current_role != "guest":
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
+            return jsonify({
+                "success": False,
+                "message": "Only swimmer/guest accounts can be deleted via this option."
+            }), 403
+        flash("Only swimmer accounts can be self-deleted.", "danger")
+        return redirect(url_for("index"))
+
+    current_user = (session.get("user_name") or "").strip()
+    current_phone = (session.get("phone") or "").strip()
+    user_clean_phone = re.sub(r"\D", "", current_phone)
+    user_norm = current_user.lower()
+    user_id_number = (session.get("id_number") or "").strip()
+
+    if not current_user and not user_clean_phone:
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
+            return jsonify({
+                "success": False,
+                "message": "User session is invalid or expired."
+            }), 400
+        return redirect(url_for("index"))
+
+    # 1. Active Bookings Guard: Check if swimmer has any active or ongoing classes with remaining sessions
+    data = load_data()
+    active_packages = []
+
+    for b in data.get("bookings", []):
+        if str(b.get("owner_phone") or "").startswith("ARCHIVED"):
+            continue
+
+        b_phone = re.sub(r"\D", "", str(b.get("owner_phone") or ""))
+        b_owner = (b.get("owner_name") or "").strip().lower()
+        b_created = (b.get("created_by") or "").strip().lower()
+
+        matches = False
+        if user_clean_phone and b_phone and (
+            user_clean_phone == b_phone or
+            user_clean_phone.endswith(b_phone) or
+            b_phone.endswith(user_clean_phone)
+        ):
+            matches = True
+        elif user_norm and (b_owner == user_norm or b_created == user_norm):
+            matches = True
+
+        if matches:
+            is_comp = b.get("is_completed", False)
+            rem_classes = b.get("remaining_classes", 0) or 0
+            b_status = str(b.get("status") or "").strip().lower()
+            pay_req = str(b.get("payment_request") or "").strip().lower()
+
+            # Active package with remaining classes
+            if not is_comp and rem_classes > 0 and (b_status in ("paid", "active", "confirmed", "pending") or pay_req == "approved"):
+                pkg_name = b.get("package") or "Package"
+                active_packages.append(f"{pkg_name} ({rem_classes} sessions remaining)")
+
+    if active_packages:
+        msg = (
+            "Cannot delete account: You have ongoing swimming classes with remaining sessions: "
+            + ", ".join(active_packages)
+            + ". Please complete or cancel your classes before deleting your account."
+        )
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
+            return jsonify({"success": False, "message": msg}), 400
+        flash(msg, "danger")
+        return redirect(url_for("index"))
+
+    # 2. Database Cleanup & Anonymization
+    try:
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+
+        # Delete any unconfirmed or draft bookings
+        cursor.execute(r"""
+            DELETE FROM bookings
+            WHERE ((%s <> '' AND regexp_replace(COALESCE(owner_phone, ''), '\D', '', 'g') = %s)
+               OR (%s <> '' AND LOWER(COALESCE(owner_name, '')) = %s))
+              AND (status = 'unconfirmed' OR payment_request = 'unconfirmed')
+        """, (user_clean_phone, user_clean_phone, user_norm, user_norm))
+
+        # Archive completed bookings: anonymize phone and email, keep student_name and fee intact for coach
+        cursor.execute(r"""
+            UPDATE bookings
+            SET owner_phone = 'ARCHIVED',
+                email = ''
+            WHERE ((%s <> '' AND regexp_replace(COALESCE(owner_phone, ''), '\D', '', 'g') = %s)
+               OR (%s <> '' AND LOWER(COALESCE(owner_name, '')) = %s))
+        """, (user_clean_phone, user_clean_phone, user_norm, user_norm))
+
+        # Remove student profiles
+        cursor.execute(r"""
+            DELETE FROM students
+            WHERE (%s <> '' AND regexp_replace(COALESCE(owner_phone, ''), '\D', '', 'g') = %s)
+               OR (%s <> '' AND LOWER(COALESCE(owner_name, '')) = %s)
+        """, (user_clean_phone, user_clean_phone, user_norm, user_norm))
+
+        # Remove user_activity record (resets login history, tour status, and STPS ID for clean slate)
+        cursor.execute(r"""
+            DELETE FROM user_activity
+            WHERE role = 'guest'
+              AND ((%s <> '' AND regexp_replace(COALESCE(phone, ''), '\D', '', 'g') = %s)
+               OR (%s <> '' AND LOWER(COALESCE(user_name, '')) = %s))
+        """, (user_clean_phone, user_clean_phone, user_norm, user_norm))
+
+        # Remove guest favorites
+        if user_clean_phone or current_phone:
+            cursor.execute(r"""
+                DELETE FROM guest_favorites
+                WHERE (%s <> '' AND regexp_replace(COALESCE(guest_phone, ''), '\D', '', 'g') = %s)
+                   OR (%s <> '' AND guest_phone = %s)
+            """, (user_clean_phone, user_clean_phone, current_phone, current_phone))
+
+        # Remove notice reads
+        cursor.execute("""
+            DELETE FROM notice_reads
+            WHERE user_type = 'student'
+              AND (user_id = %s OR user_id = %s OR LOWER(user_id) = %s)
+        """, (user_id_number, current_phone, user_norm))
+
+        # Anonymize coach feedback phone while keeping real name and rating for coach
+        cursor.execute(r"""
+            UPDATE coach_feedback
+            SET guest_phone = 'ARCHIVED_' || id::text
+            WHERE (%s <> '' AND regexp_replace(COALESCE(guest_phone, ''), '\D', '', 'g') = %s)
+               OR (%s <> '' AND guest_phone = %s)
+        """, (user_clean_phone, user_clean_phone, current_phone, current_phone))
+
+        # Remove ID card profile picture if stored
+        if user_id_number:
+            cursor.execute("SELECT filename FROM profile_pictures WHERE id_number = %s", (user_id_number,))
+            pic_row = cursor.fetchone()
+            if pic_row and pic_row[0]:
+                pic_file = pic_row[0]
+                if pic_file.startswith("http"):
+                    try:
+                        from services.cloudinary_service import delete_image
+                        delete_image(pic_file)
+                    except Exception:
+                        pass
+                else:
+                    filepath = os.path.join("static", "profile_pictures", pic_file)
+                    if os.path.exists(filepath):
+                        try:
+                            os.remove(filepath)
+                        except Exception:
+                            pass
+            cursor.execute("DELETE FROM profile_pictures WHERE id_number = %s", (user_id_number,))
+
+        conn.commit()
+        conn.close()
+
+    except Exception as e:
+        print("Error during account deletion:", e)
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
+            return jsonify({
+                "success": False,
+                "message": "A database error occurred while deleting your account. Please try again."
+            }), 500
+        flash("An error occurred while deleting your account. Please try again.", "danger")
+        return redirect(url_for("index"))
+
+    # 3. Clear session
+    session.clear()
+    flash("Your account and personal data have been permanently deleted.", "success")
+
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
+        return jsonify({
+            "success": True,
+            "message": "Your account has been deleted successfully.",
+            "redirect": url_for("index")
+        })
+
+    return redirect(url_for("index"))
+
+
 def register_general_routes(app):
     """Register routes with their legacy endpoint names unchanged."""
 
@@ -1351,5 +1535,11 @@ def register_general_routes(app):
         "/admin/pricing/update",
         endpoint="admin_update_pricing",
         view_func=admin_update_pricing,
+        methods=["POST"]
+    )
+    app.add_url_rule(
+        "/account/delete",
+        endpoint="delete_account",
+        view_func=delete_account,
         methods=["POST"]
     )

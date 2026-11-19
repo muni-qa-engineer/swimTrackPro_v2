@@ -1,0 +1,152 @@
+<!-- Delete Account Modal (Guests/Swimmers Only) -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content glass-panel" style="background: rgba(15, 15, 18, 0.98); border: 1px solid rgba(239, 68, 68, 0.35); box-shadow: 0 20px 40px rgba(0,0,0,0.6);">
+      
+      <!-- Modal Header -->
+      <div class="modal-header border-bottom border-secondary border-opacity-25 pb-3">
+        <div class="d-flex align-items-center gap-2">
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(239, 68, 68, 0.15); display: flex; align-items: center; justify-content: center; border: 1px solid rgba(239, 68, 68, 0.3);">
+            <i class="fa-solid fa-triangle-exclamation text-danger" style="font-size: 1.1rem;"></i>
+          </div>
+          <div>
+            <h5 class="modal-title font-display text-white mb-0" id="deleteAccountModalLabel" style="font-size: 1.15rem; font-weight: 700;">Delete Swimmer Account</h5>
+            <small class="text-secondary" style="font-size: 0.75rem;">Permanent and irreversible action</small>
+          </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body py-3">
+        <div class="alert mb-3" style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 10px; color: #fca5a5; font-size: 0.85rem;">
+          <div class="fw-bold mb-1"><i class="fa-solid fa-circle-exclamation me-1 text-danger"></i> What happens when you delete your account:</div>
+          <ul class="mb-0 ps-3" style="line-height: 1.5;">
+            <li>Your personal account, STPS ID card, saved preferences, and login credentials will be <strong>permanently erased</strong>.</li>
+            <li>If you register or log in again in the future, you will start completely fresh as a <strong>new swimmer</strong>.</li>
+            <li>Completed coaching sessions and payment records remain safely archived for your coach's earnings and financial records under your swimmer name.</li>
+          </ul>
+        </div>
+
+        <div class="p-2 mb-3 rounded" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); font-size: 0.8rem; color: #94a3b8;">
+          <i class="fa-solid fa-shield-halved text-info me-1"></i>
+          <strong>Active Bookings Guard:</strong> Deletion is automatically blocked if you currently have an ongoing package with remaining sessions.
+        </div>
+
+        <div class="mt-3">
+          <label for="deleteAccountConfirmInput" class="form-label text-white small mb-1 fw-semibold">
+            To confirm deletion, please type <span class="text-danger fw-bold">DELETE</span> below:
+          </label>
+          <input
+            type="text"
+            id="deleteAccountConfirmInput"
+            class="form-control text-center text-white"
+            placeholder="Type DELETE"
+            autocomplete="off"
+            style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 8px; font-weight: 700; letter-spacing: 2px;"
+          />
+        </div>
+
+        <div id="deleteAccountErrorAlert" class="alert alert-danger d-none mt-3 py-2 small" role="alert" style="border-radius: 8px;"></div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer border-top border-secondary border-opacity-25 pt-2">
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-3 btn-sm" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <button
+          type="button"
+          id="confirmDeleteAccountBtn"
+          class="btn btn-danger rounded-pill px-4 btn-sm fw-bold"
+          onclick="submitAccountDeletion()"
+          disabled>
+          <i class="fa-solid fa-user-xmark me-1"></i> Delete My Account
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function openDeleteAccountModal() {
+  const modalEl = document.getElementById('deleteAccountModal');
+  if (!modalEl) return;
+  const input = document.getElementById('deleteAccountConfirmInput');
+  const btn = document.getElementById('confirmDeleteAccountBtn');
+  const alertBox = document.getElementById('deleteAccountErrorAlert');
+  if (input) input.value = '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-user-xmark me-1"></i> Delete My Account';
+  }
+  if (alertBox) {
+    alertBox.classList.add('d-none');
+    alertBox.textContent = '';
+  }
+  const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+  modal.show();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  const input = document.getElementById('deleteAccountConfirmInput');
+  const btn = document.getElementById('confirmDeleteAccountBtn');
+  if (input && btn) {
+    input.addEventListener('input', function () {
+      btn.disabled = (this.value.trim().toUpperCase() !== 'DELETE');
+    });
+    input.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter' && !btn.disabled) {
+        submitAccountDeletion();
+      }
+    });
+  }
+});
+
+async function submitAccountDeletion() {
+  const input = document.getElementById('deleteAccountConfirmInput');
+  const btn = document.getElementById('confirmDeleteAccountBtn');
+  const alertBox = document.getElementById('deleteAccountErrorAlert');
+  if (!input || input.value.trim().toUpperCase() !== 'DELETE') return;
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Deleting...';
+  if (alertBox) {
+    alertBox.classList.add('d-none');
+    alertBox.textContent = '';
+  }
+
+  try {
+    const response = await fetch('/account/delete', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: JSON.stringify({ confirmation: 'DELETE' })
+    });
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> Deleted';
+      window.location.href = data.redirect || '/';
+    } else {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-user-xmark me-1"></i> Delete My Account';
+      if (alertBox) {
+        alertBox.textContent = data.message || 'Failed to delete account. Please try again.';
+        alertBox.classList.remove('d-none');
+      }
+    }
+  } catch (err) {
+    console.error('Account deletion error:', err);
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-user-xmark me-1"></i> Delete My Account';
+    if (alertBox) {
+      alertBox.textContent = 'A network error occurred. Please try again.';
+      alertBox.classList.remove('d-none');
+    }
+  }
+}
+</script>

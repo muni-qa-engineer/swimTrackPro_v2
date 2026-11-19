@@ -89,6 +89,9 @@ def _bookings_for_session(data):
 
     result = []
     for booking in data.get("bookings", []):
+        if str(booking.get("owner_phone") or "").startswith("ARCHIVED"):
+            continue
+
         b_owner_name = (booking.get("owner_name") or "").strip().lower()
         b_created_by = (booking.get("created_by") or "").strip().lower()
         b_student = (booking.get("student") or "").strip().lower()

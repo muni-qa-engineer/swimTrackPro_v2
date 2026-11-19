@@ -365,6 +365,8 @@ def get_guest_dashboard_data(current_user, current_phone, data):
     
     user_bookings = []
     for b in data.get('bookings', []):
+        if str(b.get('owner_phone') or '').startswith('ARCHIVED'):
+            continue
         b_phone_clean = clean_phone(b.get('owner_phone'))
         phone_match = False
         if current_phone_clean and b_phone_clean:

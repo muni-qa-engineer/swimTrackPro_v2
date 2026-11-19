@@ -540,6 +540,9 @@
                             <li><a class="dropdown-item" href="javascript:void(0)" onclick="startAppTour('{{ session.get('role') }}', '{{ session.get('user_name')|escape }}')"><i class="fa-solid fa-compass me-2 text-info"></i> Guided Tour</a></li>
                             {% endif %}
                             <li><a class="dropdown-item" href="/help"><i class="fa-solid fa-headset me-2"></i> Help & Contact</a></li>
+                            {% if session.get('role') == 'guest' %}
+                            <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="openDeleteAccountModal()"><i class="fa-solid fa-user-xmark me-2"></i> Delete Account</a></li>
+                            {% endif %}
                             <li><hr class="dropdown-divider" style="border-color: rgba(255, 255, 255, 0.08);"></li>
                             {% endif %}
                             <li><a class="dropdown-item text-danger" href="/logout"><i class="fa-solid fa-right-from-bracket me-2"></i> Sign Out</a></li>
@@ -592,6 +595,9 @@
 
     {% if session.get('user_name') %}
         {% include 'components/id_card_modal.html' %}
+    {% endif %}
+    {% if session.get('role') == 'guest' %}
+        {% include 'components/delete_account_modal.html' %}
     {% endif %}
 
     <!-- Notice Board Modal -->
