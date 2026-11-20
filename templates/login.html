@@ -675,11 +675,6 @@
                     <i class="fa-solid fa-person-swimming me-1"></i> Coaching Sessions
                 </button>
             </div>
-
-            <!-- Mobile Horizontal Scroll Hint -->
-            <div class="d-md-none text-center text-muted small mt-2" style="font-size: 0.75rem;">
-                <i class="fa-solid fa-arrows-left-right me-1" style="color: var(--color-primary);"></i> Swipe horizontally to explore moments
-            </div>
         </div>
 
         <!-- Gallery Grid -->
@@ -1155,9 +1150,6 @@ document.addEventListener('DOMContentLoaded', initGallery);
         
         <!-- INDIVIDUAL / CARDS VIEW -->
         <div id="view-individual">
-            <div class="d-md-none text-center text-muted small mb-3">
-                <i class="fa-solid fa-arrows-left-right me-1" style="color: var(--color-primary);"></i> Swipe horizontally to compare all plans
-            </div>
             {% set bp = pricing_config.base_prices if pricing_config and pricing_config.base_prices else {'demo': 500, 'single': 750, 'monthly_2d': 5000, 'monthly_3d': 7500, '3_months': 18000} %}
             <div class="cg-pricing-grid mb-5">
                 <!-- 1. Demo Session -->

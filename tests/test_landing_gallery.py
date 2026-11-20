@@ -76,7 +76,7 @@ class LandingGalleryTests(unittest.TestCase):
         # 7. Verify mobile responsive optimizations
         # Hidden on mobile view, shown on desktop
         self.assertIn('d-none d-md-flex', html)
-        self.assertIn('Swipe horizontally to explore moments', html)
+        self.assertNotIn('Swipe horizontally', html)
         # 2-row horizontal scroll layout in CSS
         self.assertIn('grid-template-rows: repeat(2, 160px)', html)
         self.assertIn('grid-auto-flow: column', html)
@@ -85,7 +85,6 @@ class LandingGalleryTests(unittest.TestCase):
 
         # 8. Verify Long Term Coaching mobile horizontal view
         self.assertIn('class="long-term-grid', html)
-        self.assertNotIn('Swipe horizontally to view long-term plans', html)
         self.assertIn('.long-term-grid', html)
 
 
