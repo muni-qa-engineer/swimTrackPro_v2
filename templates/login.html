@@ -873,17 +873,12 @@
                         {% endif %}
                     </div>
 
-                    <!-- Bottom Gradient Overlay with Caption and Expand Icon -->
+                    <!-- Bottom Gradient Overlay with Category Label and Expand Icon -->
                     <div class="gallery-overlay-bottom">
-                        <div class="d-flex justify-content-between align-items-end">
-                            <div class="pe-2">
-                                <p class="gallery-caption mb-0 text-white fw-semibold small text-truncate">
-                                    {{ item.caption }}
-                                </p>
-                                <span class="gallery-subcaption text-muted" style="font-size: 0.7rem;">
-                                    {{ item.category_label }}
-                                </span>
-                            </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="gallery-subcaption text-white fw-medium" style="font-size: 0.72rem; letter-spacing: 0.3px;">
+                                {{ item.category_label }}
+                            </span>
                             <div class="gallery-expand-btn">
                                 <i class="fa-solid fa-expand"></i>
                             </div>
@@ -1052,8 +1047,8 @@
     left: 0;
     right: 0;
     z-index: 4;
-    padding: 2rem 0.85rem 0.75rem;
-    background: linear-gradient(to top, rgba(9, 9, 11, 0.95) 0%, rgba(9, 9, 11, 0.6) 60%, transparent 100%);
+    padding: 1.75rem 0.75rem 0.65rem;
+    background: linear-gradient(to top, rgba(9, 9, 11, 0.92) 0%, rgba(9, 9, 11, 0.5) 60%, transparent 100%);
     pointer-events: none;
 }
 

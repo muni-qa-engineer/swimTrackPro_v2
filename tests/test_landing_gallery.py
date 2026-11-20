@@ -53,11 +53,12 @@ class LandingGalleryTests(unittest.TestCase):
         self.assertIn('data-filter="coaching"', html)
         self.assertIn('data-filter="swimmers"', html)
 
-        # 3. Verify Privacy and Anti-Download Protection attributes are in place, but visual tags are removed
+        # 3. Verify Privacy and Anti-Download Protection attributes are in place, but visual tags and heading overlays are removed
         self.assertIn('class="gallery-photo-shield"', html)
         self.assertIn('oncontextmenu="return false;"', html)
         self.assertIn('draggable="false"', html)
         self.assertNotIn('class="gallery-watermark"', html)
+        self.assertNotIn('class="gallery-caption', html)
 
         # 4. Verify Lightbox Modal and protective shield are present, but "Read-Only View" tag is removed
         self.assertIn('id="galleryLightboxModal"', html)
