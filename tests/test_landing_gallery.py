@@ -39,7 +39,9 @@ class LandingGalleryTests(unittest.TestCase):
 
         # 1. Verify Gallery section is present
         self.assertIn('id="gallery"', html)
-        self.assertIn("Training Moments & Facilities", html)
+        self.assertIn("Training Moments & Achievements", html)
+        self.assertNotIn("Olympic Standard", html)
+        self.assertNotIn("Pool Facility & Academy", html)
         
         # Verify removed subtitle and "Protected Gallery:" pill are absent
         self.assertNotIn("Explore real coaching moments", html)
@@ -47,8 +49,9 @@ class LandingGalleryTests(unittest.TestCase):
 
         # 2. Verify filter tabs are rendered
         self.assertIn('data-filter="all"', html)
-        self.assertIn('data-filter="facilities"', html)
+        self.assertIn('data-filter="achievements"', html)
         self.assertIn('data-filter="coaching"', html)
+        self.assertIn('data-filter="swimmers"', html)
 
         # 3. Verify Privacy and Anti-Download Protection attributes are in place, but visual tags are removed
         self.assertIn('class="gallery-photo-shield"', html)

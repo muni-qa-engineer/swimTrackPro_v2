@@ -813,7 +813,7 @@
                 <i class="fa-solid fa-camera-retro me-1"></i> VISUAL HIGHLIGHTS
             </span>
             <h2 class="font-display text-white" style="font-weight: 800; font-size: 2.2rem; margin-bottom: 1.25rem;">
-                Training Moments & Facilities
+                Training Moments & Achievements
             </h2>
 
             <!-- Filter Tabs (Desktop / Tablet view; hidden on mobile) -->
@@ -821,11 +821,14 @@
                 <button type="button" class="btn btn-sm gallery-filter-btn active" data-filter="all">
                     <i class="fa-solid fa-border-all me-1"></i> All Moments (<span id="galleryCountAll">{{ gallery_items|length }}</span>)
                 </button>
-                <button type="button" class="btn btn-sm gallery-filter-btn" data-filter="facilities">
-                    <i class="fa-solid fa-water-ladder me-1"></i> Academy & Facilities
+                <button type="button" class="btn btn-sm gallery-filter-btn" data-filter="achievements">
+                    <i class="fa-solid fa-trophy me-1"></i> Medals & Achievements
                 </button>
                 <button type="button" class="btn btn-sm gallery-filter-btn" data-filter="coaching">
-                    <i class="fa-solid fa-person-swimming me-1"></i> Coaching Sessions
+                    <i class="fa-solid fa-user-group me-1"></i> Coach & Learners
+                </button>
+                <button type="button" class="btn btn-sm gallery-filter-btn" data-filter="swimmers">
+                    <i class="fa-solid fa-person-swimming me-1"></i> Swimmers in Action
                 </button>
             </div>
         </div>
@@ -859,9 +862,13 @@
                         <span class="badge" style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-size: 0.72rem;">
                             <i class="fa-solid fa-certificate me-1"></i> {{ item.author }}
                         </span>
+                        {% elif item.category == 'achievements' %}
+                        <span class="badge" style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); border: 1px solid rgba(245, 158, 11, 0.4); color: #fbbf24; font-size: 0.72rem;">
+                            <i class="fa-solid fa-trophy me-1"></i> {{ item.author }}
+                        </span>
                         {% else %}
                         <span class="badge" style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; font-size: 0.72rem;">
-                            <i class="fa-solid fa-shield-halved me-1"></i> {{ item.author }}
+                            <i class="fa-solid fa-water me-1"></i> {{ item.author }}
                         </span>
                         {% endif %}
                     </div>
