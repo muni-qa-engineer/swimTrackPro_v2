@@ -40,27 +40,37 @@ class LandingGalleryTests(unittest.TestCase):
         # 1. Verify Gallery section is present
         self.assertIn('id="gallery"', html)
         self.assertIn("Training Moments & Facilities", html)
-        self.assertIn("Protected Gallery:", html)
+        
+        # Verify removed subtitle and "Protected Gallery:" pill are absent
+        self.assertNotIn("Explore real coaching moments", html)
+        self.assertNotIn("Protected Gallery:", html)
 
         # 2. Verify filter tabs are rendered
         self.assertIn('data-filter="all"', html)
         self.assertIn('data-filter="facilities"', html)
         self.assertIn('data-filter="coaching"', html)
 
-        # 3. Verify Privacy and Anti-Download Protection attributes are in place
+        # 3. Verify Privacy and Anti-Download Protection attributes are in place, but visual tags are removed
         self.assertIn('class="gallery-photo-shield"', html)
         self.assertIn('oncontextmenu="return false;"', html)
         self.assertIn('draggable="false"', html)
-        self.assertIn('class="gallery-watermark"', html)
+        self.assertNotIn('class="gallery-watermark"', html)
 
-        # 4. Verify Lightbox Modal and protective shield are present
+        # 4. Verify Lightbox Modal and protective shield are present, but "Read-Only View" tag is removed
         self.assertIn('id="galleryLightboxModal"', html)
         self.assertIn('class="lightbox-photo-shield"', html)
-        self.assertIn("Read-Only View", html)
+        self.assertNotIn("Read-Only View", html)
 
         # 5. Verify Navigation bar link to Gallery is rendered for visitors
         self.assertIn('href="#gallery"', html)
         self.assertIn("Gallery</a>", html)
+
+        # 6. Verify section order: Coaches -> Gallery -> Coaching Plans
+        coaches_idx = html.find('id="coaches"')
+        gallery_idx = html.find('id="gallery"')
+        plans_idx = html.find('id="plans"')
+        self.assertTrue(coaches_idx != -1 and gallery_idx != -1 and plans_idx != -1)
+        self.assertTrue(coaches_idx < gallery_idx < plans_idx)
 
 
 if __name__ == "__main__":
