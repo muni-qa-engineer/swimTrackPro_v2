@@ -42,6 +42,8 @@
         
         <nav class="nav-links animate-fade-in">
             <a href="#features" class="nav-link">Our Concept</a>
+            <a href="#coaches" class="nav-link">Coaches</a>
+            <a href="#gallery" class="nav-link">Gallery</a>
             <a href="#plans" class="nav-link">Coaching Plans</a>
             {% if session.get('user_name') %}
                 <a href="/logout" class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Logout</a>
@@ -1574,6 +1576,485 @@
     </div>
 </div>
 {% endif %}
+
+<!-- Gallery Section (Visual Highlights) -->
+{% if gallery_items is defined and gallery_items|length > 0 %}
+<section class="gallery-section py-5" id="gallery" style="background: rgba(9, 9, 11, 0.5); border-top: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06); position: relative;">
+    <div class="container">
+        <!-- Section Header -->
+        <div class="text-center mb-4">
+            <span class="badge mb-2 px-3 py-1.5 rounded-pill" style="background: rgba(6, 182, 212, 0.12); color: #38bdf8; font-weight: 700; font-size: 0.75rem; letter-spacing: 0.5px; border: 1px solid rgba(6, 182, 212, 0.3);">
+                <i class="fa-solid fa-camera-retro me-1"></i> VISUAL HIGHLIGHTS
+            </span>
+            <h2 class="font-display text-white" style="font-weight: 800; font-size: 2.2rem; margin-bottom: 0.5rem;">
+                Training Moments & Facilities
+            </h2>
+            <p class="text-muted" style="max-width: 650px; margin: 0 auto 1.25rem;">
+                Explore real coaching moments, stroke correction drills, and partner community pool facilities.
+            </p>
+
+            <!-- Privacy Trust Reassurance Pill -->
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1.5 rounded-pill mb-3" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); color: #6ee7b7; font-size: 0.78rem;">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>Protected Gallery: Photos are in read-only mode for student privacy. Downloading & saving are disabled.</span>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="d-flex justify-content-center align-items-center flex-wrap gap-2 mt-2" id="galleryFilterTabs">
+                <button type="button" class="btn btn-sm gallery-filter-btn active" data-filter="all">
+                    <i class="fa-solid fa-border-all me-1"></i> All Moments (<span id="galleryCountAll">{{ gallery_items|length }}</span>)
+                </button>
+                <button type="button" class="btn btn-sm gallery-filter-btn" data-filter="facilities">
+                    <i class="fa-solid fa-water-ladder me-1"></i> Academy & Facilities
+                </button>
+                <button type="button" class="btn btn-sm gallery-filter-btn" data-filter="coaching">
+                    <i class="fa-solid fa-person-swimming me-1"></i> Coaching Sessions
+                </button>
+            </div>
+        </div>
+
+        <!-- Gallery Grid -->
+        <div class="gallery-grid" id="galleryGrid">
+            {% for item in gallery_items %}
+            <div class="gallery-item-card" data-category="{{ item.category }}" data-index="{{ loop.index0 }}">
+                <div class="gallery-img-wrapper">
+                    <!-- Base Image -->
+                    <img
+                        src="{{ item.url }}"
+                        alt="{{ item.caption }}"
+                        class="gallery-img"
+                        loading="lazy"
+                        draggable="false"
+                    />
+
+                    <!-- Transparent Privacy Shield: Intercepts right-click, touch, and drag -->
+                    <div
+                        class="gallery-photo-shield"
+                        title="Click to view details"
+                        oncontextmenu="return false;"
+                        ondragstart="return false;"
+                        onclick="openGalleryLightbox({{ loop.index0 }})"
+                    ></div>
+
+                    <!-- Subtle Watermark -->
+                    <div class="gallery-watermark">SwimTrackPro • Protected</div>
+
+                    <!-- Top Left Category/Author Badge -->
+                    <div class="gallery-badge-top">
+                        {% if item.is_coach %}
+                        <span class="badge" style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-size: 0.72rem;">
+                            <i class="fa-solid fa-certificate me-1"></i> {{ item.author }}
+                        </span>
+                        {% else %}
+                        <span class="badge" style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; font-size: 0.72rem;">
+                            <i class="fa-solid fa-shield-halved me-1"></i> {{ item.author }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Bottom Gradient Overlay with Caption and Expand Icon -->
+                    <div class="gallery-overlay-bottom">
+                        <div class="d-flex justify-content-between align-items-end">
+                            <div class="pe-2">
+                                <p class="gallery-caption mb-0 text-white fw-semibold small text-truncate">
+                                    {{ item.caption }}
+                                </p>
+                                <span class="gallery-subcaption text-muted" style="font-size: 0.7rem;">
+                                    {{ item.category_label }}
+                                </span>
+                            </div>
+                            <div class="gallery-expand-btn">
+                                <i class="fa-solid fa-expand"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Read-Only Lightbox Modal -->
+<div class="modal fade" id="galleryLightboxModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content glass-panel" style="background: rgba(15, 15, 18, 0.98); border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); border-radius: 16px; overflow: hidden;">
+            <!-- Lightbox Header -->
+            <div class="modal-header border-bottom border-secondary border-opacity-25 py-2.5 px-3 d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <span id="lightboxIndexBadge" class="badge bg-secondary bg-opacity-50 text-white small" style="font-size: 0.75rem;">1 / 1</span>
+                    <span id="lightboxCategoryBadge" class="badge rounded-pill" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); font-size: 0.72rem;"></span>
+                    <span class="badge rounded-pill d-none d-sm-inline-flex align-items-center gap-1" style="background: rgba(16, 185, 129, 0.1); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.7rem;">
+                        <i class="fa-solid fa-lock"></i> Read-Only View
+                    </span>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Lightbox Body: Image Container with Shield Layer -->
+            <div class="modal-body p-0 position-relative d-flex justify-content-center align-items-center" style="min-height: 380px; max-height: 72vh; background: #000; overflow: hidden;" oncontextmenu="return false;">
+                <!-- Main Preview Image -->
+                <img
+                    id="lightboxMainImg"
+                    src=""
+                    alt="Gallery Preview"
+                    draggable="false"
+                    style="max-height: 72vh; max-width: 100%; object-fit: contain; pointer-events: none; -webkit-user-drag: none; user-select: none; display: block;"
+                />
+
+                <!-- Transparent Privacy Shield over Lightbox Preview -->
+                <div
+                    class="lightbox-photo-shield"
+                    oncontextmenu="return false;"
+                    ondragstart="return false;"
+                    style="position: absolute; inset: 0; z-index: 5; -webkit-touch-callout: none; user-select: none; background: transparent;"
+                ></div>
+
+                <!-- Watermark Overlay -->
+                <div class="lightbox-watermark-overlay" style="position: absolute; bottom: 12px; right: 16px; z-index: 6; pointer-events: none; font-size: 0.75rem; color: rgba(255, 255, 255, 0.45); font-weight: 600; letter-spacing: 1px; text-shadow: 0 1px 3px rgba(0,0,0,0.8);">
+                    🏊🏼‍♂️ SwimTrackPro • Training Moments
+                </div>
+
+                <!-- Previous Navigation Button -->
+                <button
+                    type="button"
+                    class="lightbox-nav-btn prev-btn"
+                    id="lightboxPrevBtn"
+                    onclick="prevGalleryPhoto()"
+                    title="Previous Photo (Left Arrow)"
+                    style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); z-index: 10; width: 42px; height: 42px; border-radius: 50%; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.2); color: white; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); transition: all 0.2s;"
+                >
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+
+                <!-- Next Navigation Button -->
+                <button
+                    type="button"
+                    class="lightbox-nav-btn next-btn"
+                    id="lightboxNextBtn"
+                    onclick="nextGalleryPhoto()"
+                    title="Next Photo (Right Arrow)"
+                    style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); z-index: 10; width: 42px; height: 42px; border-radius: 50%; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.2); color: white; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); transition: all 0.2s;"
+                >
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <!-- Lightbox Footer -->
+            <div class="modal-footer border-top border-secondary border-opacity-25 py-2.5 px-3 d-flex justify-content-between align-items-center">
+                <div class="text-start pe-2" style="max-width: 65%;">
+                    <div id="lightboxCaption" class="text-white fw-bold small text-truncate"></div>
+                    <div id="lightboxAuthor" class="text-muted" style="font-size: 0.75rem;"></div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <a
+                        id="lightboxCoachLink"
+                        href="#coaches"
+                        class="btn btn-sm btn-outline-info rounded-pill px-3 d-none align-items-center gap-1"
+                        onclick="closeLightboxAndScrollToCoaches()"
+                        style="font-size: 0.75rem;"
+                    >
+                        <i class="fa-solid fa-calendar-check"></i> Book With Coach
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal" style="font-size: 0.75rem;">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Gallery Grid & Anti-Download Styling */
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 1.25rem;
+    position: relative;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
+.gallery-item-card {
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(24, 24, 27, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    position: relative;
+    height: 240px;
+}
+
+.gallery-item-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(6, 182, 212, 0.4);
+    box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.5), 0 0 15px rgba(6, 182, 212, 0.15);
+}
+
+.gallery-img-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.gallery-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    -webkit-user-drag: none;
+    user-select: none;
+    transition: transform 0.4s ease;
+}
+
+.gallery-item-card:hover .gallery-img {
+    transform: scale(1.05);
+}
+
+/* Protective transparent shield overlay */
+.gallery-photo-shield {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    cursor: pointer;
+    background: transparent;
+    -webkit-touch-callout: none;
+    user-select: none;
+}
+
+.gallery-watermark {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 4;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.4);
+    background: rgba(0, 0, 0, 0.45);
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    pointer-events: none;
+    backdrop-filter: blur(2px);
+}
+
+.gallery-badge-top {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 4;
+    pointer-events: none;
+}
+
+.gallery-overlay-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 4;
+    padding: 2rem 0.85rem 0.75rem;
+    background: linear-gradient(to top, rgba(9, 9, 11, 0.95) 0%, rgba(9, 9, 11, 0.6) 60%, transparent 100%);
+    pointer-events: none;
+}
+
+.gallery-expand-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.gallery-item-card:hover .gallery-expand-btn {
+    background: var(--color-primary);
+    color: #09090b;
+    border-color: var(--color-primary);
+}
+
+/* Filter buttons */
+.gallery-filter-btn {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--color-text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 0.35rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.gallery-filter-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.gallery-filter-btn.active {
+    background: var(--color-primary);
+    color: #09090b;
+    border-color: var(--color-primary);
+    font-weight: 700;
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.3);
+}
+
+/* Lightbox navigation buttons */
+.lightbox-nav-btn:hover {
+    background: var(--color-primary) !important;
+    color: #09090b !important;
+    border-color: var(--color-primary) !important;
+}
+
+@media (max-width: 576px) {
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 0.75rem;
+    }
+    .gallery-item-card {
+        height: 180px;
+    }
+    .lightbox-nav-btn {
+        width: 34px !important;
+        height: 34px !important;
+        font-size: 0.8rem;
+    }
+}
+</style>
+
+<script>
+// Gallery Data & Protected Lightbox Logic
+const landingGalleryData = {{ gallery_items|tojson if gallery_items is defined else '[]' }};
+let currentGalleryIndex = 0;
+let filteredGalleryIndices = [];
+
+function initGallery() {
+    filteredGalleryIndices = landingGalleryData.map((_, i) => i);
+
+    // Setup filter button listeners
+    const filterBtns = document.querySelectorAll('.gallery-filter-btn');
+    const cards = document.querySelectorAll('.gallery-item-card');
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', function () {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            const filter = this.getAttribute('data-filter');
+            filteredGalleryIndices = [];
+
+            cards.forEach((card, idx) => {
+                const category = card.getAttribute('data-category');
+                if (filter === 'all' || category === filter) {
+                    card.style.display = 'block';
+                    filteredGalleryIndices.push(idx);
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    // Global right-click prevention on gallery section
+    const gallerySection = document.getElementById('gallery');
+    if (gallerySection) {
+        gallerySection.addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+            return false;
+        });
+    }
+
+    // Keyboard navigation for Lightbox
+    document.addEventListener('keydown', function (e) {
+        const modalEl = document.getElementById('galleryLightboxModal');
+        if (!modalEl || !modalEl.classList.contains('show')) return;
+
+        if (e.key === 'ArrowRight') {
+            nextGalleryPhoto();
+        } else if (e.key === 'ArrowLeft') {
+            prevGalleryPhoto();
+        }
+    });
+}
+
+function openGalleryLightbox(index) {
+    if (!landingGalleryData || landingGalleryData.length === 0) return;
+    currentGalleryIndex = index;
+    renderLightboxItem(currentGalleryIndex);
+
+    const modalEl = document.getElementById('galleryLightboxModal');
+    if (modalEl) {
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+    }
+}
+
+function renderLightboxItem(index) {
+    const item = landingGalleryData[index];
+    if (!item) return;
+
+    const imgEl = document.getElementById('lightboxMainImg');
+    const indexBadge = document.getElementById('lightboxIndexBadge');
+    const catBadge = document.getElementById('lightboxCategoryBadge');
+    const captionEl = document.getElementById('lightboxCaption');
+    const authorEl = document.getElementById('lightboxAuthor');
+    const coachBtn = document.getElementById('lightboxCoachLink');
+
+    if (imgEl) imgEl.src = item.url;
+    if (indexBadge) indexBadge.textContent = `${index + 1} / ${landingGalleryData.length}`;
+    if (catBadge) catBadge.textContent = item.category_label || 'Gallery';
+    if (captionEl) captionEl.textContent = item.caption || 'SwimTrackPro Training Highlight';
+    if (authorEl) authorEl.textContent = `Credit: ${item.author || 'SwimTrackPro'}`;
+
+    if (coachBtn) {
+        if (item.is_coach) {
+            coachBtn.classList.remove('d-none');
+            coachBtn.classList.add('d-inline-flex');
+        } else {
+            coachBtn.classList.remove('d-inline-flex');
+            coachBtn.classList.add('d-none');
+        }
+    }
+}
+
+function nextGalleryPhoto() {
+    if (!landingGalleryData.length) return;
+    currentGalleryIndex = (currentGalleryIndex + 1) % landingGalleryData.length;
+    renderLightboxItem(currentGalleryIndex);
+}
+
+function prevGalleryPhoto() {
+    if (!landingGalleryData.length) return;
+    currentGalleryIndex = (currentGalleryIndex - 1 + landingGalleryData.length) % landingGalleryData.length;
+    renderLightboxItem(currentGalleryIndex);
+}
+
+function closeLightboxAndScrollToCoaches() {
+    const modalEl = document.getElementById('galleryLightboxModal');
+    if (modalEl) {
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+    }
+    setTimeout(() => {
+        const coachesSection = document.getElementById('coaches');
+        if (coachesSection) {
+            coachesSection.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, 300);
+}
+
+document.addEventListener('DOMContentLoaded', initGallery);
+</script>
+{% endif %}
+<!-- End Gallery Section -->
 
 <!-- Modal login overlay -->
 <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">

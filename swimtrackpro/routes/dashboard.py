@@ -17,6 +17,71 @@ def index():
         packages = get_all_packages()
         coaches_list = []
         carousel_images = []
+        gallery_items = []
+
+        fallback_highlights = [
+            {
+                'id': 'curated_1',
+                'url': '/static/images/Album/DSC08188.JPG',
+                'category': 'coaching',
+                'category_label': 'Coaching Session',
+                'author': 'SwimTrackPro Academy',
+                'caption': 'Underwater Freestyle Form & Stroke Correction',
+                'is_coach': False,
+                'coach_username': ''
+            },
+            {
+                'id': 'curated_2',
+                'url': '/static/images/Album/IMG20220514170101_01.jpg',
+                'category': 'facilities',
+                'category_label': 'Academy & Facilities',
+                'author': 'SwimTrackPro Official',
+                'caption': 'Olympic Standard Temperature-Controlled Pool Facilities',
+                'is_coach': False,
+                'coach_username': ''
+            },
+            {
+                'id': 'curated_3',
+                'url': '/static/images/Album/DSC08279.JPG',
+                'category': 'coaching',
+                'category_label': 'Coaching Session',
+                'author': 'SwimTrackPro Academy',
+                'caption': 'Junior Swimmer Kickboard & Breath Control Drills',
+                'is_coach': False,
+                'coach_username': ''
+            },
+            {
+                'id': 'curated_4',
+                'url': '/static/images/Album/DSC08390.jpg',
+                'category': 'coaching',
+                'category_label': 'Coaching Session',
+                'author': 'SwimTrackPro Academy',
+                'caption': 'Advanced Butterfly Stroke Rhythm & Core Power',
+                'is_coach': False,
+                'coach_username': ''
+            },
+            {
+                'id': 'curated_5',
+                'url': '/static/images/Album/Medals.jpg',
+                'category': 'facilities',
+                'category_label': 'Academy & Facilities',
+                'author': 'SwimTrackPro Official',
+                'caption': 'Championship Laurels & Competition Accolades',
+                'is_coach': False,
+                'coach_username': ''
+            },
+            {
+                'id': 'curated_6',
+                'url': '/static/images/Album/10376914.jpg',
+                'category': 'facilities',
+                'category_label': 'Academy & Facilities',
+                'author': 'SwimTrackPro Official',
+                'caption': 'Community & Doorstep Apartment Swimming Clinic',
+                'is_coach': False,
+                'coach_username': ''
+            }
+        ]
+
         try:
             conn = get_pg_connection()
             cursor = conn.cursor()
@@ -29,12 +94,14 @@ def index():
                 SELECT t.username, t.name, t.experience, t.qualification, t.currently_working, t.residence_location, t.rating,
                        (SELECT COUNT(DISTINCT b.student_name) FROM bookings b WHERE LOWER(b.trainer_username) = LOWER(t.username)) as student_count,
                        (SELECT COUNT(*) FROM coach_feedback c WHERE c.trainer_username = t.username) as review_count,
-                       t.available_slots
+                       t.available_slots,
+                       t.photos
                 FROM trainers t
                 WHERE t.is_approved = TRUE
                 ORDER BY t.rating DESC, t.name
             """)
-            for row in cursor.fetchall():
+            raw_trainers = cursor.fetchall()
+            for row in raw_trainers:
                 coaches_list.append({
                     'username': row[0],
                     'name': row[1],
@@ -47,6 +114,48 @@ def index():
                     'review_count': row[8] or 0,
                     'available_slots': row[9] or "[]"
                 })
+
+            # Build unified gallery items:
+            # 1. Admin photos (homepage_carousel)
+            for img in carousel_images:
+                img_url = (img.get('url') or '').strip()
+                if img_url:
+                    gallery_items.append({
+                        'id': f"admin_{img.get('id')}",
+                        'url': img_url,
+                        'category': 'facilities',
+                        'category_label': 'Academy & Facilities',
+                        'author': 'SwimTrackPro Official',
+                        'caption': 'Pool Facility & Academy Campus',
+                        'is_coach': False,
+                        'coach_username': ''
+                    })
+
+            # 2. Coach photos (trainers.photos)
+            for row in raw_trainers:
+                t_user = row[0]
+                t_name = row[1]
+                t_photos_raw = row[10] or ''
+                photo_list = [p.strip() for p in t_photos_raw.split(',') if p.strip()]
+                for idx, p in enumerate(photo_list):
+                    url = p if p.startswith('http') else f"/static/images/Album/{p}"
+                    gallery_items.append({
+                        'id': f"coach_{t_user}_{idx}",
+                        'url': url,
+                        'category': 'coaching',
+                        'category_label': 'Coaching Session',
+                        'author': f"Coach {t_name}",
+                        'caption': f"Training Session with Coach {t_name}",
+                        'is_coach': True,
+                        'coach_username': t_user
+                    })
+
+            # 3. Ensure gallery has curated items if uploads are low
+            if len(gallery_items) < 6:
+                existing_urls = {item['url'] for item in gallery_items}
+                for item in fallback_highlights:
+                    if item['url'] not in existing_urls:
+                        gallery_items.append(item)
 
             recent_reviews = []
             cursor.execute("""
@@ -67,6 +176,8 @@ def index():
             conn.close()
         except Exception as e:
             print("Error loading data for landing page:", e)
+            if not gallery_items:
+                gallery_items = fallback_highlights
 
         data = load_data()
         active_bookings = [
@@ -93,6 +204,7 @@ def index():
             carousel_images=carousel_images,
             recent_reviews=recent_reviews,
             all_bookings=active_bookings,
+            gallery_items=gallery_items,
             pricing_config=get_pricing_config_dict()
         )
 
