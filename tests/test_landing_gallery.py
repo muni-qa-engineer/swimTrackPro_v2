@@ -85,7 +85,7 @@ class LandingGalleryTests(unittest.TestCase):
 
         # 8. Verify Long Term Coaching mobile horizontal view
         self.assertIn('class="long-term-grid', html)
-        self.assertIn('Swipe horizontally to view long-term plans', html)
+        self.assertNotIn('Swipe horizontally to view long-term plans', html)
         self.assertIn('.long-term-grid', html)
 
 
