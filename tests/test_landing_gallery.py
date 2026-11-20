@@ -88,5 +88,11 @@ class LandingGalleryTests(unittest.TestCase):
         self.assertIn('.long-term-grid', html)
 
 
+        # 9. Verify What You Will Get redesigned cards and mobile layout
+        self.assertIn('class="levels-grid"', html)
+        self.assertIn('class="level-icon-circle mb-3"', html)
+        self.assertIn('.levels-grid', html)
+
+
 if __name__ == "__main__":
     unittest.main()

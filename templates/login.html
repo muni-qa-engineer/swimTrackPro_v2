@@ -385,33 +385,60 @@
 <div class="what-you-get-section" id="what-you-get">
     <div class="container">
         <div class="text-center mb-5">
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-2" style="background: rgba(6, 182, 212, 0.12); border: 1px solid rgba(6, 182, 212, 0.3); color: var(--color-primary); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;">
+                <i class="fa-solid fa-graduation-cap"></i> Skill Progression
+            </div>
             <h2 class="font-display text-white" style="font-weight: 800; font-size: 2.2rem; margin-bottom: 0.5rem;">What You Will Get</h2>
-            <p class="text-muted">Explore the outcomes for your specific skill level.</p>
+            <p class="text-muted">Explore the tailored training outcomes for your specific skill level.</p>
         </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="levels-grid">
             <!-- Beginner Card -->
             <div class="level-card" onclick="openLevelModal('beginner')">
-                <div class="level-icon">🏊🏼‍♂️</div>
+                <span class="badge rounded-pill px-3 py-1 mb-3 level-badge level-badge-beginner">
+                    <i class="fa-solid fa-water me-1"></i> LEVEL 1 • FOUNDATIONS
+                </span>
+                <div class="level-icon-circle mb-3">
+                    <i class="fa-solid fa-life-ring"></i>
+                </div>
                 <h3 class="font-display">I'm a Beginner</h3>
-                <p>Starting from scratch? Learn the basics of water safety and floating.</p>
-                <button class="btn btn-outline-primary mt-3 btn-sm px-4">View Outcomes</button>
+                <p>Starting from scratch? Learn the basics of water safety, floating, and breath control.</p>
+                <div class="level-action-btn">
+                    <span>View Outcomes</span>
+                    <i class="fa-solid fa-arrow-right fa-xs"></i>
+                </div>
             </div>
             
             <!-- Intermediate Card -->
             <div class="level-card" onclick="openLevelModal('intermediate')">
-                <div class="level-icon"><i class="fa-solid fa-swimmer"></i></div>
+                <span class="badge rounded-pill px-3 py-1 mb-3 level-badge level-badge-intermediate">
+                    <i class="fa-solid fa-person-swimming me-1"></i> LEVEL 2 • TECHNIQUE
+                </span>
+                <div class="level-icon-circle mb-3">
+                    <i class="fa-solid fa-person-swimming"></i>
+                </div>
                 <h3 class="font-display">I'm at Intermediate</h3>
-                <p>Know the basics? Master different strokes and underwater swimming.</p>
-                <button class="btn btn-outline-primary mt-3 btn-sm px-4">View Outcomes</button>
+                <p>Know the basics? Master different strokes, underwater swimming, and diving form.</p>
+                <div class="level-action-btn">
+                    <span>View Outcomes</span>
+                    <i class="fa-solid fa-arrow-right fa-xs"></i>
+                </div>
             </div>
             
             <!-- Regular Card -->
             <div class="level-card" onclick="openLevelModal('regular')">
-                <div class="level-icon"><i class="fa-solid fa-stopwatch"></i></div>
+                <span class="badge rounded-pill px-3 py-1 mb-3 level-badge level-badge-regular">
+                    <i class="fa-solid fa-gauge-high me-1"></i> LEVEL 3 • ENDURANCE
+                </span>
+                <div class="level-icon-circle mb-3">
+                    <i class="fa-solid fa-stopwatch"></i>
+                </div>
                 <h3 class="font-display">I'm Regular</h3>
-                <p>Swimming daily? Refine your strokes, build endurance, and track laps.</p>
-                <button class="btn btn-outline-primary mt-3 btn-sm px-4">View Outcomes</button>
+                <p>Swimming daily? Refine your strokes, build endurance, track laps, and race faster.</p>
+                <div class="level-action-btn">
+                    <span>View Outcomes</span>
+                    <i class="fa-solid fa-arrow-right fa-xs"></i>
+                </div>
             </div>
         </div>
     </div>
@@ -451,36 +478,162 @@
 </div>
 
 <style>
+    .levels-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        align-items: stretch;
+    }
+
     .level-card {
-        background: rgba(255,255,255,0.02);
-        border: 1px solid rgba(255,255,255,0.05);
-        border-radius: var(--radius-md);
-        padding: 2.5rem 1.5rem;
+        background: rgba(24, 24, 27, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 2rem 1.5rem;
         text-align: center;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
         height: 100%;
+        position: relative;
     }
+
     .level-card:hover {
         transform: translateY(-5px);
-        background: rgba(6, 182, 212, 0.05);
-        border-color: rgba(6, 182, 212, 0.3);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        background: rgba(24, 24, 27, 0.95);
+        border-color: rgba(6, 182, 212, 0.5);
+        box-shadow: 0 14px 32px rgba(0, 0, 0, 0.5), 0 0 20px rgba(6, 182, 212, 0.18);
     }
-    .level-icon {
-        font-size: 3rem;
+
+    .level-badge {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+    }
+    .level-badge-beginner {
+        background: rgba(16, 185, 129, 0.12);
+        color: #6ee7b7;
+        border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+    .level-badge-intermediate {
+        background: rgba(6, 182, 212, 0.12);
+        color: #38bdf8;
+        border: 1px solid rgba(6, 182, 212, 0.3);
+    }
+    .level-badge-regular {
+        background: rgba(168, 85, 247, 0.12);
+        color: #c084fc;
+        border: 1px solid rgba(168, 85, 247, 0.25);
+    }
+
+    .level-icon-circle {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(6, 182, 212, 0.1);
+        border: 1px solid rgba(6, 182, 212, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
         color: var(--color-primary);
-        margin-bottom: 1.5rem;
+        font-size: 1.55rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 16px rgba(6, 182, 212, 0.15);
     }
+
+    .level-card:hover .level-icon-circle {
+        background: var(--color-primary);
+        color: #09090b;
+        transform: scale(1.08);
+        box-shadow: 0 0 25px rgba(6, 182, 212, 0.45);
+    }
+
     .level-card h3 {
         color: white;
-        margin-bottom: 1rem;
+        margin-bottom: 0.65rem;
         font-weight: 700;
+        font-size: 1.25rem;
     }
+
     .level-card p {
-        color: var(--color-text-secondary);
-        font-size: 0.95rem;
-        margin-bottom: 0;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        line-height: 1.55;
+        min-height: 44px;
+        margin-bottom: 1.25rem;
+    }
+
+    .level-action-btn {
+        width: 100%;
+        padding: 0.55rem 1rem;
+        border-radius: 999px;
+        background: rgba(6, 182, 212, 0.08);
+        border: 1px solid rgba(6, 182, 212, 0.25);
+        color: var(--color-primary);
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        transition: all 0.2s ease;
+    }
+
+    .level-card:hover .level-action-btn {
+        background: var(--color-primary);
+        color: #09090b;
+        border-color: var(--color-primary);
+        font-weight: 700;
+        box-shadow: 0 0 12px rgba(6, 182, 212, 0.3);
+    }
+
+    @media (max-width: 767.98px) {
+        .levels-grid {
+            display: flex !important;
+            overflow-x: auto !important;
+            scroll-snap-type: x mandatory !important;
+            -webkit-overflow-scrolling: touch !important;
+            gap: 1rem !important;
+            padding-bottom: 1rem !important;
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+            margin-left: -12px !important;
+            margin-right: -12px !important;
+            scrollbar-width: thin !important;
+            scrollbar-color: rgba(6, 182, 212, 0.4) transparent !important;
+        }
+
+        .levels-grid::-webkit-scrollbar {
+            height: 4px;
+        }
+        .levels-grid::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        .levels-grid::-webkit-scrollbar-thumb {
+            background: rgba(6, 182, 212, 0.4);
+            border-radius: 10px;
+        }
+
+        .level-card {
+            flex: 0 0 280px !important;
+            width: 280px !important;
+            min-width: 280px !important;
+            max-width: 280px !important;
+            scroll-snap-align: center !important;
+            padding: 1.6rem 1.25rem !important;
+            height: auto !important;
+        }
+
+        .level-card p {
+            min-height: 40px !important;
+            font-size: 0.85rem !important;
+        }
     }
     .carousel-item img {
         object-fit: cover;
