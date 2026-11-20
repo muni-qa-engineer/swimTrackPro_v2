@@ -663,8 +663,8 @@
                 Training Moments & Facilities
             </h2>
 
-            <!-- Filter Tabs -->
-            <div class="d-flex justify-content-center align-items-center flex-wrap gap-2 mt-2" id="galleryFilterTabs">
+            <!-- Filter Tabs (Desktop / Tablet view; hidden on mobile) -->
+            <div class="d-none d-md-flex justify-content-center align-items-center flex-wrap gap-2 mt-2" id="galleryFilterTabs">
                 <button type="button" class="btn btn-sm gallery-filter-btn active" data-filter="all">
                     <i class="fa-solid fa-border-all me-1"></i> All Moments (<span id="galleryCountAll">{{ gallery_items|length }}</span>)
                 </button>
@@ -674,6 +674,11 @@
                 <button type="button" class="btn btn-sm gallery-filter-btn" data-filter="coaching">
                     <i class="fa-solid fa-person-swimming me-1"></i> Coaching Sessions
                 </button>
+            </div>
+
+            <!-- Mobile Horizontal Scroll Hint -->
+            <div class="d-md-none text-center text-muted small mt-2" style="font-size: 0.75rem;">
+                <i class="fa-solid fa-arrows-left-right me-1" style="color: var(--color-primary);"></i> Swipe horizontally to explore moments
             </div>
         </div>
 
@@ -951,14 +956,59 @@
     border-color: var(--color-primary) !important;
 }
 
-@media (max-width: 576px) {
+@media (max-width: 767.98px) {
+    #galleryFilterTabs {
+        display: none !important;
+    }
+
+    /* 2-row horizontal scrolling gallery with dynamic columns on mobile */
     .gallery-grid {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        display: grid;
+        grid-template-rows: repeat(2, 160px);
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(200px, 225px);
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+        scroll-padding: 0 0.5rem;
         gap: 0.75rem;
+        padding-bottom: 0.85rem;
+        padding-top: 0.25rem;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(6, 182, 212, 0.4) rgba(255, 255, 255, 0.04);
     }
+
+    .gallery-grid::-webkit-scrollbar {
+        height: 4px;
+    }
+
+    .gallery-grid::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 999px;
+    }
+
+    .gallery-grid::-webkit-scrollbar-thumb {
+        background: rgba(6, 182, 212, 0.35);
+        border-radius: 999px;
+    }
+
+    .gallery-grid::-webkit-scrollbar-thumb:hover {
+        background: var(--color-primary);
+    }
+
     .gallery-item-card {
-        height: 180px;
+        height: 160px !important;
+        scroll-snap-align: start;
+        flex: 0 0 auto;
     }
+
+    .gallery-expand-btn {
+        width: 26px;
+        height: 26px;
+        font-size: 0.7rem;
+    }
+
     .lightbox-nav-btn {
         width: 34px !important;
         height: 34px !important;

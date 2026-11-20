@@ -73,5 +73,15 @@ class LandingGalleryTests(unittest.TestCase):
         self.assertTrue(coaches_idx < gallery_idx < plans_idx)
 
 
+        # 7. Verify mobile responsive optimizations
+        # Hidden on mobile view, shown on desktop
+        self.assertIn('d-none d-md-flex', html)
+        self.assertIn('Swipe horizontally to explore moments', html)
+        # 2-row horizontal scroll layout in CSS
+        self.assertIn('grid-template-rows: repeat(2, 160px)', html)
+        self.assertIn('grid-auto-flow: column', html)
+        self.assertIn('overflow-x: auto', html)
+
+
 if __name__ == "__main__":
     unittest.main()
