@@ -1372,10 +1372,13 @@ document.addEventListener('DOMContentLoaded', initGallery);
             <!-- Long Term Coaching Section -->
             <div class="text-center mb-4 pt-2">
                 <h3 class="font-display text-white" style="font-weight: 700;">Long Term Coaching</h3>
-                <p class="text-muted">Commit longer, lock in stable cash flow & save up to 57.3% over standalone sessions.</p>
+                <p class="text-muted mb-2">Commit longer, lock in stable cash flow & save up to 57.3% over standalone sessions.</p>
+                <div class="d-md-none text-muted small">
+                    <i class="fa-solid fa-arrows-left-right me-1" style="color: var(--color-primary);"></i> Swipe horizontally to view long-term plans
+                </div>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4 mb-4">
+            <div class="long-term-grid mb-4">
                 <!-- 3 Calendar Months Card (Anchor Value) -->
                 <div class="long-term-card p-3.5 rounded-4" style="background: rgba(24,24,27,0.7); border: 1.5px solid rgba(6,182,212,0.5); box-shadow: 0 6px 24px rgba(0,0,0,0.4); cursor: pointer;" onclick="bookFromPricingCard('3_months')">
                     <div class="badge badge-primary mb-2" id="plan-3months-badge" style="background: rgba(6,182,212,0.15); color: var(--color-primary); padding: 0.35rem 0.65rem; font-weight: 700;">36 SESSIONS • BEST VALUE</div>
@@ -1431,7 +1434,8 @@ document.addEventListener('DOMContentLoaded', initGallery);
 
 <style>
     /* ChatGPT-Style Pricing Grid */
-    .cg-pricing-grid {
+    .cg-pricing-grid,
+    .long-term-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 1.25rem;
@@ -1439,14 +1443,16 @@ document.addEventListener('DOMContentLoaded', initGallery);
     }
     
     @media (max-width: 1199.98px) {
-        .cg-pricing-grid {
+        .cg-pricing-grid,
+        .long-term-grid {
             grid-template-columns: repeat(2, 1fr);
             gap: 1.25rem;
             align-items: stretch;
         }
     }
     @media (max-width: 767.98px) {
-        .cg-pricing-grid {
+        .cg-pricing-grid,
+        .long-term-grid {
             display: flex !important;
             overflow-x: auto !important;
             scroll-snap-type: x mandatory !important;
@@ -1461,14 +1467,17 @@ document.addEventListener('DOMContentLoaded', initGallery);
             scrollbar-color: rgba(6, 182, 212, 0.4) transparent !important;
             align-items: stretch !important;
         }
-        .cg-pricing-grid::-webkit-scrollbar {
+        .cg-pricing-grid::-webkit-scrollbar,
+        .long-term-grid::-webkit-scrollbar {
             height: 5px;
         }
-        .cg-pricing-grid::-webkit-scrollbar-track {
+        .cg-pricing-grid::-webkit-scrollbar-track,
+        .long-term-grid::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 10px;
         }
-        .cg-pricing-grid::-webkit-scrollbar-thumb {
+        .cg-pricing-grid::-webkit-scrollbar-thumb,
+        .long-term-grid::-webkit-scrollbar-thumb {
             background: rgba(6, 182, 212, 0.4);
             border-radius: 10px;
         }
@@ -1480,6 +1489,15 @@ document.addEventListener('DOMContentLoaded', initGallery);
             scroll-snap-align: center !important;
             min-height: 610px !important;
             height: auto !important;
+        }
+        .long-term-card {
+            flex: 0 0 280px !important;
+            width: 280px !important;
+            min-width: 280px !important;
+            max-width: 280px !important;
+            scroll-snap-align: center !important;
+            height: auto !important;
+            min-height: 215px !important;
         }
     }
 

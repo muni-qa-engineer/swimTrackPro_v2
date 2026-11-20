@@ -83,5 +83,11 @@ class LandingGalleryTests(unittest.TestCase):
         self.assertIn('overflow-x: auto', html)
 
 
+        # 8. Verify Long Term Coaching mobile horizontal view
+        self.assertIn('class="long-term-grid', html)
+        self.assertIn('Swipe horizontally to view long-term plans', html)
+        self.assertIn('.long-term-grid', html)
+
+
 if __name__ == "__main__":
     unittest.main()
