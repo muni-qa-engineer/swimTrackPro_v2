@@ -77,14 +77,18 @@ class LandingGalleryTests(unittest.TestCase):
         self.assertTrue(coaches_idx < gallery_idx < plans_idx)
 
 
-        # 7. Verify mobile responsive optimizations
+        # 7. Verify desktop and mobile responsive optimizations
         # Hidden on mobile view, shown on desktop
         self.assertIn('d-none d-md-flex', html)
         self.assertNotIn('Swipe horizontally', html)
-        # 2-row horizontal scroll layout in CSS
+        # Desktop 3-row layout and mobile 2-row layout in CSS
+        self.assertIn('grid-template-rows: repeat(3, 210px)', html)
         self.assertIn('grid-template-rows: repeat(2, 160px)', html)
         self.assertIn('grid-auto-flow: column', html)
         self.assertIn('overflow-x: auto', html)
+        # Desktop navigation controls
+        self.assertIn('id="galleryScrollPrev"', html)
+        self.assertIn('id="galleryScrollNext"', html)
 
 
         # 8. Verify Long Term Coaching mobile horizontal view

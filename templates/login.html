@@ -833,60 +833,84 @@
             </div>
         </div>
 
-        <!-- Gallery Grid -->
-        <div class="gallery-grid" id="galleryGrid">
-            {% for item in gallery_items %}
-            <div class="gallery-item-card" data-category="{{ item.category }}" data-index="{{ loop.index0 }}">
-                <div class="gallery-img-wrapper">
-                    <!-- Base Image -->
-                    <img
-                        src="{{ item.url }}"
-                        alt="{{ item.caption }}"
-                        class="gallery-img"
-                        loading="lazy"
-                        draggable="false"
-                    />
+        <!-- Gallery Grid with Desktop Navigation Arrows -->
+        <div class="gallery-wrapper position-relative">
+            <button
+                type="button"
+                class="gallery-scroll-arrow gallery-scroll-prev d-none d-md-flex"
+                id="galleryScrollPrev"
+                onclick="scrollGallery(-1)"
+                title="Scroll Left"
+                aria-label="Scroll Left"
+            >
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
 
-                    <!-- Transparent Privacy Shield: Intercepts right-click, touch, and drag -->
-                    <div
-                        class="gallery-photo-shield"
-                        title="Click to view details"
-                        oncontextmenu="return false;"
-                        ondragstart="return false;"
-                        onclick="openGalleryLightbox({{ loop.index0 }})"
-                    ></div>
+            <div class="gallery-grid" id="galleryGrid">
+                {% for item in gallery_items %}
+                <div class="gallery-item-card" data-category="{{ item.category }}" data-index="{{ loop.index0 }}">
+                    <div class="gallery-img-wrapper">
+                        <!-- Base Image -->
+                        <img
+                            src="{{ item.url }}"
+                            alt="{{ item.caption }}"
+                            class="gallery-img"
+                            loading="lazy"
+                            draggable="false"
+                        />
 
-                    <!-- Top Left Category/Author Badge -->
-                    <div class="gallery-badge-top">
-                        {% if item.is_coach %}
-                        <span class="badge" style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-size: 0.72rem;">
-                            <i class="fa-solid fa-certificate me-1"></i> {{ item.author }}
-                        </span>
-                        {% elif item.category == 'achievements' %}
-                        <span class="badge" style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); border: 1px solid rgba(245, 158, 11, 0.4); color: #fbbf24; font-size: 0.72rem;">
-                            <i class="fa-solid fa-trophy me-1"></i> {{ item.author }}
-                        </span>
-                        {% else %}
-                        <span class="badge" style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; font-size: 0.72rem;">
-                            <i class="fa-solid fa-water me-1"></i> {{ item.author }}
-                        </span>
-                        {% endif %}
-                    </div>
+                        <!-- Transparent Privacy Shield: Intercepts right-click, touch, and drag -->
+                        <div
+                            class="gallery-photo-shield"
+                            title="Click to view details"
+                            oncontextmenu="return false;"
+                            ondragstart="return false;"
+                            onclick="openGalleryLightbox({{ loop.index0 }})"
+                        ></div>
 
-                    <!-- Bottom Gradient Overlay with Category Label and Expand Icon -->
-                    <div class="gallery-overlay-bottom">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="gallery-subcaption text-white fw-medium" style="font-size: 0.72rem; letter-spacing: 0.3px;">
-                                {{ item.category_label }}
+                        <!-- Top Left Category/Author Badge -->
+                        <div class="gallery-badge-top">
+                            {% if item.is_coach %}
+                            <span class="badge" style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-size: 0.72rem;">
+                                <i class="fa-solid fa-certificate me-1"></i> {{ item.author }}
                             </span>
-                            <div class="gallery-expand-btn">
-                                <i class="fa-solid fa-expand"></i>
+                            {% elif item.category == 'achievements' %}
+                            <span class="badge" style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); border: 1px solid rgba(245, 158, 11, 0.4); color: #fbbf24; font-size: 0.72rem;">
+                                <i class="fa-solid fa-trophy me-1"></i> {{ item.author }}
+                            </span>
+                            {% else %}
+                            <span class="badge" style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; font-size: 0.72rem;">
+                                <i class="fa-solid fa-water me-1"></i> {{ item.author }}
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Bottom Gradient Overlay with Category Label and Expand Icon -->
+                        <div class="gallery-overlay-bottom">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="gallery-subcaption text-white fw-medium" style="font-size: 0.72rem; letter-spacing: 0.3px;">
+                                    {{ item.category_label }}
+                                </span>
+                                <div class="gallery-expand-btn">
+                                    <i class="fa-solid fa-expand"></i>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
+
+            <button
+                type="button"
+                class="gallery-scroll-arrow gallery-scroll-next d-none d-md-flex"
+                id="galleryScrollNext"
+                onclick="scrollGallery(1)"
+                title="Scroll Right"
+                aria-label="Scroll Right"
+            >
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
         </div>
     </div>
 </section>
@@ -974,15 +998,50 @@
 </div>
 
 <style>
-/* Gallery Grid & Anti-Download Styling */
+/* Gallery Grid: 3 rows with dynamic columns on desktop */
+.gallery-wrapper {
+    position: relative;
+    width: 100%;
+}
+
 .gallery-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-    gap: 1.25rem;
+    grid-template-rows: repeat(3, 210px);
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(280px, 340px);
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    scroll-padding: 0 0.5rem;
+    scroll-behavior: smooth;
+    gap: 1.15rem;
+    padding-bottom: 0.9rem;
+    padding-top: 0.25rem;
     position: relative;
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(6, 182, 212, 0.4) rgba(255, 255, 255, 0.04);
+}
+
+.gallery-grid::-webkit-scrollbar {
+    height: 6px;
+}
+
+.gallery-grid::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 999px;
+}
+
+.gallery-grid::-webkit-scrollbar-thumb {
+    background: rgba(6, 182, 212, 0.35);
+    border-radius: 999px;
+}
+
+.gallery-grid::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary);
 }
 
 .gallery-item-card {
@@ -992,13 +1051,49 @@
     border: 1px solid rgba(255, 255, 255, 0.08);
     transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
     position: relative;
-    height: 240px;
+    height: 210px;
+    scroll-snap-align: start;
+    flex: 0 0 auto;
 }
 
 .gallery-item-card:hover {
     transform: translateY(-4px);
     border-color: rgba(6, 182, 212, 0.4);
     box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.5), 0 0 15px rgba(6, 182, 212, 0.15);
+}
+
+.gallery-scroll-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 8;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.gallery-scroll-arrow:hover {
+    background: var(--color-primary);
+    color: #09090b;
+    border-color: var(--color-primary);
+    transform: translateY(-50%) scale(1.08);
+}
+
+.gallery-scroll-prev {
+    left: -14px;
+}
+
+.gallery-scroll-next {
+    right: -14px;
 }
 
 .gallery-img-wrapper {
@@ -1111,46 +1206,24 @@
         display: none !important;
     }
 
+    .gallery-scroll-arrow {
+        display: none !important;
+    }
+
     /* 2-row horizontal scrolling gallery with dynamic columns on mobile */
     .gallery-grid {
-        display: grid;
         grid-template-rows: repeat(2, 160px);
-        grid-auto-flow: column;
         grid-auto-columns: minmax(200px, 225px);
-        overflow-x: auto;
-        overflow-y: hidden;
-        -webkit-overflow-scrolling: touch;
-        scroll-snap-type: x proximity;
-        scroll-padding: 0 0.5rem;
         gap: 0.75rem;
         padding-bottom: 0.85rem;
-        padding-top: 0.25rem;
-        scrollbar-width: thin;
-        scrollbar-color: rgba(6, 182, 212, 0.4) rgba(255, 255, 255, 0.04);
     }
 
     .gallery-grid::-webkit-scrollbar {
         height: 4px;
     }
 
-    .gallery-grid::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.04);
-        border-radius: 999px;
-    }
-
-    .gallery-grid::-webkit-scrollbar-thumb {
-        background: rgba(6, 182, 212, 0.35);
-        border-radius: 999px;
-    }
-
-    .gallery-grid::-webkit-scrollbar-thumb:hover {
-        background: var(--color-primary);
-    }
-
     .gallery-item-card {
         height: 160px !important;
-        scroll-snap-align: start;
-        flex: 0 0 auto;
     }
 
     .gallery-expand-btn {
@@ -1197,8 +1270,21 @@ function initGallery() {
                     card.style.display = 'none';
                 }
             });
+
+            const grid = document.getElementById('galleryGrid');
+            if (grid) {
+                grid.scrollTo({ left: 0, behavior: 'smooth' });
+            }
+            setTimeout(updateGalleryScrollArrows, 150);
         });
     });
+
+    const galleryGridEl = document.getElementById('galleryGrid');
+    if (galleryGridEl) {
+        galleryGridEl.addEventListener('scroll', updateGalleryScrollArrows);
+    }
+    window.addEventListener('resize', updateGalleryScrollArrows);
+    setTimeout(updateGalleryScrollArrows, 250);
 
     // Global right-click prevention on gallery section
     const gallerySection = document.getElementById('gallery');
@@ -1220,6 +1306,45 @@ function initGallery() {
             prevGalleryPhoto();
         }
     });
+}
+
+function scrollGallery(direction) {
+    const grid = document.getElementById('galleryGrid');
+    if (!grid) return;
+    const scrollAmount = grid.clientWidth * 0.75;
+    grid.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+}
+
+function updateGalleryScrollArrows() {
+    const grid = document.getElementById('galleryGrid');
+    const prevBtn = document.getElementById('galleryScrollPrev');
+    const nextBtn = document.getElementById('galleryScrollNext');
+    if (!grid || !prevBtn || !nextBtn) return;
+
+    if (window.innerWidth < 768) {
+        prevBtn.style.display = 'none';
+        nextBtn.style.display = 'none';
+        return;
+    }
+
+    const hasOverflow = grid.scrollWidth > grid.clientWidth + 8;
+    if (!hasOverflow) {
+        prevBtn.style.display = 'none';
+        nextBtn.style.display = 'none';
+        return;
+    }
+
+    prevBtn.style.display = 'flex';
+    nextBtn.style.display = 'flex';
+
+    const atStart = grid.scrollLeft <= 10;
+    const atEnd = grid.scrollLeft >= (grid.scrollWidth - grid.clientWidth - 10);
+
+    prevBtn.style.opacity = atStart ? '0.2' : '1';
+    prevBtn.style.pointerEvents = atStart ? 'none' : 'auto';
+
+    nextBtn.style.opacity = atEnd ? '0.2' : '1';
+    nextBtn.style.pointerEvents = atEnd ? 'none' : 'auto';
 }
 
 function openGalleryLightbox(index) {
