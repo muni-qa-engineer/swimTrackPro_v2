@@ -207,6 +207,11 @@ class DeleteAccountTests(unittest.TestCase):
         self.assertIn("alertElem.remove()", html)
         self.assertIn("container.remove()", html)
 
+        # Assert login modal flash message has 5-second auto-dismiss and modal hide logic
+        self.assertIn("loginModalFlashMessage", html)
+        self.assertIn("dismissLoginModalFlash", html)
+        self.assertIn("msgElem.remove()", html)
+
 
 if __name__ == "__main__":
     unittest.main()

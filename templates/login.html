@@ -2480,11 +2480,57 @@ document.addEventListener('DOMContentLoaded', initGallery);
                 
                 {% with messages = get_flashed_messages() %}
                     {% if messages %}
-                        <div class="text-center mb-3">
+                        <div id="loginModalFlashMessage" class="text-center mb-3 auto-dismiss-msg" style="transition: opacity 0.6s ease, transform 0.6s ease, max-height 0.6s ease, margin-bottom 0.6s ease, padding 0.6s ease; overflow: hidden;">
                             <small class="text-danger" style="font-size: 0.85rem; font-weight: 500;">
                                 <i class="fa-solid fa-triangle-exclamation"></i> {{ messages[-1] }}
                             </small>
                         </div>
+                        <script>
+                          (function() {
+                            function dismissLoginModalFlash() {
+                              setTimeout(function() {
+                                const msgElem = document.getElementById('loginModalFlashMessage');
+                                if (!msgElem) return;
+                                msgElem.style.transition = 'opacity 0.6s ease, transform 0.6s ease, max-height 0.6s ease, margin-bottom 0.6s ease, padding 0.6s ease';
+                                msgElem.style.opacity = '0';
+                                msgElem.style.transform = 'translateY(-6px)';
+                                msgElem.style.maxHeight = '0px';
+                                msgElem.style.marginBottom = '0px';
+                                msgElem.style.padding = '0px';
+                                setTimeout(function() {
+                                  if (msgElem && msgElem.parentNode) {
+                                    msgElem.remove();
+                                  }
+                                  // Auto close modal if user has not interacted with the form
+                                  const nameVal = document.getElementById('nameInput') ? document.getElementById('nameInput').value.trim() : '';
+                                  const phoneVal = document.getElementById('phoneInput') ? document.getElementById('phoneInput').value.trim() : '';
+                                  if (!nameVal && !phoneVal) {
+                                    const modalElem = document.getElementById('loginModal');
+                                    if (modalElem) {
+                                      if (window.bootstrap && bootstrap.Modal) {
+                                        const bsModal = bootstrap.Modal.getInstance(modalElem);
+                                        if (bsModal) {
+                                          bsModal.hide();
+                                        } else {
+                                          const closeBtn = modalElem.querySelector('.btn-close');
+                                          if (closeBtn) closeBtn.click();
+                                        }
+                                      } else {
+                                        const closeBtn = modalElem.querySelector('.btn-close');
+                                        if (closeBtn) closeBtn.click();
+                                      }
+                                    }
+                                  }
+                                }, 650);
+                              }, 5000); // 5 seconds
+                            }
+                            if (document.readyState === 'loading') {
+                              document.addEventListener('DOMContentLoaded', dismissLoginModalFlash);
+                            } else {
+                              dismissLoginModalFlash();
+                            }
+                          })();
+                        </script>
                     {% endif %}
                 {% endwith %}
                 
