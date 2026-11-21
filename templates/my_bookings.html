@@ -1381,6 +1381,58 @@ function confirmAndDeleteBooking(formId, btn, msg) {
     });
 }
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+async function downloadBooking(btn, format, bookingId) {
+    const card = btn.closest('.booking-card');
+    if (!card) return;
+
+    const actions = card.querySelector('.mt-auto.pt-3');
+    const dropdown = card.querySelector('.dropdown');
+    const originalActionsDisplay = actions ? actions.style.display : '';
+    const originalDropdownDisplay = dropdown ? dropdown.style.display : '';
+    
+    if (actions) actions.style.display = 'none';
+    if (dropdown) dropdown.style.display = 'none';
+
+    try {
+        const canvas = await html2canvas(card, {
+            scale: 2,
+            backgroundColor: '#18181b',
+            useCORS: true,
+            logging: false
+        });
+
+        if (actions) actions.style.display = originalActionsDisplay;
+        if (dropdown) dropdown.style.display = originalDropdownDisplay;
+
+        const filename = `booking_${bookingId}_swimtrackpro`;
+
+        if (format === 'png' || format === 'jpeg') {
+            const imgData = canvas.toDataURL(`image/${format}`, 1.0);
+            const link = document.createElement('a');
+            link.download = `${filename}.${format}`;
+            link.href = imgData;
+            link.click();
+        } else if (format === 'pdf') {
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new window.jspdf.jsPDF({
+                orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+                unit: 'px',
+                format: [canvas.width, canvas.height]
+            });
+            pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+            pdf.save(`${filename}.pdf`);
+        }
+    } catch (e) {
+        console.error("Error generating image:", e);
+        if (actions) actions.style.display = originalActionsDisplay;
+        if (dropdown) dropdown.style.display = originalDropdownDisplay;
+        alert("Could not generate download. Please try again.");
+    }
+}
+</script>
 <script src="{{ url_for('static', filename='common.js') }}?v=2.1.0"></script>
 
 
