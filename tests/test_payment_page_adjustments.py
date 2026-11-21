@@ -63,10 +63,12 @@ class PaymentPageAdjustmentTests(unittest.TestCase):
 
         # 1. Height limitation / scrollable table container for ~15 records
         self.assertIn("payment-records-scroll", html, "Payment records table must have scrollable wrapper class")
+        self.assertIn("max-height: 720px", html, "CSS must cap table height to ~15 records with vertical scroll")
         self.assertIn("overflow-y: auto", html, "CSS must provide smooth vertical scroll for records")
 
-        # 2. Download button beside Payment Records
-        self.assertIn("Download Payment Records", html, "Download button must exist in Payment Records")
+        # 2. Download button beside Payment Records (icon-only, no text)
+        self.assertIn("fa-download", html, "Download icon button must exist in Payment Records")
+        self.assertNotIn("Download Payment Records", html, "Download button should not have redundant text/tooltip")
         self.assertIn("downloadPaymentRecords('pdf')", html, "Must offer PDF download option")
         self.assertIn("downloadPaymentRecords('png')", html, "Must offer PNG download option")
         self.assertIn("downloadPaymentRecordsCSV()", html, "Must offer CSV download option")
@@ -74,14 +76,10 @@ class PaymentPageAdjustmentTests(unittest.TestCase):
         # 3. Serial Number column in table
         self.assertIn("<th style=\"width: 50px; text-align: center;\">#</th>", html, "Table header must include serial number column #")
 
-        # 4. Payment Calculations section under My Payment Settings
+        # 4. Payment Calculations section under My Payment Settings (clean summary card)
         self.assertIn("My Payment Settings", html, "Trainer view must have My Payment Settings")
         self.assertIn("Payment Calculations", html, "Must have Payment Calculations section")
         self.assertIn("paymentCalculationsCard", html, "Must have paymentCalculationsCard panel")
-        self.assertIn("calcCountAll", html, "Must have All filter counter")
-        self.assertIn("calcCountReceived", html, "Must have Received filter counter")
-        self.assertIn("calcCountPending", html, "Must have Pending filter counter")
-        self.assertIn("memberCalculationSearch", html, "Must have member search filter input")
         self.assertIn("calcTotalReceived", html, "Must have total received element")
         self.assertIn("calcTotalPending", html, "Must have total pending element")
         self.assertIn("calcGrandTotal", html, "Must have grand total sum element")
