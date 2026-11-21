@@ -5,6 +5,86 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<style>
+/* Refined Dashboard Grid & Calendar UI/UX */
+.dashboard-widget-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+#tourMiniCalendar .mini-calendar {
+    background: rgba(0, 0, 0, 0.28);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 0.5rem;
+    max-width: 360px;
+    margin: 0 auto;
+}
+
+#tourMiniCalendar .calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+    margin-bottom: 0.35rem;
+}
+
+#tourMiniCalendar .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+#tourMiniCalendar .calendar-day {
+    aspect-ratio: 1;
+    max-width: 33px;
+    max-height: 33px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.76rem;
+    font-weight: 500;
+    border-radius: 50%;
+    color: var(--color-text-secondary);
+}
+
+#tourMiniCalendar .calendar-day.empty {
+    visibility: hidden;
+}
+
+#tourMiniCalendar .calendar-day.today {
+    background: var(--color-primary);
+    color: #09090b;
+    font-weight: 800;
+    box-shadow: 0 0 10px var(--color-primary-glow);
+}
+
+#tourMiniCalendar .calendar-day.booked {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    font-weight: 700;
+    border: 1px solid rgba(16, 185, 129, 0.45);
+}
+
+#tourMiniCalendar .calendar-day.makeup {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+    font-weight: 700;
+    border: 1px solid rgba(245, 158, 11, 0.45);
+}
+
+.progress-stats-box {
+    background: rgba(0, 0, 0, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-sm);
+    padding: 0.65rem 0.5rem;
+}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -144,98 +224,147 @@
 
         </div>
 
-        <!-- Dashboard Widgets Layout (2 Columns: 1, 2 / 1, 2 / 1, 2) -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6" style="align-items: start;">
+        <!-- Row 1: Activity & Schedule (Progress Tracker & Mini Calendar) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             
             <!-- 1. Progress Tracker -->
-            <div class="glass-panel" id="tourProgressTracker" style="padding: 1.5rem;">
-                <h3 class="font-display" style="font-size: 1.25rem; margin-bottom: 1rem;"><i class="fa-solid fa-chart-line text-accent"></i> Progress Tracker</h3>
-                
-                {% if total_sessions > 0 %}
-                    {% set progress_percent = ((completed_sessions * 100) / total_sessions) %}
-                    <div class="flex items-center justify-between gap-4">
-                        <div class="progress-circle" style="--progress:{{ progress_percent|round(0,'floor') }};">
-                            <div class="progress-circle-inner">{{ progress_percent|round(0,'floor') }}%</div>
-                        </div>
-                        <div style="flex: 1;">
-                            <div style="font-size: 1.4rem; font-weight: 800; line-height: 1;">
-                                {{ completed_sessions }} / {{ total_sessions }}
-                            </div>
-                            <div class="text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">Total Sessions Completed</div>
-                            <div class="text-secondary" style="font-size: 0.8rem; margin-top: 0.1rem;">Across all your bookings</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Quick Actions -->
-                    {% if has_active_package %}
-                    <div class="d-flex gap-2 mt-4 pt-3" style="border-top: 1px solid rgba(255,255,255,0.05);">
-                        <button type="button" class="btn btn-outline flex-grow-1" style="color: var(--color-warning); border-color: rgba(245, 158, 11, 0.5);" onclick="openSkipModal()">
-                            <i class="fa-solid fa-forward-step"></i> Skip
-                        </button>
-                        {% if has_pausable_package %}
-                        <button type="button" class="btn btn-outline flex-grow-1" style="color: var(--color-danger); border-color: rgba(239, 68, 68, 0.5);" onclick="openPauseModal()">
-                            <i class="fa-solid fa-pause"></i> Pause
-                        </button>
+            <div class="glass-panel dashboard-widget-card" id="tourProgressTracker" style="padding: 1.5rem;">
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-display" style="font-size: 1.25rem; margin: 0;">
+                            <i class="fa-solid fa-chart-line text-accent me-1.5"></i> Progress Tracker
+                        </h3>
+                        {% if total_sessions > 0 %}
+                            {% set pct_val = ((completed_sessions * 100) / total_sessions)|round(0, 'floor') %}
+                            <span class="badge" style="background: rgba(6, 182, 212, 0.12); color: #38bdf8; border: 1px solid rgba(6, 182, 212, 0.3); font-size: 0.72rem; padding: 4px 10px;">
+                                <i class="fa-solid fa-bolt me-1 text-warning"></i>
+                                {% if pct_val >= 100 %}Completed{% elif pct_val > 0 %}In Progress{% else %}Ready to Start{% endif %}
+                            </span>
                         {% endif %}
                     </div>
-                    {% endif %}
-                {% else %}
-                    <div class="text-center py-4">
-                        <div class="mb-3">
-                            <i class="fa-solid fa-person-swimming" style="font-size: 2.5rem; color: rgba(255,255,255,0.1);"></i>
+                    
+                    {% if total_sessions > 0 %}
+                        {% set progress_percent = ((completed_sessions * 100) / total_sessions)|round(0, 'floor') %}
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="progress-circle flex-shrink-0" style="--progress:{{ progress_percent }};">
+                                <div class="progress-circle-inner">{{ progress_percent }}%</div>
+                            </div>
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-size: 1.5rem; font-weight: 800; line-height: 1.1; color: #fff;">
+                                    {{ completed_sessions }} <span style="font-size: 0.95rem; color: #94a3b8; font-weight: 500;">/ {{ total_sessions }} Sessions</span>
+                                </div>
+                                <div class="text-secondary small mt-1" style="font-size: 0.8rem;">
+                                    Across all your active & past bookings
+                                </div>
+                            </div>
                         </div>
-                        <p class="text-muted mb-3" style="font-size: 0.95rem;">No bookings found yet.</p>
-                        <a href="/booking" class="btn btn-primary btn-sm rounded-pill px-4 py-2">
-                            <i class="fa-solid fa-plus me-1"></i> Book Now
-                        </a>
-                    </div>
+
+                        <!-- 3-Box Metric Breakdown -->
+                        <div class="row g-2 mb-2">
+                            <div class="col-4">
+                                <div class="progress-stats-box text-center">
+                                    <div class="text-muted" style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase;">Completed</div>
+                                    <div style="font-size: 1.15rem; font-weight: 800; color: #34d399; margin-top: 2px;">{{ completed_sessions }}</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="progress-stats-box text-center">
+                                    <div class="text-muted" style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase;">Remaining</div>
+                                    <div style="font-size: 1.15rem; font-weight: 800; color: #38bdf8; margin-top: 2px;">{{ total_sessions - completed_sessions if total_sessions >= completed_sessions else 0 }}</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="progress-stats-box text-center">
+                                    <div class="text-muted" style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase;">Target</div>
+                                    <div style="font-size: 1.15rem; font-weight: 800; color: #e2e8f0; margin-top: 2px;">{{ total_sessions }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <div class="mb-3">
+                                <i class="fa-solid fa-person-swimming" style="font-size: 2.5rem; color: rgba(255,255,255,0.15);"></i>
+                            </div>
+                            <p class="text-muted mb-3" style="font-size: 0.92rem;">No bookings found yet.</p>
+                            <a href="/booking" class="btn btn-primary btn-sm rounded-pill px-4 py-2">
+                                <i class="fa-solid fa-plus me-1"></i> Book Now
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Quick Actions Docked at Bottom -->
+                {% if has_active_package %}
+                <div class="d-flex gap-2 pt-3 mt-2" style="border-top: 1px solid rgba(255,255,255,0.06);">
+                    <button type="button" class="btn btn-outline flex-grow-1" style="color: var(--color-warning); border-color: rgba(245, 158, 11, 0.45); font-size: 0.82rem; padding: 0.45rem 0.5rem;" onclick="openSkipModal()">
+                        <i class="fa-solid fa-forward-step me-1"></i> Skip
+                    </button>
+                    {% if has_pausable_package %}
+                    <button type="button" class="btn btn-outline flex-grow-1" style="color: var(--color-danger); border-color: rgba(239, 68, 68, 0.45); font-size: 0.82rem; padding: 0.45rem 0.5rem;" onclick="openPauseModal()">
+                        <i class="fa-solid fa-pause me-1"></i> Pause
+                    </button>
+                    {% endif %}
+                </div>
                 {% endif %}
             </div>
 
             <!-- 2. Mini Calendar -->
-            <div class="glass-panel" id="tourMiniCalendar" style="padding: 1.5rem;">
-                <div class="flex justify-between items-center mb-3">
-                    <h3 class="font-display" style="font-size: 1.25rem; margin: 0;"><i class="fa-regular fa-calendar text-accent"></i> Mini Calendar</h3>
-                    <a href="/calendar" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;">Full View</a>
-                </div>
-                
-                <div class="text-center mb-3">
-                    <h4 style="font-size: 1rem; color: var(--color-text-primary);">{{ current_month_name }}</h4>
-                </div>
-                
-                <div class="mini-calendar">
-                    <div class="calendar-header">
-                        <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+            <div class="glass-panel dashboard-widget-card" id="tourMiniCalendar" style="padding: 1.5rem;">
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-display" style="font-size: 1.25rem; margin: 0;">
+                            <i class="fa-regular fa-calendar text-accent me-1.5"></i> Mini Calendar
+                        </h3>
+                        <a href="/calendar" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; border-radius: 9999px;">
+                            Full View <i class="fa-solid fa-arrow-right ms-1"></i>
+                        </a>
                     </div>
-                    <div class="calendar-grid">
-                        {% for d in calendar_days %}
-                            {% if d.day is none %}
-                                <div class="calendar-day empty"></div>
-                            {% else %}
-                                <div class="calendar-day
-                                  {% if d.is_today %}
-                                    today
-                                  {% elif d.is_booked %}
-                                    booked
-                                  {% elif d.is_makeup %}
-                                    makeup
-                                  {% endif %}">
-                                  {{ d.day }}
-                                </div>
-                            {% endif %}
-                        {% endfor %}
+                    
+                    <div class="text-center mb-2.5">
+                        <span class="badge" style="background: rgba(255, 255, 255, 0.06); color: #fff; font-size: 0.82rem; padding: 4px 12px; font-weight: 600; letter-spacing: 0.3px;">
+                            <i class="fa-regular fa-calendar-days text-primary me-1"></i> {{ current_month_name }}
+                        </span>
+                    </div>
+                    
+                    <div class="mini-calendar">
+                        <div class="calendar-header">
+                            <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+                        </div>
+                        <div class="calendar-grid">
+                            {% for d in calendar_days %}
+                                {% if d.day is none %}
+                                    <div class="calendar-day empty"></div>
+                                {% else %}
+                                    <div class="calendar-day
+                                      {% if d.is_today %}
+                                        today
+                                      {% elif d.is_booked %}
+                                        booked
+                                      {% elif d.is_makeup %}
+                                        makeup
+                                      {% endif %}">
+                                      {{ d.day }}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
                 
-                <div class="flex justify-center gap-4 mt-3" style="font-size: 0.75rem;">
-                    <div class="flex items-center gap-2"><span style="width: 8px; height: 8px; border-radius: 50%; background: #34d399; display: inline-block;"></span> Booked</div>
-                    <div class="flex items-center gap-2"><span style="width: 8px; height: 8px; border-radius: 50%; background: #fbbf24; display: inline-block;"></span> Makeup</div>
-                    <div class="flex items-center gap-2"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--color-primary); display: inline-block;"></span> Today</div>
+                <div class="flex justify-center gap-4 mt-3 pt-2" style="font-size: 0.75rem; border-top: 1px solid rgba(255, 255, 255, 0.06);">
+                    <div class="flex items-center gap-1.5"><span style="width: 8px; height: 8px; border-radius: 50%; background: #34d399; display: inline-block;"></span> Booked</div>
+                    <div class="flex items-center gap-1.5"><span style="width: 8px; height: 8px; border-radius: 50%; background: #fbbf24; display: inline-block;"></span> Makeup</div>
+                    <div class="flex items-center gap-1.5"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--color-primary); display: inline-block;"></span> Today</div>
                 </div>
             </div>
 
+        </div>
+
+        <!-- Row 2: Attendance Flexibility & Credits (Make-up Sessions & Membership) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            
             <!-- 3. Dedicated Make-Up Sessions Credit Card -->
-            <div class="glass-panel animate-fade-in" id="tourMakeupSessionsCard" style="padding: 1.5rem; border: 1px solid rgba(6, 182, 212, 0.35); background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(15, 23, 42, 0.85) 100%);">
+            <div class="glass-panel dashboard-widget-card animate-fade-in" id="tourMakeupSessionsCard" style="padding: 1.5rem; border: 1px solid rgba(6, 182, 212, 0.35); background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(15, 23, 42, 0.85) 100%);">
                     <div class="d-flex align-items-center gap-2 mb-3">
                         <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(6, 182, 212, 0.18); border: 1px solid rgba(6, 182, 212, 0.4); display: flex; align-items: center; justify-content: center; color: #38bdf8; font-size: 1.1rem;">
                             <i class="fa-solid fa-ticket-simple"></i>
@@ -345,7 +474,7 @@
                 </div>
 
                 <!-- Membership & Flexibility Card (Cult.fit Model) -->
-                <div class="glass-panel" id="tourMembershipCard" style="padding: 1.5rem;">
+                <div class="glass-panel dashboard-widget-card" id="tourMembershipCard" style="padding: 1.5rem;">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h3 class="font-display" style="font-size: 1.25rem; margin: 0;">
                             <i class="fa-solid fa-circle-pause text-warning"></i> Membership & Flexibility
@@ -460,8 +589,13 @@
                     {% endif %}
                 </div>
 
+        </div>
+
+        <!-- Row 3: Swimmers & Billing (My Swimmers & Payment Overview) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+
                 <!-- 5. My Swimmers Interactive -->
-                <div class="glass-panel" id="tourMySwimmersCard" style="padding: 1.5rem; display: flex; flex-direction: column;">
+                <div class="glass-panel dashboard-widget-card" id="tourMySwimmersCard" style="padding: 1.5rem;">
                     <div class="flex justify-between items-center mb-2">
                         <h3 class="font-display" style="font-size: 1.25rem; margin: 0;"><i class="fa-solid fa-users text-accent"></i> My Swimmers</h3>
                         <span class="badge badge-success">{{ students|length if students else 0 }}</span>
@@ -524,7 +658,7 @@
                 </div>
 
                 <!-- 6. Payment Overview -->
-                <div class="glass-panel" id="tourPaymentOverviewCard" style="padding: 1.5rem;">
+                <div class="glass-panel dashboard-widget-card" id="tourPaymentOverviewCard" style="padding: 1.5rem;">
                     <h3 class="font-display" style="font-size: 1.25rem; margin-bottom: 1.25rem;"><i class="fa-solid fa-credit-card text-accent"></i> Payment Overview</h3>
                     
                     <div class="grid grid-cols-3 gap-2 text-center mb-4" style="background: rgba(0, 0, 0, 0.2); padding: 1rem; border-radius: var(--radius-md);">
