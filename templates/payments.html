@@ -25,7 +25,8 @@
         border-radius: var(--radius-md);
         padding: 0;
         backdrop-filter: var(--backdrop-blur);
-        max-height: 720px; /* displays ~15 records, hides the rest with smooth scroll */
+        flex: 1 1 auto;
+        min-height: 480px;
         overflow-y: auto;
         overflow-x: auto;
     }
@@ -97,7 +98,7 @@
                 <div class="metric-icon"><i class="fa-solid fa-circle-check"></i></div>
                 <div>
                     <div class="text-muted" style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Paid</div>
-                    <div id="paidAmountCard" style="font-size: 1.8rem; font-weight: 800; line-height: 1; margin-top: 0.25rem;">₹0</div>
+                    <div id="paidAmountCard" style="font-size: 1.8rem; font-weight: 800; line-height: 1; margin-top: 0.25rem;"><i class="fa-solid fa-indian-rupee-sign"></i>{{ "{:,}".format(paid_amount_total if paid_amount_total is defined else 0) }}</div>
                 </div>
             </div>
             
@@ -105,7 +106,7 @@
                 <div class="metric-icon"><i class="fa-solid fa-hourglass-half"></i></div>
                 <div>
                     <div class="text-muted" style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Pending Verification</div>
-                    <div id="pendingAmountCard" style="font-size: 1.8rem; font-weight: 800; line-height: 1; margin-top: 0.25rem;">₹0</div>
+                    <div id="pendingAmountCard" style="font-size: 1.8rem; font-weight: 800; line-height: 1; margin-top: 0.25rem;"><i class="fa-solid fa-indian-rupee-sign"></i>{{ "{:,}".format(pending_amount_total if pending_amount_total is defined else 0) }}</div>
                 </div>
             </div>
             
@@ -113,7 +114,7 @@
                 <div class="metric-icon"><i class="fa-solid fa-circle-xmark" style="color: var(--color-danger);"></i></div>
                 <div>
                     <div class="text-muted" style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Not Paid</div>
-                    <div id="notPaidAmountCard" style="font-size: 1.8rem; font-weight: 800; line-height: 1; margin-top: 0.25rem; color: var(--color-danger);">₹0</div>
+                    <div id="notPaidAmountCard" style="font-size: 1.8rem; font-weight: 800; line-height: 1; margin-top: 0.25rem; color: var(--color-danger);"><i class="fa-solid fa-indian-rupee-sign"></i>{{ "{:,}".format(not_paid_amount_total if not_paid_amount_total is defined else 0) }}</div>
                 </div>
             </div>
         </div>
@@ -210,14 +211,14 @@
                     <!-- Filter Controls: Status Pills & Search Box -->
                     <div class="d-flex flex-column gap-2 mb-3">
                         <div class="d-flex gap-1.5 flex-wrap" id="calcFilterButtons">
-                            <button type="button" class="btn btn-sm calc-filter-btn active" data-filter="all" style="padding: 0.25rem 0.65rem; font-size: 0.75rem; border-radius: 9999px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #cbd5e1;">
-                                All (<span id="calcCountAll">0</span>)
+                            <button type="button" class="btn btn-sm calc-filter-btn active" data-filter="all" style="padding: 0.25rem 0.65rem; font-size: 0.75rem; border-radius: 9999px; background: rgba(6, 182, 212, 0.2); border: 1px solid rgba(6, 182, 212, 0.5); color: #38bdf8; font-weight: 700;">
+                                All (<span id="calcCountAll">{{ calc_count_all if calc_count_all is defined else 0 }}</span>)
                             </button>
                             <button type="button" class="btn btn-sm calc-filter-btn" data-filter="received" style="padding: 0.25rem 0.65rem; font-size: 0.75rem; border-radius: 9999px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #cbd5e1;">
-                                Received (<span id="calcCountReceived">0</span>)
+                                Received (<span id="calcCountReceived">{{ calc_count_received if calc_count_received is defined else 0 }}</span>)
                             </button>
                             <button type="button" class="btn btn-sm calc-filter-btn" data-filter="pending" style="padding: 0.25rem 0.65rem; font-size: 0.75rem; border-radius: 9999px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #cbd5e1;">
-                                Pending (<span id="calcCountPending">0</span>)
+                                Pending (<span id="calcCountPending">{{ calc_count_pending if calc_count_pending is defined else 0 }}</span>)
                             </button>
                         </div>
 
@@ -227,35 +228,83 @@
                         </div>
                     </div>
 
-                    <!-- Member Calculation List -->
-                    <div id="paymentCalculationsList" class="custom-scrollbar mb-3" style="max-height: 280px; overflow-y: auto; padding-right: 4px;">
-                        <div class="text-center text-muted py-3 small">
-                            <span class="spinner-border spinner-border-sm me-1"></span> Calculating member payments...
-                        </div>
+                    <!-- Member Calculation List (Pre-rendered for instantaneous paint) -->
+                    <div id="paymentCalculationsList" class="custom-scrollbar mb-3" style="max-height: 320px; overflow-y: auto; padding-right: 4px;">
+                        {% if member_calculations and member_calculations|length > 0 %}
+                            {% for m in member_calculations %}
+                            <div class="calc-member-item p-2.5 rounded mb-2" data-name="{{ m.name|lower }}" data-swimmers="{{ m.swimmers|lower }}" data-received="{{ m.received }}" data-pending="{{ m.pending }}" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06);">
+                                <div class="d-flex justify-content-between align-items-center mb-1.5">
+                                    <div class="d-flex align-items-center gap-2 min-w-0">
+                                        <span class="text-white fw-bold text-truncate" style="font-size: 0.88rem;" title="{{ m.name }}">
+                                            <i class="fa-solid fa-user text-primary me-1" style="font-size: 0.75rem;"></i>{{ m.name }}
+                                        </span>
+                                        {% if m.swimmers %}
+                                        <span class="text-muted small text-truncate" style="font-size: 0.72rem;">(Swimmer: {{ m.swimmers }})</span>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        {% if m.is_fully_paid %}
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.7rem; font-weight: 700;"><i class="fa-solid fa-check me-1"></i> Paid</span>
+                                        {% elif m.is_pending_only %}
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.7rem; font-weight: 700;"><i class="fa-solid fa-hourglass-half me-1"></i> Pending</span>
+                                        {% else %}
+                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.7rem; font-weight: 700;"><i class="fa-solid fa-circle-exclamation me-1"></i> Partial</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                {% if m.is_fully_paid %}
+                                    <div class="d-flex align-items-center gap-2 text-success small" style="font-size: 0.8rem; font-weight: 600;">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                        <span>You received payment from <strong>{{ m.name }}</strong> = <strong>₹{{ "{:,}".format(m.received) }}</strong></span>
+                                    </div>
+                                {% elif m.is_pending_only %}
+                                    <div class="d-flex align-items-center gap-2 text-warning small" style="font-size: 0.8rem; font-weight: 600;">
+                                        <i class="fa-solid fa-clock"></i>
+                                        <span>Your payment pending with <strong>{{ m.name }}</strong> = <strong>₹{{ "{:,}".format(m.pending) }}</strong></span>
+                                    </div>
+                                {% else %}
+                                    <div class="d-flex flex-column gap-1 small" style="font-size: 0.78rem;">
+                                        <div class="text-success" style="font-weight: 600;">
+                                            <i class="fa-solid fa-circle-check me-1"></i> You received payment from <strong>{{ m.name }}</strong> = <strong>₹{{ "{:,}".format(m.received) }}</strong>
+                                        </div>
+                                        <div class="text-warning" style="font-weight: 600;">
+                                            <i class="fa-solid fa-clock me-1"></i> Your payment pending with <strong>{{ m.name }}</strong> = <strong>₹{{ "{:,}".format(m.pending) }}</strong>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-4 text-muted small" style="background: rgba(255,255,255,0.02); border-radius: var(--radius-sm); border: 1px dashed rgba(255,255,255,0.08);">
+                                <i class="fa-solid fa-receipt mb-2 d-block" style="font-size: 1.5rem; opacity: 0.5;"></i>
+                                No member calculations available yet.
+                            </div>
+                        {% endif %}
                     </div>
 
                     <!-- Total Sum Footer Summary -->
                     <div class="p-3 rounded" style="background: rgba(0, 0, 0, 0.32); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-md);">
                         <div class="d-flex justify-content-between align-items-center mb-1.5" style="font-size: 0.82rem;">
                             <span class="text-muted"><i class="fa-solid fa-circle-check text-success me-1"></i> Total Received:</span>
-                            <strong id="calcTotalReceived" class="text-success">₹0</strong>
+                            <strong id="calcTotalReceived" class="text-success">₹{{ "{:,}".format(calc_total_received if calc_total_received is defined else 0) }}</strong>
                         </div>
                         <div class="d-flex justify-content-between align-items-center mb-2" style="font-size: 0.82rem;">
                             <span class="text-muted"><i class="fa-solid fa-hourglass-half text-warning me-1"></i> Total Pending:</span>
-                            <strong id="calcTotalPending" class="text-warning">₹0</strong>
+                            <strong id="calcTotalPending" class="text-warning">₹{{ "{:,}".format(calc_total_pending if calc_total_pending is defined else 0) }}</strong>
                         </div>
                         <div class="d-flex justify-content-between align-items-center pt-2" style="border-top: 1px solid rgba(255, 255, 255, 0.08); font-size: 0.95rem;">
                             <span class="text-white fw-bold"><i class="fa-solid fa-coins text-cyan-400 me-1"></i> Total Sum:</span>
-                            <strong id="calcGrandTotal" style="font-size: 1.15rem; color: #38bdf8;">₹0</strong>
+                            <strong id="calcGrandTotal" style="font-size: 1.15rem; color: #38bdf8;">₹{{ "{:,}".format(calc_grand_total if calc_grand_total is defined else 0) }}</strong>
                         </div>
                     </div>
                 </div>
 
             </div>
             
-            <!-- Right Column: Table Records -->
-            <div class="glass-panel" id="paymentRecordsPanel" style="padding: 1.5rem; min-width: 0;">
-                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <!-- Right Column: Table Records (Fills Full Height) -->
+            <div class="glass-panel" id="paymentRecordsPanel" style="padding: 1.5rem; min-width: 0; display: flex; flex-direction: column; height: 100%;">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                     <h3 class="font-display mb-0" style="font-size: 1.25rem;"><i class="fa-solid fa-receipt text-accent"></i> Payment Records</h3>
                     
                     <!-- Right-aligned Download Button with dropdown -->
@@ -266,16 +315,17 @@
                             <i class="fa-solid fa-chevron-down ms-1" style="font-size: 0.7rem; opacity: 0.7;"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg" style="background: rgba(24, 24, 27, 0.96); border: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; border-radius: var(--radius-sm); min-width: 170px;">
-                            <li><a class="dropdown-item py-2 text-white d-flex align-items-center gap-2" href="#" onclick="downloadPaymentRecords('pdf'); return false;"><i class="fa-solid fa-file-pdf text-danger"></i> PDF Document</a></li>
-                            <li><a class="dropdown-item py-2 text-white d-flex align-items-center gap-2" href="#" onclick="downloadPaymentRecords('png'); return false;"><i class="fa-regular fa-image text-primary"></i> PNG Image</a></li>
-                            <li><a class="dropdown-item py-2 text-white d-flex align-items-center gap-2" href="#" onclick="downloadPaymentRecords('jpeg'); return false;"><i class="fa-solid fa-image text-success"></i> JPEG Image</a></li>
+                            <li><a class="dropdown-item py-2 text-white d-flex align-items-center gap-2" href="javascript:void(0)" onclick="downloadPaymentRecords('pdf'); return false;"><i class="fa-solid fa-file-pdf text-danger"></i> PDF Document</a></li>
+                            <li><a class="dropdown-item py-2 text-white d-flex align-items-center gap-2" href="javascript:void(0)" onclick="downloadPaymentRecords('png'); return false;"><i class="fa-regular fa-image text-primary"></i> PNG Image</a></li>
+                            <li><a class="dropdown-item py-2 text-white d-flex align-items-center gap-2" href="javascript:void(0)" onclick="downloadPaymentRecords('jpeg'); return false;"><i class="fa-solid fa-image text-success"></i> JPEG Image</a></li>
                             <li><hr class="dropdown-divider" style="border-color: rgba(255,255,255,0.08);"></li>
-                            <li><a class="dropdown-item py-2 text-white d-flex align-items-center gap-2" href="#" onclick="downloadPaymentRecordsCSV(); return false;"><i class="fa-solid fa-file-csv text-warning"></i> CSV Spreadsheet</a></li>
+                            <li><a class="dropdown-item py-2 text-white d-flex align-items-center gap-2" href="javascript:void(0)" onclick="downloadPaymentRecordsCSV(); return false;"><i class="fa-solid fa-file-csv text-warning"></i> CSV Spreadsheet</a></li>
                         </ul>
                     </div>
                 </div>
                 
-                <div class="table-responsive payment-records-scroll custom-scrollbar">
+                <!-- Table Wrapper expands cleanly to fill the bottom space -->
+                <div class="table-responsive payment-records-scroll custom-scrollbar" style="flex: 1 1 auto; overflow-y: auto; overflow-x: auto; min-height: 480px;">
                     <table class="table align-middle">
                         <thead>
                             <tr>
@@ -289,16 +339,71 @@
                             </tr>
                         </thead>
                         <tbody id="paymentTableBody">
-                            <tr>
-                                <td colspan="7" class="text-center text-muted py-4">
-                                    <span class="spinner-border spinner-border-sm me-2"></span> Loading payment records...
-                                </td>
-                            </tr>
+                            {% if bookings and bookings|length > 0 %}
+                                {% for b in bookings %}
+                                <tr>
+                                    <td style="text-align: center; color: var(--color-text-muted); font-weight: 600; font-size: 0.85rem; width: 50px;">{{ loop.index }}</td>
+                                    <td style="color: white; font-weight: 600;">{{ b.owner or b.created_by or '-' }}</td>
+                                    <td>{{ b.student or '-' }}</td>
+                                    <td>{{ b.package or '-' }}</td>
+                                    <td>
+                                        {% set b_status = b.status or 'Not Paid' %}
+                                        {% if role in ['trainer', 'admin'] %}
+                                            {% if b_status == 'Pending Verification' %}
+                                                <div class="flex gap-2">
+                                                    <button type="button" class="btn btn-primary btn-sm payment-status-action-btn" data-booking-id="{{ b.id }}" data-status="Paid" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; border-radius: var(--radius-sm);">
+                                                        <i class="fa-solid fa-circle-check"></i> Verify
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline btn-sm payment-status-action-btn" data-booking-id="{{ b.id }}" data-status="Not Paid" style="border-color: var(--color-danger); color: var(--color-danger); padding: 0.35rem 0.75rem; font-size: 0.8rem; border-radius: var(--radius-sm);">
+                                                        <i class="fa-solid fa-circle-xmark"></i> Reject
+                                                    </button>
+                                                </div>
+                                            {% else %}
+                                                <span class="badge {{ 'badge-success' if b_status == 'Paid' else 'badge-danger' }}">{{ b_status }}</span>
+                                            {% endif %}
+                                        {% else %}
+                                            {% if b_status == 'Paid' %}
+                                                <span class="badge badge-success">Paid</span>
+                                            {% elif b_status == 'Pending Verification' %}
+                                                <span class="badge badge-warning">Pending Verification</span>
+                                            {% else %}
+                                                <select class="form-select form-select-sm payment-status-select" data-booking-id="{{ b.id }}" style="background: rgba(0,0,0,0.4); color: white; border: 1px solid rgba(255,255,255,0.1); width: 150px; font-size: 0.8rem;">
+                                                    <option value="Not Paid" {{ 'selected' if b_status == 'Not Paid' else '' }}>Not Paid</option>
+                                                    <option value="Paid">Mark as Paid</option>
+                                                </select>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                    <td>₹{{ "{:,}".format(b.fee|int if b.fee else 0) }}</td>
+                                    <td>
+                                        {% if role in ['trainer', 'admin'] %}
+                                            {{ 'Awaiting Decision' if b_status == 'Pending Verification' else 'Verified' }}
+                                        {% else %}
+                                            {% if b_status == 'Paid' %}
+                                                <span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> Verified</span>
+                                            {% elif b_status == 'Pending Verification' %}
+                                                <span class="badge badge-warning"><i class="fa-solid fa-hourglass-half"></i> Pending</span>
+                                            {% else %}
+                                                <a href="upi://pay?pa={{ upi_id }}&pn={{ account_holder_name|urlencode }}&am={{ b.fee|default(0) }}&cu=INR&tn=SwimTrackPro%20Payment" class="btn btn-primary btn-sm" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;" title="Open UPI App">
+                                                    <i class="fa-solid fa-credit-card"></i> Pay Now (₹{{ b.fee|default(0) }})
+                                                </a>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        No payment records found.
+                                    </td>
+                                </tr>
+                            {% endif %}
                         </tbody>
                     </table>
                 </div>
                 
-                <div class="alert alert-info mt-4 mb-0" style="font-size: 0.8rem; background: rgba(6, 182, 212, 0.05); border-color: rgba(6, 182, 212, 0.15); color: var(--color-primary);">
+                <div class="alert alert-info mt-3 mb-0" style="font-size: 0.8rem; background: rgba(6, 182, 212, 0.05); border-color: rgba(6, 182, 212, 0.15); color: var(--color-primary); flex-shrink: 0; margin-top: auto;">
                     <strong>Pending Verification:</strong> payment marked paid by Swimmer, awaiting coach confirmation.
                 </div>
             </div>
@@ -325,18 +430,216 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="{{ url_for('static', filename='common.js') }}"></script>
-<script src="{{ url_for('static', filename='payment_core.js') }}"></script>
+<script src="{{ url_for('static', filename='payment_core.js') }}?v=20261121_06"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    if (typeof updatePaymentSummary === 'function') {
-        updatePaymentSummary();
+// Standalone Download & Event Binding in page for guaranteed reliability
+window.downloadPaymentRecordsCSV = function() {
+    const table = document.querySelector('#paymentRecordsPanel table');
+    if (!table) return;
+
+    let rows = [];
+    const ths = table.querySelectorAll('thead th');
+    rows.push(Array.from(ths).map(th => '"' + th.textContent.trim().replace(/"/g, '""') + '"').join(','));
+
+    const trs = table.querySelectorAll('tbody tr');
+    trs.forEach(tr => {
+        if (tr.querySelector('td[colspan]')) return;
+        const tds = tr.querySelectorAll('td');
+        const rowData = Array.from(tds).map(td => {
+            const select = td.querySelector('select');
+            if (select) return '"' + select.value.replace(/"/g, '""') + '"';
+            return '"' + td.textContent.trim().replace(/\s+/g, ' ').replace(/"/g, '""') + '"';
+        });
+        if (rowData.length > 0) rows.push(rowData.join(','));
+    });
+
+    const blob = new Blob([rows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'payment_records_swimtrackpro.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+};
+
+window.downloadPaymentRecords = async function(format) {
+    if (format === 'csv') {
+        window.downloadPaymentRecordsCSV();
+        return;
     }
-    if (typeof updatePaymentTable === 'function') {
-        updatePaymentTable();
+
+    const panel = document.getElementById('paymentRecordsPanel');
+    if (!panel) return;
+
+    const dropdown = panel.querySelector('.dropdown');
+    const scrollContainer = panel.querySelector('.payment-records-scroll');
+
+    const origDropdownDisplay = dropdown ? dropdown.style.display : '';
+    const origMaxHeight = scrollContainer ? scrollContainer.style.maxHeight : '';
+    const origOverflow = scrollContainer ? scrollContainer.style.overflow : '';
+
+    if (dropdown) dropdown.style.display = 'none';
+    if (scrollContainer) {
+        scrollContainer.style.maxHeight = 'none';
+        scrollContainer.style.overflow = 'visible';
     }
-    if (typeof updatePaymentCalculations === 'function') {
-        updatePaymentCalculations();
+
+    try {
+        if (typeof html2canvas === 'function') {
+            const canvas = await html2canvas(panel, {
+                scale: 2,
+                backgroundColor: '#18181b',
+                useCORS: true,
+                logging: false,
+                onclone: (clonedDoc) => {
+                    const clonedPanel = clonedDoc.getElementById('paymentRecordsPanel');
+                    if (clonedPanel) {
+                        clonedPanel.style.backdropFilter = 'none';
+                        clonedPanel.style.webkitBackdropFilter = 'none';
+                    }
+                    const clonedScroll = clonedDoc.querySelector('.payment-records-scroll');
+                    if (clonedScroll) {
+                        clonedScroll.style.maxHeight = 'none';
+                        clonedScroll.style.overflow = 'visible';
+                        clonedScroll.style.backdropFilter = 'none';
+                    }
+                }
+            });
+
+            const filename = 'payment_records_swimtrackpro';
+
+            if (format === 'png' || format === 'jpeg') {
+                const mime = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+                const imgData = canvas.toDataURL(mime, 0.95);
+                const a = document.createElement('a');
+                a.href = imgData;
+                a.download = `${filename}.${format}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                return;
+            }
+
+            if (format === 'pdf') {
+                const JsPDFClass = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : window.jsPDF;
+                if (JsPDFClass) {
+                    const imgData = canvas.toDataURL('image/png');
+                    const isLandscape = canvas.width > canvas.height;
+                    const pdf = new JsPDFClass({
+                        orientation: isLandscape ? 'landscape' : 'portrait',
+                        unit: 'px',
+                        format: [canvas.width, canvas.height]
+                    });
+                    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+                    pdf.save(`${filename}.pdf`);
+                    return;
+                }
+            }
+        }
+
+        // Fallback for PDF
+        if (format === 'pdf') {
+            window.print();
+        } else {
+            alert('Image capture library is still loading. Please choose CSV Spreadsheet or try again.');
+        }
+    } catch (err) {
+        console.error('Download error:', err);
+        if (format === 'pdf') {
+            window.print();
+        } else {
+            alert('Could not generate download: ' + err.message);
+        }
+    } finally {
+        if (dropdown) dropdown.style.display = origDropdownDisplay;
+        if (scrollContainer) {
+            scrollContainer.style.maxHeight = origMaxHeight;
+            scrollContainer.style.overflow = origOverflow;
+        }
     }
-});
+};
+
+// Immediate execution & event wiring
+function initPaymentCalculationsFiltering() {
+    const filterButtons = document.querySelectorAll('.calc-filter-btn');
+    const searchInput = document.getElementById('memberCalculationSearch');
+    const items = document.querySelectorAll('.calc-member-item');
+    const totalReceivedEl = document.getElementById('calcTotalReceived');
+    const totalPendingEl = document.getElementById('calcTotalPending');
+    const grandTotalEl = document.getElementById('calcGrandTotal');
+
+    let activeFilter = 'all';
+    let searchQuery = '';
+
+    function filterMemberItems() {
+        let filtRec = 0;
+        let filtPend = 0;
+        let visibleCount = 0;
+
+        items.forEach(item => {
+            const name = item.dataset.name || '';
+            const swimmers = item.dataset.swimmers || '';
+            const rec = Number(item.dataset.received || 0);
+            const pend = Number(item.dataset.pending || 0);
+
+            let matchesStatus = true;
+            if (activeFilter === 'received' && rec <= 0) matchesStatus = false;
+            if (activeFilter === 'pending' && pend <= 0) matchesStatus = false;
+
+            let matchesSearch = true;
+            if (searchQuery) {
+                matchesSearch = name.includes(searchQuery) || swimmers.includes(searchQuery);
+            }
+
+            if (matchesStatus && matchesSearch) {
+                item.style.display = '';
+                filtRec += rec;
+                filtPend += pend;
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        if (totalReceivedEl) totalReceivedEl.textContent = '₹' + filtRec.toLocaleString();
+        if (totalPendingEl) totalPendingEl.textContent = '₹' + filtPend.toLocaleString();
+        if (grandTotalEl) grandTotalEl.textContent = '₹' + (filtRec + filtPend).toLocaleString();
+    }
+
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            filterButtons.forEach(b => {
+                b.classList.remove('active');
+                b.style.background = 'rgba(255, 255, 255, 0.05)';
+                b.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                b.style.color = '#cbd5e1';
+                b.style.fontWeight = 'normal';
+            });
+            this.classList.add('active');
+            this.style.background = 'rgba(6, 182, 212, 0.2)';
+            this.style.borderColor = 'rgba(6, 182, 212, 0.5)';
+            this.style.color = '#38bdf8';
+            this.style.fontWeight = '700';
+
+            activeFilter = this.dataset.filter || 'all';
+            filterMemberItems();
+        });
+    });
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            searchQuery = this.value.trim().toLowerCase();
+            filterMemberItems();
+        });
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPaymentCalculationsFiltering);
+} else {
+    initPaymentCalculationsFiltering();
+}
 </script>
 {% endblock %}

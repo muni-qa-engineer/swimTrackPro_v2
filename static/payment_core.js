@@ -385,6 +385,11 @@ function updatePaymentCalculations(statusFilter = currentCalcFilter, searchQuery
 
 // Bind calculations filter buttons and search input
 function initializePaymentCalculationsEvents() {
+  // If server-rendered calculations are already active and wired, do not duplicate
+  if (document.querySelectorAll('.calc-member-item').length > 0) {
+    return;
+  }
+
   const filterButtons = document.querySelectorAll('.calc-filter-btn');
   filterButtons.forEach(btn => {
     btn.addEventListener('click', function() {
@@ -416,6 +421,11 @@ function initializePaymentCalculationsEvents() {
 // Download Payment Records Functions (PDF, PNG, JPEG, CSV)
 // -------------------------------------------------------------
 async function downloadPaymentRecords(format) {
+  if (format === 'csv') {
+    downloadPaymentRecordsCSV();
+    return;
+  }
+
   const recordsPanel = document.getElementById('paymentRecordsPanel');
   if (!recordsPanel) return;
 
@@ -434,91 +444,133 @@ async function downloadPaymentRecords(format) {
   }
 
   try {
-    if (typeof html2canvas === 'undefined') {
-      alert('Download library is loading. Please try again in a moment.');
-      if (downloadDropdown) downloadDropdown.style.display = originalDropdownDisplay;
-      if (scrollWrapper) {
-        scrollWrapper.style.maxHeight = originalMaxHeight;
-        scrollWrapper.style.overflow = originalOverflow;
-      }
-      return;
-    }
+    if (typeof html2canvas === 'function') {
+      const canvas = await html2canvas(recordsPanel, {
+        scale: 2,
+        backgroundColor: '#18181b',
+        useCORS: true,
+        logging: false,
+        onclone: (clonedDoc) => {
+          const clonedPanel = clonedDoc.getElementById('paymentRecordsPanel');
+          if (clonedPanel) {
+            clonedPanel.style.backdropFilter = 'none';
+            clonedPanel.style.webkitBackdropFilter = 'none';
+          }
+          const clonedScroll = clonedDoc.querySelector('.payment-records-scroll');
+          if (clonedScroll) {
+            clonedScroll.style.maxHeight = 'none';
+            clonedScroll.style.overflow = 'visible';
+            clonedScroll.style.backdropFilter = 'none';
+          }
+        }
+      });
 
-    const canvas = await html2canvas(recordsPanel, {
-      scale: 2,
-      backgroundColor: '#18181b',
-      useCORS: true,
-      logging: false
-    });
+      const filename = `payment_records_swimtrackpro`;
 
-    if (downloadDropdown) downloadDropdown.style.display = originalDropdownDisplay;
-    if (scrollWrapper) {
-      scrollWrapper.style.maxHeight = originalMaxHeight;
-      scrollWrapper.style.overflow = originalOverflow;
-    }
-
-    const filename = `payment_records_swimtrackpro`;
-
-    if (format === 'png' || format === 'jpeg') {
-      const imgData = canvas.toDataURL(`image/${format}`, 1.0);
-      const link = document.createElement('a');
-      link.download = `${filename}.${format}`;
-      link.href = imgData;
-      link.click();
-    } else if (format === 'pdf') {
-      if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
-        alert('PDF library is loading. Please try again in a moment.');
+      if (format === 'png' || format === 'jpeg') {
+        const mime = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+        const imgData = canvas.toDataURL(mime, 0.95);
+        const link = document.createElement('a');
+        link.download = `${filename}.${format}`;
+        link.href = imgData;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
         return;
       }
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new window.jspdf.jsPDF({
-        orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
-        unit: 'px',
-        format: [canvas.width, canvas.height]
-      });
-      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-      pdf.save(`${filename}.pdf`);
+
+      if (format === 'pdf') {
+        const JsPDFClass = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : window.jsPDF;
+        if (JsPDFClass) {
+          const imgData = canvas.toDataURL('image/png');
+          const isLandscape = canvas.width > canvas.height;
+          const pdf = new JsPDFClass({
+            orientation: isLandscape ? 'landscape' : 'portrait',
+            unit: 'px',
+            format: [canvas.width, canvas.height]
+          });
+          pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+          pdf.save(`${filename}.pdf`);
+          return;
+        }
+      }
+    }
+
+    // Fallback for PDF
+    if (format === 'pdf') {
+      window.print();
+    } else {
+      alert('Image capture library is still loading. Please choose CSV Spreadsheet or try again.');
     }
   } catch (err) {
     console.error('Error generating payment records download:', err);
+    if (format === 'pdf') {
+      window.print();
+    } else {
+      alert('Could not generate download. Please try again.');
+    }
+  } finally {
     if (downloadDropdown) downloadDropdown.style.display = originalDropdownDisplay;
     if (scrollWrapper) {
       scrollWrapper.style.maxHeight = originalMaxHeight;
       scrollWrapper.style.overflow = originalOverflow;
     }
-    alert('Could not generate download. Please try again.');
   }
 }
 
 function downloadPaymentRecordsCSV() {
-  const bookings = window.bookingsData || [];
-  if (bookings.length === 0) {
-    alert('No payment records to download.');
-    return;
+  const table = document.querySelector('#paymentRecordsPanel table');
+  let rows = [];
+
+  if (table) {
+    const ths = table.querySelectorAll('thead th');
+    rows.push(Array.from(ths).map(th => '"' + th.textContent.trim().replace(/"/g, '""') + '"').join(','));
+
+    const trs = table.querySelectorAll('tbody tr');
+    trs.forEach(tr => {
+      if (tr.querySelector('td[colspan]')) return;
+      const tds = tr.querySelectorAll('td');
+      const rowData = Array.from(tds).map(td => {
+        const select = td.querySelector('select');
+        if (select) return '"' + select.value.replace(/"/g, '""') + '"';
+        return '"' + td.textContent.trim().replace(/\s+/g, ' ').replace(/"/g, '""') + '"';
+      });
+      if (rowData.length > 0) rows.push(rowData.join(','));
+    });
   }
 
-  let csvContent = 'data:text/csv;charset=utf-8,';
-  csvContent += 'S.No,Owner,Swimmer,Package,Status,Amount (INR)\n';
+  if (rows.length <= 1) {
+    const bookings = window.bookingsData || [];
+    if (bookings.length === 0) {
+      alert('No payment records to download.');
+      return;
+    }
+    rows = ['"S.No","Owner","Swimmer","Package","Status","Amount (INR)"'];
+    bookings.forEach((b, index) => {
+      const sNo = index + 1;
+      const owner = (b.owner || b.created_by || '-').replace(/"/g, '""');
+      const swimmer = (b.student || '-').replace(/"/g, '""');
+      const pkg = (b.package || '-').replace(/"/g, '""');
+      const status = (b.status || 'Not Paid').replace(/"/g, '""');
+      const fee = Number(b.fee || 0);
+      rows.push(`"${sNo}","${owner}","${swimmer}","${pkg}","${status}","${fee}"`);
+    });
+  }
 
-  bookings.forEach((b, index) => {
-    const sNo = index + 1;
-    const owner = (b.owner || b.created_by || '-').replace(/"/g, '""');
-    const swimmer = (b.student || '-').replace(/"/g, '""');
-    const pkg = (b.package || '-').replace(/"/g, '""');
-    const status = (b.status || 'Not Paid').replace(/"/g, '""');
-    const fee = Number(b.fee || 0);
-
-    csvContent += `"${sNo}","${owner}","${swimmer}","${pkg}","${status}","${fee}"\n`;
-  });
-
-  const encodedUri = encodeURI(csvContent);
+  const blob = new Blob([rows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  link.setAttribute('href', encodedUri);
-  link.setAttribute('download', 'payment_records_swimtrackpro.csv');
+  link.href = url;
+  link.download = 'payment_records_swimtrackpro.csv';
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
+
+// Expose to window for global inline accessibility
+window.downloadPaymentRecords = downloadPaymentRecords;
+window.downloadPaymentRecordsCSV = downloadPaymentRecordsCSV;
 
 // Auto-initialize calculation events on load
 document.addEventListener('DOMContentLoaded', function () {

@@ -303,12 +303,86 @@ def register_page_routes(app, *, get_pg_connection, load_data):
             reminder_conn.commit()
             reminder_conn.close()
 
-        total_pending_amount = sum(
+        paid_amount_total = sum(
             int(booking.get("fee", 0) or 0)
             for booking in user_bookings
-            if str(booking.get("status", "")).strip().lower() != "paid"
+            if str(booking.get("status", "")).strip().lower() == "paid"
         )
-        
+        pending_amount_total = sum(
+            int(booking.get("fee", 0) or 0)
+            for booking in user_bookings
+            if str(booking.get("status", "")).strip().lower() in ("pending", "pending verification")
+        )
+        not_paid_amount_total = sum(
+            int(booking.get("fee", 0) or 0)
+            for booking in user_bookings
+            if str(booking.get("status", "")).strip().lower() not in ("paid", "pending", "pending verification")
+        )
+        total_pending_amount = pending_amount_total + not_paid_amount_total
+
+        # Pre-calculate member calculations for Payment Calculations card
+        member_calc_map = {}
+        for b in user_bookings:
+            if current_role in ("trainer", "admin"):
+                raw_name = b.get("owner") or b.get("created_by") or b.get("student") or "Unknown Member"
+            else:
+                raw_name = b.get("student") or b.get("owner") or "Swimmer"
+
+            clean_name = str(raw_name).strip() or "Unknown Member"
+            if clean_name not in member_calc_map:
+                member_calc_map[clean_name] = {
+                    "name": clean_name,
+                    "swimmers": set(),
+                    "packages": set(),
+                    "received": 0,
+                    "pending": 0,
+                    "total": 0,
+                    "booking_count": 0,
+                }
+
+            student_name = b.get("student")
+            if student_name:
+                member_calc_map[clean_name]["swimmers"].add(student_name)
+            pkg = b.get("package")
+            if pkg:
+                member_calc_map[clean_name]["packages"].add(pkg)
+
+            fee_val = int(b.get("fee", 0) or 0)
+            status_val = str(b.get("status", "")).strip().lower()
+            if status_val == "paid":
+                member_calc_map[clean_name]["received"] += fee_val
+            else:
+                member_calc_map[clean_name]["pending"] += fee_val
+            member_calc_map[clean_name]["total"] += fee_val
+            member_calc_map[clean_name]["booking_count"] += 1
+
+        calc_member_list = []
+        calc_total_received = 0
+        calc_total_pending = 0
+        calc_count_received = 0
+        calc_count_pending = 0
+
+        for m in member_calc_map.values():
+            calc_member_list.append({
+                "name": m["name"],
+                "swimmers": ", ".join(sorted(m["swimmers"])),
+                "received": m["received"],
+                "pending": m["pending"],
+                "total": m["total"],
+                "booking_count": m["booking_count"],
+                "is_fully_paid": m["received"] > 0 and m["pending"] == 0,
+                "is_pending_only": m["pending"] > 0 and m["received"] == 0,
+                "is_partial": m["received"] > 0 and m["pending"] > 0,
+            })
+            calc_total_received += m["received"]
+            calc_total_pending += m["pending"]
+            if m["received"] > 0:
+                calc_count_received += 1
+            if m["pending"] > 0:
+                calc_count_pending += 1
+
+        calc_grand_total = calc_total_received + calc_total_pending
+
         trainer_payment_settings = {}
         if current_role == "trainer":
             try:
@@ -359,6 +433,16 @@ def register_page_routes(app, *, get_pg_connection, load_data):
             role=current_role,
             user_name=session.get("user_name"),
             total_pending_amount=total_pending_amount,
+            paid_amount_total=paid_amount_total,
+            pending_amount_total=pending_amount_total,
+            not_paid_amount_total=not_paid_amount_total,
+            member_calculations=calc_member_list,
+            calc_total_received=calc_total_received,
+            calc_total_pending=calc_total_pending,
+            calc_grand_total=calc_grand_total,
+            calc_count_all=len(calc_member_list),
+            calc_count_received=calc_count_received,
+            calc_count_pending=calc_count_pending,
             account_holder_name=get_setting("account_holder_name", ""),
             trainer_phone=get_setting("trainer_phone", ""),
             upi_id=get_setting("upi_id", ""),

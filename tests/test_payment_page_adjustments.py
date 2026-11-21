@@ -63,7 +63,7 @@ class PaymentPageAdjustmentTests(unittest.TestCase):
 
         # 1. Height limitation / scrollable table container for ~15 records
         self.assertIn("payment-records-scroll", html, "Payment records table must have scrollable wrapper class")
-        self.assertIn("max-height: 720px", html, "CSS must cap table height to ~15 records with vertical scroll")
+        self.assertIn("overflow-y: auto", html, "CSS must provide smooth vertical scroll for records")
 
         # 2. Download button beside Payment Records
         self.assertIn("Download Payment Records", html, "Download button must exist in Payment Records")
