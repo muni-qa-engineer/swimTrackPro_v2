@@ -514,23 +514,23 @@ if (typeof window.showCenteredToast !== 'function') {
             alertElem.dataset.autoDismissInitialized = 'true';
 
             setTimeout(function() {
-                alertElem.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                alertElem.style.transition = 'opacity 0.6s ease, transform 0.6s ease, max-height 0.6s ease, margin-bottom 0.6s ease, padding 0.6s ease';
                 alertElem.style.opacity = '0';
                 alertElem.style.transform = 'translateY(-10px)';
+                alertElem.style.maxHeight = '0px';
+                alertElem.style.marginBottom = '0px';
+                alertElem.style.paddingTop = '0px';
+                alertElem.style.paddingBottom = '0px';
+                alertElem.style.overflow = 'hidden';
                 setTimeout(function() {
+                    const container = alertElem.closest('.flash-messages-container');
                     if (alertElem.parentNode) {
-                        try {
-                            if (window.bootstrap && bootstrap.Alert) {
-                                const bsAlert = bootstrap.Alert.getInstance(alertElem) || new bootstrap.Alert(alertElem);
-                                bsAlert.close();
-                            } else {
-                                alertElem.remove();
-                            }
-                        } catch (e) {
-                            alertElem.remove();
-                        }
+                        alertElem.remove();
                     }
-                }, 600);
+                    if (container && container.querySelectorAll('.alert').length === 0) {
+                        container.remove();
+                    }
+                }, 650);
             }, 5000); // 5 seconds
         });
     }

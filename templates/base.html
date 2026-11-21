@@ -575,12 +575,61 @@
           {% if messages %}
             <div class="container pt-3 pb-2 flash-messages-container" style="max-width: 800px; z-index: 1050; position: relative;">
               {% for category, message in messages %}
-                <div class="alert alert-{{ 'danger' if category in ['danger', 'error'] else ('warning' if category == 'warning' else ('success' if category == 'success' else 'info')) }} alert-dismissible fade show auto-dismiss-alert mb-3" role="alert" style="border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 8px 24px rgba(0,0,0,0.3); transition: opacity 0.5s ease, transform 0.5s ease;">
+                <div class="alert alert-{{ 'danger' if category in ['danger', 'error'] else ('warning' if category == 'warning' else ('success' if category == 'success' else 'info')) }} alert-dismissible fade show auto-dismiss-alert mb-3" role="alert" style="border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 8px 24px rgba(0,0,0,0.3); transition: opacity 0.6s ease, transform 0.6s ease, max-height 0.6s ease, margin 0.6s ease, padding 0.6s ease;">
                   <i class="fa-solid fa-{{ 'circle-exclamation' if category in ['danger', 'error', 'warning'] else ('circle-check' if category == 'success' else 'circle-info') }} me-2"></i> {{ message }}
                   <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
               {% endfor %}
             </div>
+            <script>
+              (function() {
+                function startFlashAutoDismiss() {
+                  const container = document.querySelector('.flash-messages-container');
+                  if (!container) return;
+
+                  // Clean container if alert is closed manually via close button
+                  container.addEventListener('closed.bs.alert', function() {
+                    if (container.querySelectorAll('.alert').length === 0) {
+                      container.remove();
+                    }
+                  });
+
+                  setTimeout(function() {
+                    const currentContainer = document.querySelector('.flash-messages-container');
+                    if (!currentContainer) return;
+                    const alerts = currentContainer.querySelectorAll('.alert.auto-dismiss-alert:not(.alert-permanent)');
+                    if (!alerts.length) return;
+                    alerts.forEach(function(alertElem) {
+                      alertElem.style.transition = 'opacity 0.6s ease, transform 0.6s ease, max-height 0.6s ease, margin-bottom 0.6s ease, padding 0.6s ease';
+                      alertElem.style.opacity = '0';
+                      alertElem.style.transform = 'translateY(-10px)';
+                      alertElem.style.maxHeight = '0px';
+                      alertElem.style.marginBottom = '0px';
+                      alertElem.style.paddingTop = '0px';
+                      alertElem.style.paddingBottom = '0px';
+                      alertElem.style.overflow = 'hidden';
+                    });
+                    setTimeout(function() {
+                      alerts.forEach(function(alertElem) {
+                        if (alertElem && alertElem.parentNode) {
+                          alertElem.remove();
+                        }
+                      });
+                      const finalContainer = document.querySelector('.flash-messages-container');
+                      if (finalContainer && finalContainer.querySelectorAll('.alert').length === 0) {
+                        finalContainer.remove();
+                      }
+                    }, 650);
+                  }, 5000); // 5 seconds
+                }
+
+                if (document.readyState === 'loading') {
+                  document.addEventListener('DOMContentLoaded', startFlashAutoDismiss);
+                } else {
+                  startFlashAutoDismiss();
+                }
+              })();
+            </script>
           {% endif %}
         {% endwith %}
 
@@ -1344,38 +1393,41 @@
         }
 
         // Auto-dismiss alert notifications within 5 seconds
-        document.addEventListener('DOMContentLoaded', function() {
-            function initAutoDismissAlerts() {
-                const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
-                alerts.forEach(function(alertElem) {
-                    if (alertElem.closest('.modal') || alertElem.id === 'bookingClientAlert') return;
-                    if (alertElem.dataset.autoDismissInitialized) return;
-                    alertElem.dataset.autoDismissInitialized = 'true';
+        function initAutoDismissAlerts() {
+            const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
+            alerts.forEach(function(alertElem) {
+                if (alertElem.closest('.modal') || alertElem.id === 'bookingClientAlert') return;
+                if (alertElem.dataset.autoDismissInitialized) return;
+                alertElem.dataset.autoDismissInitialized = 'true';
 
+                setTimeout(function() {
+                    alertElem.style.transition = 'opacity 0.6s ease, transform 0.6s ease, max-height 0.6s ease, margin-bottom 0.6s ease, padding 0.6s ease';
+                    alertElem.style.opacity = '0';
+                    alertElem.style.transform = 'translateY(-10px)';
+                    alertElem.style.maxHeight = '0px';
+                    alertElem.style.marginBottom = '0px';
+                    alertElem.style.paddingTop = '0px';
+                    alertElem.style.paddingBottom = '0px';
+                    alertElem.style.overflow = 'hidden';
                     setTimeout(function() {
-                        alertElem.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-                        alertElem.style.opacity = '0';
-                        alertElem.style.transform = 'translateY(-10px)';
-                        setTimeout(function() {
-                            if (alertElem.parentNode) {
-                                try {
-                                    if (window.bootstrap && bootstrap.Alert) {
-                                        const bsAlert = bootstrap.Alert.getInstance(alertElem) || new bootstrap.Alert(alertElem);
-                                        bsAlert.close();
-                                    } else {
-                                        alertElem.remove();
-                                    }
-                                } catch (e) {
-                                    alertElem.remove();
-                                }
-                            }
-                        }, 600);
-                    }, 5000); // 5 seconds
-                });
-            }
+                        const container = alertElem.closest('.flash-messages-container');
+                        if (alertElem.parentNode) {
+                            alertElem.remove();
+                        }
+                        if (container && container.querySelectorAll('.alert').length === 0) {
+                            container.remove();
+                        }
+                    }, 650);
+                }, 5000); // 5 seconds
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initAutoDismissAlerts);
+        } else {
             initAutoDismissAlerts();
-            window.initAutoDismissAlerts = initAutoDismissAlerts;
-        });
+        }
+        window.initAutoDismissAlerts = initAutoDismissAlerts;
 
         // Live Real-Time Clock in Navbar
         (function initNavClock() {

@@ -174,6 +174,39 @@ class DeleteAccountTests(unittest.TestCase):
             self.assertEqual(coach_bookings[0]["student"], "Swimmer Real Name")
             self.assertEqual(coach_bookings[0]["fee"], 5000)
 
+    @patch("swimtrackpro.routes.dashboard.get_pg_connection")
+    @patch("swimtrackpro.routes.dashboard.load_data")
+    @patch("swimtrackpro.routes.dashboard.get_all_packages")
+    def test_deletion_flash_message_renders_with_5s_auto_dismiss(self, mock_pkgs, mock_load, mock_get_conn):
+        mock_pkgs.return_value = []
+        mock_load.return_value = {"bookings": []}
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_cursor.fetchall.return_value = []
+        mock_get_conn.return_value = mock_conn
+
+        # Set flashed message simulating after account deletion redirect
+        with self.client.session_transaction() as sess:
+            sess["_flashes"] = [("success", "Your account and personal data have been permanently deleted.")]
+
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+
+        # Assert flash message is present
+        self.assertIn("Your account and personal data have been permanently deleted.", html)
+        self.assertIn("flash-messages-container", html)
+        self.assertIn("auto-dismiss-alert", html)
+
+        # Assert 5-second auto-dismiss timer and removal logic are present
+        self.assertIn("startFlashAutoDismiss", html)
+        self.assertIn("5000", html)
+        self.assertIn("opacity = '0'", html)
+        self.assertIn("translateY(-10px)", html)
+        self.assertIn("alertElem.remove()", html)
+        self.assertIn("container.remove()", html)
+
 
 if __name__ == "__main__":
     unittest.main()
