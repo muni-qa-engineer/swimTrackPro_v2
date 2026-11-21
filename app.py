@@ -54,7 +54,7 @@ def favicon():
     return redirect('/static/images/icon-192.png')
 
 def get_pg_connection():
-    return psycopg2.connect(DATABASE_URL)
+    return psycopg2.connect(DATABASE_URL, connect_timeout=10)
 
 _tables_ensured = False
 
