@@ -266,6 +266,9 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='common.js') }}"></script>
+<script>
+    window.SWIMTRACK_PRICING_CONFIG = {{ pricing_config|tojson|safe if pricing_config else '{}' }};
+</script>
 <script src="{{ url_for('static', filename='js/pricingEngine.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -447,17 +450,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     current.setDate(current.getDate() + 1);
                 }
 
-                if (totalClasses > 14) {
-                    feeInput.value = '';
-                    feeInput.placeholder = `${totalClasses} sessions (Requires trainer discussion)`;
-                    return;
-                } else if (totalClasses >= 12 && totalClasses <= 14) {
-                    quote = PricingEngine.getPackageQuote('monthly_3d', persons);
-                    finalFee = quote.totalBatchPrice;
-                } else {
-                    quote = PricingEngine.getPackageQuote('custom', persons, { customBasePrice: totalClasses * 750 });
-                    finalFee = quote.totalBatchPrice;
-                }
+                const customRate = (window.SWIMTRACK_PRICING_CONFIG && window.SWIMTRACK_PRICING_CONFIG.base_prices && window.SWIMTRACK_PRICING_CONFIG.base_prices.custom) || 750;
+                quote = PricingEngine.getPackageQuote('custom', persons, { customBasePrice: totalClasses * customRate, sessionCount: totalClasses });
+                finalFee = quote.totalBatchPrice;
             }
         }
 

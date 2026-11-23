@@ -24,7 +24,8 @@
       "single": 750,
       "monthly_2d": 5000,
       "monthly_3d": 7500,
-      "3_months": 18000
+      "3_months": 18000,
+      "custom": 750
     },
     "multipliers": {
       "1": 1.0,

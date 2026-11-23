@@ -270,19 +270,9 @@
           current.setDate(current.getDate() + 1);
         }
 
-        if (totalClasses > 14) {
-          feeInput.value = '';
-          feeInput.placeholder = `${totalClasses} sessions (Requires trainer discussion)`;
-          const perSwimmerEl = document.getElementById('bookingPerSwimmerShare');
-          if (perSwimmerEl) perSwimmerEl.style.display = 'none';
-          return;
-        } else if (totalClasses >= 12 && totalClasses <= 14) {
-          quote = PricingEngine.getPackageQuote('monthly_3d', persons);
-          finalFee = quote.totalBatchPrice;
-        } else {
-          quote = PricingEngine.getPackageQuote('custom', persons, { customBasePrice: totalClasses * 750 });
-          finalFee = quote.totalBatchPrice;
-        }
+        const customRate = (window.SWIMTRACK_PRICING_CONFIG && window.SWIMTRACK_PRICING_CONFIG.base_prices && window.SWIMTRACK_PRICING_CONFIG.base_prices.custom) || 750;
+        quote = PricingEngine.getPackageQuote('custom', persons, { customBasePrice: totalClasses * customRate, sessionCount: totalClasses });
+        finalFee = quote.totalBatchPrice;
       }
     }
 
@@ -302,6 +292,10 @@
       if (quote && quote.isGroup && finalFee > 0) {
         perSwimmerEl.style.display = 'block';
         perSwimmerEl.innerHTML = `<i class="fa-solid fa-users me-1"></i> ₹${quote.pricePerPerson.toLocaleString('en-IN')} / swimmer &bull; ${quote.savingsPerPersonPercent}% group savings applied`;
+      } else if (pkg && pkg.value === 'Custom' && typeof totalClasses !== 'undefined' && totalClasses > 0 && finalFee > 0) {
+        const customRate = (window.SWIMTRACK_PRICING_CONFIG && window.SWIMTRACK_PRICING_CONFIG.base_prices && window.SWIMTRACK_PRICING_CONFIG.base_prices.custom) || 750;
+        perSwimmerEl.style.display = 'block';
+        perSwimmerEl.innerHTML = `<i class="fa-solid fa-calendar-check me-1"></i> ${totalClasses} sessions @ ₹${customRate}/session`;
       } else {
         perSwimmerEl.style.display = 'none';
       }

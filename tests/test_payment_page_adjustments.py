@@ -66,9 +66,13 @@ class PaymentPageAdjustmentTests(unittest.TestCase):
         self.assertIn("max-height: 720px", html, "CSS must cap table height to ~15 records with vertical scroll")
         self.assertIn("overflow-y: auto", html, "CSS must provide smooth vertical scroll for records")
 
-        # 2. Download button beside Payment Records (icon-only, no text)
+        # 2. Download button beside Payment Records (icon-only, circle in shape, no text)
         self.assertIn("fa-download", html, "Download icon button must exist in Payment Records")
         self.assertNotIn("Download Payment Records", html, "Download button should not have redundant text/tooltip")
+        self.assertIn("border-radius: 50%", html, "Download button must be circular in shape")
+        self.assertIn("width: 36px", html, "Download button must have equal width for circle")
+        self.assertIn("height: 36px", html, "Download button must have equal height for circle")
+        self.assertIn("padding: 0", html, "Download button must have padding 0 to avoid oval stretching")
         self.assertIn("downloadPaymentRecords('pdf')", html, "Must offer PDF download option")
         self.assertIn("downloadPaymentRecords('png')", html, "Must offer PNG download option")
         self.assertIn("downloadPaymentRecordsCSV()", html, "Must offer CSV download option")
@@ -125,7 +129,8 @@ class PaymentPageAdjustmentTests(unittest.TestCase):
             session["user_name"] = "parent_user"
             html = render_template("payments.html", **context)
 
-        self.assertIn("Payment Calculations", html)
+        self.assertNotIn("Payment Calculations", html, "Payment Calculations card is not required for swimmer/guest")
+        self.assertNotIn("paymentCalculationsCard", html, "paymentCalculationsCard must not be rendered for swimmer/guest")
         self.assertIn("payment-records-scroll", html)
         self.assertIn("downloadPaymentRecords", html)
 

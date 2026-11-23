@@ -300,19 +300,9 @@ function createToast(message, type = 'success', duration = 2000) {
 
       const selectedDaysPerWeek = selected.length;
 
-      if (durationDays >= 1 && durationDays <= 23) {
-        actualAmount = totalClasses * 750 * persons;
-      }
-      else if (durationDays >= 24 && durationDays <= 30) {
-        actualAmount =
-          (monthlyCustomFees[selectedDaysPerWeek] || 0) * persons;
-      }
-      else if (durationDays >= 31 && durationDays <= 53) {
-        actualAmount = totalClasses * 650 * persons;
-      }
-      else if (durationDays >= 54 && durationDays <= 60) {
-        actualAmount =
-          (twoMonthCustomFees[selectedDaysPerWeek] || 0) * persons;
+      const customRate = (window.SWIMTRACK_PRICING_CONFIG && window.SWIMTRACK_PRICING_CONFIG.base_prices && window.SWIMTRACK_PRICING_CONFIG.base_prices.custom) || 750;
+      if (durationDays >= 1 && durationDays <= 60) {
+        actualAmount = totalClasses * customRate * persons;
       }
       else {
         feeInput.value = '';

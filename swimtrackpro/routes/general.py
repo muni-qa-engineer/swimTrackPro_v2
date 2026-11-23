@@ -692,7 +692,7 @@ def admin_update_pricing():
         from services.pricing_service import update_base_prices, get_base_prices
         data = request.get_json(silent=True) or request.form
         base_prices = {}
-        for key in ["demo", "single", "monthly_2d", "monthly_3d", "3_months"]:
+        for key in ["demo", "single", "monthly_2d", "monthly_3d", "3_months", "custom"]:
             if key in data and str(data.get(key)).strip() != "":
                 try:
                     base_prices[key] = int(float(data.get(key)))

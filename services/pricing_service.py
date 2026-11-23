@@ -30,6 +30,7 @@ DEFAULT_BASE_PRICES = {
     'monthly_2d': 5000,
     'monthly_3d': 7500,
     '3_months': 18000,
+    'custom': 750,
 }
 
 GROUP_MULTIPLIERS = {
@@ -80,6 +81,7 @@ PACKAGE_METADATA = {
     'monthly_2d': {'name': 'Monthly (2 days/week)', 'sessions': 8, 'badge': 'Popular'},
     'monthly_3d': {'name': 'Monthly (3 days/week)', 'sessions': 12, 'badge': 'Recommended'},
     '3_months': {'name': '3 Calendar Months', 'sessions': 36, 'badge': 'Best Value'},
+    'custom': {'name': 'Custom Schedule', 'sessions': 1, 'badge': 'Custom'},
 }
 
 
@@ -257,13 +259,12 @@ def get_package_quote(package_key, swimmer_count=1, session_count=None, weekly_d
 
     if custom_base is not None and isinstance(custom_base, (int, float)) and custom_base >= 0:
         base_price = int(custom_base)
+    elif canonical_key == 'custom':
+        custom_rate = base_prices.get('custom', 750)
+        sessions = max(0, int(session_count or 1))
+        base_price = sessions * custom_rate
     elif canonical_key in base_prices:
         base_price = base_prices[canonical_key]
-    elif canonical_key == 'custom':
-        # Default single session anchor rate
-        single_rate = base_prices.get('single', 750)
-        sessions = max(0, int(session_count or 1))
-        base_price = sessions * single_rate
     else:
         base_price = base_prices.get('monthly_3d', 7500)
 
@@ -361,24 +362,15 @@ def calculate_discounted_fee(package, persons, session_count=None):
         base = base_prices.get('3_months', 18000)
         return round(base * multiplier)
 
-    # Custom Package: Dynamic duration
+    # Custom Package: Dynamic duration (number of sessions * custom_rate * group multiplier)
     if clean_pkg.lower() == 'custom':
         try:
             sessions = max(0, int(session_count or 0))
         except Exception:
             sessions = 0
 
-        # More than 14 sessions requires trainer discussion
-        if sessions > 14:
-            return 0
-
-        # 12 to 14 sessions are capped at 3-days/wk monthly equivalent
-        if 12 <= sessions <= 14:
-            base = base_prices.get('monthly_3d', 7500)
-        else:
-            single_rate = base_prices.get('single', 750)
-            base = sessions * single_rate
-
+        custom_rate = base_prices.get('custom', 750)
+        base = sessions * custom_rate
         return round(base * multiplier)
 
     # Other Long Term Packages (6, 9, 12 months)

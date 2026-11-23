@@ -17,7 +17,7 @@ from services.email_service import (
     send_booking_confirmation_email,
     send_booking_alert_email,
 )
-from services.pricing_service import calculate_discounted_fee
+from services.pricing_service import calculate_discounted_fee, get_pricing_config_dict
 from services.package_tier_service import get_package_tier_info
 from swimtrackpro.runtime import get_pg_connection, load_data
 
@@ -112,12 +112,14 @@ def book():
 
     fee = calculate_discounted_fee(package, persons, session_count)
 
-    # V0044.0 - Custom package fee is calculated by the frontend fee engine.
+    # V0044.0 - Custom package fee: prefer client calculated fee if positive, else use server calculate_discounted_fee
     if package == 'Custom':
         try:
-            fee = int(float(request.form.get('fee', 0) or 0))
+            client_custom_fee = int(float(request.form.get('fee', 0) or 0))
+            if client_custom_fee > 0:
+                fee = client_custom_fee
         except Exception:
-            fee = 0
+            pass
 
     # Allow manual fee override only for admin users.
     # Guest users always use the system-calculated fee.
@@ -617,7 +619,8 @@ def edit_booking(booking_id):
         'editBooking.html',
         booking=booking_prepared,
         role=session.get('role', 'guest'),
-        trainers=trainers
+        trainers=trainers,
+        pricing_config=get_pricing_config_dict()
     )
 
 def update_booking(booking_id):

@@ -19,6 +19,7 @@
     monthly_2d: 5000,
     monthly_3d: 7500,
     '3_months': 18000,
+    custom: 750,
   });
 
   // Group Multipliers (2 to 5 Swimmers)
@@ -172,12 +173,12 @@
     let basePrice = 0;
     if (typeof options.customBasePrice === 'number' && options.customBasePrice >= 0) {
       basePrice = Math.round(options.customBasePrice);
+    } else if (normalizedKey === 'custom') {
+      const sessionCount = parseInt(options.sessionCount, 10) || 1;
+      const customRate = effectiveBasePrices.custom || effectiveBasePrices.single || 750;
+      basePrice = sessionCount * customRate;
     } else if (normalizedKey in effectiveBasePrices) {
       basePrice = effectiveBasePrices[normalizedKey];
-    } else if (normalizedKey === 'custom') {
-      // Custom hourly rate defaults to Single session rate (750)
-      const sessionCount = parseInt(options.sessionCount, 10) || 1;
-      basePrice = sessionCount * (effectiveBasePrices.single || 750);
     } else {
       basePrice = effectiveBasePrices.monthly_3d || 7500;
     }

@@ -3609,25 +3609,13 @@ document.addEventListener('DOMContentLoaded', initGallery);
                         feeNote.innerText = 'Select dates and training days to calculate fee';
                         feeNote.className = 'text-warning small mt-1';
                     }
-                } else if (sessionCount > 14) {
-                    fee = 0;
-                    if (feeNote) {
-                        feeNote.innerText = `${sessionCount} sessions (Requires trainer discussion)`;
-                        feeNote.className = 'text-warning small mt-1';
-                    }
-                } else if (sessionCount >= 12 && sessionCount <= 14) {
-                    quote = PricingEngine.getPackageQuote('monthly_3d', persons);
-                    fee = quote.totalBatchPrice;
-                    if (feeNote) {
-                        feeNote.innerText = `${sessionCount} sessions • Monthly equivalent rate`;
-                        feeNote.className = 'text-muted small mt-1';
-                    }
                 } else {
-                    const customBase = sessionCount * 750;
+                    const customRate = (window.SWIMTRACK_PRICING_CONFIG && window.SWIMTRACK_PRICING_CONFIG.base_prices && window.SWIMTRACK_PRICING_CONFIG.base_prices.custom) || 750;
+                    const customBase = sessionCount * customRate;
                     quote = PricingEngine.getPackageQuote('custom', persons, { customBasePrice: customBase, sessionCount: sessionCount });
                     fee = quote.totalBatchPrice;
                     if (feeNote) {
-                        feeNote.innerText = `${sessionCount} sessions @ ₹750/session anchor rate`;
+                        feeNote.innerText = `${sessionCount} sessions @ ₹${customRate}/session`;
                         feeNote.className = 'text-muted small mt-1';
                     }
                 }

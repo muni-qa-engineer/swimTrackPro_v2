@@ -121,7 +121,7 @@
 
         <div class="payments-layout">
             
-            <!-- Left Column: Payment Details/Settings & Payment Calculations -->
+            {# Left Column: Payment Details/Settings & Calculations #}
             <div class="d-flex flex-column gap-4" style="min-width: 0;">
                 
                 <!-- My Payment Settings / Payment Information Panel -->
@@ -199,7 +199,8 @@
                     {% endif %}
                 </div>
 
-                <!-- Payment Calculations Section (Under My Payment Settings) -->
+                {% if role != 'guest' %}
+                {# Payment Calculations Section (Visible for coaches/trainers and admin, not for swimmer/guest) #}
                 <div class="glass-panel" id="paymentCalculationsCard" style="padding: 1.5rem; min-width: 0; word-break: break-word;">
                     <h3 class="font-display mb-1.5" style="font-size: 1.25rem;">
                         <i class="fa-solid fa-calculator text-primary me-1.5"></i> Payment Calculations
@@ -222,6 +223,7 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
 
             </div>
             
@@ -230,10 +232,10 @@
                 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                     <h3 class="font-display mb-0" style="font-size: 1.25rem;"><i class="fa-solid fa-receipt text-accent"></i> Payment Records</h3>
                     
-                    <!-- Right-aligned Download Button (Icon only, no text) -->
+                    <!-- Right-aligned Download Button (Icon only, perfect circle) -->
                     <div class="dropdown">
-                        <button class="btn btn-secondary d-flex align-items-center justify-content-center shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff;">
-                            <i class="fa-solid fa-download" style="font-size: 0.85rem;"></i>
+                        <button class="btn btn-secondary shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width: 36px !important; height: 36px !important; min-width: 36px !important; max-width: 36px !important; min-height: 36px !important; max-height: 36px !important; padding: 0 !important; border-radius: 50% !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; aspect-ratio: 1 / 1 !important; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff;" title="Download records">
+                            <i class="fa-solid fa-download" style="font-size: 0.85rem; line-height: 1;"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg" style="background: rgba(24, 24, 27, 0.96); border: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; border-radius: var(--radius-sm); min-width: 170px;">
                             <li><a class="dropdown-item py-2 text-white d-flex align-items-center gap-2" href="javascript:void(0)" onclick="downloadPaymentRecords('pdf'); return false;"><i class="fa-solid fa-file-pdf text-danger"></i> PDF Document</a></li>

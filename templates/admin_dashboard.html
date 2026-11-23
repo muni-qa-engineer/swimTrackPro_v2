@@ -924,7 +924,7 @@
                                 </button>
                             </div>
 
-                            {% set bp = pricing_config.base_prices if pricing_config and pricing_config.base_prices else {'demo': 500, 'single': 750, 'monthly_2d': 5000, 'monthly_3d': 7500, '3_months': 18000} %}
+                            {% set bp = pricing_config.base_prices if pricing_config and pricing_config.base_prices else {'demo': 500, 'single': 750, 'monthly_2d': 5000, 'monthly_3d': 7500, '3_months': 18000, 'custom': 750} %}
                             <div class="row g-3">
                                 <div class="col-12 col-sm-6 col-lg">
                                     <label class="form-label text-muted small fw-semibold mb-1">
@@ -975,6 +975,16 @@
                                         <input type="number" name="3_months" id="adminRate3Months" class="form-control" value="{{ bp.get('3_months', 18000) }}" min="0" step="500" required style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.15); color: white; font-weight: 700;">
                                     </div>
                                 </div>
+
+                                <div class="col-12 col-sm-6 col-lg">
+                                    <label class="form-label text-muted small fw-semibold mb-1">
+                                        Custom Schedule <span class="text-primary">(per sess)</span>
+                                    </label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text" style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.15); color: var(--color-primary);">₹</span>
+                                        <input type="number" name="custom" id="adminRateCustom" class="form-control" value="{{ bp.get('custom', 750) }}" min="0" step="50" required style="background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.15); color: white; font-weight: 700;">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -1005,7 +1015,8 @@
                                         ('Single Day', '1 sess', bp.get('single', 750), 'single'),
                                         ('Monthly: 2 days/wk', '8 sess', bp.get('monthly_2d', 5000), 'monthly_2d'),
                                         ('Monthly: 3 days/wk', '12 sess', bp.get('monthly_3d', 7500), 'monthly_3d'),
-                                        ('3 Calendar Months', '36 sess', bp.get('3_months', 18000), '3_months')
+                                        ('3 Calendar Months', '36 sess', bp.get('3_months', 18000), '3_months'),
+                                        ('Custom Schedule', 'per sess', bp.get('custom', 750), 'custom')
                                     ] %}
                                     {% for name, sess, base, key in matrix_packages %}
                                     <tr data-pkg-key="{{ key }}" data-base="{{ base }}">
@@ -2128,7 +2139,8 @@
             'single': document.getElementById('adminRateSingle'),
             'monthly_2d': document.getElementById('adminRateMonthly2d'),
             'monthly_3d': document.getElementById('adminRateMonthly3d'),
-            '3_months': document.getElementById('adminRate3Months')
+            '3_months': document.getElementById('adminRate3Months'),
+            'custom': document.getElementById('adminRateCustom')
         };
 
         function recalculateAdminMatrix() {
