@@ -152,8 +152,8 @@ class CustomPackagePricingTests(unittest.TestCase):
         with open("templates/booking.html", "r", encoding="utf-8") as f:
             content = f.read()
 
-        self.assertIn("filename='booking.js') }}?v=20261123_custom_v4", content)
-        self.assertIn("filename='js/pricingEngine.js') }}?v=20261123_custom_v4", content)
+        self.assertIn("filename='booking.js') }}?v=20261123_custom_v5", content)
+        self.assertIn("filename='js/pricingEngine.js') }}?v=20261123_custom_v5", content)
         self.assertNotIn("booking.js') }}?v=6", content)
 
     def test_service_worker_uses_network_first_for_scripts(self):
@@ -161,9 +161,18 @@ class CustomPackagePricingTests(unittest.TestCase):
         with open("static/service-worker.js", "r", encoding="utf-8") as f:
             content = f.read()
 
-        self.assertIn("swimtrackpro-cache-v5", content)
+        self.assertIn("swimtrackpro-cache-v6", content)
         self.assertIn("url.pathname.endsWith('.js')", content)
         self.assertNotIn("swimtrackpro-cache-v3", content)
+
+    def test_booking_html_green_per_session_fee_info(self):
+        """Verify booking.html contains green styled info message container below feeInput."""
+        with open("templates/booking.html", "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn('id="bookingPerSwimmerShare"', content)
+        self.assertIn('text-success', content)
+        self.assertIn('#10b981', content)
 
 
 if __name__ == "__main__":

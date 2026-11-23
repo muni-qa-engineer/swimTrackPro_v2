@@ -185,13 +185,17 @@
     const discountPercent = discountMap[persons] || 0;
     let finalFee = 0;
     let quote = null;
+    let sessionCount = 1;
+    let totalClasses = 0;
 
     if (typeof PricingEngine !== 'undefined') {
       if (pkg.value === 'Demo') {
+        sessionCount = 1;
         quote = PricingEngine.getPackageQuote('demo', persons);
         finalFee = quote.totalBatchPrice;
       }
       else if (pkg.value === 'Single') {
+        sessionCount = 1;
         quote = PricingEngine.getPackageQuote('single', persons);
         finalFee = quote.totalBatchPrice;
       }
@@ -203,6 +207,7 @@
           if (perSwimmerEl) perSwimmerEl.style.display = 'none';
           return;
         }
+        sessionCount = selected.length === 2 ? 8 : 12;
         const pkgKey = selected.length === 2 ? 'monthly_2d' : 'monthly_3d';
         quote = PricingEngine.getPackageQuote(pkgKey, persons);
         finalFee = quote.totalBatchPrice;
@@ -215,6 +220,7 @@
           if (perSwimmerEl) perSwimmerEl.style.display = 'none';
           return;
         }
+        sessionCount = 36;
         quote = PricingEngine.getPackageQuote('3_months', persons);
         finalFee = quote.totalBatchPrice;
       }
@@ -227,6 +233,7 @@
           return;
         }
         const mCount = { '6_months': 6, '9_months': 9, '12_months': 12 }[pkg.value] || 6;
+        sessionCount = mCount * 12;
         quote = PricingEngine.getPackageQuote(pkg.value, persons, { customBasePrice: 6000 * mCount });
         finalFee = quote.totalBatchPrice;
       }
@@ -269,7 +276,7 @@
           'Thursday': 4, 'Friday': 5, 'Saturday': 6
         };
         const selectedDayIndexes = selected.map(day => dayMap[day]);
-        let totalClasses = 0;
+        totalClasses = 0;
         const current = new Date(start);
         while (current <= end) {
           if (selectedDayIndexes.includes(current.getDay())) {
@@ -277,6 +284,8 @@
           }
           current.setDate(current.getDate() + 1);
         }
+
+        sessionCount = totalClasses;
 
         if (totalClasses === 0) {
           feeInput.value = 0;
@@ -310,13 +319,25 @@
       }
     }
     if (perSwimmerEl) {
-      if (quote && quote.isGroup && finalFee > 0) {
+      if (finalFee > 0) {
         perSwimmerEl.style.display = 'block';
-        perSwimmerEl.innerHTML = `<i class="fa-solid fa-users me-1"></i> ₹${quote.pricePerPerson.toLocaleString('en-IN')} / swimmer &bull; ${quote.savingsPerPersonPercent}% group savings applied`;
-      } else if (pkg && pkg.value === 'Custom' && typeof totalClasses !== 'undefined' && totalClasses > 0 && finalFee > 0) {
+        perSwimmerEl.style.color = '#10b981';
+
         const customRate = (window.SWIMTRACK_PRICING_CONFIG && window.SWIMTRACK_PRICING_CONFIG.base_prices && window.SWIMTRACK_PRICING_CONFIG.base_prices.custom) || 750;
-        perSwimmerEl.style.display = 'block';
-        perSwimmerEl.innerHTML = `<i class="fa-solid fa-calendar-check me-1"></i> ${totalClasses} sessions @ ₹${customRate}/session`;
+
+        if (quote && quote.isGroup) {
+          const perPersonSession = sessionCount > 0 ? Math.round(quote.pricePerPerson / sessionCount) : quote.pricePerPerson;
+          perSwimmerEl.innerHTML = `<i class="fa-solid fa-users me-1"></i> ₹${perPersonSession.toLocaleString('en-IN')} / session per swimmer &bull; ${quote.savingsPerPersonPercent}% group savings applied`;
+        } else if (pkg && pkg.value === 'Custom') {
+          perSwimmerEl.innerHTML = `<i class="fa-solid fa-circle-info me-1"></i> ₹${customRate.toLocaleString('en-IN')} / session &bull; ${sessionCount} sessions`;
+        } else {
+          const perSession = sessionCount > 0 ? Math.round(finalFee / sessionCount) : finalFee;
+          if (sessionCount > 1) {
+            perSwimmerEl.innerHTML = `<i class="fa-solid fa-circle-info me-1"></i> ₹${perSession.toLocaleString('en-IN')} / session &bull; ${sessionCount} sessions`;
+          } else {
+            perSwimmerEl.innerHTML = `<i class="fa-solid fa-circle-info me-1"></i> ₹${perSession.toLocaleString('en-IN')} / session`;
+          }
+        }
       } else {
         perSwimmerEl.style.display = 'none';
       }

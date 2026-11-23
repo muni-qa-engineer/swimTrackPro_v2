@@ -323,7 +323,7 @@
                             <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 700; color: var(--color-primary);">₹</span>
                             <input type="number" id="feeInput" name="fee" class="form-control" value="750" readonly style="padding-left: 2rem; font-weight: 700; font-size: 1.2rem; color: white !important;">
                         </div>
-                        <div id="bookingPerSwimmerShare" class="text-primary small fw-semibold mt-1" style="display: none; font-size: 0.85rem;"></div>
+                        <div id="bookingPerSwimmerShare" class="text-success small fw-semibold mt-1" style="display: none; font-size: 0.88rem; color: #10b981 !important;"></div>
                     </div>
                 </div>
 
@@ -396,9 +396,9 @@
     window.LONG_TERM_PACKAGES = {{ packages_json|safe if packages_json else 'null' }};
     window.SWIMTRACK_PRICING_CONFIG = {{ pricing_config|tojson|safe if pricing_config else '{}' }};
 </script>
-<script src="{{ url_for('static', filename='js/pricingEngine.js') }}?v=20261123_custom_v4"></script>
-<script src="{{ url_for('static', filename='common.js') }}?v=20261123_custom_v4"></script>
-<script src="{{ url_for('static', filename='booking.js') }}?v=20261123_custom_v4"></script>
+<script src="{{ url_for('static', filename='js/pricingEngine.js') }}?v=20261123_custom_v5"></script>
+<script src="{{ url_for('static', filename='common.js') }}?v=20261123_custom_v5"></script>
+<script src="{{ url_for('static', filename='booking.js') }}?v=20261123_custom_v5"></script>
 <script>
     // Copy filters, details visibility controllers
     document.addEventListener('DOMContentLoaded', function() {

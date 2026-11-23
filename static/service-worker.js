@@ -1,4 +1,4 @@
-const CACHE_NAME = 'swimtrackpro-cache-v5';
+const CACHE_NAME = 'swimtrackpro-cache-v6';
 const ASSETS_TO_CACHE = [
   '/',
   '/static/css/global.css',

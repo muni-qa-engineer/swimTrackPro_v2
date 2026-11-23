@@ -216,6 +216,7 @@
                 <div class="form-group">
                     <label class="form-label">Fee (₹)</label>
                     <input type="number" name="fee" id="feeInput" class="form-control" value="{{ booking.fee }}" {% if role != 'trainer' %}readonly{% endif %} required style="font-weight: 700; color: white !important;">
+                    <div id="bookingPerSessionRate" class="text-success small fw-semibold mt-1" style="color: #10b981 !important; display: none;"></div>
                 </div>
             </div>
 
@@ -458,6 +459,39 @@ document.addEventListener('DOMContentLoaded', function() {
 
         feeInput.placeholder = '';
         feeInput.value = finalFee;
+
+        const rateEl = document.getElementById('bookingPerSessionRate');
+        if (rateEl) {
+            if (finalFee > 0) {
+                rateEl.style.display = 'block';
+                let sessionCount = 1;
+                if (pkgVal === 'Monthly') sessionCount = selected.length === 2 ? 8 : 12;
+                else if (pkgVal === '3_months') sessionCount = 36;
+                else if (['6_months', '9_months', '12_months'].includes(pkgVal)) {
+                    const m = { '6_months': 6, '9_months': 9, '12_months': 12 }[pkgVal] || 6;
+                    sessionCount = m * 12;
+                } else if (pkgVal === 'Custom') {
+                    sessionCount = totalClasses || 1;
+                }
+
+                if (quote && quote.isGroup) {
+                    const perPersonSession = sessionCount > 0 ? Math.round(quote.pricePerPerson / sessionCount) : quote.pricePerPerson;
+                    rateEl.innerHTML = `<i class="fa-solid fa-users me-1"></i> ₹${perPersonSession.toLocaleString('en-IN')} / session per swimmer &bull; ${quote.savingsPerPersonPercent}% group savings applied`;
+                } else if (pkgVal === 'Custom') {
+                    const customRate = (window.SWIMTRACK_PRICING_CONFIG && window.SWIMTRACK_PRICING_CONFIG.base_prices && window.SWIMTRACK_PRICING_CONFIG.base_prices.custom) || 750;
+                    rateEl.innerHTML = `<i class="fa-solid fa-circle-info me-1"></i> ₹${customRate.toLocaleString('en-IN')} / session &bull; ${sessionCount} sessions`;
+                } else {
+                    const perSession = sessionCount > 0 ? Math.round(finalFee / sessionCount) : finalFee;
+                    if (sessionCount > 1) {
+                        rateEl.innerHTML = `<i class="fa-solid fa-circle-info me-1"></i> ₹${perSession.toLocaleString('en-IN')} / session &bull; ${sessionCount} sessions`;
+                    } else {
+                        rateEl.innerHTML = `<i class="fa-solid fa-circle-info me-1"></i> ₹${perSession.toLocaleString('en-IN')} / session`;
+                    }
+                }
+            } else {
+                rateEl.style.display = 'none';
+            }
+        }
 
         if (groupHint) {
             if (quote && quote.isGroup) {
