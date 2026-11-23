@@ -2989,7 +2989,7 @@ document.addEventListener('DOMContentLoaded', initGallery);
 <script>
     window.SWIMTRACK_PRICING_CONFIG = {{ pricing_config|tojson|safe if pricing_config else '{}' }};
 </script>
-<script src="{{ url_for('static', filename='js/pricingEngine.js') }}"></script>
+<script src="{{ url_for('static', filename='js/pricingEngine.js') }}?v=20261123_custom_v4"></script>
 <script>
     window.allBookingsData = {{ all_bookings|default([])|tojson|safe }};
     let myModal;

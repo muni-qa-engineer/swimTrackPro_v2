@@ -248,6 +248,14 @@
         const durationDays =
           Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
 
+        if (durationDays < 1) {
+          feeInput.value = 0;
+          feeInput.placeholder = 'End date cannot be earlier than start date';
+          const perSwimmerEl = document.getElementById('bookingPerSwimmerShare');
+          if (perSwimmerEl) perSwimmerEl.style.display = 'none';
+          return;
+        }
+
         if (durationDays > 60) {
           feeInput.value = '';
           feeInput.placeholder = 'Maximum 60 days allowed';
@@ -270,9 +278,22 @@
           current.setDate(current.getDate() + 1);
         }
 
+        if (totalClasses === 0) {
+          feeInput.value = 0;
+          feeInput.placeholder = '0 sessions in selected range';
+          const perSwimmerEl = document.getElementById('bookingPerSwimmerShare');
+          if (perSwimmerEl) perSwimmerEl.style.display = 'none';
+          return;
+        }
+
         const customRate = (window.SWIMTRACK_PRICING_CONFIG && window.SWIMTRACK_PRICING_CONFIG.base_prices && window.SWIMTRACK_PRICING_CONFIG.base_prices.custom) || 750;
-        quote = PricingEngine.getPackageQuote('custom', persons, { customBasePrice: totalClasses * customRate, sessionCount: totalClasses });
-        finalFee = quote.totalBatchPrice;
+        if (typeof PricingEngine !== 'undefined') {
+          quote = PricingEngine.getPackageQuote('custom', persons, { customBasePrice: totalClasses * customRate, sessionCount: totalClasses });
+          finalFee = quote.totalBatchPrice;
+        } else {
+          const mult = { 1: 1.0, 2: 1.7, 3: 2.3, 4: 2.8, 5: 3.2 }[persons] || 1.0;
+          finalFee = Math.round(totalClasses * customRate * mult);
+        }
       }
     }
 
@@ -466,10 +487,12 @@ function initializeBookingEventListeners() {
 
   if (endDateInput) {
     endDateInput.addEventListener('change', updateSelectedDays);
+    endDateInput.addEventListener('input', updateSelectedDays);
   }
 
   if (personsInput) {
     personsInput.addEventListener('input', updateSelectedDays);
+    personsInput.addEventListener('change', updateSelectedDays);
   }
 
   if (dayCheckboxes.length > 0) {

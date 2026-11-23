@@ -139,6 +139,32 @@ class CustomPackagePricingTests(unittest.TestCase):
         self.assertIn('data-pkg-key="custom"', html, "Admin pricing matrix must include custom row")
         self.assertIn('Custom Schedule', html, "Admin pricing matrix must display Custom Schedule")
 
+    def test_service_worker_no_cache_headers(self):
+        """Verify /service-worker.js sends Cache-Control: no-cache headers."""
+        response = self.client.get("/service-worker.js")
+        self.assertEqual(response.status_code, 200)
+        cache_control = response.headers.get("Cache-Control", "")
+        self.assertIn("no-cache", cache_control)
+        self.assertIn("must-revalidate", cache_control)
+
+    def test_booking_html_cache_busting_version(self):
+        """Verify booking.html has bumped script cache busting parameters."""
+        with open("templates/booking.html", "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("filename='booking.js') }}?v=20261123_custom_v4", content)
+        self.assertIn("filename='js/pricingEngine.js') }}?v=20261123_custom_v4", content)
+        self.assertNotIn("booking.js') }}?v=6", content)
+
+    def test_service_worker_uses_network_first_for_scripts(self):
+        """Verify static/service-worker.js uses Network-First for JS and CSS files."""
+        with open("static/service-worker.js", "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("swimtrackpro-cache-v5", content)
+        self.assertIn("url.pathname.endsWith('.js')", content)
+        self.assertNotIn("swimtrackpro-cache-v3", content)
+
 
 if __name__ == "__main__":
     unittest.main()

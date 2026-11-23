@@ -1,10 +1,9 @@
-const CACHE_NAME = 'swimtrackpro-cache-v3';
+const CACHE_NAME = 'swimtrackpro-cache-v5';
 const ASSETS_TO_CACHE = [
   '/',
   '/static/css/global.css',
   '/static/css/animations.css',
   '/static/css/dashboard.css',
-  '/static/common.js',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css'
 ];
@@ -37,15 +36,33 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch Event - Network First Strategy for API / HTML, Cache First for Static Assets
+// Fetch Event - Network First Strategy for JS/CSS/HTML/API, Cache First for Static Images & Fonts
 self.addEventListener('fetch', (event) => {
   // Only intercept GET requests
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
 
-  // If it's a static asset (CSS, JS, Image), try Cache First, then Network
-  if (url.pathname.startsWith('/static/') || url.hostname === 'cdn.jsdelivr.net' || url.hostname === 'cdnjs.cloudflare.com' || url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+  // Application Scripts and Styles: Always try Network First so updates take effect immediately
+  if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Static images and fonts: Cache First, then Network
+  if (url.pathname.startsWith('/static/images/') || url.pathname.startsWith('/static/icons/') || url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
         if (cachedResponse) {
@@ -59,15 +76,14 @@ self.addEventListener('fetch', (event) => {
         });
       })
     );
-  } else {
-    // For HTML pages and APIs, try Network First, fallback to Cache
-    event.respondWith(
-      fetch(event.request)
-        .catch(() => {
-          return caches.match(event.request);
-        })
-    );
+    return;
   }
+
+  // For HTML pages and APIs, try Network First, fallback to Cache
+  event.respondWith(
+    fetch(event.request)
+      .catch(() => caches.match(event.request))
+  );
 });
 
 // --- PWA Push & Session Completion Action Handlers ---

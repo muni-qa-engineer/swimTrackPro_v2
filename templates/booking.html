@@ -396,9 +396,9 @@
     window.LONG_TERM_PACKAGES = {{ packages_json|safe if packages_json else 'null' }};
     window.SWIMTRACK_PRICING_CONFIG = {{ pricing_config|tojson|safe if pricing_config else '{}' }};
 </script>
-<script src="{{ url_for('static', filename='js/pricingEngine.js') }}"></script>
-<script src="{{ url_for('static', filename='common.js') }}"></script>
-<script src="{{ url_for('static', filename='booking.js') }}?v=6"></script>
+<script src="{{ url_for('static', filename='js/pricingEngine.js') }}?v=20261123_custom_v4"></script>
+<script src="{{ url_for('static', filename='common.js') }}?v=20261123_custom_v4"></script>
+<script src="{{ url_for('static', filename='booking.js') }}?v=20261123_custom_v4"></script>
 <script>
     // Copy filters, details visibility controllers
     document.addEventListener('DOMContentLoaded', function() {
@@ -911,6 +911,10 @@
                     showBookingAlert('<strong>Weekly days required:</strong> Long Term packages require exactly 3 training days per week.');
                     return;
                 }
+                if (pkg === 'Custom' && checkedDays === 0) {
+                    showBookingAlert('<strong>Weekly days required:</strong> Custom schedule requires choosing at least 1 class day per week.');
+                    return;
+                }
             }
 
             const timeSelect = document.getElementById('timeSelect');
@@ -925,6 +929,11 @@
                 showBookingAlert('<strong>Location required:</strong> Please enter your pool location or society address.');
                 if (locationInput) locationInput.focus();
                 return;
+            }
+
+            // Ensure fee is freshly recalculated before showing Step 2
+            if (typeof updateSelectedDays === 'function') {
+                updateSelectedDays();
             }
         }
 

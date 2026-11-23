@@ -47,7 +47,9 @@ def make_session_permanent():
 
 @app.route('/service-worker.js')
 def service_worker():
-    return app.send_static_file('service-worker.js')
+    response = app.send_static_file('service-worker.js')
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    return response
 
 @app.route('/favicon.ico')
 def favicon():
