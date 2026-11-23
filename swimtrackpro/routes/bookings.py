@@ -242,7 +242,7 @@ def book():
             existing_time_str = b.get('time')
             if not existing_time_str: continue
             
-            existing_time = datetime.strptime(existing_time_str, '%I:%M %p')
+            existing_time = datetime.strptime(existing_time_str.split('-')[0].strip(), '%I:%M %p')
             time_diff = abs((booking_time - existing_time).total_seconds()) / 60
             
             if time_diff < 60:
@@ -275,7 +275,7 @@ def book():
             existing_time_str = b.get('time')
             if not existing_time_str: continue
             
-            existing_time = datetime.strptime(existing_time_str, '%I:%M %p')
+            existing_time = datetime.strptime(existing_time_str.split('-')[0].strip(), '%I:%M %p')
             time_diff = abs((booking_time - existing_time).total_seconds()) / 60
             
             if time_diff < 60:
@@ -375,6 +375,17 @@ def book():
                 flash(f'You are swimming along with {name1}, {name2} and {others_count} others.', 'info')
             else:
                 flash(f'You are swimming along with {name1}, {name2}.', 'info')
+
+    # Clean up any abandoned unconfirmed booking for this session
+    prev_pending_id = session.get('pending_booking_id')
+    if prev_pending_id:
+        try:
+            cursor.execute(
+                "DELETE FROM bookings WHERE id = %s AND (status = 'unconfirmed' OR payment_request = 'unconfirmed')",
+                (str(prev_pending_id),)
+            )
+        except Exception as e:
+            print("Cleanup prior unconfirmed booking error:", e)
 
     cursor.execute('''
     INSERT INTO bookings (
@@ -796,7 +807,7 @@ def update_booking(booking_id):
             existing_time_str = b.get('time')
             if not existing_time_str: continue
             
-            existing_time = datetime.strptime(existing_time_str, '%I:%M %p')
+            existing_time = datetime.strptime(existing_time_str.split('-')[0].strip(), '%I:%M %p')
             time_diff = abs((booking_time - existing_time).total_seconds()) / 60
             
             if time_diff < 60:
@@ -829,7 +840,7 @@ def update_booking(booking_id):
             existing_time_str = b.get('time')
             if not existing_time_str: continue
             
-            existing_time = datetime.strptime(existing_time_str, '%I:%M %p')
+            existing_time = datetime.strptime(existing_time_str.split('-')[0].strip(), '%I:%M %p')
             time_diff = abs((booking_time - existing_time).total_seconds()) / 60
             
             if time_diff < 60:
@@ -1953,7 +1964,7 @@ def renew_booking():
             existing_time_str = b.get('time')
             if not existing_time_str: continue
             
-            existing_time = datetime.strptime(existing_time_str, '%I:%M %p')
+            existing_time = datetime.strptime(existing_time_str.split('-')[0].strip(), '%I:%M %p')
             time_diff = abs((booking_time - existing_time).total_seconds()) / 60
             
             if time_diff < 60:
@@ -1981,7 +1992,7 @@ def renew_booking():
             existing_time_str = b.get('time')
             if not existing_time_str: continue
             
-            existing_time = datetime.strptime(existing_time_str, '%I:%M %p')
+            existing_time = datetime.strptime(existing_time_str.split('-')[0].strip(), '%I:%M %p')
             time_diff = abs((booking_time - existing_time).total_seconds()) / 60
             
             if time_diff < 60:

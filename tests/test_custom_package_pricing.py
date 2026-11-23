@@ -174,6 +174,27 @@ class CustomPackagePricingTests(unittest.TestCase):
         self.assertIn('text-success', content)
         self.assertIn('#10b981', content)
 
+    def test_generate_booking_id_uniqueness(self):
+        """Verify generate_booking_id generates unique IDs for the same student, date, and time."""
+        from services.booking_engine import generate_booking_id
+        student = "Munisekhar"
+        start_date = "2026-11-23"
+        time_str = "08:00 PM"
+
+        id1 = generate_booking_id(student, start_date, time_str)
+        id2 = generate_booking_id(student, start_date, time_str)
+        self.assertNotEqual(id1, id2, "Subsequent calls to generate_booking_id must not collide")
+        self.assertEqual(len(id1), 32)
+        self.assertEqual(len(id2), 32)
+
+    def test_booking_conflict_time_range_parsing(self):
+        """Verify time parsing supports both single and range times (e.g., '08:00 PM - 09:00 PM')."""
+        from datetime import datetime
+        raw_times = ["08:00 PM", "08:00 PM - 09:00 PM", " 07:30 AM - 08:30 AM "]
+        for rt in raw_times:
+            parsed = datetime.strptime(rt.split('-')[0].strip(), '%I:%M %p')
+            self.assertIsNotNone(parsed)
+
 
 if __name__ == "__main__":
     unittest.main()

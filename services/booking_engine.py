@@ -1,8 +1,10 @@
 import hashlib
+import uuid
 from datetime import datetime, timedelta
 
 def generate_booking_id(student, start_date, time_str):
-    return hashlib.md5(f"{student}{start_date}{time_str}".encode()).hexdigest()
+    entropy = uuid.uuid4().hex[:12]
+    return hashlib.md5(f"{student}{start_date}{time_str}{entropy}".encode()).hexdigest()
 
 def generate_booking_code(cursor):
     cursor.execute(
