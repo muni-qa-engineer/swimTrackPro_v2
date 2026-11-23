@@ -294,7 +294,7 @@ def approve_trainer(username):
     conn.commit()
     conn.close()
     flash(f"Trainer '{username}' approved successfully.", "success")
-    return redirect(url_for("index"))
+    return redirect(url_for("index") + "?section=coaches")
 
 
 @admin_required("Only super admin can reject trainers.")
@@ -305,7 +305,73 @@ def reject_trainer(username):
     conn.commit()
     conn.close()
     flash(f"Trainer '{username}' rejected and registration deleted.", "success")
-    return redirect(url_for("index"))
+    return redirect(url_for("index") + "?section=coaches")
+
+
+@admin_required("Only super admin can verify trainer proofs.")
+def verify_trainer_proof(username):
+    proof_type = (request.form.get("proof_type") or (request.json.get("proof_type") if request.is_json else None) or "").strip().lower()
+    raw_status = (request.form.get("status") or (request.json.get("status") if request.is_json else None) or "").strip().lower()
+
+    if raw_status in ("accepted", "verified", "accept"):
+        status_val = "Verified"
+    elif raw_status in ("decline", "declined", "reject", "rejected"):
+        status_val = "Declined"
+    else:
+        status_val = "Pending"
+
+    if proof_type not in ("id_proof", "qualification"):
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
+            return jsonify({"success": False, "error": "Invalid proof type."}), 400
+        flash("Invalid proof type.", "danger")
+        return redirect(url_for("index") + "?section=coaches")
+
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+    try:
+        if proof_type == "id_proof":
+            cursor.execute("UPDATE trainers SET id_proof_status = %s WHERE LOWER(username) = LOWER(%s)", (status_val, username.strip()))
+        else:
+            cursor.execute("UPDATE trainers SET qualification_status = %s WHERE LOWER(username) = LOWER(%s)", (status_val, username.strip()))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        try:
+            cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS id_proof_status TEXT DEFAULT 'pending'")
+            cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS qualification_status TEXT DEFAULT 'pending'")
+            conn.commit()
+            if proof_type == "id_proof":
+                cursor.execute("UPDATE trainers SET id_proof_status = %s WHERE LOWER(username) = LOWER(%s)", (status_val, username.strip()))
+            else:
+                cursor.execute("UPDATE trainers SET qualification_status = %s WHERE LOWER(username) = LOWER(%s)", (status_val, username.strip()))
+            conn.commit()
+        except Exception as inner_e:
+            conn.rollback()
+            conn.close()
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
+                return jsonify({"success": False, "error": str(inner_e)}), 500
+            flash(f"Error updating proof status: {inner_e}", "danger")
+            return redirect(url_for("index") + "?section=coaches")
+    conn.close()
+
+    proof_label = "ID Proof" if proof_type == "id_proof" else "Qualification Certificate"
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
+        return jsonify({
+            "success": True,
+            "username": username,
+            "proof_type": proof_type,
+            "status": status_val,
+            "message": f"{proof_label} for coach '{username}' marked as {status_val}."
+        })
+
+    flash(f"{proof_label} for coach '{username}' marked as {status_val}.", "success")
+    return redirect(url_for("index") + "?section=coaches")
+
+
+@admin_required("Only super admin can verify trainer proofs.")
+def verify_trainer_proof_alt():
+    username = request.form.get("username") or (request.json.get("username") if request.is_json else "")
+    return verify_trainer_proof(username)
 
 
 @admin_required("Only super admin can delete bookings.")
@@ -360,7 +426,7 @@ def admin_delete_booking(booking_id):
         flash(f"Error deleting booking: {e}", "danger")
     finally:
         conn.close()
-    return redirect(url_for("index"))
+    return redirect(url_for("index") + "?section=bookings")
 
 
 @admin_required("Only super admin can assign coaches.")
@@ -507,7 +573,7 @@ def toggle_block_trainer(username):
         else:
             flash(f"Trainer {username} has been unblocked.", "success")
     conn.close()
-    return redirect(url_for("index"))
+    return redirect(url_for("index") + "?section=coaches")
 
 @admin_required("Only admin can block students.")
 def toggle_block_student(phone):
@@ -532,7 +598,7 @@ def toggle_block_student(phone):
         conn.commit()
         flash(f"Phone {phone} has been added to blocked list.", "danger")
     conn.close()
-    return redirect(url_for("index"))
+    return redirect(url_for("index") + "?section=students")
 
 @admin_required("Only admin can delete students.")
 def delete_student(phone):
@@ -549,7 +615,7 @@ def delete_student(phone):
     else:
         flash("Student not found.", "danger")
     conn.close()
-    return redirect(url_for("index"))
+    return redirect(url_for("index") + "?section=students")
 
 
 @admin_required("Only admin can edit students.")
@@ -789,7 +855,7 @@ def delete_trainer_image(username):
                 flash("Image not found in trainer's album.", "warning")
         
         conn.close()
-    return redirect(url_for("index"))
+    return redirect(url_for("index") + "?section=coaches")
 
 @trainer_required("Only trainers can update their profile")
 def update_trainer_profile():
@@ -909,7 +975,7 @@ def delete_carousel_image(img_id):
             flash("Image not found.", "warning")
             
         conn.close()
-    return redirect(url_for("index"))
+    return redirect(url_for("index") + "?section=promotions")
 
 @login_required
 def delete_account():
@@ -1449,6 +1515,18 @@ def register_general_routes(app):
         "/admin/reject_trainer/<username>",
         endpoint="reject_trainer",
         view_func=reject_trainer,
+        methods=["POST"],
+    )
+    app.add_url_rule(
+        "/admin/verify_trainer_proof/<username>",
+        endpoint="verify_trainer_proof",
+        view_func=verify_trainer_proof,
+        methods=["POST"],
+    )
+    app.add_url_rule(
+        "/admin/trainer/verify_proof",
+        endpoint="verify_trainer_proof_alt",
+        view_func=verify_trainer_proof_alt,
         methods=["POST"],
     )
     app.add_url_rule(

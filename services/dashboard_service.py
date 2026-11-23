@@ -12,9 +12,24 @@ def get_admin_dashboard_data(current_user, data):
     cursor = conn.cursor()
     
     # Fetch trainers
-    cursor.execute("SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, rating, is_approved, is_blocked, photos, id_proof, id_proof_file, qualification_file FROM trainers ORDER BY name")
+    try:
+        cursor.execute("SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, rating, is_approved, is_blocked, photos, id_proof, id_proof_file, qualification_file, id_proof_status, qualification_status FROM trainers ORDER BY name")
+        trainer_rows = cursor.fetchall()
+    except Exception:
+        conn.rollback()
+        try:
+            cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS id_proof_status TEXT DEFAULT 'pending'")
+            cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS qualification_status TEXT DEFAULT 'pending'")
+            conn.commit()
+            cursor.execute("SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, rating, is_approved, is_blocked, photos, id_proof, id_proof_file, qualification_file, id_proof_status, qualification_status FROM trainers ORDER BY name")
+            trainer_rows = cursor.fetchall()
+        except Exception:
+            conn.rollback()
+            cursor.execute("SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, rating, is_approved, is_blocked, photos, id_proof, id_proof_file, qualification_file FROM trainers ORDER BY name")
+            trainer_rows = cursor.fetchall()
+
     trainers_list = []
-    for row in cursor.fetchall():
+    for row in trainer_rows:
         photos_str = row[11] if row[11] else ""
         photos_list = [p for p in photos_str.split(",") if p]
         trainers_list.append({
@@ -32,7 +47,9 @@ def get_admin_dashboard_data(current_user, data):
             'photos': photos_list,
             'id_proof': row[12] if len(row) > 12 and row[12] else "",
             'id_proof_file': row[13] if len(row) > 13 and row[13] else "",
-            'qualification_file': row[14] if len(row) > 14 and row[14] else ""
+            'qualification_file': row[14] if len(row) > 14 and row[14] else "",
+            'id_proof_status': row[15] if len(row) > 15 and row[15] else "pending",
+            'qualification_status': row[16] if len(row) > 16 and row[16] else "pending"
         })
         
     # Fetch user activities

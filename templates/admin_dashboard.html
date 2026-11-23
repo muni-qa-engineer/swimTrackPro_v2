@@ -102,6 +102,20 @@
         color: white !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
+
+    /* Modal stacking context and accessibility fixes */
+    .modal {
+        z-index: 1060 !important;
+    }
+    .modal-backdrop {
+        z-index: 1050 !important;
+    }
+    .proof-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        transition: all 0.2s ease;
+    }
     
     @media (max-width: 768px) {
         .admin-main {
@@ -140,17 +154,17 @@
         
         <!-- Horizontal Tab Bar (Replaces Sidebar) -->
         <div class="glass-panel mb-4" id="adminHorizontalTabs" style="position: sticky; top: 75px; z-index: 40; padding: 0.75rem; overflow-x: auto; display: flex; gap: 0.75rem; flex-wrap: nowrap; white-space: nowrap; border-radius: var(--radius-sm);">
-            <button class="btn btn-primary py-2 px-4 admin-tab-btn" onclick="switchSection('dashboard', this)" style="border-radius: var(--radius-sm);">Dashboard</button>
-            <button class="btn btn-secondary py-2 px-4 admin-tab-btn" onclick="switchSection('bookings', this)" style="border-radius: var(--radius-sm);">Bookings</button>
-            <button class="btn btn-secondary py-2 px-4 admin-tab-btn" onclick="switchSection('students', this)" style="border-radius: var(--radius-sm);">Students</button>
-            <button class="btn btn-secondary py-2 px-4 admin-tab-btn" onclick="switchSection('coaches', this)" style="border-radius: var(--radius-sm);">Coaches</button>
-            <button class="btn btn-secondary py-2 px-4 admin-tab-btn" onclick="switchSection('sessions', this)" style="border-radius: var(--radius-sm);">Sessions</button>
-            <button class="btn btn-secondary py-2 px-4 admin-tab-btn" onclick="switchSection('payments', this)" style="border-radius: var(--radius-sm);">Payments</button>
-            <button class="btn btn-secondary py-2 px-4 admin-tab-btn" onclick="switchSection('reports', this)" style="border-radius: var(--radius-sm);">Reports</button>
-            <button class="btn btn-secondary py-2 px-4 admin-tab-btn" onclick="switchSection('pricing', this)" style="border-radius: var(--radius-sm);">Pricing</button>
-            <button class="btn btn-secondary py-2 px-4 admin-tab-btn" onclick="switchSection('settings', this)" style="border-radius: var(--radius-sm);">Settings</button>
+            <button class="btn btn-primary py-2 px-4 admin-tab-btn" onclick="switchSection('dashboard', this)" data-section="dashboard" style="border-radius: var(--radius-sm);">Dashboard</button>
+            <button class="btn btn-secondary py-2 px-4 admin-tab-btn" onclick="switchSection('bookings', this)" data-section="bookings" style="border-radius: var(--radius-sm);">Bookings</button>
+            <button class="btn btn-secondary py-2 px-4 admin-tab-btn" onclick="switchSection('students', this)" data-section="students" style="border-radius: var(--radius-sm);">Students</button>
+            <button class="btn btn-secondary py-2 px-4 admin-tab-btn" onclick="switchSection('coaches', this)" data-section="coaches" style="border-radius: var(--radius-sm);">Coaches</button>
+            <button class="btn btn-secondary py-2 px-4 admin-tab-btn" onclick="switchSection('sessions', this)" data-section="sessions" style="border-radius: var(--radius-sm);">Sessions</button>
+            <button class="btn btn-secondary py-2 px-4 admin-tab-btn" onclick="switchSection('payments', this)" data-section="payments" style="border-radius: var(--radius-sm);">Payments</button>
+            <button class="btn btn-secondary py-2 px-4 admin-tab-btn" onclick="switchSection('reports', this)" data-section="reports" style="border-radius: var(--radius-sm);">Reports</button>
+            <button class="btn btn-secondary py-2 px-4 admin-tab-btn" onclick="switchSection('pricing', this)" data-section="pricing" style="border-radius: var(--radius-sm);">Pricing</button>
+            <button class="btn btn-secondary py-2 px-4 admin-tab-btn" onclick="switchSection('settings', this)" data-section="settings" style="border-radius: var(--radius-sm);">Settings</button>
             <button class="btn btn-secondary py-2 px-4 admin-tab-btn" onclick="showMyIdCard()" style="border-radius: var(--radius-sm);">My ID Card</button>
-            <button class="btn btn-warning py-2 px-4 admin-tab-btn" onclick="switchSection('promotions', this)" style="border-radius: var(--radius-sm); color: black; font-weight: 600;"><i class="fa-solid fa-bullhorn me-1"></i> Promotions</button>
+            <button class="btn btn-warning py-2 px-4 admin-tab-btn" onclick="switchSection('promotions', this)" data-section="promotions" style="border-radius: var(--radius-sm); color: black; font-weight: 600;"><i class="fa-solid fa-bullhorn me-1"></i> Promotions</button>
         </div>
 
 
@@ -573,70 +587,32 @@
                                             <div style="font-size: 0.8rem; margin-top: 0.2rem;"><i class="fa-solid fa-id-card text-accent me-1"></i><strong>ID:</strong> {{ trainer.id_proof }}</div>
                                         {% endif %}
                                         {% if trainer.id_proof_file %}
-                                            <div style="margin-top: 0.35rem;">
+                                            <div class="d-flex align-items-center flex-wrap gap-2" style="margin-top: 0.35rem;">
                                                 <button type="button" class="btn btn-sm" style="background: rgba(6,182,212,0.15); color: #22d3ee; border: 1px solid rgba(6,182,212,0.3); padding: 0.2rem 0.5rem; font-size: 0.75rem; border-radius: 6px;" data-bs-toggle="modal" data-bs-target="#idProofModal-{{ loop.index }}">
                                                     <i class="fa-solid fa-file-image me-1"></i> View ID Proof Pic
                                                 </button>
-                                            </div>
-
-                                            <!-- ID Proof Image View Modal -->
-                                            <div class="modal fade" id="idProofModal-{{ loop.index }}" tabindex="-1" aria-hidden="true">
-                                                <div class="modal-dialog modal-dialog-centered modal-lg">
-                                                    <div class="modal-content glass-panel text-start" style="background: rgba(15, 15, 18, 0.98); border: 1px solid rgba(255,255,255,0.15);">
-                                                        <div class="modal-header border-0 pb-0">
-                                                            <h5 class="modal-title font-display text-white fw-bold"><i class="fa-solid fa-id-card text-accent me-2"></i> ID Proof: {{ trainer.name|title }}</h5>
-                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                        </div>
-                                                        <div class="modal-body text-center p-4">
-                                                            <div class="mb-3 text-start text-muted small">
-                                                                <div><strong>Coach Name:</strong> {{ trainer.name }}</div>
-                                                                <div><strong>ID Number / Type:</strong> {{ trainer.id_proof or 'N/A' }}</div>
-                                                            </div>
-                                                            <div class="p-2 rounded" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);">
-                                                                <img src="{{ url_for('static', filename='uploads/id_proofs/' + trainer.id_proof_file) }}" alt="ID Proof Image" style="max-width: 100%; max-height: 500px; object-fit: contain; border-radius: 8px;">
-                                                            </div>
-                                                            <div class="mt-3">
-                                                                <a href="{{ url_for('static', filename='uploads/id_proofs/' + trainer.id_proof_file) }}" target="_blank" class="btn btn-sm btn-outline-info">
-                                                                    <i class="fa-solid fa-up-right-from-square me-1"></i> Open Original Image in New Tab
-                                                                </a>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                <span id="badge-id-proof-{{ trainer.username }}" class="proof-status-badge" style="font-size: 0.75rem; font-weight: 600; border-radius: 9999px; padding: 0.15rem 0.5rem; {% if trainer.id_proof_status == 'Verified' %}background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.4); display: inline-flex; align-items: center;{% elif trainer.id_proof_status == 'Declined' %}background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.4); display: inline-flex; align-items: center;{% else %}display: none;{% endif %}">
+                                                    {% if trainer.id_proof_status == 'Verified' %}
+                                                        <i class="fa-solid fa-circle-check me-1"></i>Verified
+                                                    {% elif trainer.id_proof_status == 'Declined' %}
+                                                        <i class="fa-solid fa-circle-xmark me-1"></i>Declined
+                                                    {% endif %}
+                                                </span>
                                             </div>
                                         {% endif %}
 
                                         {% if trainer.qualification_file %}
-                                            <div style="margin-top: 0.25rem;">
+                                            <div class="d-flex align-items-center flex-wrap gap-2" style="margin-top: 0.25rem;">
                                                 <button type="button" class="btn btn-sm" style="background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); padding: 0.2rem 0.5rem; font-size: 0.75rem; border-radius: 6px;" data-bs-toggle="modal" data-bs-target="#qualModal-{{ loop.index }}">
                                                     <i class="fa-solid fa-graduation-cap me-1"></i> View Certificate
                                                 </button>
-                                            </div>
-
-                                            <!-- Qualification Certificate View Modal -->
-                                            <div class="modal fade" id="qualModal-{{ loop.index }}" tabindex="-1" aria-hidden="true">
-                                                <div class="modal-dialog modal-dialog-centered modal-lg">
-                                                    <div class="modal-content glass-panel text-start" style="background: rgba(15, 15, 18, 0.98); border: 1px solid rgba(255,255,255,0.15);">
-                                                        <div class="modal-header border-0 pb-0">
-                                                            <h5 class="modal-title font-display text-white fw-bold"><i class="fa-solid fa-graduation-cap text-success me-2"></i> Qualification Certificate: {{ trainer.name|title }}</h5>
-                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                        </div>
-                                                        <div class="modal-body text-center p-4">
-                                                            <div class="mb-3 text-start text-muted small">
-                                                                <div><strong>Coach Name:</strong> {{ trainer.name }}</div>
-                                                                <div><strong>Qualification / Certification:</strong> {{ trainer.qualification or 'N/A' }}</div>
-                                                            </div>
-                                                            <div class="p-2 rounded" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);">
-                                                                <img src="{{ url_for('static', filename='uploads/qualifications/' + trainer.qualification_file) }}" alt="Qualification Certificate" style="max-width: 100%; max-height: 500px; object-fit: contain; border-radius: 8px;">
-                                                            </div>
-                                                            <div class="mt-3">
-                                                                <a href="{{ url_for('static', filename='uploads/qualifications/' + trainer.qualification_file) }}" target="_blank" class="btn btn-sm btn-outline-success">
-                                                                    <i class="fa-solid fa-up-right-from-square me-1"></i> Open Original Certificate in New Tab
-                                                                </a>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                <span id="badge-qualification-{{ trainer.username }}" class="proof-status-badge" style="font-size: 0.75rem; font-weight: 600; border-radius: 9999px; padding: 0.15rem 0.5rem; {% if trainer.qualification_status == 'Verified' %}background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.4); display: inline-flex; align-items: center;{% elif trainer.qualification_status == 'Declined' %}background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.4); display: inline-flex; align-items: center;{% else %}display: none;{% endif %}">
+                                                    {% if trainer.qualification_status == 'Verified' %}
+                                                        <i class="fa-solid fa-circle-check me-1"></i>Verified
+                                                    {% elif trainer.qualification_status == 'Declined' %}
+                                                        <i class="fa-solid fa-circle-xmark me-1"></i>Declined
+                                                    {% endif %}
+                                                </span>
                                             </div>
                                         {% endif %}
                                     </td>
@@ -1435,6 +1411,122 @@
 {% endfor %}
 
 {% for trainer in trainers %}
+<!-- ID Proof Image View Modal -->
+{% if trainer.id_proof_file %}
+<div class="modal fade" id="idProofModal-{{ loop.index }}" tabindex="-1" aria-labelledby="idProofModalLabel-{{ loop.index }}" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content text-start" style="background: #111827; border: 1px solid rgba(255,255,255,0.15); border-radius: var(--radius-md); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);">
+            <div class="modal-header border-bottom border-secondary pb-3">
+                <h5 class="modal-title font-display text-white fw-bold" id="idProofModalLabel-{{ loop.index }}">
+                    <i class="fa-solid fa-id-card text-accent me-2"></i> ID Proof: {{ trainer.name|title }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <div class="mb-3 text-start text-muted small d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <div><strong>Coach Name:</strong> {{ trainer.name }}</div>
+                        <div><strong>ID Number / Type:</strong> {{ trainer.id_proof or 'N/A' }}</div>
+                    </div>
+                    <div id="modal-proof-status-id_proof-{{ trainer.username }}">
+                        {% if trainer.id_proof_status == 'Verified' %}
+                            <span class="badge" style="background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.4); padding: 0.35rem 0.75rem; border-radius: 9999px;">
+                                <i class="fa-solid fa-circle-check me-1"></i> Verified
+                            </span>
+                        {% elif trainer.id_proof_status == 'Declined' %}
+                            <span class="badge" style="background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.4); padding: 0.35rem 0.75rem; border-radius: 9999px;">
+                                <i class="fa-solid fa-circle-xmark me-1"></i> Declined
+                            </span>
+                        {% else %}
+                            <span class="badge" style="background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4); padding: 0.35rem 0.75rem; border-radius: 9999px;">
+                                <i class="fa-regular fa-clock me-1"></i> Pending Review
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="p-2 rounded" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); max-height: 520px; overflow: auto;">
+                    <img src="{{ url_for('static', filename='uploads/id_proofs/' + trainer.id_proof_file) }}" alt="ID Proof Image" style="max-width: 100%; max-height: 480px; object-fit: contain; border-radius: 8px;">
+                </div>
+                <div class="mt-3">
+                    <a href="{{ url_for('static', filename='uploads/id_proofs/' + trainer.id_proof_file) }}" target="_blank" class="btn btn-sm btn-outline-info">
+                        <i class="fa-solid fa-up-right-from-square me-1"></i> Open Original Image in New Tab
+                    </a>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-secondary pt-3 d-flex justify-content-between align-items-center">
+                <button type="button" class="btn btn-secondary px-3" data-bs-dismiss="modal">Close</button>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-danger px-4" onclick="updateTrainerProofStatus('{{ trainer.username }}', 'id_proof', 'Declined', 'idProofModal-{{ loop.index }}')">
+                        <i class="fa-solid fa-circle-xmark me-1"></i> Decline
+                    </button>
+                    <button type="button" class="btn btn-success px-4" onclick="updateTrainerProofStatus('{{ trainer.username }}', 'id_proof', 'Verified', 'idProofModal-{{ loop.index }}')">
+                        <i class="fa-solid fa-circle-check me-1"></i> Accepted
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Qualification Certificate View Modal -->
+{% if trainer.qualification_file %}
+<div class="modal fade" id="qualModal-{{ loop.index }}" tabindex="-1" aria-labelledby="qualModalLabel-{{ loop.index }}" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content text-start" style="background: #111827; border: 1px solid rgba(255,255,255,0.15); border-radius: var(--radius-md); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);">
+            <div class="modal-header border-bottom border-secondary pb-3">
+                <h5 class="modal-title font-display text-white fw-bold" id="qualModalLabel-{{ loop.index }}">
+                    <i class="fa-solid fa-graduation-cap text-success me-2"></i> Qualification Certificate: {{ trainer.name|title }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <div class="mb-3 text-start text-muted small d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <div><strong>Coach Name:</strong> {{ trainer.name }}</div>
+                        <div><strong>Qualification / Certification:</strong> {{ trainer.qualification or 'N/A' }}</div>
+                    </div>
+                    <div id="modal-proof-status-qualification-{{ trainer.username }}">
+                        {% if trainer.qualification_status == 'Verified' %}
+                            <span class="badge" style="background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.4); padding: 0.35rem 0.75rem; border-radius: 9999px;">
+                                <i class="fa-solid fa-circle-check me-1"></i> Verified
+                            </span>
+                        {% elif trainer.qualification_status == 'Declined' %}
+                            <span class="badge" style="background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.4); padding: 0.35rem 0.75rem; border-radius: 9999px;">
+                                <i class="fa-solid fa-circle-xmark me-1"></i> Declined
+                            </span>
+                        {% else %}
+                            <span class="badge" style="background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4); padding: 0.35rem 0.75rem; border-radius: 9999px;">
+                                <i class="fa-regular fa-clock me-1"></i> Pending Review
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="p-2 rounded" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); max-height: 520px; overflow: auto;">
+                    <img src="{{ url_for('static', filename='uploads/qualifications/' + trainer.qualification_file) }}" alt="Qualification Certificate" style="max-width: 100%; max-height: 480px; object-fit: contain; border-radius: 8px;">
+                </div>
+                <div class="mt-3">
+                    <a href="{{ url_for('static', filename='uploads/qualifications/' + trainer.qualification_file) }}" target="_blank" class="btn btn-sm btn-outline-success">
+                        <i class="fa-solid fa-up-right-from-square me-1"></i> Open Original Certificate in New Tab
+                    </a>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-secondary pt-3 d-flex justify-content-between align-items-center">
+                <button type="button" class="btn btn-secondary px-3" data-bs-dismiss="modal">Close</button>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-danger px-4" onclick="updateTrainerProofStatus('{{ trainer.username }}', 'qualification', 'Declined', 'qualModal-{{ loop.index }}')">
+                        <i class="fa-solid fa-circle-xmark me-1"></i> Decline
+                    </button>
+                    <button type="button" class="btn btn-success px-4" onclick="updateTrainerProofStatus('{{ trainer.username }}', 'qualification', 'Verified', 'qualModal-{{ loop.index }}')">
+                        <i class="fa-solid fa-circle-check me-1"></i> Accepted
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- Edit Trainer Modal -->
 <div class="modal fade" id="editTrainerModal-{{ loop.index }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -1568,6 +1660,9 @@
 <script>
     // Tab switching controller
     function switchSection(sectionId, clickedElement = null) {
+        if (!sectionId) sectionId = 'dashboard';
+
+        // 1. Switch active section view
         document.querySelectorAll('.dashboard-section').forEach(sec => {
             sec.classList.add('d-none');
         });
@@ -1576,45 +1671,35 @@
             activeSection.classList.remove('d-none');
         }
 
+        // 2. Reset desktop tab buttons
         document.querySelectorAll('.admin-tab-btn').forEach(btn => {
             btn.classList.remove('btn-primary');
             btn.classList.add('btn-secondary');
         });
 
-        let clickedLink = clickedElement || (window.event ? window.event.currentTarget : null);
-        
+        // 3. Highlight target desktop tab button
+        let targetBtn = document.querySelector(`.admin-tab-btn[data-section="${sectionId}"]`) ||
+                        document.querySelector(`.admin-tab-btn[onclick*="switchSection('${sectionId}'"]`);
+        if (targetBtn) {
+            targetBtn.classList.remove('btn-secondary');
+            targetBtn.classList.add('btn-primary');
+        }
+
+        // 4. Update mobile bottom navigation
         document.querySelectorAll('.mobile-nav-item').forEach(btn => {
             btn.classList.remove('active');
         });
-        
-        if (clickedLink && clickedLink.classList.contains('mobile-nav-item')) {
-            clickedLink.classList.add('active');
-            let desktopLink = document.querySelector(`.admin-tab-btn[onclick*="switchSection('${sectionId}'"]`);
-            if (desktopLink) {
-                desktopLink.classList.remove('btn-secondary');
-                desktopLink.classList.add('btn-primary');
-            }
-        } else {
-            if (!clickedLink || !clickedLink.classList.contains('admin-tab-btn')) {
-                clickedLink = document.querySelector(`.admin-tab-btn[onclick*="switchSection('${sectionId}'"]`);
-            }
-            if (clickedLink) {
-                clickedLink.classList.remove('btn-secondary');
-                clickedLink.classList.add('btn-primary');
-            }
-            let mobileLink = document.querySelector(`.mobile-nav-item[onclick*="switchSection('${sectionId}')"]`);
-            if (mobileLink) {
-                mobileLink.classList.add('active');
-            }
+        const mobileLink = document.querySelector(`.mobile-nav-item[onclick*="switchSection('${sectionId}')"]`);
+        if (mobileLink) {
+            mobileLink.classList.add('active');
         }
 
-
-
+        // 5. Update page title
         const titles = {
             'dashboard': 'Dashboard',
             'bookings': 'Bookings & Assignment',
             'students': 'Students Directory',
-            'coaches': 'Coaches & Approvals',
+            'coaches': 'Coaches Registry & Approvals',
             'sessions': 'Upcoming Sessions',
             'payments': 'Payments Status',
             'reports': 'System Audit Logs',
@@ -1622,9 +1707,128 @@
             'settings': 'Settings',
             'promotions': 'Promotions & Offer Zone'
         };
-        document.getElementById('pageTitle').textContent = titles[sectionId] || 'Dashboard';
-        sessionStorage.setItem('activeAdminSection', sectionId);
+        const titleEl = document.getElementById('pageTitle');
+        if (titleEl) {
+            titleEl.textContent = titles[sectionId] || 'Dashboard';
+        }
+
+        // 6. Persist to sessionStorage and URL search parameter
+        try {
+            sessionStorage.setItem('activeAdminSection', sectionId);
+            if (window.history && window.history.replaceState) {
+                const url = new URL(window.location);
+                url.searchParams.set('section', sectionId);
+                window.history.replaceState({}, '', url);
+            }
+        } catch (e) {
+            console.warn('Session storage error:', e);
+        }
     }
+
+    // Proof verification handler (Accepted / Decline)
+    function updateTrainerProofStatus(username, proofType, status, modalId) {
+        const formData = new FormData();
+        formData.append('username', username);
+        formData.append('proof_type', proofType);
+        formData.append('status', status);
+
+        fetch('/admin/verify_trainer_proof/' + encodeURIComponent(username), {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // 1. Update the badge beside the button in the Coaches table
+                const badgeKey = proofType === 'id_proof' ? 'id-proof' : 'qualification';
+                const badgeEl = document.getElementById('badge-' + badgeKey + '-' + username);
+                if (badgeEl) {
+                    badgeEl.style.display = 'inline-flex';
+                    badgeEl.style.alignItems = 'center';
+                    if (data.status === 'Verified') {
+                        badgeEl.style.background = 'rgba(16, 185, 129, 0.2)';
+                        badgeEl.style.color = '#34d399';
+                        badgeEl.style.border = '1px solid rgba(16, 185, 129, 0.4)';
+                        badgeEl.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i>Verified';
+                    } else if (data.status === 'Declined') {
+                        badgeEl.style.background = 'rgba(239, 68, 68, 0.2)';
+                        badgeEl.style.color = '#f87171';
+                        badgeEl.style.border = '1px solid rgba(239, 68, 68, 0.4)';
+                        badgeEl.innerHTML = '<i class="fa-solid fa-circle-xmark me-1"></i>Declined';
+                    }
+                }
+
+                // 2. Update status badge inside the modal
+                const modalBadgeEl = document.getElementById('modal-proof-status-' + proofType + '-' + username);
+                if (modalBadgeEl) {
+                    if (data.status === 'Verified') {
+                        modalBadgeEl.innerHTML = '<span class="badge" style="background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.4); padding: 0.35rem 0.75rem; border-radius: 9999px;"><i class="fa-solid fa-circle-check me-1"></i> Verified</span>';
+                    } else if (data.status === 'Declined') {
+                        modalBadgeEl.innerHTML = '<span class="badge" style="background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.4); padding: 0.35rem 0.75rem; border-radius: 9999px;"><i class="fa-solid fa-circle-xmark me-1"></i> Declined</span>';
+                    }
+                }
+
+                // 3. Show feedback toast notification
+                showAdminToast(data.message || ('Proof marked as ' + data.status), data.status === 'Verified' ? 'success' : 'danger');
+
+                // 4. Close the modal smoothly
+                setTimeout(() => {
+                    const modalEl = document.getElementById(modalId);
+                    if (modalEl) {
+                        const bsModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                        if (bsModal) {
+                            bsModal.hide();
+                        }
+                    }
+                }, 500);
+            } else {
+                alert('Error updating proof: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(err => {
+            console.error('Verify proof error:', err);
+            alert('Failed to update proof status. Please try again.');
+        });
+    }
+
+    function showAdminToast(msg, type = 'success') {
+        let toast = document.getElementById('adminDynamicToast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'adminDynamicToast';
+            toast.style.position = 'fixed';
+            toast.style.bottom = '30px';
+            toast.style.right = '30px';
+            toast.style.zIndex = '99999';
+            toast.style.padding = '0.75rem 1.25rem';
+            toast.style.borderRadius = '8px';
+            toast.style.fontWeight = '600';
+            toast.style.fontSize = '0.9rem';
+            toast.style.boxShadow = '0 10px 25px rgba(0,0,0,0.5)';
+            toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            document.body.appendChild(toast);
+        }
+        toast.style.background = type === 'success' ? '#059669' : '#dc2626';
+        toast.style.color = '#ffffff';
+        toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'} me-2"></i> ${msg}`;
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(10px)';
+        }, 3000);
+    }
+
+    // Auto-append modals to document.body when opened so they are never trapped in container stacking contexts
+    document.addEventListener('show.bs.modal', function (event) {
+        const modal = event.target;
+        if (modal && modal.parentElement !== document.body) {
+            document.body.appendChild(modal);
+        }
+    });
 
     // Chart.js initialization
     document.addEventListener('DOMContentLoaded', function () {
