@@ -115,13 +115,38 @@ def index():
                        (SELECT COUNT(DISTINCT b.student_name) FROM bookings b WHERE LOWER(b.trainer_username) = LOWER(t.username)) as student_count,
                        (SELECT COUNT(*) FROM coach_feedback c WHERE c.trainer_username = t.username) as review_count,
                        t.available_slots,
-                       t.photos
+                       t.photos,
+                       t.id_number,
+                       t.id_proof_file,
+                       pp.filename as profile_pic
                 FROM trainers t
+                LEFT JOIN profile_pictures pp ON pp.id_number = t.id_number
                 WHERE t.is_approved = TRUE
                 ORDER BY t.rating DESC, t.name
             """)
             raw_trainers = cursor.fetchall()
             for row in raw_trainers:
+                photos_str = (row[10] if len(row) > 10 and row[10] else "").strip()
+                first_photo = [p.strip() for p in photos_str.split(",") if p.strip()]
+                first_photo_val = first_photo[0] if first_photo else ""
+                id_num = (row[11] if len(row) > 11 and row[11] else "").strip()
+                id_proof_val = (row[12] if len(row) > 12 and row[12] else "").strip()
+                prof_pic = (row[13] if len(row) > 13 and row[13] else "").strip()
+
+                photo_url = ""
+                if prof_pic:
+                    if prof_pic.startswith("http://") or prof_pic.startswith("https://"):
+                        photo_url = prof_pic
+                    else:
+                        photo_url = f"/static/profile_pictures/{prof_pic}"
+                elif first_photo_val:
+                    if first_photo_val.startswith("http://") or first_photo_val.startswith("https://"):
+                        photo_url = first_photo_val
+                    else:
+                        photo_url = f"/static/uploads/{first_photo_val}"
+                elif id_proof_val:
+                    photo_url = f"/static/uploads/id_proofs/{id_proof_val}"
+
                 coaches_list.append({
                     'username': row[0],
                     'name': row[1],
@@ -132,7 +157,11 @@ def index():
                     'rating': float(row[6]) if row[6] is not None else 0.0,
                     'student_count': row[7],
                     'review_count': row[8] or 0,
-                    'available_slots': row[9] or "[]"
+                    'available_slots': row[9] or "[]",
+                    'photos': photos_str,
+                    'id_number': id_num,
+                    'profile_pic': prof_pic,
+                    'photo_url': photo_url
                 })
 
             # Build unified gallery items:
