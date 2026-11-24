@@ -466,3 +466,199 @@ def send_package_completion_email(booking):
         )
     except Exception as exc:
         print(f"Package completion email failed: {exc}")
+
+
+def send_coach_registration_email(coach_info):
+    """
+    Send confirmation email to the coach that their application is under progress.
+    Informs them that they will be notified once an Admin / recruiter accepts.
+    """
+    try:
+        email = (coach_info.get("email") or "").strip()
+        name = coach_info.get("name") or "Coach"
+        if not email:
+            print(f"Coach registration email skipped: No email provided for {name}.")
+            return False
+
+        id_number = coach_info.get("id_number") or "--"
+        username = coach_info.get("username") or "--"
+        phone = coach_info.get("phone") or "--"
+        experience = coach_info.get("experience") or "--"
+        qualification = coach_info.get("qualification") or "--"
+        location = coach_info.get("residence_location") or "--"
+
+        subject = f"🏊 Coach Application Under Progress - SwimTrackPro ({id_number})"
+
+        html_content = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b; line-height: 1.6;">
+            <div style="background: linear-gradient(135deg, #06b6d4, #0284c7); padding: 24px; text-align: center; border-radius: 12px 12px 0 0;">
+                <h1 style="color: #ffffff; margin: 0; font-size: 24px;">🏊 Coach Application Received</h1>
+                <p style="color: #e0f2fe; margin: 6px 0 0 0; font-size: 14px;">Welcome to SwimTrackPro Coaching Network</p>
+            </div>
+            
+            <div style="background: #ffffff; padding: 24px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 12px 12px;">
+                <p style="font-size: 16px;">Hello <strong>{name}</strong>,</p>
+                <p>Thank you for registering as a swimming coach with SwimTrackPro!</p>
+                
+                <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 14px 18px; margin: 18px 0; border-radius: 4px;">
+                    <p style="margin: 0; font-weight: 600; color: #065f46; font-size: 15px;">
+                        ℹ️ Your application is currently under progress.
+                    </p>
+                    <p style="margin: 6px 0 0 0; color: #047857; font-size: 14px;">
+                        Our administration and recruitment team is reviewing your profile and credentials. You will be notified once an Admin / recruiter accepts your application.
+                    </p>
+                </div>
+
+                <h3 style="color: #0f172a; font-size: 16px; margin: 20px 0 10px 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;">Submitted Application Details</h3>
+                <table style="width: 100%; border-collapse: collapse; margin: 15px 0; background: #f8fafc; border-radius: 8px; overflow: hidden; font-size: 14px;">
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 10px 14px; font-weight: bold; width: 38%; color: #64748b;">Coach ID</td>
+                        <td style="padding: 10px 14px; font-weight: bold; color: #0284c7;">{id_number}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 10px 14px; font-weight: bold; color: #64748b;">Coach Name</td>
+                        <td style="padding: 10px 14px;">{name}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 10px 14px; font-weight: bold; color: #64748b;">Username</td>
+                        <td style="padding: 10px 14px;">{username}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 10px 14px; font-weight: bold; color: #64748b;">Contact Phone</td>
+                        <td style="padding: 10px 14px;">{phone}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 10px 14px; font-weight: bold; color: #64748b;">Experience</td>
+                        <td style="padding: 10px 14px;">{experience}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 10px 14px; font-weight: bold; color: #64748b;">Qualification</td>
+                        <td style="padding: 10px 14px;">{qualification}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 10px 14px; font-weight: bold; color: #64748b;">Location / City</td>
+                        <td style="padding: 10px 14px;">{location}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px 14px; font-weight: bold; color: #64748b;">Status</td>
+                        <td style="padding: 10px 14px;"><span style="background: #fef3c7; color: #b45309; padding: 3px 10px; border-radius: 12px; font-weight: bold; font-size: 12px;">Under Progress (Pending Verification)</span></td>
+                    </tr>
+                </table>
+
+                <p style="color: #475569; font-size: 14px; margin-top: 20px;">
+                    Once your profile and identity verification are completed, you will receive an acceptance email with instructions to log in and manage your swimming coaching sessions.
+                </p>
+
+                <p style="color: #64748b; font-size: 13px; margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+                    Have questions about your application? Reply directly to this email.<br>
+                    <strong>SwimTrackPro Operations Team</strong>
+                </p>
+            </div>
+        </div>
+        """
+
+        return send_email(
+            subject=subject,
+            html_content=html_content,
+            to_email=email,
+            to_name=name
+        )
+    except Exception as exc:
+        print(f"Coach registration email failed: {exc}")
+        return False
+
+
+def send_coach_registration_admin_alert(coach_info):
+    """
+    Send new coach registration alert to administrator informing that verification is pending.
+    """
+    try:
+        name = coach_info.get("name") or "New Coach"
+        username = coach_info.get("username") or "--"
+        id_number = coach_info.get("id_number") or "--"
+        phone = coach_info.get("phone") or "--"
+        email = coach_info.get("email") or "--"
+        experience = coach_info.get("experience") or "--"
+        qualification = coach_info.get("qualification") or "--"
+        currently_working = coach_info.get("currently_working") or "--"
+        location = coach_info.get("residence_location") or "--"
+        id_proof = coach_info.get("id_proof") or "--"
+
+        subject = f"🏊 New Coach Register - Yet to pending with verification: {name} ({id_number})"
+
+        html_content = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b; line-height: 1.6;">
+            <div style="background: linear-gradient(135deg, #0ea5e9, #0284c7); padding: 22px; text-align: center; border-radius: 12px 12px 0 0;">
+                <h2 style="color: #ffffff; margin: 0; font-size: 22px;">🏊 New Coach Registration Alert</h2>
+                <p style="color: #e0f2fe; margin: 6px 0 0 0; font-size: 14px;">Super Admin Notification • Verification Pending</p>
+            </div>
+
+            <div style="background: #ffffff; padding: 24px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 12px 12px;">
+                <p style="font-size: 15px;">Hello Admin,</p>
+                <p>A new coach has registered on SwimTrackPro and is <strong>yet to pending with verification</strong>.</p>
+
+                <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+                    <strong style="color: #b45309;">Status:</strong> <span style="color: #92400e;">New coach register - Yet to pending with verification</span>
+                </div>
+
+                <h3 style="color: #0f172a; font-size: 15px; margin: 18px 0 8px 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;">Coach Profile & Credential Details</h3>
+                <table style="width: 100%; border-collapse: collapse; margin: 14px 0; background: #f8fafc; border-radius: 8px; overflow: hidden; font-size: 14px;">
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 9px 12px; font-weight: bold; width: 38%; color: #64748b;">Coach ID</td>
+                        <td style="padding: 9px 12px; font-weight: bold; color: #0284c7;">{id_number}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 9px 12px; font-weight: bold; color: #64748b;">Name</td>
+                        <td style="padding: 9px 12px;">{name}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 9px 12px; font-weight: bold; color: #64748b;">Username</td>
+                        <td style="padding: 9px 12px;">{username}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 9px 12px; font-weight: bold; color: #64748b;">Phone</td>
+                        <td style="padding: 9px 12px;">{phone}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 9px 12px; font-weight: bold; color: #64748b;">Email</td>
+                        <td style="padding: 9px 12px;"><a href="mailto:{email}" style="color: #0284c7;">{email}</a></td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 9px 12px; font-weight: bold; color: #64748b;">Location / City</td>
+                        <td style="padding: 9px 12px;">{location}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 9px 12px; font-weight: bold; color: #64748b;">Experience</td>
+                        <td style="padding: 9px 12px;">{experience}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 9px 12px; font-weight: bold; color: #64748b;">Qualification</td>
+                        <td style="padding: 9px 12px;">{qualification}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 9px 12px; font-weight: bold; color: #64748b;">Currently Working</td>
+                        <td style="padding: 9px 12px;">{currently_working}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 9px 12px; font-weight: bold; color: #64748b;">ID Proof Provided</td>
+                        <td style="padding: 9px 12px;">{id_proof}</td>
+                    </tr>
+                </table>
+
+                <div style="text-align: center; margin: 25px 0;">
+                    <a href="https://swimtrackpro.onrender.com/?section=coaches" style="background: #0284c7; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; display: inline-block;">
+                        Review & Verify Coach in Admin Dashboard
+                    </a>
+                </div>
+
+                <p style="color: #64748b; font-size: 13px; margin-top: 25px; border-top: 1px solid #e2e8f0; padding-top: 14px;">
+                    This is an automated system notification from SwimTrackPro Admin Operations.
+                </p>
+            </div>
+        </div>
+        """
+
+        return send_email(subject=subject, html_content=html_content)
+    except Exception as exc:
+        print(f"Coach registration admin alert failed: {exc}")
+        return False

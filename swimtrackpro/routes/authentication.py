@@ -399,6 +399,31 @@ def register_authentication_routes(
         )
         conn.commit()
         conn.close()
+
+        try:
+            from services.email_service import (
+                send_coach_registration_email,
+                send_coach_registration_admin_alert,
+            )
+            coach_info = {
+                "name": name,
+                "username": username.lower(),
+                "phone": phone,
+                "email": email,
+                "experience": experience,
+                "qualification": qualification,
+                "currently_working": currently_working,
+                "residence_location": residence_location,
+                "id_proof": id_proof,
+                "id_number": new_id_number,
+                "id_proof_file": saved_filename,
+                "qualification_file": saved_qual_filename,
+            }
+            send_coach_registration_email(coach_info)
+            send_coach_registration_admin_alert(coach_info)
+        except Exception as mail_err:
+            print("Coach registration email trigger error:", mail_err)
+
         flash("Trainer registered successfully! Your account is pending Super Admin approval before you can log in.")
         return redirect(url_for("index"))
 
