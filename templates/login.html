@@ -354,9 +354,9 @@
 <div class="features-section" id="features">
     <div class="container">
         <div class="text-center mb-5">
-            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-2" style="background: rgba(6, 182, 212, 0.12); border: 1px solid rgba(6, 182, 212, 0.3); color: var(--color-primary); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;">
+            <!-- <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-2" style="background: rgba(6, 182, 212, 0.12); border: 1px solid rgba(6, 182, 212, 0.3); color: var(--color-primary); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;">
                 <i class="fa-solid fa-lightbulb"></i> Our Concept
-            </div>
+            </div> -->
             <h2 class="font-display text-white" style="font-weight: 800; font-size: 2.2rem; margin-bottom: 0.5rem;">How It Works</h2>
             <p class="text-muted">High-performance private training, delivered at your personal pool site.</p>
         </div>
@@ -381,68 +381,7 @@
     </div>
 </div>
 
-<!-- What You Will Get Section -->
-<div class="what-you-get-section" id="what-you-get">
-    <div class="container">
-        <div class="text-center mb-5">
-            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-2" style="background: rgba(6, 182, 212, 0.12); border: 1px solid rgba(6, 182, 212, 0.3); color: var(--color-primary); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;">
-                <i class="fa-solid fa-graduation-cap"></i> Skill Progression
-            </div>
-            <h2 class="font-display text-white" style="font-weight: 800; font-size: 2.2rem; margin-bottom: 0.5rem;">What You Will Get</h2>
-            <p class="text-muted">Explore the tailored training outcomes for your specific skill level.</p>
-        </div>
-        
-        <div class="levels-grid">
-            <!-- Beginner Card -->
-            <div class="level-card" onclick="openLevelModal('beginner')">
-                <span class="badge rounded-pill px-3 py-1 mb-3 level-badge level-badge-beginner">
-                    <i class="fa-solid fa-water me-1"></i> LEVEL 1 • FOUNDATIONS
-                </span>
-                <div class="level-icon-circle mb-3">
-                    <i class="fa-solid fa-life-ring"></i>
-                </div>
-                <h3 class="font-display">I'm a Beginner</h3>
-                <p>Starting from scratch? Learn the basics of water safety, floating, and breath control.</p>
-                <div class="level-action-btn">
-                    <span>View Outcomes</span>
-                    <i class="fa-solid fa-arrow-right fa-xs"></i>
-                </div>
-            </div>
-            
-            <!-- Intermediate Card -->
-            <div class="level-card" onclick="openLevelModal('intermediate')">
-                <span class="badge rounded-pill px-3 py-1 mb-3 level-badge level-badge-intermediate">
-                    <i class="fa-solid fa-person-swimming me-1"></i> LEVEL 2 • TECHNIQUE
-                </span>
-                <div class="level-icon-circle mb-3">
-                    <i class="fa-solid fa-person-swimming"></i>
-                </div>
-                <h3 class="font-display">I'm at Intermediate</h3>
-                <p>Know the basics? Master different strokes, underwater swimming, and diving form.</p>
-                <div class="level-action-btn">
-                    <span>View Outcomes</span>
-                    <i class="fa-solid fa-arrow-right fa-xs"></i>
-                </div>
-            </div>
-            
-            <!-- Regular Card -->
-            <div class="level-card" onclick="openLevelModal('regular')">
-                <span class="badge rounded-pill px-3 py-1 mb-3 level-badge level-badge-regular">
-                    <i class="fa-solid fa-gauge-high me-1"></i> LEVEL 3 • ENDURANCE
-                </span>
-                <div class="level-icon-circle mb-3">
-                    <i class="fa-solid fa-stopwatch"></i>
-                </div>
-                <h3 class="font-display">I'm Regular</h3>
-                <p>Swimming daily? Refine your strokes, build endurance, track laps, and race faster.</p>
-                <div class="level-action-btn">
-                    <span>View Outcomes</span>
-                    <i class="fa-solid fa-arrow-right fa-xs"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <!-- Modals for Swimmer Levels -->
 <div class="modal fade" id="levelModal" tabindex="-1" aria-hidden="true">
@@ -967,17 +906,80 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<!-- What You Will Get Section -->
+<div class="what-you-get-section" id="what-you-get">
+    <div class="container">
+        <div class="text-center mb-5">
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-2" style="background: rgba(6, 182, 212, 0.12); border: 1px solid rgba(6, 182, 212, 0.3); color: var(--color-primary); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;">
+                <i class="fa-solid fa-graduation-cap"></i> Skill Progression
+            </div>
+            <h2 class="font-display text-white" style="font-weight: 800; font-size: 2.2rem; margin-bottom: 0.5rem;">What You Will Get</h2>
+            <p class="text-muted">Explore the tailored training outcomes for your specific skill level.</p>
+        </div>
+        
+        <div class="levels-grid">
+            <!-- Beginner Card -->
+            <div class="level-card" onclick="openLevelModal('beginner')">
+                <span class="badge rounded-pill px-3 py-1 mb-3 level-badge level-badge-beginner">
+                    <i class="fa-solid fa-water me-1"></i> LEVEL 1 • FOUNDATIONS
+                </span>
+                <div class="level-icon-circle mb-3">
+                    <i class="fa-solid fa-life-ring"></i>
+                </div>
+                <h3 class="font-display">I'm a Beginner</h3>
+                <p>Starting from scratch? Learn the basics of water safety, floating, and breath control.</p>
+                <div class="level-action-btn">
+                    <span>View Outcomes</span>
+                    <i class="fa-solid fa-arrow-right fa-xs"></i>
+                </div>
+            </div>
+            
+            <!-- Intermediate Card -->
+            <div class="level-card" onclick="openLevelModal('intermediate')">
+                <span class="badge rounded-pill px-3 py-1 mb-3 level-badge level-badge-intermediate">
+                    <i class="fa-solid fa-person-swimming me-1"></i> LEVEL 2 • TECHNIQUE
+                </span>
+                <div class="level-icon-circle mb-3">
+                    <i class="fa-solid fa-person-swimming"></i>
+                </div>
+                <h3 class="font-display">I'm at Intermediate</h3>
+                <p>Know the basics? Master different strokes, underwater swimming, and diving form.</p>
+                <div class="level-action-btn">
+                    <span>View Outcomes</span>
+                    <i class="fa-solid fa-arrow-right fa-xs"></i>
+                </div>
+            </div>
+            
+            <!-- Regular Card -->
+            <div class="level-card" onclick="openLevelModal('regular')">
+                <span class="badge rounded-pill px-3 py-1 mb-3 level-badge level-badge-regular">
+                    <i class="fa-solid fa-gauge-high me-1"></i> LEVEL 3 • ENDURANCE
+                </span>
+                <div class="level-icon-circle mb-3">
+                    <i class="fa-solid fa-stopwatch"></i>
+                </div>
+                <h3 class="font-display">I'm Regular</h3>
+                <p>Swimming daily? Refine your strokes, build endurance, track laps, and race faster.</p>
+                <div class="level-action-btn">
+                    <span>View Outcomes</span>
+                    <i class="fa-solid fa-arrow-right fa-xs"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Gallery Section (Visual Highlights) -->
 {% if gallery_items is defined and gallery_items|length > 0 %}
 <section class="gallery-section py-5" id="gallery" style="background: rgba(9, 9, 11, 0.5); border-top: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06); position: relative;">
     <div class="container">
         <!-- Section Header -->
         <div class="text-center mb-4">
-            <span class="badge mb-2 px-3 py-1.5 rounded-pill" style="background: rgba(6, 182, 212, 0.12); color: #38bdf8; font-weight: 700; font-size: 0.75rem; letter-spacing: 0.5px; border: 1px solid rgba(6, 182, 212, 0.3);">
+            <!-- <span class="badge mb-2 px-3 py-1.5 rounded-pill" style="background: rgba(6, 182, 212, 0.12); color: #38bdf8; font-weight: 700; font-size: 0.75rem; letter-spacing: 0.5px; border: 1px solid rgba(6, 182, 212, 0.3);">
                 <i class="fa-solid fa-camera-retro me-1"></i> VISUAL HIGHLIGHTS
-            </span>
+            </span> -->
             <h2 class="font-display text-white" style="font-weight: 800; font-size: 2.2rem; margin-bottom: 1.25rem;">
-                Training Moments & Achievements
+                Highlights & Achievements
             </h2>
 
             <!-- Filter Tabs (Desktop / Tablet view; hidden on mobile) -->
