@@ -304,17 +304,9 @@
         border: none;
         cursor: pointer;
         padding: 0.35rem 0.5rem;
-        z-index: 10;
+        z-index: 5;
         font-size: 1rem;
         transition: color 0.2s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        pointer-events: auto;
-    }
-
-    .toggle-pass-btn * {
-        pointer-events: none;
     }
 
     .toggle-pass-btn:hover {
@@ -2634,67 +2626,11 @@ document.addEventListener('DOMContentLoaded', initGallery);
                     <div class="input-wrapper" style="position: relative;">
                         <span class="input-icon"><i class="fa-solid fa-lock"></i></span>
                         <input type="password" name="password" id="passwordInput" class="form-control login-input" placeholder="Enter password" autocomplete="current-password">
-                        <button class="toggle-pass-btn" type="button" id="togglePasswordBtn" onclick="toggleLoginPasswordVisibility(event)" title="Show password" aria-label="Show password">
+                        <button class="toggle-pass-btn" type="button" id="togglePasswordBtn" onclick="toggleLoginPasswordVisibility()" title="Show password" aria-label="Show password">
                             <i class="fa-solid fa-eye" id="togglePasswordIcon"></i>
                         </button>
                     </div>
                 </div>
-                <script>
-                    (function() {
-                        let _lastToggle = 0;
-                        window.toggleLoginPasswordVisibility = function(e) {
-                            if (e) {
-                                if (typeof e.preventDefault === 'function') e.preventDefault();
-                                if (typeof e.stopPropagation === 'function') e.stopPropagation();
-                            }
-                            const now = Date.now();
-                            if (now - _lastToggle < 200) return;
-                            _lastToggle = now;
-
-                            const pwdInput = document.getElementById('passwordInput');
-                            const pwdIcon = document.getElementById('togglePasswordIcon');
-                            const pwdBtn = document.getElementById('togglePasswordBtn');
-                            if (!pwdInput) return;
-
-                            if (pwdInput.type === 'password') {
-                                pwdInput.type = 'text';
-                                if (pwdIcon) {
-                                    pwdIcon.classList.remove('fa-eye');
-                                    pwdIcon.classList.add('fa-eye-slash');
-                                }
-                                if (pwdBtn) {
-                                    pwdBtn.setAttribute('title', 'Hide password');
-                                    pwdBtn.setAttribute('aria-label', 'Hide password');
-                                }
-                            } else {
-                                pwdInput.type = 'password';
-                                if (pwdIcon) {
-                                    pwdIcon.classList.remove('fa-eye-slash');
-                                    pwdIcon.classList.add('fa-eye');
-                                }
-                                if (pwdBtn) {
-                                    pwdBtn.setAttribute('title', 'Show password');
-                                    pwdBtn.setAttribute('aria-label', 'Show password');
-                                }
-                            }
-                        };
-
-                        window.resetPasswordVisibility = function() {
-                            const pwdInput = document.getElementById('passwordInput');
-                            const pwdIcon = document.getElementById('togglePasswordIcon');
-                            const pwdBtn = document.getElementById('togglePasswordBtn');
-                            if (pwdInput) pwdInput.type = 'password';
-                            if (pwdIcon) {
-                                pwdIcon.classList.remove('fa-eye-slash');
-                                pwdIcon.classList.add('fa-eye');
-                            }
-                            if (pwdBtn) {
-                                pwdBtn.setAttribute('title', 'Show password');
-                                pwdBtn.setAttribute('aria-label', 'Show password');
-                            }
-                        };
-                    })();
-                </script>
                 
                 <div class="form-group mb-3" id="phoneField">
                     <label class="form-label">Mobile Number</label>
@@ -3313,8 +3249,14 @@ document.addEventListener('DOMContentLoaded', initGallery);
             });
         });
 
-        // Password toggle is handled directly via onclick="toggleLoginPasswordVisibility(event)"
-        // to prevent duplicate click handling.
+        // Toggle password show/hide button listener
+        const toggleBtn = document.getElementById('togglePasswordBtn');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                toggleLoginPasswordVisibility();
+            });
+        }
     });
 
     function openLoginModal() {
@@ -3328,17 +3270,51 @@ document.addEventListener('DOMContentLoaded', initGallery);
         }
     }
 
-    // Ensure resetPasswordVisibility and toggleLoginPasswordVisibility are accessible in this scope
     function resetPasswordVisibility() {
-        if (typeof window.resetPasswordVisibility === 'function') {
-            window.resetPasswordVisibility();
+        const pwdInput = document.getElementById('passwordInput');
+        const pwdIcon = document.getElementById('togglePasswordIcon');
+        const pwdBtn = document.getElementById('togglePasswordBtn');
+        if (pwdInput) {
+            pwdInput.type = 'password';
+        }
+        if (pwdIcon) {
+            pwdIcon.classList.remove('fa-eye-slash');
+            pwdIcon.classList.add('fa-eye');
+        }
+        if (pwdBtn) {
+            pwdBtn.setAttribute('title', 'Show password');
+            pwdBtn.setAttribute('aria-label', 'Show password');
         }
     }
 
-    function toggleLoginPasswordVisibility(e) {
-        if (typeof window.toggleLoginPasswordVisibility === 'function') {
-            window.toggleLoginPasswordVisibility(e);
+    function toggleLoginPasswordVisibility() {
+        const pwdInput = document.getElementById('passwordInput');
+        const pwdIcon = document.getElementById('togglePasswordIcon');
+        const pwdBtn = document.getElementById('togglePasswordBtn');
+        if (!pwdInput) return;
+
+        if (pwdInput.type === 'password') {
+            pwdInput.type = 'text';
+            if (pwdIcon) {
+                pwdIcon.classList.remove('fa-eye');
+                pwdIcon.classList.add('fa-eye-slash');
+            }
+            if (pwdBtn) {
+                pwdBtn.setAttribute('title', 'Hide password');
+                pwdBtn.setAttribute('aria-label', 'Hide password');
+            }
+        } else {
+            pwdInput.type = 'password';
+            if (pwdIcon) {
+                pwdIcon.classList.remove('fa-eye-slash');
+                pwdIcon.classList.add('fa-eye');
+            }
+            if (pwdBtn) {
+                pwdBtn.setAttribute('title', 'Show password');
+                pwdBtn.setAttribute('aria-label', 'Show password');
+            }
         }
+        pwdInput.focus();
     }
 
     function activateTrainerMode() {
