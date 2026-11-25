@@ -879,15 +879,15 @@
                                 <div class="flex-grow-1 mb-4 d-flex flex-column gap-2.5 coach-details-list" style="font-size: 0.86rem; color: rgba(255, 255, 255, 0.85);">
                                     <div class="d-flex align-items-center gap-2.5" title="Experience">
                                         <i class="fa-solid fa-briefcase text-primary" style="width: 18px; text-align: center; flex-shrink: 0;"></i>
-                                        <span class="text-white fw-semibold text-truncate">{{ coach.experience or 'N/A' }}</span>
+                                        <span class="text-white fw-semibold text-truncate">Experience: {{ coach.experience or 'N/A' }} Years</span>
                                     </div>
                                     <div class="d-flex align-items-center gap-2.5" title="Qualification">
                                         <i class="fa-solid fa-graduation-cap text-primary" style="width: 18px; text-align: center; flex-shrink: 0;"></i>
-                                        <span class="text-white fw-semibold text-truncate" title="{{ coach.qualification or 'N/A' }}">{{ coach.qualification or 'N/A' }}</span>
+                                        <span class="text-white fw-semibold text-truncate" title="{{ coach.qualification or 'N/A' }}">Qualification: {{ coach.qualification or 'N/A' }}</span>
                                     </div>
                                     <div class="d-flex align-items-center gap-2.5" title="Rating">
                                         <i class="fa-solid fa-star text-warning" style="width: 18px; text-align: center; flex-shrink: 0;"></i>
-                                        <span class="text-white fw-semibold">
+                                        <span class="text-white fw-semibold">Rating: 
                                             {% if coach.review_count > 0 %}
                                                 {{ '%.1f' | format(coach.rating | float) }} <span class="text-muted" style="font-size: 0.75rem;">({{ coach.review_count }})</span>
                                             {% else %}
@@ -897,7 +897,7 @@
                                     </div>
                                     <div class="d-flex align-items-center gap-2.5" title="Swimmers Trained">
                                         <i class="fa-solid fa-users text-primary" style="width: 18px; text-align: center; flex-shrink: 0;"></i>
-                                        <span class="text-white fw-semibold">{{ coach.student_count or 0 }}</span>
+                                        <span class="text-white fw-semibold">No. of Swimmer: {{ coach.student_count or 0 }}</span>
                                     </div>
                                     <div class="d-flex align-items-center gap-2.5" title="Location">
                                         <i class="fa-solid fa-location-dot text-danger" style="width: 18px; text-align: center; flex-shrink: 0;"></i>
