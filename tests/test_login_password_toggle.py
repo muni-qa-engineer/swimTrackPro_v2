@@ -14,10 +14,11 @@ class LoginPasswordToggleTests(unittest.TestCase):
         """
         Verify that:
         1. password input (#passwordInput) exists with type="password"
-        2. toggle password button (#togglePasswordBtn) exists with onclick="toggleLoginPasswordVisibility()"
+        2. toggle password button (#togglePasswordBtn) exists with onclick="toggleLoginPasswordVisibility(event)"
         3. toggle password icon (#togglePasswordIcon) exists with class fa-solid fa-eye
         4. toggleLoginPasswordVisibility JavaScript function is present and toggles between 'password' and 'text',
            and switches between fa-eye and fa-eye-slash.
+        5. duplicate event listeners are avoided to prevent instant double-toggle regression.
         """
         mock_load_data.return_value = {"bookings": []}
 
@@ -39,12 +40,15 @@ class LoginPasswordToggleTests(unittest.TestCase):
         self.assertIn('class="toggle-pass-btn"', html)
 
         # 2. onclick attribute & event handler
-        self.assertIn('onclick="toggleLoginPasswordVisibility()"', html)
-        self.assertIn('function toggleLoginPasswordVisibility()', html)
+        self.assertIn('onclick="toggleLoginPasswordVisibility(event)"', html)
+        self.assertIn('window.toggleLoginPasswordVisibility', html)
         self.assertIn("pwdInput.type = 'text'", html)
         self.assertIn("pwdInput.type = 'password'", html)
         self.assertIn("pwdIcon.classList.add('fa-eye-slash')", html)
         self.assertIn("pwdIcon.classList.add('fa-eye')", html)
 
         # 3. Reset function
-        self.assertIn('function resetPasswordVisibility()', html)
+        self.assertIn('window.resetPasswordVisibility', html)
+
+        # 4. Debounce guard to prevent rapid double-clicks
+        self.assertIn('_lastToggle', html)

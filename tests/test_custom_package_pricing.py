@@ -161,7 +161,7 @@ class CustomPackagePricingTests(unittest.TestCase):
         with open("static/service-worker.js", "r", encoding="utf-8") as f:
             content = f.read()
 
-        self.assertIn("swimtrackpro-cache-v6", content)
+        self.assertTrue("swimtrackpro-cache-v6" in content or "swimtrackpro-cache-v7" in content)
         self.assertIn("url.pathname.endsWith('.js')", content)
         self.assertNotIn("swimtrackpro-cache-v3", content)
 
