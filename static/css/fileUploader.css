@@ -1,0 +1,188 @@
+/* Modern File Uploader UI - Jira KAN-8 Reference */
+.stp-uploader-card {
+    background: var(--color-bg-surface, #18181b);
+    border: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
+    border-radius: var(--radius-md, 14px);
+    padding: 1.25rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    font-family: inherit;
+    color: var(--color-text-primary, #f4f4f5);
+}
+
+.stp-uploader-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.85rem;
+    margin-bottom: 0.85rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.stp-uploader-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-text-primary, #f4f4f5);
+    margin: 0;
+}
+
+.stp-uploader-counter {
+    font-size: 0.82rem;
+    color: var(--color-text-secondary, #a1a1aa);
+    font-weight: 500;
+}
+
+.stp-uploader-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    margin-bottom: 1rem;
+    max-height: 280px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.stp-uploader-item {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.65rem 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.stp-uploader-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.stp-file-badge {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 10px;
+    background: #5046e5;
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    box-shadow: 0 4px 10px rgba(80, 70, 229, 0.35);
+}
+
+.stp-file-badge.badge-png { background: #6366f1; }
+.stp-file-badge.badge-jpg, .stp-file-badge.badge-jpeg { background: #4f46e5; }
+.stp-file-badge.badge-pdf { background: #dc2626; }
+.stp-file-badge.badge-mp4 { background: #8b5cf6; }
+
+.stp-file-details {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.stp-file-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text-primary, #ffffff);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+}
+
+.stp-file-meta {
+    font-size: 0.78rem;
+    color: var(--color-text-secondary, #a1a1aa);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.stp-file-status {
+    font-weight: 500;
+}
+.stp-file-status.uploading { color: #818cf8; }
+.stp-file-status.completed { color: #22c55e; }
+.stp-file-status.cancelled { color: #ef4444; }
+.stp-file-status.pending { color: #a1a1aa; }
+
+.stp-progress-track {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 0.2rem;
+}
+
+.stp-progress-fill {
+    height: 100%;
+    background: #5046e5;
+    border-radius: 2px;
+    transition: width 0.25s ease;
+}
+
+.stp-file-action-btn {
+    background: none;
+    border: none;
+    color: var(--color-text-secondary, #a1a1aa);
+    cursor: pointer;
+    padding: 0.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+    line-height: 1;
+}
+
+.stp-file-action-btn:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.stp-dropzone {
+    border: 2px dashed rgba(99, 102, 241, 0.4);
+    background: rgba(99, 102, 241, 0.04);
+    border-radius: var(--radius-sm, 10px);
+    padding: 1.5rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.stp-dropzone:hover, .stp-dropzone.drag-over {
+    border-color: #6366f1;
+    background: rgba(99, 102, 241, 0.1);
+    transform: translateY(-1px);
+}
+
+.stp-dropzone-text {
+    font-size: 0.92rem;
+    color: var(--color-text-secondary, #cbd5e1);
+    font-weight: 500;
+}
+
+.stp-dropzone-browse {
+    color: #818cf8;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-weight: 600;
+    cursor: pointer;
+}

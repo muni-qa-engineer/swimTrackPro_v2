@@ -165,10 +165,46 @@ def index():
                 })
 
             # Build unified gallery items:
-            # 1. Admin photos (homepage_carousel)
+            # 1. Fetch published photos from gallery_photos table
+            try:
+                cursor.execute("""
+                    SELECT id, photo_url, coach_username, coach_name, coach_id, section, caption, uploaded_by
+                    FROM gallery_photos
+                    WHERE is_published = TRUE
+                    ORDER BY created_at DESC
+                """)
+                sec_labels = {
+                    'achievements': 'Medals & Achievements',
+                    'coaching': 'Coach & Learners',
+                    'swimmers': 'Swimmers in Action'
+                }
+                for grow in cursor.fetchall():
+                    if len(grow) >= 8:
+                        g_id, g_url, g_cuser, g_cname, g_cid, g_sec, g_cap, g_by = grow[:8]
+                    elif len(grow) >= 2:
+                        g_id, g_url = grow[0], grow[1]
+                        g_cuser, g_cname, g_cid, g_sec, g_cap, g_by = '', 'Doorstep Coaching', 'STP-COACH', 'coaching', '', 'coach'
+                    else:
+                        continue
+                    author_str = f"Coach {g_cname}" if g_cname and g_by == 'coach' else (g_cname or 'Doorstep Coaching')
+                    gallery_items.append({
+                        'id': f"gallery_{g_id}",
+                        'url': g_url,
+                        'category': g_sec or 'coaching',
+                        'category_label': sec_labels.get(g_sec, 'Coach & Learners'),
+                        'author': author_str,
+                        'caption': g_cap or f"{sec_labels.get(g_sec, 'Swimming Training')} in Hyderabad",
+                        'is_coach': bool(g_cuser),
+                        'coach_username': g_cuser or ''
+                    })
+            except Exception as ge:
+                print("Note: gallery_photos query in landing page:", ge)
+                conn.rollback()
+
+            # 2. Also include any legacy admin homepage_carousel photos if not yet migrated
             for img in carousel_images:
                 img_url = (img.get('url') or '').strip()
-                if img_url:
+                if img_url and not any(it['url'] == img_url for it in gallery_items):
                     gallery_items.append({
                         'id': f"admin_{img.get('id')}",
                         'url': img_url,
@@ -178,25 +214,6 @@ def index():
                         'caption': 'Doorstep Swimming Session & Drill Practice',
                         'is_coach': False,
                         'coach_username': ''
-                    })
-
-            # 2. Coach photos (trainers.photos)
-            for row in raw_trainers:
-                t_user = row[0]
-                t_name = row[1]
-                t_photos_raw = row[10] or ''
-                photo_list = [p.strip() for p in t_photos_raw.split(',') if p.strip()]
-                for idx, p in enumerate(photo_list):
-                    url = p if p.startswith('http') else f"/static/images/Album/{p}"
-                    gallery_items.append({
-                        'id': f"coach_{t_user}_{idx}",
-                        'url': url,
-                        'category': 'coaching',
-                        'category_label': 'Coach & Learners',
-                        'author': f"Coach {t_name}",
-                        'caption': f"Personalized Training Session with Coach {t_name}",
-                        'is_coach': True,
-                        'coach_username': t_user
                     })
 
             # 3. Ensure gallery has curated items if uploads are low

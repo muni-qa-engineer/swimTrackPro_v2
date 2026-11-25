@@ -120,6 +120,45 @@ def ensure_database_tables():
     """)
 
     cursor.execute("""
+    CREATE TABLE IF NOT EXISTS gallery_photos (
+        id SERIAL PRIMARY KEY,
+        photo_url TEXT NOT NULL,
+        coach_username VARCHAR(100),
+        coach_name VARCHAR(150),
+        coach_id VARCHAR(50),
+        section VARCHAR(50) DEFAULT 'coaching',
+        caption TEXT DEFAULT '',
+        is_published BOOLEAN DEFAULT TRUE,
+        uploaded_by VARCHAR(50) DEFAULT 'coach',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    # Seed initial gallery photos if empty
+    try:
+        cursor.execute("SELECT COUNT(*) FROM gallery_photos")
+        count = cursor.fetchone()[0]
+        if count == 0:
+            initial_gallery = [
+                ('/static/images/Album/DSC08188.JPG', '', 'Doorstep Coaching', 'STP-COACH', 'coaching', 'Underwater Freestyle Form & Stroke Correction Drill', True, 'admin'),
+                ('/static/images/Album/IMG20220514170101_01.jpg', '', 'Tournament Merit', 'STP-ACADEMY', 'achievements', 'State & National Championship Merit Certificates', True, 'admin'),
+                ('/static/images/Album/DSC08279.JPG', '', 'Junior Swimmer', 'STP-COACH', 'coaching', 'Young Learner Kickboard & Breath Control Practice', True, 'admin'),
+                ('/static/images/Album/DSC08390.jpg', '', 'Advanced Swimmer', 'STP-SWIM', 'swimmers', 'Butterfly Stroke Rhythm & Technique Drill at Student Pool', True, 'admin'),
+                ('/static/images/Album/Medals.jpg', '', 'Championship Laurels', 'STP-ACADEMY', 'achievements', 'Tournament Medals & Podiums Won by Trained Swimmers', True, 'admin'),
+                ('/static/images/Album/10376914.jpg', '', 'Championship Team', 'STP-ACADEMY', 'achievements', 'Proud Swimmers Celebrating Gold & Silver Laurels', True, 'admin'),
+                ('/static/images/Album/DSC08280.JPG', '', 'Personalized Training', 'STP-COACH', 'coaching', '1-on-1 Stroke Guidance with Certified Trainer at Villa Pool', True, 'admin'),
+                ('/static/images/Album/News 08_12_2020.jpg', '', 'Press & Honors', 'STP-ACADEMY', 'achievements', 'Media Spotlight & Competitive Swimming Accolades', True, 'admin'),
+            ]
+            cursor.executemany("""
+                INSERT INTO gallery_photos (photo_url, coach_username, coach_name, coach_id, section, caption, is_published, uploaded_by)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """, initial_gallery)
+            conn.commit()
+    except Exception as e:
+        print("Note: Gallery photos init check:", e)
+        conn.rollback()
+
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS profile_pictures (
         id SERIAL PRIMARY KEY,
         id_number VARCHAR(50) UNIQUE NOT NULL,

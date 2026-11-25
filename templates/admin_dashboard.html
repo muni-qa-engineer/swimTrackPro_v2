@@ -77,6 +77,89 @@
     .modal-close-btn:hover {
         opacity: 1;
     }
+
+    /* Gallery Tab Modern Mobile-App Styles */
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+        gap: 1.25rem;
+    }
+    .gallery-card {
+        background: rgba(24, 24, 27, 0.65);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+    }
+    .gallery-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+        border-color: rgba(99, 102, 241, 0.45);
+    }
+    .gallery-card.selected {
+        border-color: #6366f1 !important;
+        box-shadow: 0 0 0 2px #6366f1, 0 8px 24px rgba(99, 102, 241, 0.3) !important;
+    }
+    .gallery-thumb-wrap {
+        position: relative;
+        width: 100%;
+        padding-top: 66.66%;
+        overflow: hidden;
+        background: #09090b;
+        cursor: pointer;
+    }
+    .gallery-thumb {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.35s ease;
+    }
+    .gallery-card:hover .gallery-thumb {
+        transform: scale(1.05);
+    }
+    .gallery-select-badge {
+        position: absolute;
+        top: 0.6rem;
+        left: 0.6rem;
+        z-index: 5;
+        background: rgba(0, 0, 0, 0.65);
+        backdrop-filter: blur(4px);
+        border-radius: 6px;
+        padding: 0.25rem 0.45rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .gallery-status-badge {
+        position: absolute;
+        top: 0.6rem;
+        right: 0.6rem;
+        z-index: 5;
+    }
+    .gallery-bulk-bar {
+        position: sticky;
+        bottom: 1.5rem;
+        z-index: 99;
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(99, 102, 241, 0.35);
+        border-radius: var(--radius-md);
+        padding: 0.85rem 1.25rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        animation: fadeIn 0.2s ease-in-out;
+    }
     
     .form-control:disabled {
         background-color: rgba(0, 0, 0, 0.4) !important;
@@ -162,6 +245,7 @@
             <button class="btn btn-secondary py-2 px-4 admin-tab-btn" onclick="switchSection('payments', this)" data-section="payments" style="border-radius: var(--radius-sm);">Payments</button>
             <button class="btn btn-secondary py-2 px-4 admin-tab-btn" onclick="switchSection('reports', this)" data-section="reports" style="border-radius: var(--radius-sm);">Reports</button>
             <button class="btn btn-secondary py-2 px-4 admin-tab-btn" onclick="switchSection('pricing', this)" data-section="pricing" style="border-radius: var(--radius-sm);">Pricing</button>
+            <button class="btn btn-secondary py-2 px-4 admin-tab-btn" onclick="switchSection('gallery', this)" data-section="gallery" style="border-radius: var(--radius-sm);"><i class="fa-solid fa-images me-1"></i> Gallery</button>
             <button class="btn btn-secondary py-2 px-4 admin-tab-btn" onclick="switchSection('settings', this)" data-section="settings" style="border-radius: var(--radius-sm);">Settings</button>
             <button class="btn btn-secondary py-2 px-4 admin-tab-btn" onclick="showMyIdCard()" style="border-radius: var(--radius-sm);">My ID Card</button>
             <button class="btn btn-warning py-2 px-4 admin-tab-btn" onclick="switchSection('promotions', this)" data-section="promotions" style="border-radius: var(--radius-sm); color: black; font-weight: 600;"><i class="fa-solid fa-bullhorn me-1"></i> Promotions</button>
@@ -1370,6 +1454,328 @@
                 </div>
             </div>
 
+            <!-- SECTION: Gallery Management -->
+            <div id="section-gallery" class="dashboard-section d-none">
+                <!-- Header Banner -->
+                <div class="glass-panel p-4 mb-4" style="border-radius: var(--radius-md);">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="badge bg-primary px-2.5 py-1 fw-bold" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                                    <i class="fa-solid fa-images me-1"></i> MEDIA & MOMENTS
+                                </span>
+                                <span class="badge bg-secondary px-2.5 py-1">
+                                    {{ (gallery_photos|default([]))|length }} Total Photos
+                                </span>
+                            </div>
+                            <h3 class="font-display text-white mb-1" style="font-size: 1.5rem;">Platform Photo Gallery & Landing Showcase</h3>
+                            <p class="text-muted mb-0" style="font-size: 0.92rem;">
+                                Review, curate, and publish training photos submitted by coaches to the landing page, or upload official platform photos.
+                            </p>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-primary btn-sm px-3" id="galleryViewGridBtn" onclick="switchGalleryView('grid')">
+                                    <i class="fa-solid fa-border-all me-1"></i> All Photos Grid
+                                </button>
+                                <button type="button" class="btn btn-outline-light btn-sm px-3" id="galleryViewCoachBtn" onclick="switchGalleryView('coach')">
+                                    <i class="fa-solid fa-users me-1"></i> Grouped by Coach
+                                </button>
+                            </div>
+                            <button type="button" class="btn btn-success btn-sm px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#adminGalleryUploadModal">
+                                <i class="fa-solid fa-cloud-arrow-up me-1"></i> Upload Photos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Overview Row -->
+                <div class="row g-3 mb-4">
+                    <div class="col-6 col-md-3">
+                        <div class="glass-panel p-3 text-center" style="border-radius: var(--radius-sm);">
+                            <div class="text-muted small text-uppercase fw-bold mb-1">Total Photos</div>
+                            <div class="fs-3 fw-bold text-white">{{ (gallery_photos|default([]))|length }}</div>
+                            <small class="text-muted"><i class="fa-solid fa-database me-1"></i> In Platform</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="glass-panel p-3 text-center" style="border-radius: var(--radius-sm); border-left: 3px solid #22c55e;">
+                            <div class="text-muted small text-uppercase fw-bold mb-1">Live on Landing</div>
+                            <div class="fs-3 fw-bold text-success">{{ published_gallery_count|default(0) }}</div>
+                            <small class="text-success"><i class="fa-solid fa-circle-check me-1"></i> Published</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="glass-panel p-3 text-center" style="border-radius: var(--radius-sm); border-left: 3px solid #eab308;">
+                            <div class="text-muted small text-uppercase fw-bold mb-1">Pending Review</div>
+                            <div class="fs-3 fw-bold text-warning">{{ pending_gallery_count|default(0) }}</div>
+                            <small class="text-warning"><i class="fa-solid fa-clock me-1"></i> Awaiting Action</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="glass-panel p-3 text-center" style="border-radius: var(--radius-sm);">
+                            <div class="text-muted small text-uppercase fw-bold mb-1">Contributing Coaches</div>
+                            <div class="fs-3 fw-bold text-info">{{ (gallery_by_coach|default({}))|length }}</div>
+                            <small class="text-info"><i class="fa-solid fa-user-tie me-1"></i> Active Albums</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Controls & Search -->
+                <div class="glass-panel p-3 mb-4" style="border-radius: var(--radius-sm);">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-12 col-md-5">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-black border-secondary text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                <input type="text" id="gallerySearchInput" class="form-control bg-black border-secondary text-white" placeholder="Search coach name, ID, or caption..." oninput="filterGalleryPhotos()">
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <select id="gallerySectionFilter" class="form-select form-select-sm bg-black border-secondary text-white" onchange="filterGalleryPhotos()">
+                                <option value="all">All Sections (Categories)</option>
+                                <option value="achievements">Medals & Achievements</option>
+                                <option value="coaching">Coach & Learners</option>
+                                <option value="swimmers">Swimmers in Action</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <select id="galleryStatusFilter" class="form-select form-select-sm bg-black border-secondary text-white" onchange="filterGalleryPhotos()">
+                                <option value="all">All Status</option>
+                                <option value="published">Live / Published</option>
+                                <option value="pending">Pending Review</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-2 text-md-end">
+                            <button type="button" class="btn btn-outline-secondary btn-sm w-100" onclick="resetGalleryFilters()">
+                                <i class="fa-solid fa-rotate-left me-1"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sticky Bulk Action Bar (Hidden when 0 selected) -->
+                <div id="galleryBulkActionBar" class="gallery-bulk-bar d-none">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="form-check m-0">
+                            <input class="form-check-input" type="checkbox" id="gallerySelectAllCheck" onchange="toggleSelectAllGallery(this)">
+                            <label class="form-check-label text-white fw-bold small" for="gallerySelectAllCheck">
+                                Select All (<span id="gallerySelectedCount">0</span> selected)
+                            </label>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <button type="button" class="btn btn-success btn-sm px-2.5" onclick="executeBulkGalleryAction('publish')">
+                            <i class="fa-solid fa-circle-check me-1"></i> Publish Selected
+                        </button>
+                        <button type="button" class="btn btn-warning btn-sm px-2.5 text-dark fw-bold" onclick="executeBulkGalleryAction('unpublish')">
+                            <i class="fa-solid fa-eye-slash me-1"></i> Unpublish
+                        </button>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-folder-tree me-1"></i> Move Section
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="executeBulkGalleryAction('change_section', 'achievements')">Medals & Achievements</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="executeBulkGalleryAction('change_section', 'coaching')">Coach & Learners</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="executeBulkGalleryAction('change_section', 'swimmers')">Swimmers in Action</a></li>
+                            </ul>
+                        </div>
+                        <button type="button" class="btn btn-danger btn-sm px-2.5" onclick="executeBulkGalleryAction('delete')">
+                            <i class="fa-solid fa-trash-can me-1"></i> Delete Selected
+                        </button>
+                        <button type="button" class="btn btn-outline-light btn-sm" onclick="clearGallerySelection()">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- VIEW 1: All Photos Grid -->
+                <div id="galleryGridViewContainer">
+                    <div class="gallery-grid" id="galleryPhotosGrid">
+                        {% for photo in gallery_photos %}
+                        <div class="gallery-card" 
+                             id="galleryCard-{{ photo.id }}"
+                             data-photo-id="{{ photo.id }}"
+                             data-section="{{ photo.section }}"
+                             data-status="{% if photo.is_published %}published{% else %}pending{% endif %}"
+                             data-search="{{ photo.coach_name|lower }} {{ photo.coach_id|lower }} {{ photo.coach_username|lower }} {{ photo.caption|lower }} {{ photo.section|lower }}">
+                            
+                            <div class="gallery-thumb-wrap" onclick="openGalleryLightbox({{ photo.id }})">
+                                <img src="{{ photo.url }}" alt="{{ photo.caption }}" class="gallery-thumb" loading="lazy">
+                                
+                                <!-- Selection Badge -->
+                                <div class="gallery-select-badge" onclick="event.stopPropagation(); toggleSelectPhoto({{ photo.id }});">
+                                    <input type="checkbox" class="form-check-input gallery-item-check" value="{{ photo.id }}" id="checkPhoto-{{ photo.id }}" onchange="onPhotoCheckChange({{ photo.id }})" style="cursor: pointer;">
+                                </div>
+                                
+                                <!-- Status Badge -->
+                                <div class="gallery-status-badge">
+                                    {% if photo.is_published %}
+                                    <span class="badge bg-success shadow-sm" style="font-size: 0.72rem;">
+                                        <i class="fa-solid fa-circle-check me-1"></i> Live
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-warning text-dark shadow-sm fw-bold" style="font-size: 0.72rem;">
+                                        <i class="fa-solid fa-clock me-1"></i> Pending Review
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="p-3 d-flex flex-column justify-content-between flex-grow-1">
+                                <div>
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        {% if photo.section == 'achievements' %}
+                                        <span class="badge bg-warning-subtle text-warning border border-warning" style="font-size: 0.7rem;">
+                                            <i class="fa-solid fa-medal me-1"></i> Achievements
+                                        </span>
+                                        {% elif photo.section == 'swimmers' %}
+                                        <span class="badge bg-info-subtle text-info border border-info" style="font-size: 0.7rem;">
+                                            <i class="fa-solid fa-person-swimming me-1"></i> Swimmers
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-primary-subtle text-primary border border-primary" style="font-size: 0.7rem;">
+                                            <i class="fa-solid fa-chalkboard-user me-1"></i> Coaching
+                                        </span>
+                                        {% endif %}
+                                        
+                                        <small class="text-muted" style="font-size: 0.72rem;">{{ photo.created_at }}</small>
+                                    </div>
+
+                                    <p class="text-white small mb-2 text-truncate" title="{{ photo.caption or 'Training Session' }}" style="font-weight: 500;">
+                                        {{ photo.caption or 'Swimming session capture' }}
+                                    </p>
+
+                                    <div class="d-flex align-items-center gap-1.5 text-muted small mb-3" style="font-size: 0.78rem;">
+                                        <i class="fa-solid fa-user-tie text-secondary"></i>
+                                        <span class="text-light fw-medium">{{ photo.coach_name }}</span>
+                                        <span class="badge bg-dark border border-secondary text-secondary ms-1" style="font-size: 0.65rem;">{{ photo.coach_id }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex align-items-center justify-content-between pt-2 border-top border-white-10">
+                                    <button type="button" class="btn btn-sm {% if photo.is_published %}btn-outline-warning{% else %}btn-success{% endif %} py-1 px-2.5" 
+                                            onclick="togglePublishPhoto({{ photo.id }})" 
+                                            title="{% if photo.is_published %}Unpublish from landing{% else %}Publish to landing page{% endif %}"
+                                            style="font-size: 0.75rem;">
+                                        <i class="fa-solid {% if photo.is_published %}fa-eye-slash{% else %}fa-cloud-arrow-up{% endif %} me-1"></i>
+                                        {% if photo.is_published %}Unpublish{% else %}Publish Live{% endif %}
+                                    </button>
+
+                                    <div class="d-flex gap-1">
+                                        <button type="button" class="btn btn-outline-light btn-sm py-1 px-2" onclick="openGalleryLightbox({{ photo.id }})" title="View Fullscreen">
+                                            <i class="fa-solid fa-expand"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm py-1 px-2" onclick="deleteGalleryPhoto({{ photo.id }})" title="Delete Photo">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-12 text-center py-5 glass-panel" style="border-radius: var(--radius-md);">
+                            <i class="fa-regular fa-images text-muted fs-1 mb-3"></i>
+                            <h4 class="text-white">No photos in the gallery yet</h4>
+                            <p class="text-muted">Upload platform photos or have verified coaches upload training pictures from their profile.</p>
+                            <button type="button" class="btn btn-primary btn-sm px-3 mt-2" data-bs-toggle="modal" data-bs-target="#adminGalleryUploadModal">
+                                <i class="fa-solid fa-cloud-arrow-up me-1"></i> Upload First Photo
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div id="galleryEmptyFilterState" class="text-center py-5 glass-panel d-none" style="border-radius: var(--radius-md);">
+                        <i class="fa-solid fa-filter text-muted fs-1 mb-3"></i>
+                        <h4 class="text-white">No matching photos found</h4>
+                        <p class="text-muted">Try adjusting your section, status, or search keywords.</p>
+                        <button type="button" class="btn btn-outline-secondary btn-sm px-3" onclick="resetGalleryFilters()">
+                            <i class="fa-solid fa-rotate-left me-1"></i> Clear Filters
+                        </button>
+                    </div>
+                </div>
+
+                <!-- VIEW 2: Grouped by Coach View -->
+                <div id="galleryCoachViewContainer" class="d-none">
+                    {% for coach_key, coach_data in (gallery_by_coach|default({})).items() %}
+                    <div class="glass-panel p-3 mb-4 coach-gallery-group" style="border-radius: var(--radius-md);">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pb-3 mb-3 border-bottom border-white-10">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold" style="width: 44px; height: 44px; font-size: 1.1rem;">
+                                    {{ coach_data.coach_name[:1]|upper }}
+                                </div>
+                                <div>
+                                    <h5 class="text-white mb-0 fw-bold">{{ coach_data.coach_name }}</h5>
+                                    <div class="d-flex align-items-center gap-2 small text-muted">
+                                        <span><i class="fa-solid fa-id-card me-1"></i>{{ coach_data.coach_id }}</span>
+                                        {% if coach_data.coach_username %}
+                                        <span>•</span>
+                                        <span><i class="fa-solid fa-user me-1"></i>@{{ coach_data.coach_username }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-secondary">{{ coach_data.photos|length }} Photos</span>
+                                <button type="button" class="btn btn-outline-light btn-sm" onclick="selectCoachPhotos('{{ coach_data.coach_username or coach_data.coach_name }}')">
+                                    <i class="fa-solid fa-check-double me-1"></i> Select Coach's Photos
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="gallery-grid">
+                            {% for photo in coach_data.photos %}
+                            <div class="gallery-card" 
+                                 id="coachCard-{{ photo.id }}"
+                                 data-photo-id="{{ photo.id }}"
+                                 data-section="{{ photo.section }}"
+                                 data-status="{% if photo.is_published %}published{% else %}pending{% endif %}">
+                                
+                                <div class="gallery-thumb-wrap" onclick="openGalleryLightbox({{ photo.id }})">
+                                    <img src="{{ photo.url }}" alt="{{ photo.caption }}" class="gallery-thumb" loading="lazy">
+                                    <div class="gallery-select-badge" onclick="event.stopPropagation(); toggleSelectPhoto({{ photo.id }});">
+                                        <input type="checkbox" class="form-check-input gallery-item-check" value="{{ photo.id }}" id="coachCheckPhoto-{{ photo.id }}" onchange="onPhotoCheckChange({{ photo.id }})">
+                                    </div>
+                                    <div class="gallery-status-badge">
+                                        {% if photo.is_published %}
+                                        <span class="badge bg-success shadow-sm" style="font-size: 0.72rem;">Live</span>
+                                        {% else %}
+                                        <span class="badge bg-warning text-dark shadow-sm fw-bold" style="font-size: 0.72rem;">Pending</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="p-3 d-flex flex-column justify-content-between flex-grow-1">
+                                    <div>
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="badge bg-dark border border-secondary text-secondary" style="font-size: 0.68rem;">{{ photo.section|title }}</span>
+                                            <small class="text-muted" style="font-size: 0.7rem;">{{ photo.created_at }}</small>
+                                        </div>
+                                        <p class="text-white small mb-2 text-truncate" title="{{ photo.caption }}">{{ photo.caption or 'Training Session' }}</p>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between pt-2 border-top border-white-10">
+                                        <button type="button" class="btn btn-sm {% if photo.is_published %}btn-outline-warning{% else %}btn-success{% endif %} py-1 px-2.5" 
+                                                onclick="togglePublishPhoto({{ photo.id }})" 
+                                                style="font-size: 0.75rem;">
+                                            {% if photo.is_published %}Unpublish{% else %}Publish{% endif %}
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm py-1 px-2" onclick="deleteGalleryPhoto({{ photo.id }})">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5 glass-panel" style="border-radius: var(--radius-md);">
+                        <p class="text-muted">No coaches have uploaded gallery photos yet.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
         </div>
 
     </main>
@@ -1650,6 +2056,97 @@
 </div>
 {% endfor %}
 
+<!-- Admin Direct Gallery Upload Modal -->
+<div class="modal fade" id="adminGalleryUploadModal" tabindex="-1" aria-labelledby="adminGalleryUploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-bottom border-white-10">
+                <h5 class="modal-title fw-bold text-white" id="adminGalleryUploadModalLabel">
+                    <i class="fa-solid fa-cloud-arrow-up text-primary me-2"></i>Upload Photos to Gallery
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/admin/gallery/upload" method="POST" enctype="multipart/form-data" id="adminGalleryUploadForm">
+                <div class="modal-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-white small fw-bold">Target Gallery Section <span class="text-danger">*</span></label>
+                            <select name="section" class="form-select bg-black border-secondary text-white" required>
+                                <option value="coaching" selected>Coach & Learners (coaching)</option>
+                                <option value="achievements">Medals & Achievements (achievements)</option>
+                                <option value="swimmers">Swimmers in Action (swimmers)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-white small fw-bold">Publishing Status</label>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" name="is_published" value="on" id="adminUploadAutoPublish" checked>
+                                <label class="form-check-label text-white small" for="adminUploadAutoPublish">
+                                    Publish immediately to Landing Page Gallery
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-white small fw-bold">Default Caption / Description</label>
+                            <input type="text" name="caption" class="form-control bg-black border-secondary text-white" placeholder="e.g. Freestyle form training session at Gachibowli villa pool">
+                        </div>
+                    </div>
+
+                    <!-- Modern File Uploader UI Component -->
+                    <div id="adminFileUploaderMount"></div>
+                </div>
+                <div class="modal-footer border-top border-white-10">
+                    <button type="button" class="btn btn-secondary px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-4 fw-bold" id="adminUploadSubmitBtn">
+                        <i class="fa-solid fa-cloud-arrow-up me-1"></i> Upload Photos
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Fullscreen Gallery Lightbox Modal -->
+<div class="modal fade" id="galleryLightboxModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content bg-black border border-white-10 text-white">
+            <div class="modal-header border-bottom border-white-10 py-2.5">
+                <div class="d-flex align-items-center gap-2">
+                    <span id="lbSectionBadge" class="badge bg-primary">Coaching</span>
+                    <span id="lbStatusBadge" class="badge bg-success">Live</span>
+                    <span id="lbCounter" class="text-muted small">1 / 1</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0 position-relative d-flex align-items-center justify-content-center bg-black" style="min-height: 480px; max-height: 75vh; overflow: hidden;">
+                <img id="lbMainImage" src="" alt="Gallery Image" style="max-width: 100%; max-height: 72vh; object-fit: contain; border-radius: 4px;">
+                
+                <!-- Nav Arrows -->
+                <button type="button" class="btn btn-dark position-absolute start-0 top-50 translate-middle-y ms-2 rounded-circle" style="width: 44px; height: 44px; opacity: 0.8;" onclick="navigateLightbox(-1)">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <button type="button" class="btn btn-dark position-absolute end-0 top-50 translate-middle-y me-2 rounded-circle" style="width: 44px; height: 44px; opacity: 0.8;" onclick="navigateLightbox(1)">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+            <div class="modal-footer border-top border-white-10 d-flex justify-content-between align-items-center flex-wrap gap-2 py-2.5">
+                <div>
+                    <h6 id="lbCaption" class="text-white mb-0 fw-bold">Training moment</h6>
+                    <small id="lbCoachInfo" class="text-muted"><i class="fa-solid fa-user-tie me-1"></i> Coach Name (ID)</small>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-warning" id="lbTogglePublishBtn" onclick="lbActionTogglePublish()">
+                        <i class="fa-solid fa-eye-slash me-1"></i> Toggle Status
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="lbDeleteBtn" onclick="lbActionDelete()">
+                        <i class="fa-solid fa-trash-can me-1"></i> Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% set active_page = 'home' %}
 {% include 'components/mobile_bottom_nav.html' %}
 
@@ -1704,6 +2201,7 @@
             'payments': 'Payments Status',
             'reports': 'System Audit Logs',
             'pricing': 'Pricing & Packages',
+            'gallery': 'Gallery & Landing Page Moments',
             'settings': 'Settings',
             'promotions': 'Promotions & Offer Zone'
         };
@@ -2607,5 +3105,401 @@ window.submitForceActionForm = function(e) {
         btn.innerHTML = origHtml;
     });
 };
+
+/* ==========================================================================
+   ADMIN GALLERY TAB CONTROLLER (Jira KAN-8)
+   ========================================================================== */
+(function initAdminGalleryController() {
+    const selectedPhotoIds = new Set();
+    
+    // Gallery Photo Registry from Template Context
+    const galleryItems = [
+        {% for photo in gallery_photos|default([]) %}
+        {
+            id: {{ photo.id }},
+            url: "{{ photo.url }}",
+            caption: "{{ photo.caption|replace('\"', '\\\"') }}",
+            coachName: "{{ photo.coach_name|replace('\"', '\\\"') }}",
+            coachId: "{{ photo.coach_id }}",
+            coachUsername: "{{ photo.coach_username }}",
+            section: "{{ photo.section }}",
+            isPublished: {{ 'true' if photo.is_published else 'false' }},
+            createdAt: "{{ photo.created_at }}"
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    let currentLbIndex = 0;
+
+    // 1. Switch View Modes: Grid vs Grouped by Coach
+    window.switchGalleryView = function(view) {
+        const gridView = document.getElementById('galleryGridViewContainer');
+        const coachView = document.getElementById('galleryCoachViewContainer');
+        const btnGrid = document.getElementById('galleryViewGridBtn');
+        const btnCoach = document.getElementById('galleryViewCoachBtn');
+
+        if (view === 'coach') {
+            if (gridView) gridView.classList.add('d-none');
+            if (coachView) coachView.classList.remove('d-none');
+            if (btnGrid) { btnGrid.classList.remove('btn-primary'); btnGrid.classList.add('btn-outline-light'); }
+            if (btnCoach) { btnCoach.classList.remove('btn-outline-light'); btnCoach.classList.add('btn-primary'); }
+        } else {
+            if (gridView) gridView.classList.remove('d-none');
+            if (coachView) coachView.classList.add('d-none');
+            if (btnGrid) { btnGrid.classList.add('btn-primary'); btnGrid.classList.remove('btn-outline-light'); }
+            if (btnCoach) { btnCoach.classList.add('btn-outline-light'); btnCoach.classList.remove('btn-primary'); }
+        }
+    };
+
+    // 2. Real-time Filter & Search
+    window.filterGalleryPhotos = function() {
+        const searchVal = (document.getElementById('gallerySearchInput')?.value || '').toLowerCase().trim();
+        const sectionVal = (document.getElementById('gallerySectionFilter')?.value || 'all');
+        const statusVal = (document.getElementById('galleryStatusFilter')?.value || 'all');
+
+        const cards = document.querySelectorAll('#galleryPhotosGrid .gallery-card');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const cardSearch = (card.dataset.search || '').toLowerCase();
+            const cardSection = card.dataset.section || '';
+            const cardStatus = card.dataset.status || '';
+
+            const matchesSearch = !searchVal || cardSearch.includes(searchVal);
+            const matchesSection = sectionVal === 'all' || cardSection === sectionVal;
+            const matchesStatus = statusVal === 'all' || cardStatus === statusVal;
+
+            if (matchesSearch && matchesSection && matchesStatus) {
+                card.classList.remove('d-none');
+                visibleCount++;
+            } else {
+                card.classList.add('d-none');
+            }
+        });
+
+        const emptyState = document.getElementById('galleryEmptyFilterState');
+        if (emptyState) {
+            emptyState.classList.toggle('d-none', visibleCount > 0 || cards.length === 0);
+        }
+    };
+
+    window.resetGalleryFilters = function() {
+        const sInput = document.getElementById('gallerySearchInput');
+        const secFilter = document.getElementById('gallerySectionFilter');
+        const statFilter = document.getElementById('galleryStatusFilter');
+        if (sInput) sInput.value = '';
+        if (secFilter) secFilter.value = 'all';
+        if (statFilter) statFilter.value = 'all';
+        window.filterGalleryPhotos();
+    };
+
+    // 3. Multi-Select System
+    function updateSelectionUI() {
+        const count = selectedPhotoIds.size;
+        const bulkBar = document.getElementById('galleryBulkActionBar');
+        const countEl = document.getElementById('gallerySelectedCount');
+        if (countEl) countEl.textContent = count;
+
+        if (bulkBar) {
+            bulkBar.classList.toggle('d-none', count === 0);
+        }
+
+        // Sync all checkboxes & card styling across grid and coach views
+        document.querySelectorAll('.gallery-card').forEach(card => {
+            const pid = parseInt(card.dataset.photoId, 10);
+            const isSel = selectedPhotoIds.has(pid);
+            card.classList.toggle('selected', isSel);
+
+            const chk = card.querySelector('.gallery-item-check');
+            if (chk) chk.checked = isSel;
+        });
+
+        // Master select check status
+        const visibleCheckboxes = Array.from(document.querySelectorAll('#galleryPhotosGrid .gallery-card:not(.d-none) .gallery-item-check'));
+        const masterCheck = document.getElementById('gallerySelectAllCheck');
+        if (masterCheck && visibleCheckboxes.length > 0) {
+            masterCheck.checked = visibleCheckboxes.every(c => c.checked);
+        }
+    }
+
+    window.toggleSelectPhoto = function(photoId) {
+        photoId = parseInt(photoId, 10);
+        if (selectedPhotoIds.has(photoId)) {
+            selectedPhotoIds.delete(photoId);
+        } else {
+            selectedPhotoIds.add(photoId);
+        }
+        updateSelectionUI();
+    };
+
+    window.onPhotoCheckChange = function(photoId) {
+        photoId = parseInt(photoId, 10);
+        const chk = document.getElementById(`checkPhoto-${photoId}`) || document.getElementById(`coachCheckPhoto-${photoId}`);
+        if (chk && chk.checked) {
+            selectedPhotoIds.add(photoId);
+        } else {
+            selectedPhotoIds.delete(photoId);
+        }
+        updateSelectionUI();
+    };
+
+    window.toggleSelectAllGallery = function(masterCheck) {
+        const visibleCards = document.querySelectorAll('#galleryPhotosGrid .gallery-card:not(.d-none)');
+        if (masterCheck && masterCheck.checked) {
+            visibleCards.forEach(card => {
+                const pid = parseInt(card.dataset.photoId, 10);
+                if (pid) selectedPhotoIds.add(pid);
+            });
+        } else {
+            visibleCards.forEach(card => {
+                const pid = parseInt(card.dataset.photoId, 10);
+                if (pid) selectedPhotoIds.delete(pid);
+            });
+        }
+        updateSelectionUI();
+    };
+
+    window.clearGallerySelection = function() {
+        selectedPhotoIds.clear();
+        updateSelectionUI();
+    };
+
+    window.selectCoachPhotos = function(coachIdentifier) {
+        const group = Array.from(document.querySelectorAll('.coach-gallery-group')).find(g => g.innerText.includes(coachIdentifier));
+        if (group) {
+            group.querySelectorAll('.gallery-card').forEach(c => {
+                const pid = parseInt(c.dataset.photoId, 10);
+                if (pid) selectedPhotoIds.add(pid);
+            });
+            updateSelectionUI();
+        }
+    };
+
+    // 4. AJAX Actions: Toggle Publish, Delete, Bulk Action
+    window.togglePublishPhoto = function(photoId) {
+        fetch(`/admin/gallery/toggle_publish/${photoId}`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // Update in memory item
+                const item = galleryItems.find(p => p.id === photoId);
+                if (item) item.isPublished = data.is_published;
+
+                // Update DOM elements for this photo in all views
+                document.querySelectorAll(`[id$="Card-${photoId}"]`).forEach(card => {
+                    card.dataset.status = data.is_published ? 'published' : 'pending';
+                    const statusBadge = card.querySelector('.gallery-status-badge');
+                    if (statusBadge) {
+                        statusBadge.innerHTML = data.is_published ?
+                            '<span class="badge bg-success shadow-sm" style="font-size: 0.72rem;"><i class="fa-solid fa-circle-check me-1"></i> Live</span>' :
+                            '<span class="badge bg-warning text-dark shadow-sm fw-bold" style="font-size: 0.72rem;"><i class="fa-solid fa-clock me-1"></i> Pending Review</span>';
+                    }
+                    const toggleBtn = card.querySelector('button[onclick*="togglePublishPhoto"]');
+                    if (toggleBtn) {
+                        if (data.is_published) {
+                            toggleBtn.className = 'btn btn-sm btn-outline-warning py-1 px-2.5';
+                            toggleBtn.innerHTML = '<i class="fa-solid fa-eye-slash me-1"></i> Unpublish';
+                            toggleBtn.title = 'Unpublish from landing';
+                        } else {
+                            toggleBtn.className = 'btn btn-sm btn-success py-1 px-2.5';
+                            toggleBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up me-1"></i> Publish Live';
+                            toggleBtn.title = 'Publish to landing page';
+                        }
+                    }
+                });
+            } else {
+                alert(data.error || 'Failed to update photo status.');
+            }
+        })
+        .catch(err => {
+            console.error('Toggle photo error:', err);
+            alert('Failed to update status. Please try again.');
+        });
+    };
+
+    window.deleteGalleryPhoto = function(photoId) {
+        if (!confirm('Are you sure you want to permanently delete this photo?')) {
+            return;
+        }
+
+        fetch(`/admin/gallery/delete/${photoId}`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                selectedPhotoIds.delete(photoId);
+                updateSelectionUI();
+
+                document.querySelectorAll(`[id$="Card-${photoId}"]`).forEach(card => {
+                    card.style.transition = 'all 0.3s ease';
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.8)';
+                    setTimeout(() => card.remove(), 300);
+                });
+
+                // Remove from memory
+                const idx = galleryItems.findIndex(p => p.id === photoId);
+                if (idx !== -1) galleryItems.splice(idx, 1);
+            } else {
+                alert('Failed to delete photo.');
+            }
+        })
+        .catch(err => {
+            console.error('Delete photo error:', err);
+            alert('Failed to delete photo. Please try again.');
+        });
+    };
+
+    window.executeBulkGalleryAction = function(action, targetSection = null) {
+        if (selectedPhotoIds.size === 0) {
+            alert('Please select at least one photo first.');
+            return;
+        }
+
+        if (action === 'delete') {
+            if (!confirm(`Are you sure you want to permanently delete ${selectedPhotoIds.size} selected photo(s)?`)) {
+                return;
+            }
+        }
+
+        const payload = {
+            action: action,
+            photo_ids: Array.from(selectedPhotoIds)
+        };
+        if (targetSection) {
+            payload.target_section = targetSection;
+        }
+
+        fetch('/admin/gallery/bulk-action', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.error || 'Failed to process bulk action.');
+            }
+        })
+        .catch(err => {
+            console.error('Bulk action error:', err);
+            alert('Failed to process bulk action.');
+        });
+    };
+
+    // 5. Fullscreen Lightbox Preview
+    window.openGalleryLightbox = function(photoId) {
+        const idx = galleryItems.findIndex(p => p.id === photoId);
+        if (idx === -1) return;
+        currentLbIndex = idx;
+        renderLightboxItem();
+
+        const lbModal = new bootstrap.Modal(document.getElementById('galleryLightboxModal'));
+        lbModal.show();
+    };
+
+    function renderLightboxItem() {
+        if (!galleryItems.length) return;
+        const item = galleryItems[currentLbIndex];
+        if (!item) return;
+
+        const mainImg = document.getElementById('lbMainImage');
+        const sectionBadge = document.getElementById('lbSectionBadge');
+        const statusBadge = document.getElementById('lbStatusBadge');
+        const counter = document.getElementById('lbCounter');
+        const caption = document.getElementById('lbCaption');
+        const coachInfo = document.getElementById('lbCoachInfo');
+        const toggleBtn = document.getElementById('lbTogglePublishBtn');
+
+        if (mainImg) mainImg.src = item.url;
+        if (counter) counter.textContent = `${currentLbIndex + 1} / ${galleryItems.length}`;
+        if (caption) caption.textContent = item.caption || 'Training session';
+        if (coachInfo) coachInfo.innerHTML = `<i class="fa-solid fa-user-tie me-1"></i> ${item.coachName} <span class="badge bg-dark border border-secondary">${item.coachId}</span>`;
+
+        if (sectionBadge) {
+            sectionBadge.textContent = item.section.toUpperCase();
+            sectionBadge.className = 'badge ' + (item.section === 'achievements' ? 'bg-warning text-dark' : (item.section === 'swimmers' ? 'bg-info text-dark' : 'bg-primary'));
+        }
+
+        if (statusBadge) {
+            statusBadge.textContent = item.isPublished ? 'Live on Landing' : 'Pending Review';
+            statusBadge.className = 'badge ' + (item.isPublished ? 'bg-success' : 'bg-warning text-dark');
+        }
+
+        if (toggleBtn) {
+            toggleBtn.innerHTML = item.isPublished ? '<i class="fa-solid fa-eye-slash me-1"></i> Unpublish' : '<i class="fa-solid fa-cloud-arrow-up me-1"></i> Publish Live';
+        }
+    }
+
+    window.navigateLightbox = function(dir) {
+        if (!galleryItems.length) return;
+        currentLbIndex = (currentLbIndex + dir + galleryItems.length) % galleryItems.length;
+        renderLightboxItem();
+    };
+
+    window.lbActionTogglePublish = function() {
+        const item = galleryItems[currentLbIndex];
+        if (item) {
+            window.togglePublishPhoto(item.id);
+            setTimeout(() => {
+                item.isPublished = !item.isPublished;
+                renderLightboxItem();
+            }, 300);
+        }
+    };
+
+    window.lbActionDelete = function() {
+        const item = galleryItems[currentLbIndex];
+        if (item) {
+            window.deleteGalleryPhoto(item.id);
+            const lbModalEl = document.getElementById('galleryLightboxModal');
+            const instance = bootstrap.Modal.getInstance(lbModalEl);
+            if (instance) instance.hide();
+        }
+    };
+
+    // Keyboard support for Lightbox
+    document.addEventListener('keydown', function(e) {
+        const lbModalEl = document.getElementById('galleryLightboxModal');
+        if (lbModalEl && lbModalEl.classList.contains('show')) {
+            if (e.key === 'ArrowLeft') {
+                window.navigateLightbox(-1);
+            } else if (e.key === 'ArrowRight') {
+                window.navigateLightbox(1);
+            }
+        }
+    });
+
+    // 6. Direct Admin Upload Modal File Uploader Initialization
+    let adminUploaderInstance = null;
+    const uploadModalEl = document.getElementById('adminGalleryUploadModal');
+    if (uploadModalEl) {
+        uploadModalEl.addEventListener('shown.bs.modal', function() {
+            if (!adminUploaderInstance && window.STPFileUploader) {
+                adminUploaderInstance = new window.STPFileUploader('#adminFileUploaderMount', {
+                    inputName: 'gallery_pics',
+                    multiple: true,
+                    title: 'PHOTO UPLOADER',
+                    dropText: 'Drag platform photos here or',
+                    browseText: 'browse'
+                });
+            }
+        });
+    }
+})();
 </script>
 {% endblock %}

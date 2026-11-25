@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fileUploader.css') }}?v=1.0">
     <title>SwimTrackPro | Coach Registration</title>
     <style>
         :root {
@@ -270,6 +271,7 @@
                             <span class="input-group-text"><i class="fa-solid fa-certificate"></i></span>
                             <input type="file" name="qualification_file" id="qualFileInput" accept="image/*" class="form-control" required>
                         </div>
+                        <div id="qualFilePreviewCard" class="mt-2 d-none"></div>
                         <div class="form-text text-muted" style="font-size: 0.78rem; margin-top: 0.35rem;">Supported formats: JPEG, PNG, WebP. File size must be less than 1 MB.</div>
                         <div id="qualFileSizeError" class="text-danger small mt-1 d-none" style="font-weight: 600;"><i class="fa-solid fa-circle-exclamation me-1"></i>File size exceeds 1 MB limit. Please select a smaller file.</div>
                     </div>
@@ -324,6 +326,7 @@
                             <span class="input-group-text"><i class="fa-solid fa-file-image"></i></span>
                             <input type="file" name="id_proof_file" id="idProofFileInput" accept="image/*" class="form-control" required>
                         </div>
+                        <div id="idProofFilePreviewCard" class="mt-2 d-none"></div>
                         <div class="form-text text-muted" style="font-size: 0.78rem; margin-top: 0.35rem;">Supported formats: JPEG, PNG, WebP. File size must be less than 1 MB.</div>
                         <div id="fileSizeError" class="text-danger small mt-1 d-none" style="font-weight: 600;"><i class="fa-solid fa-circle-exclamation me-1"></i>File size exceeds 1 MB limit. Please select a smaller file.</div>
                     </div>
@@ -419,6 +422,61 @@
         const qualFileSizeError = document.getElementById('qualFileSizeError');
         const registrationForm = document.getElementById('registrationForm');
 
+        function formatBytes(bytes) {
+            if (!bytes || bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        function getFileExt(filename) {
+            const parts = filename.split('.');
+            return parts.length > 1 ? parts.pop().toUpperCase().slice(0, 4) : 'FILE';
+        }
+
+        function renderFilePreviewCard(file, containerId, inputId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            if (!file) {
+                container.innerHTML = '';
+                container.classList.add('d-none');
+                return;
+            }
+            const ext = getFileExt(file.name);
+            const badgeClass = `badge-${ext.toLowerCase()}`;
+            container.innerHTML = `
+                <div class="stp-uploader-item">
+                    <div class="stp-file-badge ${badgeClass}">${ext}</div>
+                    <div class="stp-file-details">
+                        <p class="stp-file-name" title="${file.name}">${file.name}</p>
+                        <div class="stp-file-meta">
+                            <span>${formatBytes(file.size)}</span>
+                            <span>•</span>
+                            <span class="stp-file-status completed">Ready for upload</span>
+                        </div>
+                        <div class="stp-progress-track">
+                            <div class="stp-progress-fill" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <button type="button" class="stp-file-action-btn" title="Remove file" onclick="clearRegistrationFile('${containerId}', '${inputId}')">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            `;
+            container.classList.remove('d-none');
+        }
+
+        window.clearRegistrationFile = function(containerId, inputId) {
+            const input = document.getElementById(inputId);
+            const container = document.getElementById(containerId);
+            if (input) input.value = '';
+            if (container) {
+                container.innerHTML = '';
+                container.classList.add('d-none');
+            }
+        };
+
         if (idProofFileInput) {
             idProofFileInput.addEventListener('change', function () {
                 if (this.files && this.files.length > 0) {
@@ -426,9 +484,13 @@
                     if (file.size > 1024 * 1024) {
                         if (fileSizeError) fileSizeError.classList.remove('d-none');
                         this.value = '';
+                        renderFilePreviewCard(null, 'idProofFilePreviewCard', 'idProofFileInput');
                     } else {
                         if (fileSizeError) fileSizeError.classList.add('d-none');
+                        renderFilePreviewCard(file, 'idProofFilePreviewCard', 'idProofFileInput');
                     }
+                } else {
+                    renderFilePreviewCard(null, 'idProofFilePreviewCard', 'idProofFileInput');
                 }
             });
         }
@@ -440,9 +502,13 @@
                     if (file.size > 1024 * 1024) {
                         if (qualFileSizeError) qualFileSizeError.classList.remove('d-none');
                         this.value = '';
+                        renderFilePreviewCard(null, 'qualFilePreviewCard', 'qualFileInput');
                     } else {
                         if (qualFileSizeError) qualFileSizeError.classList.add('d-none');
+                        renderFilePreviewCard(file, 'qualFilePreviewCard', 'qualFileInput');
                     }
+                } else {
+                    renderFilePreviewCard(null, 'qualFilePreviewCard', 'qualFileInput');
                 }
             });
         }

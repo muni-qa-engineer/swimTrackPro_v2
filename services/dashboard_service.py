@@ -143,7 +143,47 @@ def get_admin_dashboard_data(current_user, data):
     cursor.execute("SELECT id, image_url FROM homepage_carousel ORDER BY created_at DESC")
     carousel_images = [{'id': row[0], 'url': row[1]} for row in cursor.fetchall()]
 
+    # Fetch all gallery photos for Gallery management tab
+    gallery_photos = []
+    gallery_by_coach = {}
+    try:
+        cursor.execute("""
+            SELECT id, photo_url, coach_username, coach_name, coach_id, section, caption, is_published, uploaded_by, created_at
+            FROM gallery_photos
+            ORDER BY created_at DESC
+        """)
+        for row in cursor.fetchall():
+            item = {
+                'id': row[0],
+                'url': row[1],
+                'coach_username': row[2] or '',
+                'coach_name': row[3] or 'Admin / Academy',
+                'coach_id': row[4] or 'STP-PLATFORM',
+                'section': row[5] or 'coaching',
+                'caption': row[6] or '',
+                'is_published': bool(row[7]),
+                'uploaded_by': row[8] or 'coach',
+                'created_at': row[9].strftime('%Y-%m-%d %H:%M') if row[9] else ''
+            }
+            gallery_photos.append(item)
+            
+            c_key = f"{item['coach_name']} • {item['coach_id']}"
+            if c_key not in gallery_by_coach:
+                gallery_by_coach[c_key] = {
+                    'coach_name': item['coach_name'],
+                    'coach_id': item['coach_id'],
+                    'coach_username': item['coach_username'],
+                    'photos': []
+                }
+            gallery_by_coach[c_key]['photos'].append(item)
+    except Exception as ge:
+        print("Note: Gallery photos query in dashboard_service:", ge)
+        conn.rollback()
+
     conn.close()
+
+    published_gallery_count = sum(1 for p in gallery_photos if p['is_published'])
+    pending_gallery_count = len(gallery_photos) - published_gallery_count
 
     return {
         'trainers': trainers_list,
@@ -159,6 +199,10 @@ def get_admin_dashboard_data(current_user, data):
         'audit_logs': audit_logs,
         'packages': packages_list,
         'carousel_images': carousel_images,
+        'gallery_photos': gallery_photos,
+        'gallery_by_coach': gallery_by_coach,
+        'published_gallery_count': published_gallery_count,
+        'pending_gallery_count': pending_gallery_count,
         'pricing_config': get_pricing_config_dict()
     }
 

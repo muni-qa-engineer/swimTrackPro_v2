@@ -210,6 +210,28 @@ def profile_page():
         if pic_row and pic_row[0]:
             profile_pic = pic_row[0]
 
+    # Fetch coach's uploaded gallery photos
+    coach_gallery_photos = []
+    try:
+        cursor.execute("""
+            SELECT id, photo_url, section, caption, is_published, created_at
+            FROM gallery_photos
+            WHERE coach_username = %s
+            ORDER BY created_at DESC
+        """, (trainer_user,))
+        for grow in cursor.fetchall():
+            coach_gallery_photos.append({
+                'id': grow[0],
+                'url': grow[1],
+                'section': grow[2],
+                'caption': grow[3] or '',
+                'is_published': bool(grow[4]),
+                'created_at': grow[5].strftime('%Y-%m-%d') if grow[5] else ''
+            })
+    except Exception as ge:
+        print("Note: coach_gallery_photos query in profile_page:", ge)
+        conn.rollback()
+
     conn.close()
 
     photos_str = row[11] or ""
@@ -231,7 +253,7 @@ def profile_page():
         "profile_pic": profile_pic
     }
 
-    return render_template("profile.html", trainer=trainer_data, role=current_role)
+    return render_template("profile.html", trainer=trainer_data, role=current_role, coach_photos=coach_gallery_photos)
 
 
 @login_required
@@ -243,41 +265,54 @@ def profile_upload_photo():
 
     trainer_user = session.get("trainer_username") or "asdf"
 
-    if "training_pic" not in request.files:
-        flash("No file part in the request.", "error")
-        return redirect(url_for("profile_page"))
-
-    file = request.files["training_pic"]
-    if file.filename == "":
-        flash("No file selected.", "error")
-        return redirect(url_for("profile_page"))
-
-    if file:
-        from services.cloudinary_service import upload_image
-        folder = f"swimtrackpro/coaches/{trainer_user}_gallery"
-        
-        cloudinary_url = upload_image(file, folder=folder)
-        if not cloudinary_url:
-            flash("Failed to upload image to Cloudinary.", "error")
+    files = request.files.getlist("training_pics") or request.files.getlist("training_pic")
+    if not files or all(f.filename == "" for f in files):
+        if "training_pic" in request.files and request.files["training_pic"].filename != "":
+            files = [request.files["training_pic"]]
+        else:
+            flash("No file selected.", "error")
             return redirect(url_for("profile_page"))
 
-        conn = get_pg_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT photos FROM trainers WHERE username = %s", (trainer_user,))
-        row = cursor.fetchone()
+    section = request.form.get("section", "coaching").strip().lower()
+    if section not in ("achievements", "coaching", "swimmers"):
+        section = "coaching"
+    caption = request.form.get("caption", "").strip()
 
-        current_photos = row[0] if (row and row[0]) else ""
-        if current_photos:
-            new_photos = f"{current_photos},{cloudinary_url}"
-        else:
-            new_photos = cloudinary_url
+    from services.cloudinary_service import upload_image
+    folder = f"swimtrackpro/coaches/{trainer_user}_gallery"
 
-        cursor.execute("UPDATE trainers SET photos = %s WHERE username = %s", (new_photos, trainer_user))
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT name, id_number, photos FROM trainers WHERE username = %s", (trainer_user,))
+    trow = cursor.fetchone()
+    coach_name = trow[0] if trow else trainer_user
+    coach_id = trow[1] if (trow and trow[1]) else "STP-COACH"
+    current_photos = trow[2] if (trow and trow[2]) else ""
+
+    uploaded_urls = []
+    for file in files:
+        if file and file.filename != "":
+            cloudinary_url = upload_image(file, folder=folder)
+            if cloudinary_url:
+                uploaded_urls.append(cloudinary_url)
+                cursor.execute("""
+                    INSERT INTO gallery_photos (photo_url, coach_username, coach_name, coach_id, section, caption, is_published, uploaded_by)
+                    VALUES (%s, %s, %s, %s, %s, %s, FALSE, 'coach')
+                """, (cloudinary_url, trainer_user, coach_name, coach_id, section, caption or f"Training session with Coach {coach_name}"))
+
+    if uploaded_urls:
+        new_photos_list = [p for p in current_photos.split(",") if p.strip()] + uploaded_urls
+        cursor.execute("UPDATE trainers SET photos = %s WHERE username = %s", (",".join(new_photos_list), trainer_user))
         conn.commit()
-        conn.close()
+        flash(f"{len(uploaded_urls)} photo(s) submitted to album! Admin will review and publish them to the public gallery.", "success")
+    else:
+        flash("Failed to upload photo(s). Please try again.", "error")
 
-        flash("Photo uploaded and added to your album successfully!", "success")
+    conn.close()
 
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify({"success": True, "count": len(uploaded_urls)})
     return redirect(url_for("profile_page"))
 
 
@@ -977,6 +1012,165 @@ def delete_carousel_image(img_id):
         conn.close()
     return redirect(url_for("index") + "?section=promotions")
 
+
+@admin_required("Only admin can manage gallery photos.")
+def admin_gallery_upload():
+    """Upload photos directly to gallery by Admin."""
+    files = request.files.getlist("photos") or request.files.getlist("photo")
+    if not files or all(f.filename == "" for f in files):
+        if "photo" in request.files and request.files["photo"].filename != "":
+            files = [request.files["photo"]]
+        else:
+            flash("Please select at least one photo to upload.", "error")
+            return redirect(url_for("index") + "?section=gallery")
+
+    section = request.form.get("section", "swimmers").strip().lower()
+    if section not in ("achievements", "coaching", "swimmers"):
+        section = "swimmers"
+    caption = request.form.get("caption", "").strip()
+
+    from services.cloudinary_service import upload_image
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+    uploaded_count = 0
+
+    for file in files:
+        if file and file.filename != "":
+            folder = f"swimtrackpro/admin_gallery/{section}"
+            cloudinary_url = upload_image(file, folder=folder)
+            if cloudinary_url:
+                cursor.execute("""
+                    INSERT INTO gallery_photos (photo_url, coach_username, coach_name, coach_id, section, caption, is_published, uploaded_by)
+                    VALUES (%s, '', 'SwimTrackPro Academy', 'STP-ADMIN', %s, %s, TRUE, 'admin')
+                """, (cloudinary_url, section, caption or "Doorstep Swimming Training in Hyderabad"))
+                uploaded_count += 1
+
+    conn.commit()
+    conn.close()
+
+    if uploaded_count > 0:
+        flash(f"{uploaded_count} photo(s) added to gallery and published successfully!", "success")
+    else:
+        flash("Failed to upload photos. Please check file format and try again.", "error")
+
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify({"success": True, "count": uploaded_count})
+    return redirect(url_for("index") + "?section=gallery")
+
+
+@admin_required("Only admin can manage gallery photos.")
+def admin_gallery_toggle_publish(photo_id):
+    """Toggle publish status for a gallery photo."""
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT is_published FROM gallery_photos WHERE id = %s", (photo_id,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify({"success": False, "error": "Photo not found"}), 404
+        flash("Photo not found.", "warning")
+        return redirect(url_for("index") + "?section=gallery")
+
+    new_status = not bool(row[0])
+    cursor.execute("UPDATE gallery_photos SET is_published = %s WHERE id = %s", (new_status, photo_id))
+    conn.commit()
+    conn.close()
+
+    action_text = "published to landing page" if new_status else "unpublished from landing page"
+    flash(f"Photo successfully {action_text}.", "success")
+
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify({"success": True, "is_published": new_status})
+    return redirect(url_for("index") + "?section=gallery")
+
+
+@admin_required("Only admin can manage gallery photos.")
+def admin_gallery_delete(photo_id):
+    """Delete a gallery photo."""
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT photo_url FROM gallery_photos WHERE id = %s", (photo_id,))
+    row = cursor.fetchone()
+    if row and row[0]:
+        photo_url = row[0]
+        if photo_url.startswith("http"):
+            from services.cloudinary_service import delete_image
+            delete_image(photo_url)
+        cursor.execute("DELETE FROM gallery_photos WHERE id = %s", (photo_id,))
+        conn.commit()
+        flash("Gallery photo deleted successfully.", "success")
+    else:
+        flash("Photo not found.", "warning")
+    conn.close()
+
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify({"success": True})
+    return redirect(url_for("index") + "?section=gallery")
+
+
+@admin_required("Only admin can manage gallery photos.")
+def admin_gallery_bulk_action():
+    """Bulk action on selected gallery photos: publish, unpublish, delete, change_section."""
+    action = request.form.get("action", "").strip()
+    photo_ids_raw = request.form.get("photo_ids", "")
+    
+    if not photo_ids_raw and request.is_json:
+        data = request.get_json() or {}
+        action = data.get("action", "")
+        photo_ids_raw = data.get("photo_ids", [])
+
+    if isinstance(photo_ids_raw, str):
+        photo_ids = [int(x.strip()) for x in photo_ids_raw.split(",") if x.strip().isdigit()]
+    elif isinstance(photo_ids_raw, list):
+        photo_ids = [int(x) for x in photo_ids_raw if str(x).isdigit()]
+    else:
+        photo_ids = []
+
+    if not photo_ids:
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
+            return jsonify({"success": False, "error": "No photos selected."}), 400
+        flash("Please select at least one photo.", "warning")
+        return redirect(url_for("index") + "?section=gallery")
+
+    conn = get_pg_connection()
+    cursor = conn.cursor()
+
+    if action == "publish":
+        cursor.execute("UPDATE gallery_photos SET is_published = TRUE WHERE id = ANY(%s)", (photo_ids,))
+        conn.commit()
+        msg = f"Published {len(photo_ids)} photo(s) to landing page gallery."
+    elif action == "unpublish":
+        cursor.execute("UPDATE gallery_photos SET is_published = FALSE WHERE id = ANY(%s)", (photo_ids,))
+        conn.commit()
+        msg = f"Unpublished {len(photo_ids)} photo(s) from landing page gallery."
+    elif action == "delete":
+        cursor.execute("SELECT photo_url FROM gallery_photos WHERE id = ANY(%s)", (photo_ids,))
+        rows = cursor.fetchall()
+        from services.cloudinary_service import delete_image
+        for r in rows:
+            if r[0] and r[0].startswith("http"):
+                delete_image(r[0])
+        cursor.execute("DELETE FROM gallery_photos WHERE id = ANY(%s)", (photo_ids,))
+        conn.commit()
+        msg = f"Deleted {len(photo_ids)} photo(s) permanently."
+    elif action == "change_section":
+        target_section = request.form.get("target_section", "coaching").strip()
+        if target_section in ("achievements", "coaching", "swimmers"):
+            cursor.execute("UPDATE gallery_photos SET section = %s WHERE id = ANY(%s)", (target_section, photo_ids))
+            conn.commit()
+            msg = f"Moved {len(photo_ids)} photo(s) to {target_section} section."
+        else:
+            msg = "Invalid target section."
+    else:
+        msg = "Unknown action."
+
+    conn.close()
+    flash(msg, "success")
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
+        return jsonify({"success": True, "message": msg, "count": len(photo_ids)})
+    return redirect(url_for("index") + "?section=gallery")
+
 @login_required
 def delete_account():
     """Permanently delete a swimmer/guest account, personal data, and preferences.
@@ -1619,5 +1813,29 @@ def register_general_routes(app):
         "/account/delete",
         endpoint="delete_account",
         view_func=delete_account,
+        methods=["POST"]
+    )
+    app.add_url_rule(
+        "/admin/gallery/upload",
+        endpoint="admin_gallery_upload",
+        view_func=admin_gallery_upload,
+        methods=["POST"]
+    )
+    app.add_url_rule(
+        "/admin/gallery/toggle_publish/<int:photo_id>",
+        endpoint="admin_gallery_toggle_publish",
+        view_func=admin_gallery_toggle_publish,
+        methods=["POST"]
+    )
+    app.add_url_rule(
+        "/admin/gallery/delete/<int:photo_id>",
+        endpoint="admin_gallery_delete",
+        view_func=admin_gallery_delete,
+        methods=["POST"]
+    )
+    app.add_url_rule(
+        "/admin/gallery/bulk-action",
+        endpoint="admin_gallery_bulk_action",
+        view_func=admin_gallery_bulk_action,
         methods=["POST"]
     )

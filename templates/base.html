@@ -34,6 +34,7 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}?v=2.1">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}?v=2.1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fileUploader.css') }}?v=1.0">
     {% block extra_css %}{% endblock %}
     
     <style>
@@ -1461,6 +1462,7 @@
             setInterval(updateClock, 1000);
         })();
     </script>
+    <script src="{{ url_for('static', filename='js/fileUploader.js') }}?v=1.0"></script>
     <script src="{{ url_for('static', filename='js/app_tour.js') }}?v=20261117_05"></script>
     {% block extra_js %}{% endblock %}
 </body>

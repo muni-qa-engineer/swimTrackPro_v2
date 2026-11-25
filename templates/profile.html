@@ -88,20 +88,60 @@
             </div>
             
             <div class="glass-panel" style="padding: 1.5rem;">
-                <h5 class="font-display text-white mb-3" style="font-size: 1.1rem;"><i class="fa-solid fa-camera text-primary me-2"></i> Training Album</h5>
-                <p class="text-muted small mb-3">Upload training photos or action shots to showcase your coaching style.</p>
+                <h5 class="font-display text-white mb-2" style="font-size: 1.1rem;">
+                    <i class="fa-solid fa-camera text-primary me-2"></i> Training Album & Gallery
+                </h5>
+                <p class="text-muted small mb-3">
+                    Upload training photos or action shots to showcase your coaching style. Submissions are reviewed by admin and featured on the public landing page gallery.
+                </p>
                 
                 <form id="uploadPhotoForm" action="/profile/upload-photo" method="POST" enctype="multipart/form-data">
-                    <div class="form-group mb-3">
-                        <input class="form-control" type="file" id="training_pic" name="training_pic" accept="image/*" required style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white;">
+                    <div class="mb-3">
+                        <label class="form-label text-white small fw-bold">Target Gallery Section</label>
+                        <select name="section" class="form-select bg-black border-secondary text-white" required>
+                            <option value="coaching" selected>Coach & Learners (coaching)</option>
+                            <option value="achievements">Medals & Achievements (achievements)</option>
+                            <option value="swimmers">Swimmers in Action (swimmers)</option>
+                        </select>
                     </div>
-                    
-                    <div class="progress mb-3 d-none" style="height: 6px; background-color: rgba(255,255,255,0.05); border-radius: 3px;">
-                        <div id="uploadProgressBar" class="progress-bar bg-success" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-white small fw-bold">Caption / Activity Description</label>
+                        <input type="text" name="caption" class="form-control bg-black border-secondary text-white" placeholder="e.g. Kickboard & breathing rhythm drill with young learner">
                     </div>
+
+                    <!-- Modern File Uploader Mount -->
+                    <div id="coachAlbumUploaderMount" class="mb-3"></div>
                     
-                    <button type="submit" id="uploadSubmitBtn" class="btn btn-primary w-100 py-2.5">Upload to Album</button>
+                    <button type="submit" id="uploadSubmitBtn" class="btn btn-primary w-100 py-2.5 fw-bold">
+                        <i class="fa-solid fa-cloud-arrow-up me-1"></i> Submit Photos for Gallery
+                    </button>
                 </form>
+
+                <!-- Coach's Uploaded Photos List -->
+                {% if coach_photos and coach_photos|length > 0 %}
+                <div class="mt-4 pt-3 border-top border-white-10">
+                    <h6 class="text-white small fw-bold text-uppercase mb-2">Your Uploaded Photos ({{ coach_photos|length }})</h6>
+                    <div class="d-flex flex-column gap-2" style="max-height: 240px; overflow-y: auto;">
+                        {% for cp in coach_photos %}
+                        <div class="d-flex align-items-center gap-2 p-2 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
+                            <img src="{{ cp.url }}" alt="{{ cp.caption }}" style="width: 46px; height: 46px; object-fit: cover; border-radius: 6px;">
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="text-white small text-truncate fw-semibold">{{ cp.caption or 'Training Photo' }}</div>
+                                <div class="d-flex align-items-center gap-1.5 mt-0.5">
+                                    <span class="badge bg-dark border border-secondary text-muted" style="font-size: 0.65rem;">{{ cp.section|title }}</span>
+                                    {% if cp.is_published %}
+                                    <span class="badge bg-success shadow-sm" style="font-size: 0.65rem;"><i class="fa-solid fa-circle-check me-0.5"></i> Live</span>
+                                    {% else %}
+                                    <span class="badge bg-warning text-dark fw-bold" style="font-size: 0.65rem;"><i class="fa-solid fa-clock me-0.5"></i> In Review</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
         
@@ -250,45 +290,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Upload album picture progress tracking
+    // Modern File Uploader for Coach Album (Jira KAN-8)
+    let coachUploader = null;
+    if (window.STPFileUploader && document.getElementById('coachAlbumUploaderMount')) {
+        coachUploader = new window.STPFileUploader('#coachAlbumUploaderMount', {
+            inputName: 'training_pics',
+            multiple: true,
+            title: 'PHOTO UPLOADER',
+            dropText: 'Drag training photos here or',
+            browseText: 'browse'
+        });
+    }
+
     const uploadForm = document.getElementById('uploadPhotoForm');
-    const fileInput = document.getElementById('training_pic');
-    const progressBarContainer = document.querySelector('.progress');
-    const progressBar = document.getElementById('uploadProgressBar');
     const submitBtn = document.getElementById('uploadSubmitBtn');
 
-    if (fileInput && uploadForm) {
+    if (uploadForm) {
         uploadForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (!fileInput.files || fileInput.files.length === 0) return;
-
-            const formData = new FormData(uploadForm);
-            const xhr = new XMLHttpRequest();
-
-            xhr.upload.addEventListener('progress', (event) => {
-                if (event.lengthComputable) {
-                    const percentComplete = Math.round((event.loaded / event.total) * 100);
-                    progressBarContainer.classList.remove('d-none');
-                    progressBar.style.width = percentComplete + '%';
-                    progressBar.setAttribute('aria-valuenow', percentComplete);
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Uploading... ${percentComplete}%`;
-                }
-            });
-
-            xhr.addEventListener('load', () => {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    submitBtn.innerHTML = `<i class="fa-solid fa-circle-check me-2"></i> Uploaded`;
-                    setTimeout(() => window.location.reload(), 1000);
-                } else {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = "Upload to Album";
-                    alert('Upload failed.');
-                }
-            });
-
-            xhr.open('POST', uploadForm.getAttribute('action'));
-            xhr.send(formData);
+            if (coachUploader && coachUploader.files.length === 0) {
+                e.preventDefault();
+                alert('Please select or drop at least one photo to upload.');
+                return;
+            }
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Uploading Photos...';
+            }
         });
     }
 });
