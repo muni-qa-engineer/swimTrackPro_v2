@@ -1,0 +1,629 @@
+{
+  "info": {
+    "_postman_id": "swimtrackpro-api-collection",
+    "name": "SwimTrackPro API & Route Collection",
+    "description": "Comprehensive Postman collection for testing SwimTrackPro endpoints across Authentication, Bookings, Pricing, Admin operations, and Trainer workflows.\n\nNote: SwimTrackPro uses cookie-based sessions ('swimtrackpro_session'). When you call any of the login endpoints in the 'Authentication' folder, Postman will automatically store the session cookie and attach it to all subsequent authenticated requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:5001",
+      "type": "string",
+      "description": "Set to http://127.0.0.1:5001 for local testing, or https://swimtrackpro.onrender.com for production testing"
+    },
+    {
+      "key": "booking_id",
+      "value": "STP000001",
+      "type": "string"
+    },
+    {
+      "key": "trainer_username",
+      "value": "m1400",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01. Authentication & Users",
+      "item": [
+        {
+          "name": "Login - Super Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "role", "value": "admin", "type": "text" },
+                { "key": "name", "value": "admin", "type": "text" },
+                { "key": "password", "value": "admin123", "type": "text" },
+                { "key": "remember_me", "value": "on", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": ["{{base_url}}"],
+              "path": ["login"]
+            },
+            "description": "Authenticates as Super Admin and stores the session cookie."
+          }
+        },
+        {
+          "name": "Login - Trainer / Coach",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "role", "value": "trainer", "type": "text" },
+                { "key": "name", "value": "{{trainer_username}}", "type": "text" },
+                { "key": "password", "value": "trainer_password_here", "type": "text" },
+                { "key": "remember_me", "value": "on", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": ["{{base_url}}"],
+              "path": ["login"]
+            },
+            "description": "Authenticates as an approved trainer."
+          }
+        },
+        {
+          "name": "Login - Guest / Swimmer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "role", "value": "guest", "type": "text" },
+                { "key": "name", "value": "Munisekhar", "type": "text" },
+                { "key": "phone", "value": "9133851400", "type": "text" },
+                { "key": "remember_me", "value": "on", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": ["{{base_url}}"],
+              "path": ["login"]
+            },
+            "description": "Authenticates as a guest/swimmer using Name and Phone."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/logout",
+              "host": ["{{base_url}}"],
+              "path": ["logout"]
+            },
+            "description": "Clears current session cookie."
+          }
+        },
+        {
+          "name": "Register Coach",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "username", "value": "testcoach1", "type": "text" },
+                { "key": "password", "value": "SecurePass123!", "type": "text" },
+                { "key": "name", "value": "Test Coach", "type": "text" },
+                { "key": "phone", "value": "9876543210", "type": "text" },
+                { "key": "email", "value": "coach@example.com", "type": "text" },
+                { "key": "experience", "value": "5 years", "type": "text" },
+                { "key": "qualification", "value": "FINA Certified", "type": "text" },
+                { "key": "currently_working", "value": "Sports Academy", "type": "text" },
+                { "key": "residence_location", "value": "Hyderabad", "type": "text" },
+                { "key": "id_proof", "value": "Aadhaar Card", "type": "text" },
+                { "key": "id_proof_file", "type": "file", "src": "" },
+                { "key": "qualification_file", "type": "file", "src": "" },
+                { "key": "consent_accepted", "value": "on", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/register_trainer",
+              "host": ["{{base_url}}"],
+              "path": ["register_trainer"]
+            },
+            "description": "Registers a new coach (uploads ID proof and qualification certificate). Triggers coach confirmation & admin alert emails."
+          }
+        },
+        {
+          "name": "Forgot Password - Request OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "email", "value": "coach@example.com", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/forgot-password",
+              "host": ["{{base_url}}"],
+              "path": ["forgot-password"]
+            }
+          }
+        },
+        {
+          "name": "Verify OTP & Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "email", "value": "coach@example.com", "type": "text" },
+                { "key": "otp", "value": "123456", "type": "text" },
+                { "key": "new_password", "value": "NewPassword123!", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["verify-otp"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02. Pricing & Public APIs",
+      "item": [
+        {
+          "name": "Get Pricing Configuration",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/pricing/config",
+              "host": ["{{base_url}}"],
+              "path": ["api", "pricing", "config"]
+            },
+            "description": "Returns current packages, base prices, discounts, and group multipliers."
+          }
+        },
+        {
+          "name": "Calculate Price Quote (POST)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"package_key\": \"Custom\",\n  \"persons\": 1,\n  \"sessions_count\": 20,\n  \"custom_rate\": 750\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pricing/quote",
+              "host": ["{{base_url}}"],
+              "path": ["api", "pricing", "quote"]
+            },
+            "description": "Calculates real-time price quotes for standard and custom packages."
+          }
+        },
+        {
+          "name": "Landing Page",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/",
+              "host": ["{{base_url}}"],
+              "path": [""]
+            }
+          }
+        },
+        {
+          "name": "Booking Page with Preselected Coach",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/booking?coach={{trainer_username}}",
+              "host": ["{{base_url}}"],
+              "path": ["booking"],
+              "query": [
+                { "key": "coach", "value": "{{trainer_username}}" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03. Booking Management",
+      "item": [
+        {
+          "name": "Create Booking (Book Session)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" },
+              { "key": "X-Requested-With", "value": "XMLHttpRequest" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "student", "value": "Munisekhar", "type": "text" },
+                { "key": "phone", "value": "9133851400", "type": "text" },
+                { "key": "email", "value": "parent@example.com", "type": "text" },
+                { "key": "trainer_username", "value": "{{trainer_username}}", "type": "text" },
+                { "key": "package", "value": "Monthly", "type": "text" },
+                { "key": "start_date", "value": "2026-12-01", "type": "text" },
+                { "key": "time", "value": "07:00 AM", "type": "text" },
+                { "key": "selected_days", "value": "Mon,Wed,Fri", "type": "text" },
+                { "key": "persons", "value": "1", "type": "text" },
+                { "key": "location", "value": "Gachibowli, Hyderabad", "type": "text" },
+                { "key": "skill_level", "value": "Beginner", "type": "text" },
+                { "key": "fee", "value": "6000", "type": "text" },
+                { "key": "is_ajax", "value": "true", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/book",
+              "host": ["{{base_url}}"],
+              "path": ["book"]
+            },
+            "description": "Creates a new booking session in SwimTrackPro."
+          }
+        },
+        {
+          "name": "Confirm Payment Now",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "payment_reference", "value": "UPI_REF_12345678", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/booking/confirm_paynow/{{booking_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["booking", "confirm_paynow", "{{booking_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Confirm Pay Later",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/booking/confirm_paylater/{{booking_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["booking", "confirm_paylater", "{{booking_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Request Booking Pause",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "booking_id", "value": "{{booking_id}}", "type": "text" },
+                { "key": "reason", "value": "Traveling / Out of town", "type": "text" },
+                { "key": "start_date", "value": "2026-12-05", "type": "text" },
+                { "key": "end_date", "value": "2026-12-15", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/booking/pause",
+              "host": ["{{base_url}}"],
+              "path": ["booking", "pause"]
+            }
+          }
+        },
+        {
+          "name": "Resume Booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "booking_id", "value": "{{booking_id}}", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/booking/resume",
+              "host": ["{{base_url}}"],
+              "path": ["booking", "resume"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Booking",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/booking/cancel/{{booking_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["booking", "cancel", "{{booking_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04. Super Admin Operations",
+      "item": [
+        {
+          "name": "Update Base Pricing",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"package_key\": \"Custom\",\n  \"base_price\": 750\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/pricing/update",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pricing", "update"]
+            },
+            "description": "Updates package rate in Super Admin pricing table (requires Admin login)."
+          }
+        },
+        {
+          "name": "Approve Trainer",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/admin/approve_trainer/{{trainer_username}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "approve_trainer", "{{trainer_username}}"]
+            }
+          }
+        },
+        {
+          "name": "Reject Trainer",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/admin/reject_trainer/{{trainer_username}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "reject_trainer", "{{trainer_username}}"]
+            }
+          }
+        },
+        {
+          "name": "Verify Trainer Proof (ID / Qualification)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{trainer_username}}\",\n  \"proof_type\": \"id_proof\",\n  \"action\": \"accept\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/trainer/verify_proof",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "trainer", "verify_proof"]
+            },
+            "description": "Accepts or declines trainer's ID proof or Qualification certificate."
+          }
+        },
+        {
+          "name": "Verify Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "payment_status", "value": "Paid", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/verify_payment/{{booking_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "verify_payment", "{{booking_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Toggle Block Trainer",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/admin/toggle_block_trainer/{{trainer_username}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "toggle_block_trainer", "{{trainer_username}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05. Trainer Operations",
+      "item": [
+        {
+          "name": "Save Available Slots",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "slots", "value": "[\"06:00 AM - 07:00 AM\",\"07:00 AM - 08:00 AM\"]", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/trainer/save_slots",
+              "host": ["{{base_url}}"],
+              "path": ["trainer", "save_slots"]
+            }
+          }
+        },
+        {
+          "name": "Update Trainer Notice",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "notice", "value": "Pool will be under weekly maintenance this Sunday.", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/update_notice",
+              "host": ["{{base_url}}"],
+              "path": ["update_notice"]
+            }
+          }
+        },
+        {
+          "name": "Update Trainer Payment Details (UPI)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "upi_id", "value": "coach@upi", "type": "text" },
+                { "key": "account_holder_name", "value": "Coach Name", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/update_trainer_payment_details",
+              "host": ["{{base_url}}"],
+              "path": ["update_trainer_payment_details"]
+            }
+          }
+        },
+        {
+          "name": "Skip Session",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/skip_session/{{booking_id}}/2026-12-05",
+              "host": ["{{base_url}}"],
+              "path": ["skip_session", "{{booking_id}}", "2026-12-05"]
+            }
+          }
+        },
+        {
+          "name": "Undo Skip Session",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/undo_skip_session/{{booking_id}}/2026-12-05",
+              "host": ["{{base_url}}"],
+              "path": ["undo_skip_session", "{{booking_id}}", "2026-12-05"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06. Notices & System APIs",
+      "item": [
+        {
+          "name": "Get My ID Card",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/my_id_card",
+              "host": ["{{base_url}}"],
+              "path": ["api", "my_id_card"]
+            }
+          }
+        },
+        {
+          "name": "Create System Notice",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Scheduled Maintenance\",\n  \"message\": \"System maintenance at midnight.\",\n  \"target_role\": \"all\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/notices",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notices"]
+            }
+          }
+        },
+        {
+          "name": "Mark Notices as Read",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notice_ids\": [1, 2]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/notices/mark-read",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notices", "mark-read"]
+            }
+          }
+        },
+        {
+          "name": "Toggle Favorite Coach",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trainer_username\": \"{{trainer_username}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/toggle_favorite_coach",
+              "host": ["{{base_url}}"],
+              "path": ["api", "toggle_favorite_coach"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

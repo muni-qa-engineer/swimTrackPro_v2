@@ -1247,4 +1247,18 @@ def forbidden_error(error):
     return render_template('403.html'), 403
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    def _get_target_port(default_port=5000):
+        if "PORT" in os.environ:
+            return int(os.environ["PORT"])
+        import socket
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.bind(('0.0.0.0', default_port))
+                return default_port
+        except OSError:
+            print(f"\n⚠️  Port {default_port} is occupied (macOS AirPlay Receiver).")
+            print(f"🚀 Starting SwimTrackPro on port 5001 -> http://127.0.0.1:5001\n")
+            return 5001
+
+    target_port = _get_target_port(5000)
+    app.run(host='0.0.0.0', port=target_port, debug=True)

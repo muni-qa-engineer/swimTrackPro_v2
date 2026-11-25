@@ -281,6 +281,7 @@
     
     .login-input {
         padding-left: 2.75rem !important;
+        padding-right: 2.75rem !important;
         background: rgba(0, 0, 0, 0.4) !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
         border-radius: var(--radius-sm) !important;
@@ -295,13 +296,21 @@
     
     .toggle-pass-btn {
         position: absolute;
-        right: 1rem;
+        right: 0.85rem;
         top: 50%;
         transform: translateY(-50%);
-        color: var(--color-text-secondary);
+        color: var(--color-text-secondary, #a1a1aa);
         background: none;
         border: none;
         cursor: pointer;
+        padding: 0.35rem 0.5rem;
+        z-index: 5;
+        font-size: 1rem;
+        transition: color 0.2s ease;
+    }
+
+    .toggle-pass-btn:hover {
+        color: var(--color-primary, #06b6d4);
     }
     
     /* High contrast text overrides to prevent Bootstrap overrides */
@@ -2614,10 +2623,10 @@ document.addEventListener('DOMContentLoaded', initGallery);
                 
                 <div class="form-group mb-3 d-none" id="passwordField">
                     <label class="form-label">Password</label>
-                    <div class="input-wrapper">
+                    <div class="input-wrapper" style="position: relative;">
                         <span class="input-icon"><i class="fa-solid fa-lock"></i></span>
-                        <input type="password" name="password" id="passwordInput" class="form-control login-input" placeholder="Enter password">
-                        <button class="toggle-pass-btn" type="button" id="togglePasswordBtn">
+                        <input type="password" name="password" id="passwordInput" class="form-control login-input" placeholder="Enter password" autocomplete="current-password">
+                        <button class="toggle-pass-btn" type="button" id="togglePasswordBtn" onclick="toggleLoginPasswordVisibility()" title="Show password" aria-label="Show password">
                             <i class="fa-solid fa-eye" id="togglePasswordIcon"></i>
                         </button>
                     </div>
@@ -3239,6 +3248,15 @@ document.addEventListener('DOMContentLoaded', initGallery);
                 openQuickBookingModal(pkgParam, coachParam);
             });
         });
+
+        // Toggle password show/hide button listener
+        const toggleBtn = document.getElementById('togglePasswordBtn');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                toggleLoginPasswordVisibility();
+            });
+        }
     });
 
     function openLoginModal() {
@@ -3252,11 +3270,59 @@ document.addEventListener('DOMContentLoaded', initGallery);
         }
     }
 
+    function resetPasswordVisibility() {
+        const pwdInput = document.getElementById('passwordInput');
+        const pwdIcon = document.getElementById('togglePasswordIcon');
+        const pwdBtn = document.getElementById('togglePasswordBtn');
+        if (pwdInput) {
+            pwdInput.type = 'password';
+        }
+        if (pwdIcon) {
+            pwdIcon.classList.remove('fa-eye-slash');
+            pwdIcon.classList.add('fa-eye');
+        }
+        if (pwdBtn) {
+            pwdBtn.setAttribute('title', 'Show password');
+            pwdBtn.setAttribute('aria-label', 'Show password');
+        }
+    }
+
+    function toggleLoginPasswordVisibility() {
+        const pwdInput = document.getElementById('passwordInput');
+        const pwdIcon = document.getElementById('togglePasswordIcon');
+        const pwdBtn = document.getElementById('togglePasswordBtn');
+        if (!pwdInput) return;
+
+        if (pwdInput.type === 'password') {
+            pwdInput.type = 'text';
+            if (pwdIcon) {
+                pwdIcon.classList.remove('fa-eye');
+                pwdIcon.classList.add('fa-eye-slash');
+            }
+            if (pwdBtn) {
+                pwdBtn.setAttribute('title', 'Hide password');
+                pwdBtn.setAttribute('aria-label', 'Hide password');
+            }
+        } else {
+            pwdInput.type = 'password';
+            if (pwdIcon) {
+                pwdIcon.classList.remove('fa-eye-slash');
+                pwdIcon.classList.add('fa-eye');
+            }
+            if (pwdBtn) {
+                pwdBtn.setAttribute('title', 'Show password');
+                pwdBtn.setAttribute('aria-label', 'Show password');
+            }
+        }
+        pwdInput.focus();
+    }
+
     function activateTrainerMode() {
         roleInput.value = 'trainer';
         nameInput.value = '';
         phoneInput.value = '';
         passwordInput.value = '';
+        resetPasswordVisibility();
         nameError.classList.add('d-none');
         phoneError.classList.add('d-none');
         
@@ -3283,6 +3349,7 @@ document.addEventListener('DOMContentLoaded', initGallery);
         }
         phoneInput.value = '';
         passwordInput.value = '';
+        resetPasswordVisibility();
         nameError.classList.add('d-none');
         phoneError.classList.add('d-none');
         
@@ -3311,6 +3378,7 @@ document.addEventListener('DOMContentLoaded', initGallery);
         nameInput.value = '';
         phoneInput.value = '';
         passwordInput.value = '';
+        resetPasswordVisibility();
         nameError.classList.add('d-none');
         phoneError.classList.add('d-none');
         

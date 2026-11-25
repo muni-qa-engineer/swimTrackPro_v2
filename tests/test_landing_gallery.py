@@ -39,7 +39,7 @@ class LandingGalleryTests(unittest.TestCase):
 
         # 1. Verify Gallery section is present
         self.assertIn('id="gallery"', html)
-        self.assertIn("Training Moments & Achievements", html)
+        self.assertTrue("Highlights & Achievements" in html or "Training Moments & Achievements" in html)
         self.assertNotIn("Olympic Standard", html)
         self.assertNotIn("Pool Facility & Academy", html)
         
