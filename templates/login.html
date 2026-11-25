@@ -304,9 +304,17 @@
         border: none;
         cursor: pointer;
         padding: 0.35rem 0.5rem;
-        z-index: 5;
+        z-index: 10;
         font-size: 1rem;
         transition: color 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: auto;
+    }
+
+    .toggle-pass-btn * {
+        pointer-events: none;
     }
 
     .toggle-pass-btn:hover {
@@ -3249,14 +3257,7 @@ document.addEventListener('DOMContentLoaded', initGallery);
             });
         });
 
-        // Toggle password show/hide button listener
-        const toggleBtn = document.getElementById('togglePasswordBtn');
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                toggleLoginPasswordVisibility();
-            });
-        }
+        // Toggle password show/hide is handled via onclick="toggleLoginPasswordVisibility()" on the button
     });
 
     function openLoginModal() {
@@ -3286,8 +3287,20 @@ document.addEventListener('DOMContentLoaded', initGallery);
             pwdBtn.setAttribute('aria-label', 'Show password');
         }
     }
+    window.resetPasswordVisibility = resetPasswordVisibility;
 
+    let _lastPasswordToggleTime = 0;
     function toggleLoginPasswordVisibility() {
+        const e = arguments[0];
+        if (e && typeof e.preventDefault === 'function') {
+            e.preventDefault();
+        }
+        const now = Date.now();
+        if (now - _lastPasswordToggleTime < 200) {
+            return;
+        }
+        _lastPasswordToggleTime = now;
+
         const pwdInput = document.getElementById('passwordInput');
         const pwdIcon = document.getElementById('togglePasswordIcon');
         const pwdBtn = document.getElementById('togglePasswordBtn');
@@ -3314,8 +3327,8 @@ document.addEventListener('DOMContentLoaded', initGallery);
                 pwdBtn.setAttribute('aria-label', 'Show password');
             }
         }
-        pwdInput.focus();
     }
+    window.toggleLoginPasswordVisibility = toggleLoginPasswordVisibility;
 
     function activateTrainerMode() {
         roleInput.value = 'trainer';
