@@ -393,7 +393,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 submitBtn.style.opacity = '0.8';
                 submitBtn.style.pointerEvents = 'none';
-                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Loading...';
+
+                const btnText = (submitBtn.innerText || '').trim();
+                const isSpinnerOnly = submitBtn.dataset.spinnerOnly === 'true' || 
+                                      !btnText || 
+                                      (this.action && this.action.includes('/admin/assign_coach'));
+
+                if (isSpinnerOnly) {
+                    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                } else {
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>' + btnText;
+                }
             }
         });
     });
