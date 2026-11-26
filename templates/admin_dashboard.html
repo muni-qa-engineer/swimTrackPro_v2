@@ -2092,8 +2092,29 @@
                         </div>
                     </div>
 
-                    <!-- Modern File Uploader UI Component -->
-                    <div id="adminFileUploaderMount"></div>
+                    <!-- Modern File Uploader Card -->
+                    <div class="stp-uploader-card mb-3" id="adminGalleryUploaderCard">
+                        <div class="stp-uploader-header">
+                            <h4 class="stp-uploader-title">Photo Uploader</h4>
+                            <span class="stp-uploader-counter" id="adminUploadCounter">0 / 0 files selected</span>
+                        </div>
+                        
+                        <div class="stp-uploader-list" id="adminFileList"></div>
+                        
+                        <div class="stp-dropzone" id="adminDropzone" onclick="document.getElementById('adminGalleryPicsInput').click();">
+                            <i class="fa-solid fa-cloud-arrow-up text-primary fs-3 mb-1"></i>
+                            <span class="stp-dropzone-text">
+                                Drag platform photos here or <span class="stp-dropzone-browse">browse</span>
+                            </span>
+                            <span class="text-muted small" style="font-size: 0.76rem;">Supports JPG, PNG, WebP (multi-file select)</span>
+                            <input type="file" 
+                                   id="adminGalleryPicsInput" 
+                                   name="gallery_pics" 
+                                   accept="image/jpeg,image/png,image/webp,image/jpg" 
+                                   multiple 
+                                   style="display: none;">
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer border-top border-white-10">
                     <button type="button" class="btn btn-secondary px-3" data-bs-dismiss="modal">Cancel</button>
@@ -3484,19 +3505,109 @@ window.submitForceActionForm = function(e) {
         }
     });
 
-    // 6. Direct Admin Upload Modal File Uploader Initialization
-    let adminUploaderInstance = null;
-    const uploadModalEl = document.getElementById('adminGalleryUploadModal');
-    if (uploadModalEl) {
-        uploadModalEl.addEventListener('shown.bs.modal', function() {
-            if (!adminUploaderInstance && window.STPFileUploader) {
-                adminUploaderInstance = new window.STPFileUploader('#adminFileUploaderMount', {
-                    inputName: 'gallery_pics',
-                    multiple: true,
-                    title: 'PHOTO UPLOADER',
-                    dropText: 'Drag platform photos here or',
-                    browseText: 'browse'
-                });
+    // 6. Direct Admin Upload Modal File Uploader
+    const adminFileInput = document.getElementById('adminGalleryPicsInput');
+    const adminDropzone = document.getElementById('adminDropzone');
+    const adminFileList = document.getElementById('adminFileList');
+    const adminCounter = document.getElementById('adminUploadCounter');
+    let adminSelectedFiles = [];
+
+    function formatBytesAdmin(bytes) {
+        if (!bytes || bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function syncAdminNativeInput() {
+        if (!adminFileInput) return;
+        try {
+            const dt = new DataTransfer();
+            adminSelectedFiles.forEach(f => dt.items.add(f));
+            adminFileInput.files = dt.files;
+        } catch (err) {
+            console.warn('DataTransfer sync:', err);
+        }
+    }
+
+    function renderAdminFileList() {
+        if (!adminFileList || !adminCounter) return;
+        adminCounter.textContent = `${adminSelectedFiles.length} / ${adminSelectedFiles.length} files selected`;
+
+        if (adminSelectedFiles.length === 0) {
+            adminFileList.innerHTML = '';
+            return;
+        }
+
+        adminFileList.innerHTML = adminSelectedFiles.map((file, idx) => {
+            const ext = (file.name.split('.').pop() || 'FILE').toUpperCase().slice(0, 4);
+            const badgeClass = `badge-${ext.toLowerCase()}`;
+            return `
+                <div class="stp-uploader-item">
+                    <div class="stp-file-badge ${badgeClass}">${ext}</div>
+                    <div class="stp-file-details">
+                        <p class="stp-file-name" title="${file.name}">${file.name}</p>
+                        <div class="stp-file-meta">
+                            <span>${formatBytesAdmin(file.size)}</span>
+                            <span>•</span>
+                            <span class="stp-file-status completed">Ready to upload</span>
+                        </div>
+                        <div class="stp-progress-track">
+                            <div class="stp-progress-fill" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <button type="button" class="stp-file-action-btn" title="Remove photo" onclick="removeAdminFile(${idx})">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    window.removeAdminFile = function(index) {
+        adminSelectedFiles.splice(index, 1);
+        syncAdminNativeInput();
+        renderAdminFileList();
+    };
+
+    function addAdminFiles(newFiles) {
+        Array.from(newFiles).forEach(file => {
+            const exists = adminSelectedFiles.some(f => f.name === file.name && f.size === file.size);
+            if (!exists) {
+                adminSelectedFiles.push(file);
+            }
+        });
+        syncAdminNativeInput();
+        renderAdminFileList();
+    }
+
+    if (adminFileInput) {
+        adminFileInput.addEventListener('change', function() {
+            if (this.files && this.files.length) {
+                addAdminFiles(this.files);
+            }
+        });
+    }
+
+    if (adminDropzone) {
+        ['dragenter', 'dragover'].forEach(name => {
+            adminDropzone.addEventListener(name, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                adminDropzone.classList.add('drag-over');
+            });
+        });
+        ['dragleave', 'drop'].forEach(name => {
+            adminDropzone.addEventListener(name, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                adminDropzone.classList.remove('drag-over');
+            });
+        });
+        adminDropzone.addEventListener('drop', (e) => {
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+                addAdminFiles(e.dataTransfer.files);
             }
         });
     }

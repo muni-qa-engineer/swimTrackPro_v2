@@ -79,6 +79,7 @@
 
 .stp-file-badge.badge-png { background: #6366f1; }
 .stp-file-badge.badge-jpg, .stp-file-badge.badge-jpeg { background: #4f46e5; }
+.stp-file-badge.badge-webp { background: #06b6d4; }
 .stp-file-badge.badge-pdf { background: #dc2626; }
 .stp-file-badge.badge-mp4 { background: #8b5cf6; }
 

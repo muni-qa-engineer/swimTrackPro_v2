@@ -110,8 +110,29 @@
                         <input type="text" name="caption" class="form-control bg-black border-secondary text-white" placeholder="e.g. Kickboard & breathing rhythm drill with young learner">
                     </div>
 
-                    <!-- Modern File Uploader Mount -->
-                    <div id="coachAlbumUploaderMount" class="mb-3"></div>
+                    <!-- Modern File Uploader Card (Jira KAN-8) -->
+                    <div class="stp-uploader-card mb-3" id="coachAlbumUploaderCard">
+                        <div class="stp-uploader-header">
+                            <h4 class="stp-uploader-title">Photo Uploader</h4>
+                            <span class="stp-uploader-counter" id="coachUploadCounter">0 / 0 files selected</span>
+                        </div>
+                        
+                        <div class="stp-uploader-list" id="coachFileList"></div>
+                        
+                        <div class="stp-dropzone" id="coachDropzone" onclick="document.getElementById('coachTrainingPicsInput').click();">
+                            <i class="fa-solid fa-cloud-arrow-up text-primary fs-3 mb-1"></i>
+                            <span class="stp-dropzone-text">
+                                Drag files here or <span class="stp-dropzone-browse">browse</span>
+                            </span>
+                            <span class="text-muted small" style="font-size: 0.76rem;">Supports JPG, PNG, WebP (multi-file select)</span>
+                            <input type="file" 
+                                   id="coachTrainingPicsInput" 
+                                   name="training_pics" 
+                                   accept="image/jpeg,image/png,image/webp,image/jpg" 
+                                   multiple 
+                                   style="display: none;">
+                        </div>
+                    </div>
                     
                     <button type="submit" id="uploadSubmitBtn" class="btn btn-primary w-100 py-2.5 fw-bold">
                         <i class="fa-solid fa-cloud-arrow-up me-1"></i> Submit Photos for Gallery
@@ -291,14 +312,114 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Modern File Uploader for Coach Album (Jira KAN-8)
-    let coachUploader = null;
-    if (window.STPFileUploader && document.getElementById('coachAlbumUploaderMount')) {
-        coachUploader = new window.STPFileUploader('#coachAlbumUploaderMount', {
-            inputName: 'training_pics',
-            multiple: true,
-            title: 'PHOTO UPLOADER',
-            dropText: 'Drag training photos here or',
-            browseText: 'browse'
+    const coachFileInput = document.getElementById('coachTrainingPicsInput');
+    const coachDropzone = document.getElementById('coachDropzone');
+    const coachFileList = document.getElementById('coachFileList');
+    const coachCounter = document.getElementById('coachUploadCounter');
+    let coachSelectedFiles = [];
+
+    function formatBytes(bytes) {
+        if (!bytes || bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function getFileExt(filename) {
+        const parts = filename.split('.');
+        return parts.length > 1 ? parts.pop().toUpperCase().slice(0, 4) : 'FILE';
+    }
+
+    function syncCoachNativeInput() {
+        if (!coachFileInput) return;
+        try {
+            const dt = new DataTransfer();
+            coachSelectedFiles.forEach(f => dt.items.add(f));
+            coachFileInput.files = dt.files;
+        } catch (err) {
+            console.warn('DataTransfer sync:', err);
+        }
+    }
+
+    function renderCoachFileList() {
+        if (!coachFileList || !coachCounter) return;
+        coachCounter.textContent = `${coachSelectedFiles.length} / ${coachSelectedFiles.length} files selected`;
+
+        if (coachSelectedFiles.length === 0) {
+            coachFileList.innerHTML = '';
+            return;
+        }
+
+        coachFileList.innerHTML = coachSelectedFiles.map((file, idx) => {
+            const ext = getFileExt(file.name);
+            const badgeClass = `badge-${ext.toLowerCase()}`;
+            return `
+                <div class="stp-uploader-item">
+                    <div class="stp-file-badge ${badgeClass}">${ext}</div>
+                    <div class="stp-file-details">
+                        <p class="stp-file-name" title="${file.name}">${file.name}</p>
+                        <div class="stp-file-meta">
+                            <span>${formatBytes(file.size)}</span>
+                            <span>•</span>
+                            <span class="stp-file-status completed">Ready to upload</span>
+                        </div>
+                        <div class="stp-progress-track">
+                            <div class="stp-progress-fill" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <button type="button" class="stp-file-action-btn" title="Remove photo" onclick="removeCoachFile(${idx})">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    window.removeCoachFile = function(index) {
+        coachSelectedFiles.splice(index, 1);
+        syncCoachNativeInput();
+        renderCoachFileList();
+    };
+
+    function addCoachFiles(newFiles) {
+        Array.from(newFiles).forEach(file => {
+            const exists = coachSelectedFiles.some(f => f.name === file.name && f.size === file.size);
+            if (!exists) {
+                coachSelectedFiles.push(file);
+            }
+        });
+        syncCoachNativeInput();
+        renderCoachFileList();
+    }
+
+    if (coachFileInput) {
+        coachFileInput.addEventListener('change', function() {
+            if (this.files && this.files.length) {
+                addCoachFiles(this.files);
+            }
+        });
+    }
+
+    if (coachDropzone) {
+        ['dragenter', 'dragover'].forEach(name => {
+            coachDropzone.addEventListener(name, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                coachDropzone.classList.add('drag-over');
+            });
+        });
+        ['dragleave', 'drop'].forEach(name => {
+            coachDropzone.addEventListener(name, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                coachDropzone.classList.remove('drag-over');
+            });
+        });
+        coachDropzone.addEventListener('drop', (e) => {
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+                addCoachFiles(e.dataTransfer.files);
+            }
         });
     }
 
@@ -307,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (uploadForm) {
         uploadForm.addEventListener('submit', (e) => {
-            if (coachUploader && coachUploader.files.length === 0) {
+            if (coachSelectedFiles.length === 0 && (!coachFileInput.files || coachFileInput.files.length === 0)) {
                 e.preventDefault();
                 alert('Please select or drop at least one photo to upload.');
                 return;

@@ -141,7 +141,33 @@ class GalleryTabTests(unittest.TestCase):
             # 7. Modals
             self.assertIn('id="adminGalleryUploadModal"', html)
             self.assertIn('id="galleryLightboxModal"', html)
-            self.assertIn('id="adminFileUploaderMount"', html)
+            self.assertIn('id="adminGalleryUploaderCard"', html)
+            self.assertIn('id="adminDropzone"', html)
+
+    def test_coach_profile_renders_album_uploader(self):
+        """Verify coach profile template renders the album uploader dropzone card."""
+        with app.test_request_context():
+            trainer_context = {
+                'trainer': {
+                    'username': 'coach_rajesh',
+                    'name': 'Rajesh Kumar',
+                    'phone': '9876543210',
+                    'email': 'rajesh@example.com',
+                    'whatsapp': '9876543210',
+                    'experience': 5,
+                    'qualification': 'Certified Coach',
+                    'currently_working': 'SwimTrackPro Academy',
+                    'residence_location': 'Gachibowli, Hyderabad',
+                    'id_proof': 'UID-12345'
+                },
+                'role': 'trainer',
+                'coach_photos': []
+            }
+            html = render_template('profile.html', **trainer_context)
+            self.assertIn('id="coachAlbumUploaderCard"', html)
+            self.assertIn('id="coachDropzone"', html)
+            self.assertIn('name="training_pics"', html)
+            self.assertIn('Drag files here or', html)
 
     @patch("swimtrackpro.routes.general.get_pg_connection")
     def test_admin_gallery_toggle_publish(self, mock_get_conn):
