@@ -143,6 +143,9 @@ class GalleryTabTests(unittest.TestCase):
             self.assertIn('id="galleryLightboxModal"', html)
             self.assertIn('id="adminGalleryUploaderCard"', html)
             self.assertIn('id="adminDropzone"', html)
+            self.assertIn('for="adminGalleryPicsInput"', html)
+            self.assertIn('id="adminUploadCounter"', html)
+            self.assertIn('No photos selected', html)
 
     def test_coach_profile_renders_album_uploader(self):
         """Verify coach profile template renders the album uploader dropzone card."""
@@ -166,7 +169,10 @@ class GalleryTabTests(unittest.TestCase):
             html = render_template('profile.html', **trainer_context)
             self.assertIn('id="coachAlbumUploaderCard"', html)
             self.assertIn('id="coachDropzone"', html)
+            self.assertIn('for="coachTrainingPicsInput"', html)
             self.assertIn('name="training_pics"', html)
+            self.assertIn('id="coachUploadCounter"', html)
+            self.assertIn('No photos selected', html)
             self.assertIn('Drag files here or', html)
 
     @patch("swimtrackpro.routes.general.get_pg_connection")

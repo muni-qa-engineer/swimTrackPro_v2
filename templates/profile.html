@@ -114,24 +114,26 @@
                     <div class="stp-uploader-card mb-3" id="coachAlbumUploaderCard">
                         <div class="stp-uploader-header">
                             <h4 class="stp-uploader-title">Photo Uploader</h4>
-                            <span class="stp-uploader-counter" id="coachUploadCounter">0 / 0 files selected</span>
+                            <span class="stp-uploader-counter" id="coachUploadCounter">
+                                <i class="fa-regular fa-image me-1"></i> No photos selected
+                            </span>
                         </div>
                         
                         <div class="stp-uploader-list" id="coachFileList"></div>
                         
-                        <div class="stp-dropzone" id="coachDropzone" onclick="document.getElementById('coachTrainingPicsInput').click();">
+                        <label for="coachTrainingPicsInput" class="stp-dropzone mb-0" id="coachDropzone">
                             <i class="fa-solid fa-cloud-arrow-up text-primary fs-3 mb-1"></i>
                             <span class="stp-dropzone-text">
                                 Drag files here or <span class="stp-dropzone-browse">browse</span>
                             </span>
                             <span class="text-muted small" style="font-size: 0.76rem;">Supports JPG, PNG, WebP (multi-file select)</span>
-                            <input type="file" 
-                                   id="coachTrainingPicsInput" 
-                                   name="training_pics" 
-                                   accept="image/jpeg,image/png,image/webp,image/jpg" 
-                                   multiple 
-                                   style="display: none;">
-                        </div>
+                        </label>
+                        <input type="file" 
+                               id="coachTrainingPicsInput" 
+                               name="training_pics" 
+                               accept="image/jpeg,image/png,image/webp,image/jpg" 
+                               multiple 
+                               style="display: none;">
                     </div>
                     
                     <button type="submit" id="uploadSubmitBtn" class="btn btn-primary w-100 py-2.5 fw-bold">
@@ -270,174 +272,215 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='common.js') }}"></script>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    // Upload album picture progress tracking
-    const saveChangesBtn = document.getElementById('saveChangesBtn');
-    const inputs = document.querySelectorAll('#profileForm .form-control');
-    
-    const initialValues = {};
-    inputs.forEach(input => {
-        initialValues[input.id] = input.value;
-    });
-
-    const profilePhone = document.getElementById('profilePhone');
-    if (profilePhone) {
-        profilePhone.addEventListener('input', () => {
-            profilePhone.value = profilePhone.value.replace(/\D/g, '').slice(0, 10);
+(function() {
+    function initCoachProfileScripts() {
+        // Upload album picture progress tracking
+        const saveChangesBtn = document.getElementById('saveChangesBtn');
+        const inputs = document.querySelectorAll('#profileForm .form-control');
+        
+        const initialValues = {};
+        inputs.forEach(input => {
+            if (input.id) {
+                initialValues[input.id] = input.value;
+            }
         });
-    }
 
-    const profileWhatsapp = document.getElementById('profileWhatsapp');
-    if (profileWhatsapp) {
-        profileWhatsapp.addEventListener('input', () => {
-            profileWhatsapp.value = profileWhatsapp.value.replace(/\D/g, '').slice(0, 10);
-        });
-    }
-    
-    inputs.forEach(input => {
-        input.addEventListener('input', () => {
-            let modified = false;
-            inputs.forEach(inp => {
-                if (inp.value !== initialValues[inp.id]) {
-                    modified = true;
+        const profilePhone = document.getElementById('profilePhone');
+        if (profilePhone) {
+            profilePhone.addEventListener('input', () => {
+                profilePhone.value = profilePhone.value.replace(/\D/g, '').slice(0, 10);
+            });
+        }
+
+        const profileWhatsapp = document.getElementById('profileWhatsapp');
+        if (profileWhatsapp) {
+            profileWhatsapp.addEventListener('input', () => {
+                profileWhatsapp.value = profileWhatsapp.value.replace(/\D/g, '').slice(0, 10);
+            });
+        }
+        
+        inputs.forEach(input => {
+            input.addEventListener('input', () => {
+                let modified = false;
+                inputs.forEach(inp => {
+                    if (inp.id && inp.value !== initialValues[inp.id]) {
+                        modified = true;
+                    }
+                });
+                
+                if (saveChangesBtn) {
+                    if (modified) {
+                        saveChangesBtn.style.setProperty('display', 'inline-block', 'important');
+                    } else {
+                        saveChangesBtn.style.setProperty('display', 'none', 'important');
+                    }
                 }
             });
-            
-            if (modified) {
-                saveChangesBtn.style.setProperty('display', 'inline-block', 'important');
-            } else {
-                saveChangesBtn.style.setProperty('display', 'none', 'important');
-            }
         });
-    });
 
-    // Modern File Uploader for Coach Album (Jira KAN-8)
-    const coachFileInput = document.getElementById('coachTrainingPicsInput');
-    const coachDropzone = document.getElementById('coachDropzone');
-    const coachFileList = document.getElementById('coachFileList');
-    const coachCounter = document.getElementById('coachUploadCounter');
-    let coachSelectedFiles = [];
+        // Modern File Uploader for Coach Album (Jira KAN-8)
+        const coachFileInput = document.getElementById('coachTrainingPicsInput');
+        const coachDropzone = document.getElementById('coachDropzone');
+        const coachFileList = document.getElementById('coachFileList');
+        const coachCounter = document.getElementById('coachUploadCounter');
+        const uploadSubmitBtn = document.getElementById('uploadSubmitBtn');
+        let coachSelectedFiles = [];
 
-    function formatBytes(bytes) {
-        if (!bytes || bytes === 0) return '0 B';
-        const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-    }
-
-    function getFileExt(filename) {
-        const parts = filename.split('.');
-        return parts.length > 1 ? parts.pop().toUpperCase().slice(0, 4) : 'FILE';
-    }
-
-    function syncCoachNativeInput() {
-        if (!coachFileInput) return;
-        try {
-            const dt = new DataTransfer();
-            coachSelectedFiles.forEach(f => dt.items.add(f));
-            coachFileInput.files = dt.files;
-        } catch (err) {
-            console.warn('DataTransfer sync:', err);
-        }
-    }
-
-    function renderCoachFileList() {
-        if (!coachFileList || !coachCounter) return;
-        coachCounter.textContent = `${coachSelectedFiles.length} / ${coachSelectedFiles.length} files selected`;
-
-        if (coachSelectedFiles.length === 0) {
-            coachFileList.innerHTML = '';
-            return;
+        function formatBytes(bytes) {
+            if (!bytes || bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
         }
 
-        coachFileList.innerHTML = coachSelectedFiles.map((file, idx) => {
-            const ext = getFileExt(file.name);
-            const badgeClass = `badge-${ext.toLowerCase()}`;
-            return `
-                <div class="stp-uploader-item">
-                    <div class="stp-file-badge ${badgeClass}">${ext}</div>
-                    <div class="stp-file-details">
-                        <p class="stp-file-name" title="${file.name}">${file.name}</p>
-                        <div class="stp-file-meta">
-                            <span>${formatBytes(file.size)}</span>
-                            <span>•</span>
-                            <span class="stp-file-status completed">Ready to upload</span>
+        function getFileExt(filename) {
+            const parts = filename.split('.');
+            return parts.length > 1 ? parts.pop().toUpperCase().slice(0, 4) : 'FILE';
+        }
+
+        let isSyncingCoachInput = false;
+        function syncCoachNativeInput() {
+            if (!coachFileInput || isSyncingCoachInput) return;
+            try {
+                isSyncingCoachInput = true;
+                const dt = new DataTransfer();
+                coachSelectedFiles.forEach(f => dt.items.add(f));
+                coachFileInput.files = dt.files;
+            } catch (err) {
+                console.warn('DataTransfer sync:', err);
+            } finally {
+                isSyncingCoachInput = false;
+            }
+        }
+
+        function renderCoachFileList() {
+            if (!coachFileList || !coachCounter) return;
+
+            const count = coachSelectedFiles.length;
+            if (count === 0) {
+                coachCounter.className = 'stp-uploader-counter text-muted';
+                coachCounter.innerHTML = '<i class="fa-regular fa-image me-1"></i> No photos selected';
+                coachFileList.innerHTML = '';
+                if (uploadSubmitBtn) {
+                    uploadSubmitBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up me-1"></i> Submit Photos for Gallery';
+                }
+                return;
+            }
+
+            const countLabel = count === 1 ? '1 photo selected' : `${count} photos selected`;
+            coachCounter.className = 'stp-uploader-counter text-success fw-bold';
+            coachCounter.innerHTML = `<i class="fa-solid fa-circle-check text-success me-1"></i> ${countLabel} (ready to upload)`;
+
+            if (uploadSubmitBtn) {
+                uploadSubmitBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up me-1"></i> Submit ${count} ${count === 1 ? 'Photo' : 'Photos'} for Gallery`;
+            }
+
+            coachFileList.innerHTML = coachSelectedFiles.map((file, idx) => {
+                const ext = getFileExt(file.name);
+                const badgeClass = `badge-${ext.toLowerCase()}`;
+                const previewUrl = URL.createObjectURL(file);
+                return `
+                    <div class="stp-uploader-item">
+                        <img src="${previewUrl}" class="stp-file-thumb" alt="${file.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="stp-file-badge ${badgeClass}" style="display: none;">${ext}</div>
+                        <div class="stp-file-details">
+                            <p class="stp-file-name" title="${file.name}">${file.name}</p>
+                            <div class="stp-file-meta">
+                                <span>${formatBytes(file.size)}</span>
+                                <span>•</span>
+                                <span class="stp-file-status completed"><i class="fa-solid fa-check-circle me-1"></i>Ready to upload</span>
+                            </div>
+                            <div class="stp-progress-track">
+                                <div class="stp-progress-fill" style="width: 100%;"></div>
+                            </div>
                         </div>
-                        <div class="stp-progress-track">
-                            <div class="stp-progress-fill" style="width: 100%;"></div>
-                        </div>
+                        <button type="button" class="stp-file-action-btn" title="Remove photo" onclick="removeCoachFile(${idx})">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
                     </div>
-                    <button type="button" class="stp-file-action-btn" title="Remove photo" onclick="removeCoachFile(${idx})">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
-                </div>
-            `;
-        }).join('');
-    }
+                `;
+            }).join('');
+        }
 
-    window.removeCoachFile = function(index) {
-        coachSelectedFiles.splice(index, 1);
-        syncCoachNativeInput();
-        renderCoachFileList();
-    };
+        window.removeCoachFile = function(index) {
+            coachSelectedFiles.splice(index, 1);
+            syncCoachNativeInput();
+            renderCoachFileList();
+        };
 
-    function addCoachFiles(newFiles) {
-        Array.from(newFiles).forEach(file => {
-            const exists = coachSelectedFiles.some(f => f.name === file.name && f.size === file.size);
-            if (!exists) {
-                coachSelectedFiles.push(file);
-            }
-        });
-        syncCoachNativeInput();
-        renderCoachFileList();
-    }
-
-    if (coachFileInput) {
-        coachFileInput.addEventListener('change', function() {
-            if (this.files && this.files.length) {
-                addCoachFiles(this.files);
-            }
-        });
-    }
-
-    if (coachDropzone) {
-        ['dragenter', 'dragover'].forEach(name => {
-            coachDropzone.addEventListener(name, (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                coachDropzone.classList.add('drag-over');
+        function addCoachFiles(newFiles) {
+            if (!newFiles || !newFiles.length) return;
+            Array.from(newFiles).forEach(file => {
+                const exists = coachSelectedFiles.some(f => f.name === file.name && f.size === file.size);
+                if (!exists) {
+                    coachSelectedFiles.push(file);
+                }
             });
-        });
-        ['dragleave', 'drop'].forEach(name => {
-            coachDropzone.addEventListener(name, (e) => {
+            syncCoachNativeInput();
+            renderCoachFileList();
+        }
+
+        if (coachFileInput) {
+            coachFileInput.addEventListener('change', function(e) {
+                if (isSyncingCoachInput) return;
+                const files = this.files || (e.target && e.target.files);
+                if (files && files.length) {
+                    addCoachFiles(files);
+                }
+            });
+            // Clear value on click so re-selecting same files triggers change event
+            coachFileInput.addEventListener('click', function() {
+                this.value = '';
+            });
+        }
+
+        if (coachDropzone) {
+            ['dragenter', 'dragover'].forEach(name => {
+                coachDropzone.addEventListener(name, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    coachDropzone.classList.add('drag-over');
+                });
+            });
+            ['dragleave'].forEach(name => {
+                coachDropzone.addEventListener(name, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    coachDropzone.classList.remove('drag-over');
+                });
+            });
+            coachDropzone.addEventListener('drop', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 coachDropzone.classList.remove('drag-over');
+                if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+                    addCoachFiles(e.dataTransfer.files);
+                }
             });
-        });
-        coachDropzone.addEventListener('drop', (e) => {
-            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
-                addCoachFiles(e.dataTransfer.files);
-            }
-        });
+        }
+
+        const uploadForm = document.getElementById('uploadPhotoForm');
+        if (uploadForm) {
+            uploadForm.addEventListener('submit', (e) => {
+                if (coachSelectedFiles.length === 0 && (!coachFileInput || !coachFileInput.files || coachFileInput.files.length === 0)) {
+                    e.preventDefault();
+                    alert('Please select or drop at least one photo to upload.');
+                    return;
+                }
+                if (uploadSubmitBtn) {
+                    uploadSubmitBtn.disabled = true;
+                    uploadSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Uploading Photos...';
+                }
+            });
+        }
     }
 
-    const uploadForm = document.getElementById('uploadPhotoForm');
-    const submitBtn = document.getElementById('uploadSubmitBtn');
-
-    if (uploadForm) {
-        uploadForm.addEventListener('submit', (e) => {
-            if (coachSelectedFiles.length === 0 && (!coachFileInput.files || coachFileInput.files.length === 0)) {
-                e.preventDefault();
-                alert('Please select or drop at least one photo to upload.');
-                return;
-            }
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Uploading Photos...';
-            }
-        });
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCoachProfileScripts);
+    } else {
+        initCoachProfileScripts();
     }
-});
+})();
+</script>
 {% endblock %}

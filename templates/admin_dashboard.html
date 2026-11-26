@@ -2096,24 +2096,26 @@
                     <div class="stp-uploader-card mb-3" id="adminGalleryUploaderCard">
                         <div class="stp-uploader-header">
                             <h4 class="stp-uploader-title">Photo Uploader</h4>
-                            <span class="stp-uploader-counter" id="adminUploadCounter">0 / 0 files selected</span>
+                            <span class="stp-uploader-counter" id="adminUploadCounter">
+                                <i class="fa-regular fa-image me-1"></i> No photos selected
+                            </span>
                         </div>
                         
                         <div class="stp-uploader-list" id="adminFileList"></div>
                         
-                        <div class="stp-dropzone" id="adminDropzone" onclick="document.getElementById('adminGalleryPicsInput').click();">
+                        <label for="adminGalleryPicsInput" class="stp-dropzone mb-0" id="adminDropzone">
                             <i class="fa-solid fa-cloud-arrow-up text-primary fs-3 mb-1"></i>
                             <span class="stp-dropzone-text">
                                 Drag platform photos here or <span class="stp-dropzone-browse">browse</span>
                             </span>
                             <span class="text-muted small" style="font-size: 0.76rem;">Supports JPG, PNG, WebP (multi-file select)</span>
-                            <input type="file" 
-                                   id="adminGalleryPicsInput" 
-                                   name="gallery_pics" 
-                                   accept="image/jpeg,image/png,image/webp,image/jpg" 
-                                   multiple 
-                                   style="display: none;">
-                        </div>
+                        </label>
+                        <input type="file" 
+                               id="adminGalleryPicsInput" 
+                               name="gallery_pics" 
+                               accept="image/jpeg,image/png,image/webp,image/jpg" 
+                               multiple 
+                               style="display: none;">
                     </div>
                 </div>
                 <div class="modal-footer border-top border-white-10">
@@ -3510,6 +3512,7 @@ window.submitForceActionForm = function(e) {
     const adminDropzone = document.getElementById('adminDropzone');
     const adminFileList = document.getElementById('adminFileList');
     const adminCounter = document.getElementById('adminUploadCounter');
+    const adminSubmitBtn = document.getElementById('adminUploadSubmitBtn');
     let adminSelectedFiles = [];
 
     function formatBytesAdmin(bytes) {
@@ -3520,38 +3523,57 @@ window.submitForceActionForm = function(e) {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     }
 
+    let isSyncingAdminInput = false;
     function syncAdminNativeInput() {
-        if (!adminFileInput) return;
+        if (!adminFileInput || isSyncingAdminInput) return;
         try {
+            isSyncingAdminInput = true;
             const dt = new DataTransfer();
             adminSelectedFiles.forEach(f => dt.items.add(f));
             adminFileInput.files = dt.files;
         } catch (err) {
             console.warn('DataTransfer sync:', err);
+        } finally {
+            isSyncingAdminInput = false;
         }
     }
 
     function renderAdminFileList() {
         if (!adminFileList || !adminCounter) return;
-        adminCounter.textContent = `${adminSelectedFiles.length} / ${adminSelectedFiles.length} files selected`;
 
-        if (adminSelectedFiles.length === 0) {
+        const count = adminSelectedFiles.length;
+        if (count === 0) {
+            adminCounter.className = 'stp-uploader-counter text-muted';
+            adminCounter.innerHTML = '<i class="fa-regular fa-image me-1"></i> No photos selected';
             adminFileList.innerHTML = '';
+            if (adminSubmitBtn) {
+                adminSubmitBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up me-1"></i> Upload Photos';
+            }
             return;
+        }
+
+        const countLabel = count === 1 ? '1 photo selected' : `${count} photos selected`;
+        adminCounter.className = 'stp-uploader-counter text-success fw-bold';
+        adminCounter.innerHTML = `<i class="fa-solid fa-circle-check text-success me-1"></i> ${countLabel} (ready to upload)`;
+
+        if (adminSubmitBtn) {
+            adminSubmitBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up me-1"></i> Upload ${count} ${count === 1 ? 'Photo' : 'Photos'}`;
         }
 
         adminFileList.innerHTML = adminSelectedFiles.map((file, idx) => {
             const ext = (file.name.split('.').pop() || 'FILE').toUpperCase().slice(0, 4);
             const badgeClass = `badge-${ext.toLowerCase()}`;
+            const previewUrl = URL.createObjectURL(file);
             return `
                 <div class="stp-uploader-item">
-                    <div class="stp-file-badge ${badgeClass}">${ext}</div>
+                    <img src="${previewUrl}" class="stp-file-thumb" alt="${file.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="stp-file-badge ${badgeClass}" style="display: none;">${ext}</div>
                     <div class="stp-file-details">
                         <p class="stp-file-name" title="${file.name}">${file.name}</p>
                         <div class="stp-file-meta">
                             <span>${formatBytesAdmin(file.size)}</span>
                             <span>•</span>
-                            <span class="stp-file-status completed">Ready to upload</span>
+                            <span class="stp-file-status completed"><i class="fa-solid fa-check-circle me-1"></i>Ready to upload</span>
                         </div>
                         <div class="stp-progress-track">
                             <div class="stp-progress-fill" style="width: 100%;"></div>
@@ -3572,6 +3594,7 @@ window.submitForceActionForm = function(e) {
     };
 
     function addAdminFiles(newFiles) {
+        if (!newFiles || !newFiles.length) return;
         Array.from(newFiles).forEach(file => {
             const exists = adminSelectedFiles.some(f => f.name === file.name && f.size === file.size);
             if (!exists) {
@@ -3583,10 +3606,15 @@ window.submitForceActionForm = function(e) {
     }
 
     if (adminFileInput) {
-        adminFileInput.addEventListener('change', function() {
-            if (this.files && this.files.length) {
-                addAdminFiles(this.files);
+        adminFileInput.addEventListener('change', function(e) {
+            if (isSyncingAdminInput) return;
+            const files = this.files || (e.target && e.target.files);
+            if (files && files.length) {
+                addAdminFiles(files);
             }
+        });
+        adminFileInput.addEventListener('click', function() {
+            this.value = '';
         });
     }
 
@@ -3598,7 +3626,7 @@ window.submitForceActionForm = function(e) {
                 adminDropzone.classList.add('drag-over');
             });
         });
-        ['dragleave', 'drop'].forEach(name => {
+        ['dragleave'].forEach(name => {
             adminDropzone.addEventListener(name, (e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -3606,8 +3634,26 @@ window.submitForceActionForm = function(e) {
             });
         });
         adminDropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            adminDropzone.classList.remove('drag-over');
             if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
                 addAdminFiles(e.dataTransfer.files);
+            }
+        });
+    }
+
+    const adminUploadForm = document.getElementById('adminGalleryUploadForm');
+    if (adminUploadForm) {
+        adminUploadForm.addEventListener('submit', (e) => {
+            if (adminSelectedFiles.length === 0 && (!adminFileInput || !adminFileInput.files || adminFileInput.files.length === 0)) {
+                e.preventDefault();
+                alert('Please select or drop at least one photo to upload.');
+                return;
+            }
+            if (adminSubmitBtn) {
+                adminSubmitBtn.disabled = true;
+                adminSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Uploading Photos...';
             }
         });
     }
