@@ -101,6 +101,50 @@ class LandingGalleryTests(unittest.TestCase):
         self.assertIn('class="level-icon-circle mb-3"', html)
         self.assertIn('.levels-grid', html)
 
+    @patch("psycopg2.connect")
+    @patch("swimtrackpro.routes.dashboard.load_data")
+    def test_empty_gallery_sync_when_no_published_photos(self, mock_load_data, mock_connect):
+        """Verify that when gallery is emptied in Admin, landing page has 0 photos and shows in-sync empty state."""
+        mock_load_data.return_value = {"bookings": []}
+
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+
+        # Mock database queries:
+        # 1. packages
+        # 2. homepage_carousel
+        # 3. trainers
+        # 4. gallery_photos -> 0 rows (admin deleted all photos)
+        # 5. coach_feedback
+        mock_cursor.fetchall.side_effect = [
+            [(1, "individual", "Monthly", 6000, 10)],
+            [],  # carousel
+            [],  # trainers
+            [],  # gallery_photos (EMPTY)
+            []   # feedback
+        ]
+        mock_connect.return_value = mock_conn
+
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+
+        # 1. Verify Gallery section is present
+        self.assertIn('id="gallery"', html)
+
+        # 2. Verify count says 0 moments, matching 0 published photos in Admin
+        self.assertIn('All Moments (<span id="galleryCountAll">0</span>)', html)
+
+        # 3. Verify clean empty state message is shown
+        self.assertIn('No photos published in the gallery yet', html)
+
+        # 4. Verify hardcoded fallback photos are NOT injected
+        self.assertNotIn('Underwater Freestyle Form & Stroke Correction Drill', html)
+        self.assertNotIn('State & National Championship Merit Certificates', html)
+        self.assertNotIn('Butterfly Stroke Rhythm & Technique Drill at Student Pool', html)
+        self.assertNotIn('class="gallery-item-card"', html)
+
 
 if __name__ == "__main__":
     unittest.main()

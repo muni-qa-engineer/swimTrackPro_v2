@@ -987,7 +987,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <!-- Gallery Section (Visual Highlights) -->
-{% if gallery_items is defined and gallery_items|length > 0 %}
 <section class="gallery-section py-5" id="gallery" style="background: rgba(9, 9, 11, 0.5); border-top: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06); position: relative;">
     <div class="container">
         <!-- Section Header -->
@@ -1002,7 +1001,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <!-- Filter Tabs (Desktop / Tablet view; hidden on mobile) -->
             <div class="d-none d-md-flex justify-content-center align-items-center flex-wrap gap-2 mt-2" id="galleryFilterTabs">
                 <button type="button" class="btn btn-sm gallery-filter-btn active" data-filter="all">
-                    <i class="fa-solid fa-border-all me-1"></i> All Moments (<span id="galleryCountAll">{{ gallery_items|length }}</span>)
+                    <i class="fa-solid fa-border-all me-1"></i> All Moments (<span id="galleryCountAll">{{ gallery_items|length if gallery_items is defined else 0 }}</span>)
                 </button>
                 <button type="button" class="btn btn-sm gallery-filter-btn" data-filter="achievements">
                     <i class="fa-solid fa-trophy me-1"></i> Medals & Achievements
@@ -1018,6 +1017,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         <!-- Gallery Grid with Desktop Navigation Arrows -->
         <div class="gallery-wrapper position-relative">
+            {% if gallery_items is defined and gallery_items|length > 0 %}
             <button
                 type="button"
                 class="gallery-scroll-arrow gallery-scroll-prev d-none d-md-flex"
@@ -1094,6 +1094,13 @@ document.addEventListener('DOMContentLoaded', function() {
             >
                 <i class="fa-solid fa-chevron-right"></i>
             </button>
+            {% else %}
+            <div class="text-center py-5 glass-panel text-muted" style="border-radius: var(--radius-md);">
+                <i class="fa-regular fa-images fs-1 mb-3 d-block opacity-50"></i>
+                <h5 class="text-white">No photos published in the gallery yet</h5>
+                <p class="text-muted small mb-0">Check back soon for new training moments and achievements.</p>
+            </div>
+            {% endif %}
         </div>
     </div>
 </section>
@@ -1595,7 +1602,6 @@ function closeLightboxAndScrollToCoaches() {
 
 document.addEventListener('DOMContentLoaded', initGallery);
 </script>
-{% endif %}
 <!-- End Gallery Section -->
 
 <!-- ChatGPT-Style Pricing Plan Section -->

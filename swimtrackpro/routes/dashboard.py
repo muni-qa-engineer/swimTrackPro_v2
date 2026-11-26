@@ -19,89 +19,6 @@ def index():
         carousel_images = []
         gallery_items = []
 
-        fallback_highlights = [
-            {
-                'id': 'curated_1',
-                'url': '/static/images/Album/DSC08188.JPG',
-                'category': 'coaching',
-                'category_label': 'Coach & Learners',
-                'author': 'Doorstep Coaching',
-                'caption': 'Underwater Freestyle Form & Stroke Correction Drill',
-                'is_coach': False,
-                'coach_username': ''
-            },
-            {
-                'id': 'curated_2',
-                'url': '/static/images/Album/IMG20220514170101_01.jpg',
-                'category': 'achievements',
-                'category_label': 'Achievement',
-                'author': 'Tournament Merit',
-                'caption': 'State & National Championship Merit Certificates',
-                'is_coach': False,
-                'coach_username': ''
-            },
-            {
-                'id': 'curated_3',
-                'url': '/static/images/Album/DSC08279.JPG',
-                'category': 'coaching',
-                'category_label': 'Coach & Learners',
-                'author': 'Junior Swimmer',
-                'caption': 'Young Learner Kickboard & Breath Control Practice',
-                'is_coach': False,
-                'coach_username': ''
-            },
-            {
-                'id': 'curated_4',
-                'url': '/static/images/Album/DSC08390.jpg',
-                'category': 'swimmers',
-                'category_label': 'Swimmers in Action',
-                'author': 'Advanced Swimmer',
-                'caption': 'Butterfly Stroke Rhythm & Technique Drill at Student Pool',
-                'is_coach': False,
-                'coach_username': ''
-            },
-            {
-                'id': 'curated_5',
-                'url': '/static/images/Album/Medals.jpg',
-                'category': 'achievements',
-                'category_label': 'Achievement',
-                'author': 'Championship Laurels',
-                'caption': 'Tournament Medals & Podiums Won by Trained Swimmers',
-                'is_coach': False,
-                'coach_username': ''
-            },
-            {
-                'id': 'curated_6',
-                'url': '/static/images/Album/10376914.jpg',
-                'category': 'achievements',
-                'category_label': 'Achievement',
-                'author': 'Championship Team',
-                'caption': 'Proud Swimmers Celebrating Gold & Silver Laurels',
-                'is_coach': False,
-                'coach_username': ''
-            },
-            {
-                'id': 'curated_7',
-                'url': '/static/images/Album/DSC08280.JPG',
-                'category': 'coaching',
-                'category_label': 'Coach & Learners',
-                'author': 'Personalized Training',
-                'caption': '1-on-1 Stroke Guidance with Certified Trainer at Villa Pool',
-                'is_coach': False,
-                'coach_username': ''
-            },
-            {
-                'id': 'curated_8',
-                'url': '/static/images/Album/News 08_12_2020.jpg',
-                'category': 'achievements',
-                'category_label': 'Achievement',
-                'author': 'Press & Honors',
-                'caption': 'Media Spotlight & Competitive Swimming Accolades',
-                'is_coach': False,
-                'coach_username': ''
-            }
-        ]
-
         try:
             conn = get_pg_connection()
             cursor = conn.cursor()
@@ -201,28 +118,6 @@ def index():
                 print("Note: gallery_photos query in landing page:", ge)
                 conn.rollback()
 
-            # 2. Also include any legacy admin homepage_carousel photos if not yet migrated
-            for img in carousel_images:
-                img_url = (img.get('url') or '').strip()
-                if img_url and not any(it['url'] == img_url for it in gallery_items):
-                    gallery_items.append({
-                        'id': f"admin_{img.get('id')}",
-                        'url': img_url,
-                        'category': 'swimmers',
-                        'category_label': 'Training Moment',
-                        'author': 'SwimTrackPro Training',
-                        'caption': 'Doorstep Swimming Session & Drill Practice',
-                        'is_coach': False,
-                        'coach_username': ''
-                    })
-
-            # 3. Ensure gallery has curated items if uploads are low
-            if len(gallery_items) < 6:
-                existing_urls = {item['url'] for item in gallery_items}
-                for item in fallback_highlights:
-                    if item['url'] not in existing_urls:
-                        gallery_items.append(item)
-
             recent_reviews = []
             cursor.execute("""
                 SELECT c.guest_name, c.rating, c.comment, t.name 
@@ -242,8 +137,6 @@ def index():
             conn.close()
         except Exception as e:
             print("Error loading data for landing page:", e)
-            if not gallery_items:
-                gallery_items = fallback_highlights
 
         data = load_data()
         active_bookings = [

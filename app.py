@@ -134,30 +134,6 @@ def ensure_database_tables():
     )
     """)
 
-    # Seed initial gallery photos if empty
-    try:
-        cursor.execute("SELECT COUNT(*) FROM gallery_photos")
-        count = cursor.fetchone()[0]
-        if count == 0:
-            initial_gallery = [
-                ('/static/images/Album/DSC08188.JPG', '', 'Doorstep Coaching', 'STP-COACH', 'coaching', 'Underwater Freestyle Form & Stroke Correction Drill', True, 'admin'),
-                ('/static/images/Album/IMG20220514170101_01.jpg', '', 'Tournament Merit', 'STP-ACADEMY', 'achievements', 'State & National Championship Merit Certificates', True, 'admin'),
-                ('/static/images/Album/DSC08279.JPG', '', 'Junior Swimmer', 'STP-COACH', 'coaching', 'Young Learner Kickboard & Breath Control Practice', True, 'admin'),
-                ('/static/images/Album/DSC08390.jpg', '', 'Advanced Swimmer', 'STP-SWIM', 'swimmers', 'Butterfly Stroke Rhythm & Technique Drill at Student Pool', True, 'admin'),
-                ('/static/images/Album/Medals.jpg', '', 'Championship Laurels', 'STP-ACADEMY', 'achievements', 'Tournament Medals & Podiums Won by Trained Swimmers', True, 'admin'),
-                ('/static/images/Album/10376914.jpg', '', 'Championship Team', 'STP-ACADEMY', 'achievements', 'Proud Swimmers Celebrating Gold & Silver Laurels', True, 'admin'),
-                ('/static/images/Album/DSC08280.JPG', '', 'Personalized Training', 'STP-COACH', 'coaching', '1-on-1 Stroke Guidance with Certified Trainer at Villa Pool', True, 'admin'),
-                ('/static/images/Album/News 08_12_2020.jpg', '', 'Press & Honors', 'STP-ACADEMY', 'achievements', 'Media Spotlight & Competitive Swimming Accolades', True, 'admin'),
-            ]
-            cursor.executemany("""
-                INSERT INTO gallery_photos (photo_url, coach_username, coach_name, coach_id, section, caption, is_published, uploaded_by)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            """, initial_gallery)
-            conn.commit()
-    except Exception as e:
-        print("Note: Gallery photos init check:", e)
-        conn.rollback()
-
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS profile_pictures (
         id SERIAL PRIMARY KEY,
