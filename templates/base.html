@@ -258,27 +258,34 @@
             color: var(--color-primary);
         }
         
-        /* User Avatar Badge */
+        /* User Avatar Badge - Highlighted Profile Icon */
         .user-avatar-badge {
-            width: 38px;
-            height: 38px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            background: rgba(6, 182, 212, 0.15);
+            border: 1.5px solid var(--color-primary);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 700;
-            color: white !important;
-            text-transform: uppercase;
-            font-size: 0.95rem;
+            color: var(--color-primary) !important;
+            font-size: 1.05rem;
             text-decoration: none;
-            transition: all 0.2s ease;
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.35);
+            transition: all 0.25s ease;
+            cursor: pointer;
         }
-        .user-avatar-badge:hover, .user-avatar-badge[aria-expanded="true"] {
+        .user-avatar-badge:hover, 
+        .user-avatar-badge[aria-expanded="true"],
+        .user-avatar-badge.active {
             background: var(--color-primary);
-            color: black !important;
+            color: #000000 !important;
             border-color: var(--color-primary);
+            box-shadow: 0 0 16px rgba(6, 182, 212, 0.6);
+            transform: scale(1.05);
+        }
+        .user-avatar-badge::after {
+            display: none !important;
         }
         
         /* Dropdown reset list bullets */
@@ -487,7 +494,7 @@
                         <a href="/my-bookings" class="nav-link" id="desktopNavBookings">Bookings</a>
                         <a href="/payments" class="nav-link" id="desktopNavPayments">Payments</a>
                         {% if session.get('role') == 'trainer' %}
-                        <a href="{{ url_for('profile_page') }}" class="nav-link" id="desktopNavProfile">Update My Profile</a>
+                        <a href="{{ url_for('profile_page') }}" class="nav-link" id="desktopNavProfile">My Profile</a>
                         {% else %}
                         <a href="{{ url_for('about_trainer') }}" class="nav-link" id="desktopNavProfile">About Coach</a>
                         {% endif %}
@@ -520,7 +527,7 @@
 
                     <!-- Profile initials dropdown trigger -->
                     <div class="dropdown">
-                        <a href="#" class="{% if session.get('role') != 'admin' %}user-avatar-badge{% endif %} dropdown-toggle" id="avatarDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="text-decoration: none; {% if session.get('role') == 'admin' %}background: transparent; color: white; display: flex; align-items: center; gap: 0.75rem;{% endif %}">
+                        <a href="#" class="{% if session.get('role') != 'admin' %}user-avatar-badge{% endif %} dropdown-toggle" id="avatarDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="My Profile & Settings" style="text-decoration: none; {% if session.get('role') == 'admin' %}background: transparent; color: white; display: flex; align-items: center; gap: 0.75rem;{% endif %}">
                             {% if session.get('role') == 'admin' %}
                                 <div style="text-align: right; pointer-events: none;" class="d-none d-sm-block text-white">
                                     <div style="font-weight: 700; font-size: 0.9rem; line-height: 1.2;">Super Admin</div>
@@ -530,14 +537,14 @@
                                     👑
                                 </div>
                             {% else %}
-                                {{ session.get('user_name')[0]|upper }}
+                                <i class="fa-solid fa-user"></i>
                             {% endif %}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="avatarDropdown">
                             <li style="padding: 0.5rem 1rem;"><span class="text-secondary small">Logged in as: <strong class="text-white">{{ session.get('user_name')|title }}</strong></span></li>
                             <li><hr class="dropdown-divider" style="border-color: rgba(255, 255, 255, 0.08);"></li>
                             {% if session.get('role') != 'admin' %}
-
+                            <li><a class="dropdown-item" href="{{ url_for('profile_page') if session.get('role') == 'trainer' else url_for('about_trainer') }}"><i class="fa-solid fa-user me-2 text-info"></i> My Profile</a></li>
                             <li><a class="dropdown-item" href="#" onclick="showMyIdCard(); return false;"><i class="fa-solid fa-id-card me-2"></i> My ID</a></li>
                             {% if session.get('role') in ['guest', 'trainer'] %}
                             <li><a class="dropdown-item" href="javascript:void(0)" onclick="startAppTour('{{ session.get('role') }}', '{{ session.get('user_name')|escape }}')"><i class="fa-solid fa-compass me-2 text-info"></i> Guided Tour</a></li>
@@ -735,6 +742,12 @@
                     link.classList.remove('active');
                 }
             });
+
+            // Highlight profile avatar badge when on profile pages
+            if (currentPath === '/profile' || currentPath.startsWith('/profile/')) {
+                const avatarBadge = document.querySelector('.user-avatar-badge');
+                if (avatarBadge) avatarBadge.classList.add('active');
+            }
 
             // Trigger global loader on navigation links
             document.querySelectorAll('.nav-links .nav-link, .mobile-bottom-nav .nav-item').forEach(link => {

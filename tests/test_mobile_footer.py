@@ -93,6 +93,24 @@ class MobileFooterTests(unittest.TestCase):
         self.assertIn('@media (max-width: 768px)', css)
         self.assertIn('display: none !important', css)
 
+    def test_trainer_nav_profile_text_and_icon(self):
+        """Verify trainer navbar displays 'My Profile' and highlighted profile icon."""
+        with self.client.session_transaction() as sess:
+            sess['user_name'] = 'Rajesh'
+            sess['role'] = 'trainer'
+
+        response = self.client.get('/help')
+        self.assertEqual(response.status_code, 200)
+        html = response.data.decode('utf-8')
+
+        # Link must be 'My Profile', not 'Update My Profile'
+        self.assertIn('My Profile', html)
+        self.assertNotIn('Update My Profile', html)
+
+        # Profile avatar badge must have fa-solid fa-user icon
+        self.assertIn('user-avatar-badge', html)
+        self.assertIn('fa-solid fa-user', html)
+
 
 if __name__ == '__main__':
     unittest.main()
