@@ -286,19 +286,6 @@
 {% set p_type = profile_type if profile_type else ('swimmer' if role == 'guest' else ('trainer' if role == 'trainer' else 'admin')) %}
 <div class="container py-4">
 
-    <!-- Flash message alerts -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ 'success' if category == 'success' else ('danger' if category in ['error', 'danger'] else 'info') }} alert-dismissible fade show mb-4 border-0 shadow-lg" role="alert" style="background: rgba({{ '16, 185, 129' if category == 'success' else '239, 68, 68' }}, 0.15); border: 1px solid rgba({{ '16, 185, 129' if category == 'success' else '239, 68, 68' }}, 0.3) !important; color: #fff;">
-                    <i class="fa-solid {{ 'fa-circle-check text-success' if category == 'success' else 'fa-circle-exclamation text-danger' }} me-2"></i>
-                    {{ message }}
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-
     <!-- Admin Override Banner (if active) -->
     {% if is_admin_override %}
     <div class="admin-override-banner animate-slide-up">

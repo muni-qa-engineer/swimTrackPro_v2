@@ -61,6 +61,7 @@ class TestProfileRedesign(unittest.TestCase):
         self.assertEqual(res_post.status_code, 200)
         post_html = res_post.data.decode('utf-8')
         self.assertIn("Swimmer Profile updated successfully!", post_html)
+        self.assertEqual(post_html.count("Swimmer Profile updated successfully!"), 1)
         self.assertIn("Devansh Sharma", post_html)
 
     def test_trainer_profile_flow(self):
@@ -114,6 +115,7 @@ class TestProfileRedesign(unittest.TestCase):
         self.assertEqual(res_post.status_code, 200)
         post_html = res_post.data.decode('utf-8')
         self.assertIn("Trainer Profile updated successfully!", post_html)
+        self.assertEqual(post_html.count("Trainer Profile updated successfully!"), 1)
 
     def test_admin_directory_and_override_flow(self):
         # 3. Simulate Admin Login
