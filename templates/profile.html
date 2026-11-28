@@ -944,6 +944,59 @@
                 </button>
             </div>
 
+        <!-- Section 06: Public Profile Settings -->
+            <div class="profile-section-card">
+                <div class="section-header-badge">
+                    <span class="section-number-pill">06</span>
+                    <span>Public Profile & Visibility</span>
+                </div>
+                <p class="text-muted small mb-3">Control which details appear on your public coach profile and landing page.</p>
+
+                <div class="stp-toggle-item">
+                    <div>
+                        <div class="text-white fw-bold small">Public Profile Visible</div>
+                        <div class="text-muted" style="font-size: 0.76rem;">Allow your coach card to appear on the Coaches directory</div>
+                    </div>
+                    <label class="stp-switch">
+                        <input type="checkbox" name="public_profile_visible" value="true" {% if trainer.public_profile_visible is not defined or trainer.public_profile_visible %}checked{% endif %}>
+                        <span class="stp-slider"></span>
+                    </label>
+                </div>
+
+                <div class="stp-toggle-item">
+                    <div>
+                        <div class="text-white fw-bold small">Show Experience Details</div>
+                        <div class="text-muted" style="font-size: 0.76rem;">Display years of coaching experience on your public card</div>
+                    </div>
+                    <label class="stp-switch">
+                        <input type="checkbox" name="show_experience" value="true" {% if trainer.show_experience is not defined or trainer.show_experience %}checked{% endif %}>
+                        <span class="stp-slider"></span>
+                    </label>
+                </div>
+
+                <div class="stp-toggle-item">
+                    <div>
+                        <div class="text-white fw-bold small">Show Qualifications & Badges</div>
+                        <div class="text-muted" style="font-size: 0.76rem;">Display verified certifications on your public profile</div>
+                    </div>
+                    <label class="stp-switch">
+                        <input type="checkbox" name="show_qualifications" value="true" {% if trainer.show_qualifications is not defined or trainer.show_qualifications %}checked{% endif %}>
+                        <span class="stp-slider"></span>
+                    </label>
+                </div>
+
+                <div class="stp-toggle-item mb-0">
+                    <div>
+                        <div class="text-white fw-bold small">Show Profile Photo to Visitors</div>
+                        <div class="text-muted" style="font-size: 0.76rem;">Show high-resolution photo on public landing page</div>
+                    </div>
+                    <label class="stp-switch">
+                        <input type="checkbox" name="show_profile_photo" value="true" {% if trainer.show_profile_photo is not defined or trainer.show_profile_photo %}checked{% endif %}>
+                        <span class="stp-slider"></span>
+                    </label>
+                </div>
+            </div>
+
         </div>
 
         <!-- Right Column: Sections 01 to 06 -->
@@ -1238,59 +1291,6 @@
                                 {% endfor %}
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Section 06: Public Profile Settings -->
-                <div class="profile-section-card">
-                    <div class="section-header-badge">
-                        <span class="section-number-pill">06</span>
-                        <span>Public Profile & Visibility</span>
-                    </div>
-                    <p class="text-muted small mb-3">Control which details appear on your public coach profile and landing page.</p>
-
-                    <div class="stp-toggle-item">
-                        <div>
-                            <div class="text-white fw-bold small">Public Profile Visible</div>
-                            <div class="text-muted" style="font-size: 0.76rem;">Allow your coach card to appear on the Coaches directory</div>
-                        </div>
-                        <label class="stp-switch">
-                            <input type="checkbox" name="public_profile_visible" value="true" {% if trainer.public_profile_visible is not defined or trainer.public_profile_visible %}checked{% endif %}>
-                            <span class="stp-slider"></span>
-                        </label>
-                    </div>
-
-                    <div class="stp-toggle-item">
-                        <div>
-                            <div class="text-white fw-bold small">Show Experience Details</div>
-                            <div class="text-muted" style="font-size: 0.76rem;">Display years of coaching experience on your public card</div>
-                        </div>
-                        <label class="stp-switch">
-                            <input type="checkbox" name="show_experience" value="true" {% if trainer.show_experience is not defined or trainer.show_experience %}checked{% endif %}>
-                            <span class="stp-slider"></span>
-                        </label>
-                    </div>
-
-                    <div class="stp-toggle-item">
-                        <div>
-                            <div class="text-white fw-bold small">Show Qualifications & Badges</div>
-                            <div class="text-muted" style="font-size: 0.76rem;">Display verified certifications on your public profile</div>
-                        </div>
-                        <label class="stp-switch">
-                            <input type="checkbox" name="show_qualifications" value="true" {% if trainer.show_qualifications is not defined or trainer.show_qualifications %}checked{% endif %}>
-                            <span class="stp-slider"></span>
-                        </label>
-                    </div>
-
-                    <div class="stp-toggle-item mb-0">
-                        <div>
-                            <div class="text-white fw-bold small">Show Profile Photo to Visitors</div>
-                            <div class="text-muted" style="font-size: 0.76rem;">Show high-resolution photo on public landing page</div>
-                        </div>
-                        <label class="stp-switch">
-                            <input type="checkbox" name="show_profile_photo" value="true" {% if trainer.show_profile_photo is not defined or trainer.show_profile_photo %}checked{% endif %}>
-                            <span class="stp-slider"></span>
-                        </label>
                     </div>
                 </div>
 
