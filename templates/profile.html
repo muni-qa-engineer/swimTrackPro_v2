@@ -903,13 +903,14 @@
                 {% if coach_photos and coach_photos|length > 0 %}
                 <div class="mt-4 pt-3 border-top border-white-10">
                     <h6 class="text-white small fw-bold text-uppercase mb-3">Uploaded Photos ({{ coach_photos|length }})</h6>
-                    <div class="d-flex flex-column gap-2.5" style="max-height: 280px; overflow-y: auto;">
+                    <!-- <div class="d-flex flex-column gap-2.5" style="max-height: 280px; overflow-y: auto;"> -->
+                    <div class="d-flex flex-column gap-2.5" style="max-height: 280px; ">
                         {% for cp in coach_photos %}
                         <div class="d-flex align-items-center gap-3 p-2.5 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">
                             <img src="{{ cp.url }}" alt="Uploaded Photo" style="width: 52px; height: 52px; object-fit: cover; border-radius: 8px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.1);">
                             <div class="d-flex flex-column align-items-start gap-1.5 min-w-0">
                                 {% if cp.is_published %}
-                                    <span class="badge rounded-pill text-white fw-bold px-3 py-1" style="background: #15803d; font-size: 0.72rem; letter-spacing: 0.5px;">
+                                    <span class="badge rounded-pill text-white fw-bold px-3 py-1" style="background: #15803d; font-size: 0.72rem; letter-spacing: 0.5px; margin-bottom: 2px;">
                                         <i class="fa-solid fa-circle-check me-1"></i> LIVE
                                     </span>
                                 {% else %}
