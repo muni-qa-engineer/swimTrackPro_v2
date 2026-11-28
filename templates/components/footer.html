@@ -1,3 +1,5 @@
+{% set is_landing = (request.path == '/' or request.endpoint == 'index' or is_landing_page|default(false)) %}
+<div class="site-footer-section{% if not is_landing %} footer-mobile-hidden d-none d-md-block{% endif %}">
 <hr style="border-top: 1px solid rgba(255, 255, 255, 0.4); margin: 0; padding: 0;">
 <footer class="footer mt-auto" style="background: rgba(9, 9, 11, 0.95); padding: 3rem 0 2rem 0; margin-top: 4rem; backdrop-filter: var(--backdrop-blur);">
     <div class="container">
@@ -76,6 +78,7 @@
         </div>
     </div>
 </footer>
+</div>
 
 
 <!-- Footer Dynamic Modal -->

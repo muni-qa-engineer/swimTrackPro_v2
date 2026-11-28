@@ -459,3 +459,15 @@ img {
   background: #0891b2;
 }
 
+/* ==========================================================================
+   Jira KAN-9: Remove Footer section on all pages in mobile view (MBL Flow)
+   Keep footer visible only on the landing page
+   ========================================================================== */
+@media (max-width: 768px) {
+  .footer-mobile-hidden,
+  body:not(.landing-page) .site-footer-section,
+  body:not(.landing-page) footer.footer {
+    display: none !important;
+  }
+}
+
