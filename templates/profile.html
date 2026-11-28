@@ -944,58 +944,6 @@
                 </button>
             </div>
 
-        <!-- Section 06: Public Profile Settings -->
-            <div class="profile-section-card">
-                <div class="section-header-badge">
-                    <span class="section-number-pill">06</span>
-                    <span>Public Profile & Visibility</span>
-                </div>
-                <p class="text-muted small mb-3">Control which details appear on your public coach profile and landing page.</p>
-
-                <div class="stp-toggle-item">
-                    <div>
-                        <div class="text-white fw-bold small">Public Profile Visible</div>
-                        <div class="text-muted" style="font-size: 0.76rem;">Allow your coach card to appear on the Coaches directory</div>
-                    </div>
-                    <label class="stp-switch">
-                        <input type="checkbox" name="public_profile_visible" value="true" {% if trainer.public_profile_visible is not defined or trainer.public_profile_visible %}checked{% endif %}>
-                        <span class="stp-slider"></span>
-                    </label>
-                </div>
-
-                <div class="stp-toggle-item">
-                    <div>
-                        <div class="text-white fw-bold small">Show Experience Details</div>
-                        <div class="text-muted" style="font-size: 0.76rem;">Display years of coaching experience on your public card</div>
-                    </div>
-                    <label class="stp-switch">
-                        <input type="checkbox" name="show_experience" value="true" {% if trainer.show_experience is not defined or trainer.show_experience %}checked{% endif %}>
-                        <span class="stp-slider"></span>
-                    </label>
-                </div>
-
-                <div class="stp-toggle-item">
-                    <div>
-                        <div class="text-white fw-bold small">Show Qualifications & Badges</div>
-                        <div class="text-muted" style="font-size: 0.76rem;">Display verified certifications on your public profile</div>
-                    </div>
-                    <label class="stp-switch">
-                        <input type="checkbox" name="show_qualifications" value="true" {% if trainer.show_qualifications is not defined or trainer.show_qualifications %}checked{% endif %}>
-                        <span class="stp-slider"></span>
-                    </label>
-                </div>
-
-                <div class="stp-toggle-item mb-0">
-                    <div>
-                        <div class="text-white fw-bold small">Show Profile Photo to Visitors</div>
-                        <div class="text-muted" style="font-size: 0.76rem;">Show high-resolution photo on public landing page</div>
-                    </div>
-                    <label class="stp-switch">
-                        <input type="checkbox" name="show_profile_photo" value="true" {% if trainer.show_profile_photo is not defined or trainer.show_profile_photo %}checked{% endif %}>
-                        <span class="stp-slider"></span>
-                    </label>
-                </div>
-            </div>
 
         </div>
 
@@ -1152,11 +1100,6 @@
 
                 <!-- Section 04: Training Availability & Slots (Item 8) -->
                 <div class="profile-section-card">
-                    <div class="section-header-badge">
-                        <span class="section-number-pill">04</span>
-                        <span>Training Availability & Slots</span>
-                    </div>
-
                     <div class="row g-3">
                         <!-- Item 8: Updated label to COACHING AVAILABLE LOCATION -->
                         <div class="col-md-6">
@@ -1164,103 +1107,6 @@
                                 <i class="fa-solid fa-location-dot me-1"></i> Coaching Available Location
                             </label>
                             <input type="text" id="trainerLocations" name="training_locations" class="form-control" placeholder="e.g. Gachibowli, Madhapur, Kondapur" value="{{ trainer.training_locations or 'Gachibowli Stadium Pool' }}">
-                        </div>
-
-                        <!-- Item 8: Updated label to AVAILABLE TIME SLOTS & Auto-synced with pills -->
-                        <div class="col-md-6">
-                            <label for="trainerTimeSlots" class="form-label text-uppercase fw-bold text-primary" style="font-size: 0.78rem; letter-spacing: 0.5px;">
-                                <i class="fa-solid fa-clock me-1"></i> Available Time Slots
-                            </label>
-                            <input type="text" id="trainerTimeSlots" name="available_slots" class="form-control font-monospace" placeholder="e.g. 06:00 AM - 09:00 AM, 05:00 PM - 08:00 PM" value="{{ trainer.available_slots or '' }}">
-                            <small class="text-muted d-block mt-1" style="font-size: 0.72rem;">
-                                Auto-synced with the time slot selector below, or type custom intervals.
-                            </small>
-                        </div>
-
-                        <!-- Item 8: Dedicated 15-Minute Time Slot Selector Section -->
-                        <div class="col-12 mt-3">
-                            <div class="p-3.5 p-md-4 rounded-3" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.2); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);">
-                                <!-- Header & Quick Select Presets -->
-                                <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2 mb-3 pb-2.5 border-bottom border-white-10">
-                                    <div>
-                                        <h6 class="text-white fw-bold mb-1 d-flex align-items-center gap-2">
-                                            <i class="fa-solid fa-calendar-check text-primary"></i>
-                                            <span>Time Slot Picker (15-min Intervals)</span>
-                                        </h6>
-                                        <span class="text-muted" style="font-size: 0.74rem;">
-                                            Select available slots from <strong>05:30 AM to 10:00 PM</strong>. Active slots reflect dynamically in AVAILABLE TIME SLOTS.
-                                        </span>
-                                    </div>
-                                    <!-- Quick Presets -->
-                                    <div class="d-flex flex-wrap gap-1.5">
-                                        <button type="button" class="btn btn-outline-info btn-xs rounded-pill px-2.5 py-1" onclick="applyTimePreset('morning')" style="font-size: 0.72rem;">
-                                            <i class="fa-solid fa-sun me-1"></i> Morning (06:00 - 09:00 AM)
-                                        </button>
-                                        <button type="button" class="btn btn-outline-warning btn-xs rounded-pill px-2.5 py-1" onclick="applyTimePreset('evening')" style="font-size: 0.72rem;">
-                                            <i class="fa-solid fa-moon me-1"></i> Evening (05:00 - 08:00 PM)
-                                        </button>
-                                        <button type="button" class="btn btn-outline-secondary btn-xs rounded-pill px-2 py-1" onclick="applyTimePreset('clear')" style="font-size: 0.72rem;">
-                                            <i class="fa-solid fa-rotate-left me-1"></i> Clear
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Morning Sessions (05:30 AM - 11:45 AM) -->
-                                <div class="mb-3">
-                                    <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <span class="text-info small fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">
-                                            <i class="fa-solid fa-cloud-sun me-1.5"></i> Morning Sessions (05:30 AM - 11:45 AM)
-                                        </span>
-                                        <button type="button" class="btn btn-link text-info p-0 text-decoration-none fw-semibold" style="font-size: 0.7rem;" onclick="toggleRangeSlots('05:30 AM', '11:45 AM')">
-                                            Toggle All Morning
-                                        </button>
-                                    </div>
-                                    <div class="stp-pill-container" id="morningSlotsContainer">
-                                        <!-- Dynamically generated 15-min pills -->
-                                    </div>
-                                </div>
-
-                                <!-- Afternoon Sessions (12:00 PM - 04:45 PM) -->
-                                <div class="mb-3">
-                                    <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <span class="text-warning small fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">
-                                            <i class="fa-solid fa-sun me-1.5"></i> Afternoon Sessions (12:00 PM - 04:45 PM)
-                                        </span>
-                                        <button type="button" class="btn btn-link text-warning p-0 text-decoration-none fw-semibold" style="font-size: 0.7rem;" onclick="toggleRangeSlots('12:00 PM', '04:45 PM')">
-                                            Toggle All Afternoon
-                                        </button>
-                                    </div>
-                                    <div class="stp-pill-container" id="afternoonSlotsContainer">
-                                        <!-- Dynamically generated 15-min pills -->
-                                    </div>
-                                </div>
-
-                                <!-- Evening Sessions (05:00 PM - 10:00 PM) -->
-                                <div>
-                                    <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <span class="text-purple-400 small fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px; color: #c084fc;">
-                                            <i class="fa-solid fa-moon me-1.5"></i> Evening / Night Sessions (05:00 PM - 10:00 PM)
-                                        </span>
-                                        <button type="button" class="btn btn-link p-0 text-decoration-none fw-semibold" style="font-size: 0.7rem; color: #c084fc;" onclick="toggleRangeSlots('05:00 PM', '10:00 PM')">
-                                            Toggle All Evening
-                                        </button>
-                                    </div>
-                                    <div class="stp-pill-container" id="eveningSlotsContainer">
-                                        <!-- Dynamically generated 15-min pills -->
-                                    </div>
-                                </div>
-
-                                <!-- Summary & Real-time Active Slots Preview -->
-                                <div class="mt-3 pt-2.5 border-top border-white-10 d-flex flex-wrap align-items-center justify-content-between gap-2">
-                                    <div class="text-muted small" style="font-size: 0.74rem;">
-                                        <i class="fa-solid fa-circle-check text-success me-1"></i>
-                                        <span id="selectedSlotsCountBadge" class="text-white fw-bold">0 slots selected</span>
-                                    </div>
-                                    <div class="font-monospace small text-info text-end" id="selectedSlotsDisplayPreview" style="font-size: 0.76rem;">
-                                        None selected
-                                    </div>
-                                </div>
-                            </div>
                         </div>
 
                         <div class="col-md-6 mt-3">
@@ -1276,21 +1122,59 @@
                             <label for="trainerMaxStudents" class="form-label">Max Students per Batch</label>
                             <input type="number" id="trainerMaxStudents" name="max_students" class="form-control" min="1" max="25" value="{{ trainer.max_students or 5 }}">
                         </div>
+                    </div>
+                </div>
 
-                        <!-- Preferred Training Days Pills -->
-                        <div class="col-12 mt-3">
-                            <label class="form-label">Preferred Training Days</label>
-                            <div class="stp-pill-container" id="trainerDaysGroup">
-                                {% set week_days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
-                                {% for day in week_days %}
-                                    <div class="stp-select-pill {% if day in trainer_days %}active{% endif %}" data-value="{{ day }}" data-name="preferred_training_days">
-                                        <i class="fa-solid fa-check check-icon"></i>
-                                        <span>{{ day }}</span>
-                                        <input type="checkbox" name="preferred_training_days" value="{{ day }}" {% if day in trainer_days %}checked{% endif %} style="display: none;">
-                                    </div>
-                                {% endfor %}
-                            </div>
+                        <!-- Section 06: Public Profile Settings -->
+                <div class="profile-section-card">
+                    <div class="section-header-badge">
+                        <span class="section-number-pill">06</span>
+                        <span>Public Profile & Visibility</span>
+                    </div>
+                    <p class="text-muted small mb-3">Control which details appear on your public coach profile and landing page.</p>
+
+                    <div class="stp-toggle-item">
+                        <div>
+                            <div class="text-white fw-bold small">Public Profile Visible</div>
+                            <div class="text-muted" style="font-size: 0.76rem;">Allow your coach card to appear on the Coaches directory</div>
                         </div>
+                        <label class="stp-switch">
+                            <input type="checkbox" name="public_profile_visible" value="true" {% if trainer.public_profile_visible is not defined or trainer.public_profile_visible %}checked{% endif %}>
+                            <span class="stp-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="stp-toggle-item">
+                        <div>
+                            <div class="text-white fw-bold small">Show Experience Details</div>
+                            <div class="text-muted" style="font-size: 0.76rem;">Display years of coaching experience on your public card</div>
+                        </div>
+                        <label class="stp-switch">
+                            <input type="checkbox" name="show_experience" value="true" {% if trainer.show_experience is not defined or trainer.show_experience %}checked{% endif %}>
+                            <span class="stp-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="stp-toggle-item">
+                        <div>
+                            <div class="text-white fw-bold small">Show Qualifications & Badges</div>
+                            <div class="text-muted" style="font-size: 0.76rem;">Display verified certifications on your public profile</div>
+                        </div>
+                        <label class="stp-switch">
+                            <input type="checkbox" name="show_qualifications" value="true" {% if trainer.show_qualifications is not defined or trainer.show_qualifications %}checked{% endif %}>
+                            <span class="stp-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="stp-toggle-item mb-0">
+                        <div>
+                            <div class="text-white fw-bold small">Show Profile Photo to Visitors</div>
+                            <div class="text-muted" style="font-size: 0.76rem;">Show high-resolution photo on public landing page</div>
+                        </div>
+                        <label class="stp-switch">
+                            <input type="checkbox" name="show_profile_photo" value="true" {% if trainer.show_profile_photo is not defined or trainer.show_profile_photo %}checked{% endif %}>
+                            <span class="stp-slider"></span>
+                        </label>
                     </div>
                 </div>
 
