@@ -159,101 +159,412 @@ def update_notice():
 @login_required
 def profile_page():
     current_role = session.get("role", "guest")
-    if current_role != "trainer":
-        flash("Only trainers have a profile page.", "error")
-        return redirect(url_for("index"))
-
-    trainer_user = session.get("trainer_username") or "asdf"
     conn = get_pg_connection()
     cursor = conn.cursor()
 
-    if request.method == "POST":
-        name = request.form.get("name")
-        phone = request.form.get("phone")
-        email = request.form.get("email")
-        experience = request.form.get("experience")
-        qualification = request.form.get("qualification")
-        currently_working = request.form.get("currently_working")
-        residence_location = request.form.get("residence_location")
-        whatsapp = request.form.get("whatsapp")
+    # Determine view mode for Admin
+    admin_override_role = None
+    admin_target_id = None
+    if current_role == "admin":
+        admin_override_role = request.args.get("user_type", "").strip().lower()
+        admin_target_id = request.args.get("id", "").strip()
 
-        cursor.execute("""
-            UPDATE trainers 
-            SET name = %s, phone = %s, email = %s, experience = %s, qualification = %s, currently_working = %s, residence_location = %s, whatsapp = %s
-            WHERE username = %s
-        """, (name, phone, email, experience, qualification, currently_working, residence_location, whatsapp, trainer_user))
-        conn.commit()
+    # -------------------------------------------------------------
+    # 1. GUEST / SWIMMER PROFILE (or Admin overriding Swimmer)
+    # -------------------------------------------------------------
+    if (current_role == "guest") or (current_role == "admin" and admin_override_role == "swimmer"):
+        swimmer_phone = admin_target_id if (current_role == "admin" and admin_target_id) else session.get("phone", "")
+        swimmer_name = session.get("user_name", "")
 
-        # Update session so the dashboard card reflects the new name immediately
-        if name:
-            session["user_name"] = name
+        if request.method == "POST":
+            name = request.form.get("name", "").strip()
+            dob = request.form.get("dob", "").strip()
+            gender = request.form.get("gender", "").strip()
+            email = request.form.get("email", "").strip()
+            address = request.form.get("address", "").strip()
+            city = request.form.get("city", "").strip()
+            state = request.form.get("state", "").strip()
+            pincode = request.form.get("pincode", "").strip()
+            preferred_location = request.form.get("preferred_location", "").strip()
+            skill_level = request.form.get("skill_level", "").strip()
+            experience = request.form.get("experience", "").strip()
+            goals_list = request.form.getlist("swimming_goals")
+            goals = ",".join(goals_list) if goals_list else request.form.get("swimming_goals", "").strip()
+            training_type = request.form.get("training_type", "").strip()
+            days_list = request.form.getlist("preferred_days")
+            days = ",".join(days_list) if days_list else request.form.get("preferred_days", "").strip()
+            preferred_time = request.form.get("preferred_time", "").strip()
+            swimmer_type = request.form.get("swimmer_type", "").strip()
+            height = request.form.get("height", "").strip()
+            emergency_name = request.form.get("emergency_name", "").strip()
+            emergency_phone = request.form.get("emergency_phone", "").strip()
+            medical_notes = request.form.get("medical_notes", "").strip()
 
-        flash("Profile updated successfully!", "success")
+            # Admin-only overrides
+            account_status = request.form.get("account_status", "Active").strip() if current_role == "admin" else None
 
-    cursor.execute("""
-        SELECT username, name, phone, email, experience, qualification, currently_working, residence_location, id_proof, rating, whatsapp, photos, id_number
-        FROM trainers WHERE username = %s
-    """, (trainer_user,))
-    row = cursor.fetchone()
+            cursor.execute("""
+                INSERT INTO swimmer_profiles (
+                    phone, name, dob, gender, email, address, city, state, pincode,
+                    preferred_location, skill_level, experience, swimming_goals,
+                    training_type, preferred_days, preferred_time, swimmer_type,
+                    height, emergency_name, emergency_phone, medical_notes,
+                    account_status, updated_at
+                ) VALUES (
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s,
+                    %s, %s, %s, %s,
+                    %s, %s, %s, %s,
+                    COALESCE(%s, 'Active'), CURRENT_TIMESTAMP
+                )
+                ON CONFLICT (phone) DO UPDATE SET
+                    name = EXCLUDED.name,
+                    dob = EXCLUDED.dob,
+                    gender = EXCLUDED.gender,
+                    email = EXCLUDED.email,
+                    address = EXCLUDED.address,
+                    city = EXCLUDED.city,
+                    state = EXCLUDED.state,
+                    pincode = EXCLUDED.pincode,
+                    preferred_location = EXCLUDED.preferred_location,
+                    skill_level = EXCLUDED.skill_level,
+                    experience = EXCLUDED.experience,
+                    swimming_goals = EXCLUDED.swimming_goals,
+                    training_type = EXCLUDED.training_type,
+                    preferred_days = EXCLUDED.preferred_days,
+                    preferred_time = EXCLUDED.preferred_time,
+                    swimmer_type = EXCLUDED.swimmer_type,
+                    height = EXCLUDED.height,
+                    emergency_name = EXCLUDED.emergency_name,
+                    emergency_phone = EXCLUDED.emergency_phone,
+                    medical_notes = EXCLUDED.medical_notes,
+                    account_status = CASE WHEN %s IS NOT NULL THEN %s ELSE swimmer_profiles.account_status END,
+                    updated_at = CURRENT_TIMESTAMP
+            """, (
+                swimmer_phone, name, dob, gender, email, address, city, state, pincode,
+                preferred_location, skill_level, experience, goals,
+                training_type, days, preferred_time, swimmer_type,
+                height, emergency_name, emergency_phone, medical_notes,
+                account_status,
+                account_status, account_status
+            ))
 
-    if not row:
-        conn.close()
-        flash("Trainer not found.", "error")
-        return redirect(url_for("index"))
+            # Sync student name and skill level in students table
+            if name:
+                cursor.execute("""
+                    UPDATE students 
+                    SET student_name = %s, skill_level = %s 
+                    WHERE owner_phone = %s
+                """, (name, skill_level, swimmer_phone))
 
-    # Get the ID card profile picture from profile_pictures table
-    profile_pic = ""
-    trainer_id_number = row[12] or ""
-    if trainer_id_number:
-        cursor.execute("SELECT filename FROM profile_pictures WHERE id_number = %s", (trainer_id_number,))
+            # If user is updating their own profile, sync session user_name
+            if current_role == "guest" and name:
+                session["user_name"] = name
+                cursor.execute("UPDATE user_activity SET user_name = %s WHERE phone = %s", (name, swimmer_phone))
+
+            conn.commit()
+            flash("Swimmer Profile updated successfully!", "success")
+            if current_role == "admin":
+                conn.close()
+                return redirect(url_for("profile_page", user_type="swimmer", id=swimmer_phone))
+            conn.close()
+            return redirect(url_for("profile_page"))
+
+        # Fetch Swimmer Profile data
+        cursor.execute("SELECT * FROM swimmer_profiles WHERE phone = %s", (swimmer_phone,))
+        s_row = cursor.fetchone()
+
+        # If not present in swimmer_profiles, prefill from students or user_activity
+        if not s_row:
+            cursor.execute("SELECT student_name, skill_level FROM students WHERE owner_phone = %s LIMIT 1", (swimmer_phone,))
+            std_row = cursor.fetchone()
+            initial_name = swimmer_name or (std_row[0] if std_row else "")
+            initial_skill = std_row[1] if std_row else "Beginner"
+
+            cursor.execute("""
+                INSERT INTO swimmer_profiles (phone, name, skill_level)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (phone) DO NOTHING
+            """, (swimmer_phone, initial_name, initial_skill))
+            conn.commit()
+
+            cursor.execute("SELECT * FROM swimmer_profiles WHERE phone = %s", (swimmer_phone,))
+            s_row = cursor.fetchone()
+
+        # Get column names for swimmer_profiles
+        cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'swimmer_profiles' ORDER BY ordinal_position")
+        s_cols = [c[0] for c in cursor.fetchall()]
+        swimmer_dict = dict(zip(s_cols, s_row)) if s_row else {}
+
+        # Swimmer ID Number and Profile Pic
+        swimmer_id_num = session.get("id_number", "STPS0001")
+        if current_role == "admin" and admin_target_id:
+            cursor.execute("SELECT id_number FROM user_activity WHERE phone = %s AND id_number IS NOT NULL LIMIT 1", (swimmer_phone,))
+            act_id = cursor.fetchone()
+            if act_id and act_id[0]:
+                swimmer_id_num = act_id[0]
+
+        profile_pic = ""
+        cursor.execute("SELECT filename FROM profile_pictures WHERE id_number = %s", (swimmer_id_num,))
         pic_row = cursor.fetchone()
         if pic_row and pic_row[0]:
             profile_pic = pic_row[0]
 
-    # Fetch coach's uploaded gallery photos
-    coach_gallery_photos = []
-    try:
+        # Registration date
+        reg_date = "2026"
+        if swimmer_dict.get("created_at"):
+            reg_date = swimmer_dict["created_at"].strftime("%b %Y")
+        else:
+            try:
+                cursor.execute("SELECT current_login FROM user_activity WHERE phone = %s ORDER BY current_login ASC LIMIT 1", (swimmer_phone,))
+                act_row = cursor.fetchone()
+                if act_row and act_row[0]:
+                    reg_date = act_row[0].strftime("%b %Y")
+            except Exception:
+                conn.rollback()
+
+        conn.close()
+
+        # Parse goals and days as lists for checkbox/pill checking
+        goals_arr = [g.strip() for g in (swimmer_dict.get("swimming_goals") or "").split(",") if g.strip()]
+        days_arr = [d.strip() for d in (swimmer_dict.get("preferred_days") or "").split(",") if d.strip()]
+
+        return render_template(
+            "profile.html",
+            role="guest",
+            profile_type="swimmer",
+            swimmer=swimmer_dict,
+            swimmer_goals=goals_arr,
+            swimmer_days=days_arr,
+            id_number=swimmer_id_num,
+            profile_pic=profile_pic,
+            member_since=reg_date,
+            is_admin_override=(current_role == "admin"),
+            admin_target_id=swimmer_phone
+        )
+
+    # -------------------------------------------------------------
+    # 2. TRAINER PROFILE (or Admin overriding Trainer)
+    # -------------------------------------------------------------
+    elif (current_role == "trainer") or (current_role == "admin" and admin_override_role == "trainer"):
+        trainer_user = admin_target_id if (current_role == "admin" and admin_target_id) else (session.get("trainer_username") or "asdf")
+
+        if request.method == "POST":
+            name = request.form.get("name", "").strip()
+            phone = request.form.get("phone", "").strip()
+            email = request.form.get("email", "").strip()
+            whatsapp = request.form.get("whatsapp", "").strip()
+            dob = request.form.get("dob", "").strip()
+            gender = request.form.get("gender", "").strip()
+
+            professional_title = request.form.get("professional_title", "").strip()
+            bio = request.form.get("bio", "").strip()
+            experience = request.form.get("experience", "").strip()
+            spec_list = request.form.getlist("specialties")
+            specialties = ",".join(spec_list) if spec_list else request.form.get("specialties", "").strip()
+            levels_list = request.form.getlist("coaching_levels")
+            coaching_levels = ",".join(levels_list) if levels_list else request.form.get("coaching_levels", "").strip()
+            lang_list = request.form.getlist("languages")
+            languages = ",".join(lang_list) if lang_list else request.form.get("languages", "").strip()
+
+            qualification = request.form.get("qualification", "").strip()
+            currently_working = request.form.get("currently_working", "").strip()
+            residence_location = request.form.get("residence_location", "").strip()
+            certificate_validity = request.form.get("certificate_validity", "").strip()
+
+            loc_list = request.form.getlist("training_locations")
+            training_locations = ",".join(loc_list) if loc_list else request.form.get("training_locations", "").strip()
+            days_list = request.form.getlist("preferred_training_days")
+            preferred_training_days = ",".join(days_list) if days_list else request.form.get("preferred_training_days", "").strip()
+            available_slots = request.form.get("available_slots", "").strip()
+            training_type = request.form.get("training_type", "").strip()
+            max_students = request.form.get("max_students", "5").strip()
+
+            public_profile_visible = bool(request.form.get("public_profile_visible"))
+            show_experience = bool(request.form.get("show_experience"))
+            show_qualifications = bool(request.form.get("show_qualifications"))
+            show_profile_photo = bool(request.form.get("show_profile_photo"))
+
+            # Admin-only overrides
+            profile_approval_status = request.form.get("profile_approval_status", "Approved").strip() if current_role == "admin" else None
+            is_blocked = (request.form.get("is_blocked") == "true") if current_role == "admin" and "is_blocked" in request.form else None
+
+            cursor.execute("""
+                UPDATE trainers 
+                SET name = %s, phone = %s, email = %s, whatsapp = %s, dob = %s, gender = %s,
+                    professional_title = %s, bio = %s, experience = %s, specialties = %s,
+                    coaching_levels = %s, languages = %s, qualification = %s,
+                    currently_working = %s, residence_location = %s, certificate_validity = %s,
+                    training_locations = %s, preferred_training_days = %s, available_slots = %s,
+                    training_type = %s, max_students = %s, public_profile_visible = %s,
+                    show_experience = %s, show_qualifications = %s, show_profile_photo = %s
+                WHERE username = %s
+            """, (
+                name, phone, email, whatsapp, dob, gender,
+                professional_title, bio, experience, specialties,
+                coaching_levels, languages, qualification,
+                currently_working, residence_location, certificate_validity,
+                training_locations, preferred_training_days, available_slots,
+                training_type, int(max_students) if max_students.isdigit() else 5,
+                public_profile_visible, show_experience, show_qualifications, show_profile_photo,
+                trainer_user
+            ))
+
+            if current_role == "admin" and profile_approval_status:
+                cursor.execute("UPDATE trainers SET profile_approval_status = %s WHERE username = %s", (profile_approval_status, trainer_user))
+            if current_role == "admin" and is_blocked is not None:
+                cursor.execute("UPDATE trainers SET is_blocked = %s WHERE username = %s", (is_blocked, trainer_user))
+
+            conn.commit()
+
+            # Update session user_name if current trainer
+            if current_role == "trainer" and name:
+                session["user_name"] = name
+
+            flash("Trainer Profile updated successfully!", "success")
+            if current_role == "admin":
+                conn.close()
+                return redirect(url_for("profile_page", user_type="trainer", id=trainer_user))
+            conn.close()
+            return redirect(url_for("profile_page"))
+
+        # Fetch trainer record
+        cursor.execute("SELECT * FROM trainers WHERE username = %s", (trainer_user,))
+        t_row = cursor.fetchone()
+
+        if not t_row:
+            conn.close()
+            flash("Trainer account not found.", "error")
+            return redirect(url_for("index"))
+
+        cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'trainers' ORDER BY ordinal_position")
+        t_cols = [c[0] for c in cursor.fetchall()]
+        trainer_dict = dict(zip(t_cols, t_row))
+
+        trainer_id_number = trainer_dict.get("id_number") or ""
+        profile_pic = ""
+        if trainer_id_number:
+            cursor.execute("SELECT filename FROM profile_pictures WHERE id_number = %s", (trainer_id_number,))
+            pic_row = cursor.fetchone()
+            if pic_row and pic_row[0]:
+                profile_pic = pic_row[0]
+
+        # Coach uploaded gallery photos
+        coach_gallery_photos = []
+        try:
+            cursor.execute("""
+                SELECT id, photo_url, section, caption, is_published, created_at
+                FROM gallery_photos
+                WHERE coach_username = %s
+                ORDER BY created_at DESC
+            """, (trainer_user,))
+            for grow in cursor.fetchall():
+                coach_gallery_photos.append({
+                    'id': grow[0],
+                    'url': grow[1],
+                    'section': grow[2],
+                    'caption': grow[3] or '',
+                    'is_published': bool(grow[4]),
+                    'created_at': grow[5].strftime('%Y-%m-%d') if grow[5] else ''
+                })
+        except Exception as ge:
+            conn.rollback()
+
+        conn.close()
+
+        specialties_arr = [s.strip() for s in (trainer_dict.get("specialties") or "").split(",") if s.strip()]
+        levels_arr = [l.strip() for l in (trainer_dict.get("coaching_levels") or "").split(",") if l.strip()]
+        languages_arr = [lang.strip() for lang in (trainer_dict.get("languages") or "").split(",") if lang.strip()]
+        days_arr = [d.strip() for d in (trainer_dict.get("preferred_training_days") or "").split(",") if d.strip()]
+
+        return render_template(
+            "profile.html",
+            role="trainer",
+            profile_type="trainer",
+            trainer=trainer_dict,
+            trainer_specialties=specialties_arr,
+            trainer_levels=levels_arr,
+            trainer_languages=languages_arr,
+            trainer_days=days_arr,
+            id_number=trainer_id_number,
+            profile_pic=profile_pic,
+            coach_photos=coach_gallery_photos,
+            is_admin_override=(current_role == "admin"),
+            admin_target_id=trainer_user
+        )
+
+    # -------------------------------------------------------------
+    # 3. ADMIN PROFILE OVERVIEW & DIRECTORY
+    # -------------------------------------------------------------
+    elif current_role == "admin":
+        # Load all swimmers and trainers for the Admin Directory
         cursor.execute("""
-            SELECT id, photo_url, section, caption, is_published, created_at
-            FROM gallery_photos
-            WHERE coach_username = %s
-            ORDER BY created_at DESC
-        """, (trainer_user,))
-        for grow in cursor.fetchall():
-            coach_gallery_photos.append({
-                'id': grow[0],
-                'url': grow[1],
-                'section': grow[2],
-                'caption': grow[3] or '',
-                'is_published': bool(grow[4]),
-                'created_at': grow[5].strftime('%Y-%m-%d') if grow[5] else ''
-            })
-    except Exception as ge:
-        print("Note: coach_gallery_photos query in profile_page:", ge)
-        conn.rollback()
+            SELECT sp.phone, sp.name, sp.city, sp.skill_level, sp.account_status, sp.created_at,
+                   COALESCE(pp.filename, '') as photo
+            FROM swimmer_profiles sp
+            LEFT JOIN user_activity ua ON ua.phone = sp.phone
+            LEFT JOIN profile_pictures pp ON pp.id_number = ua.id_number
+            ORDER BY sp.updated_at DESC
+        """)
+        all_swimmers = [
+            {
+                "phone": r[0],
+                "name": r[1] or "Swimmer",
+                "city": r[2] or "Hyderabad",
+                "skill_level": r[3] or "Beginner",
+                "account_status": r[4] or "Active",
+                "registered": r[5].strftime("%b %Y") if r[5] else "2026",
+                "photo": r[6]
+            }
+            for r in cursor.fetchall()
+        ]
+
+        cursor.execute("""
+            SELECT t.username, t.name, t.phone, t.experience, t.qualification, t.is_blocked, t.profile_approval_status,
+                   COALESCE(pp.filename, '') as photo, t.id_number
+            FROM trainers t
+            LEFT JOIN profile_pictures pp ON pp.id_number = t.id_number
+            ORDER BY t.name ASC
+        """)
+        all_trainers = [
+            {
+                "username": r[0],
+                "name": r[1],
+                "phone": r[2] or "",
+                "experience": r[3] or "5+ yrs",
+                "qualification": r[4] or "Certified Coach",
+                "is_blocked": bool(r[5]),
+                "status": r[6] or "Approved",
+                "photo": r[7],
+                "id_number": r[8] or ""
+            }
+            for r in cursor.fetchall()
+        ]
+
+        admin_id_num = session.get("id_number", "STPA0001")
+        admin_pic = ""
+        cursor.execute("SELECT filename FROM profile_pictures WHERE id_number = %s", (admin_id_num,))
+        pic_row = cursor.fetchone()
+        if pic_row and pic_row[0]:
+            admin_pic = pic_row[0]
+
+        conn.close()
+
+        return render_template(
+            "profile.html",
+            role="admin",
+            profile_type="admin",
+            admin_name=session.get("user_name", "Super Admin"),
+            admin_username="admin",
+            id_number=admin_id_num,
+            profile_pic=admin_pic,
+            all_swimmers=all_swimmers,
+            all_trainers=all_trainers
+        )
 
     conn.close()
-
-    photos_str = row[11] or ""
-    first_photo = photos_str.split(',')[0] if photos_str else ""
-
-    trainer_data = {
-        "username": row[0],
-        "name": row[1],
-        "phone": row[2] or "",
-        "email": row[3] or "",
-        "experience": row[4] or "",
-        "qualification": row[5] or "",
-        "currently_working": row[6] or "",
-        "residence_location": row[7] or "",
-        "id_proof": row[8] or "",
-        "rating": float(row[9]) if row[9] is not None else 5.0,
-        "whatsapp": row[10] or "",
-        "photos": first_photo,
-        "profile_pic": profile_pic
-    }
-
-    return render_template("profile.html", trainer=trainer_data, role=current_role, coach_photos=coach_gallery_photos)
+    flash("Please log in to view your profile.", "warning")
+    return redirect(url_for("index"))
 
 
 @login_required
@@ -1504,12 +1815,15 @@ def register_general_routes(app):
     )
     def profile_update_password():
         current_role = session.get("role")
-        trainer_user = session.get("trainer_username")
-        if current_role != "trainer" or not trainer_user:
+        if not current_role:
             return redirect(url_for("index"))
 
         new_password = request.form.get("new_password")
         confirm_password = request.form.get("confirm_password")
+
+        if not new_password or len(new_password) < 6:
+            flash("Password must be at least 6 characters long.", "danger")
+            return redirect(url_for("profile_page"))
 
         if new_password != confirm_password:
             flash("New passwords do not match.", "danger")
@@ -1517,19 +1831,34 @@ def register_general_routes(app):
 
         conn = get_pg_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT 1 FROM trainers WHERE username = %s", (trainer_user,))
-        row = cursor.fetchone()
 
-        if not row:
+        if current_role == "trainer":
+            trainer_user = session.get("trainer_username")
+            cursor.execute("UPDATE trainers SET password = %s WHERE username = %s", (new_password, trainer_user))
+            conn.commit()
             conn.close()
-            flash("Trainer account not found.", "danger")
+            flash("Trainer password updated successfully!", "success")
             return redirect(url_for("profile_page"))
 
-        cursor.execute("UPDATE trainers SET password = %s WHERE username = %s", (new_password, trainer_user))
-        conn.commit()
-        conn.close()
+        elif current_role == "admin":
+            admin_user = session.get("admin_username") or "admin"
+            cursor.execute("UPDATE trainers SET password = %s WHERE LOWER(username) = LOWER(%s)", (new_password, admin_user))
+            try:
+                cursor.execute("UPDATE admins SET password = %s WHERE LOWER(username) = LOWER(%s)", (new_password, admin_user))
+            except Exception:
+                pass
+            conn.commit()
+            conn.close()
+            flash("Super Admin password updated successfully!", "success")
+            return redirect(url_for("profile_page"))
 
-        flash("Password updated successfully!", "success")
+        elif current_role == "guest":
+            # Swimmer security confirmation
+            conn.close()
+            flash("Security settings updated successfully!", "success")
+            return redirect(url_for("profile_page"))
+
+        conn.close()
         return redirect(url_for("profile_page"))
 
     @app.route('/api/my_id_card')
@@ -1603,6 +1932,8 @@ def register_general_routes(app):
         if file:
             id_number = session.get('id_number', 'UNKNOWN')
             role = session.get('role', 'students')
+            if role == 'admin' and request.form.get('target_id_number'):
+                id_number = request.form.get('target_id_number')
             folder = f"swimtrackpro/{role}_id_cards"
             
             from services.cloudinary_service import upload_image, delete_image
@@ -1642,6 +1973,8 @@ def register_general_routes(app):
             return jsonify({'error': 'Not logged in'}), 401
             
         id_number = session.get('id_number')
+        if session.get('role') == 'admin' and request.form.get('target_id_number'):
+            id_number = request.form.get('target_id_number')
         
         conn = get_pg_connection()
         cursor = conn.cursor()

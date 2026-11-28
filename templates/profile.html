@@ -1,104 +1,801 @@
 {% extends 'base.html' %}
 
-{% block title %}My Profile | SwimTrack Pro{% endblock %}
+{% block title %}My Profile | SwimTrackPro{% endblock %}
 {% block page_title %}My Profile{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/fileUploader.css') }}">
 <style>
-    .profile-avatar-container {
-        width: 100px;
-        height: 100px;
-        background: rgba(255, 255, 255, 0.05);
-        border: 2px solid rgba(255, 255, 255, 0.1);
+    /* Profile Redesign Theme & Components */
+    .profile-hero-card {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.7) 100%);
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        border-radius: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+    .profile-hero-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #38bdf8, #818cf8, #38bdf8);
+        background-size: 200% 100%;
+        animation: pulseGlow 4s ease infinite;
+    }
+    @keyframes pulseGlow {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    .profile-avatar-wrap {
+        position: relative;
+        width: 110px;
+        height: 110px;
         border-radius: 50%;
+        border: 3px solid rgba(56, 189, 248, 0.4);
+        box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
+        background: rgba(15, 23, 42, 0.9);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2.5rem;
-        margin: 0 auto 1.5rem auto;
+        cursor: pointer;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .time-slot-badge {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: white;
-        padding: 0.4rem 0.8rem;
-        border-radius: 8px;
-        font-size: 0.8rem;
+    .profile-avatar-wrap:hover {
+        border-color: #38bdf8;
+        transform: scale(1.03);
+        box-shadow: 0 0 25px rgba(56, 189, 248, 0.4);
+    }
+    .profile-avatar-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .profile-avatar-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.65);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        color: #fff;
+        font-size: 0.72rem;
         font-weight: 600;
-        cursor: grab;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .profile-avatar-wrap:hover .profile-avatar-overlay {
+        opacity: 1;
+    }
+
+    .profile-section-card {
+        background: rgba(18, 24, 38, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 1.75rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        transition: border-color 0.25s ease;
+    }
+    .profile-section-card:hover {
+        border-color: rgba(56, 189, 248, 0.25);
+    }
+
+    .section-header-badge {
         display: inline-flex;
         align-items: center;
-        transition: all 0.25s ease;
-        user-select: none;
+        gap: 0.6rem;
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        width: 100%;
     }
-    .time-slot-badge:hover {
-        background: rgba(255, 255, 255, 0.12);
-        border-color: rgba(255, 255, 255, 0.2);
-        transform: translateY(-2px);
-    }
-    .time-slot-badge.active-slot {
+    .section-number-pill {
         background: rgba(56, 189, 248, 0.15);
+        color: #38bdf8;
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        font-size: 0.75rem;
+        font-weight: 800;
+        padding: 0.15rem 0.55rem;
+        border-radius: 8px;
+        letter-spacing: 0.5px;
+    }
+
+    /* Interactive Multi-Select Pills */
+    .stp-pill-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .stp-select-pill {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: #cbd5e1;
+        padding: 0.45rem 0.9rem;
+        border-radius: 24px;
+        font-size: 0.82rem;
+        font-weight: 500;
+        cursor: pointer;
+        user-select: none;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .stp-select-pill:hover {
+        background: rgba(255, 255, 255, 0.08);
         border-color: rgba(56, 189, 248, 0.4);
-        color: var(--color-primary) !important;
+        color: #fff;
+        transform: translateY(-1px);
     }
-    .time-slot-badge.active-slot:hover {
-        background: rgba(56, 189, 248, 0.25);
-        border-color: rgba(56, 189, 248, 0.6);
+    .stp-select-pill.active {
+        background: rgba(56, 189, 248, 0.16);
+        border-color: #38bdf8;
+        color: #38bdf8;
+        font-weight: 600;
+        box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
     }
-    .time-slot-badge i.drag-handle {
-        font-size: 0.7rem;
-        margin-right: 0.4rem;
-        opacity: 0.5;
+    .stp-select-pill.active i.check-icon {
+        display: inline-block !important;
     }
-    .time-slot-badge:active {
-        cursor: grabbing;
+    .stp-select-pill i.check-icon {
+        display: none;
+        font-size: 0.72rem;
+    }
+
+    /* iOS-Style Modern Toggle Switch */
+    .stp-toggle-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.9rem 1.1rem;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        margin-bottom: 0.65rem;
+        transition: background 0.2s ease;
+    }
+    .stp-toggle-item:hover {
+        background: rgba(255, 255, 255, 0.04);
+    }
+    .stp-switch {
+        position: relative;
+        display: inline-block;
+        width: 46px;
+        height: 25px;
+        margin-bottom: 0;
+    }
+    .stp-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .stp-slider {
+        position: absolute;
+        cursor: pointer;
+        inset: 0;
+        background-color: rgba(255, 255, 255, 0.18);
+        transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 25px;
+    }
+    .stp-slider:before {
+        position: absolute;
+        content: "";
+        height: 19px;
+        width: 19px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 50%;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    .stp-switch input:checked + .stp-slider {
+        background-color: #0ea5e9;
+    }
+    .stp-switch input:checked + .stp-slider:before {
+        transform: translateX(21px);
+    }
+
+    /* Floating Save Bar */
+    .floating-save-bar {
+        position: fixed;
+        bottom: 2rem;
+        left: 50%;
+        transform: translateX(-50%) translateY(100px);
+        background: rgba(15, 23, 42, 0.95);
+        border: 1px solid rgba(56, 189, 248, 0.4);
+        box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.7), 0 0 20px rgba(56, 189, 248, 0.2);
+        backdrop-filter: blur(12px);
+        border-radius: 50px;
+        padding: 0.6rem 1.25rem 0.6rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        z-index: 1050;
+        transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        opacity: 0;
+        pointer-events: none;
+    }
+    .floating-save-bar.visible {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* Admin Override Mode Banner */
+    .admin-override-banner {
+        background: linear-gradient(90deg, rgba(234, 88, 12, 0.15) 0%, rgba(245, 158, 11, 0.1) 100%);
+        border: 1px solid rgba(245, 158, 11, 0.4);
+        border-radius: 12px;
+        padding: 0.85rem 1.25rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    /* Form styling overrides */
+    .form-label {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #94a3b8;
+        margin-bottom: 0.35rem;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+    .form-control, .form-select {
+        background: rgba(15, 23, 42, 0.7) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        color: #fff !important;
+        border-radius: 10px;
+        padding: 0.65rem 0.95rem;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #38bdf8 !important;
+        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15) !important;
+        background: rgba(15, 23, 42, 0.95) !important;
+    }
+    .form-control[readonly], .form-control:disabled {
+        background: rgba(255, 255, 255, 0.03) !important;
+        border-color: rgba(255, 255, 255, 0.06) !important;
+        color: #94a3b8 !important;
+        cursor: not-allowed;
     }
 </style>
 {% endblock %}
 
 {% block content %}
+{% set p_type = profile_type if profile_type else ('swimmer' if role == 'guest' else ('trainer' if role == 'trainer' else 'admin')) %}
 <div class="container py-4">
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-slide-up">
-        
-        <!-- Left Sidebar: Profile overview & Pic uploader -->
-        <div class="flex flex-col gap-6">
-            <div class="glass-panel text-center" style="padding: 2rem;">
-                <div class="profile-avatar-container">
-                    {% if trainer.profile_pic %}
-                        <img src="{{ trainer.profile_pic if trainer.profile_pic.startswith('http') else trainer.profile_pic if trainer.profile_pic.startswith('http') else url_for('static', filename='profile_pictures/' + trainer.profile_pic) }}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                    {% else %}
-                        <span>🏊</span>
-                    {% endif %}
+    <!-- Flash message alerts -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'success' if category == 'success' else ('danger' if category in ['error', 'danger'] else 'info') }} alert-dismissible fade show mb-4 border-0 shadow-lg" role="alert" style="background: rgba({{ '16, 185, 129' if category == 'success' else '239, 68, 68' }}, 0.15); border: 1px solid rgba({{ '16, 185, 129' if category == 'success' else '239, 68, 68' }}, 0.3) !important; color: #fff;">
+                    <i class="fa-solid {{ 'fa-circle-check text-success' if category == 'success' else 'fa-circle-exclamation text-danger' }} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
-                <h3 class="font-display text-white mb-2" style="font-size: 1.5rem;">{{ trainer.name|title }}</h3>
-                <span class="badge badge-warning" style="font-size: 0.8rem;"><i class="fa-solid fa-star text-warning"></i> {{ trainer.rating }} Rating</span>
-                
-                <div style="border-top: 1px solid rgba(255,255,255,0.05); margin-top: 1.5rem; padding-top: 1.5rem; text-align: left; font-size: 0.9rem;" class="flex flex-col gap-3">
-                    <div>
-                        <span class="text-muted small d-block">Username</span>
-                        <span class="text-white fw-bold">{{ trainer.username }}</span>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Admin Override Banner (if active) -->
+    {% if is_admin_override %}
+    <div class="admin-override-banner animate-slide-up">
+        <div class="d-flex align-items-center gap-3">
+            <div class="badge bg-warning text-dark px-2.5 py-1.5 fw-bold" style="font-size: 0.75rem;">
+                <i class="fa-solid fa-user-shield me-1"></i> ADMIN OVERRIDE MODE
+            </div>
+            <span class="text-white small">
+                You are reviewing & modifying the profile of <strong>{{ swimmer.name if p_type == 'swimmer' else trainer.name }}</strong> ({{ p_type|title }}). Changes will immediately update their live record.
+            </span>
+        </div>
+        <a href="/profile" class="btn btn-outline-light btn-sm px-3 py-1.5 rounded-pill" style="font-size: 0.8rem; border-color: rgba(255,255,255,0.3);">
+            <i class="fa-solid fa-arrow-left me-1"></i> Return to Directory
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Profile Header Hero Card -->
+    <div class="profile-hero-card p-4 p-md-5 mb-5 animate-slide-up">
+        <div class="d-flex flex-column flex-md-row align-items-center gap-4 text-center text-md-start">
+            
+            <!-- Avatar with Cloudinary Upload Trigger -->
+            <div class="profile-avatar-wrap" id="avatarUploadWrap" title="Click to upload profile photo">
+                {% if profile_pic %}
+                    <img id="profileAvatarImg" src="{{ profile_pic if profile_pic.startswith('http') else url_for('static', filename='profile_pictures/' + profile_pic) }}" alt="Profile Photo">
+                {% else %}
+                    <div id="profileAvatarFallback" class="fs-1">
+                        {% if p_type == 'swimmer' %}🏊‍♂️{% elif p_type == 'trainer' %}👨‍🏫{% else %}🛡️{% endif %}
                     </div>
-                    <div>
-                        <span class="text-muted small d-block">Verified ID Proof</span>
-                        <span class="text-white fw-bold">{{ trainer.id_proof }}</span>
+                {% endif %}
+                <div class="profile-avatar-overlay">
+                    <i class="fa-solid fa-camera fs-5 mb-1"></i>
+                    <span>Upload</span>
+                </div>
+            </div>
+            <!-- Hidden file input for Avatar upload -->
+            <input type="file" id="profilePicInput" accept="image/jpeg,image/png,image/webp,image/jpg" style="display: none;">
+
+            <!-- User Info Details -->
+            <div class="flex-grow-1">
+                <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-start gap-2 mb-2">
+                    <h2 class="font-display text-white mb-0" style="font-size: 1.75rem;">
+                        {% if p_type == 'swimmer' %}
+                            {{ swimmer.name or 'Swimmer' }}
+                        {% elif p_type == 'trainer' %}
+                            {{ trainer.name or 'Swimming Coach' }}
+                        {% else %}
+                            {{ admin_name or 'Super Admin' }}
+                        {% endif %}
+                    </h2>
+                    
+                    <!-- Role Badge -->
+                    {% if p_type == 'swimmer' %}
+                        <span class="badge rounded-pill" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); font-size: 0.78rem; padding: 0.35rem 0.75rem;">
+                            <i class="fa-solid fa-person-swimming me-1"></i> Active Swimmer
+                        </span>
+                    {% elif p_type == 'trainer' %}
+                        <span class="badge rounded-pill" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); font-size: 0.78rem; padding: 0.35rem 0.75rem;">
+                            <i class="fa-solid fa-award me-1"></i> Swimming Coach
+                        </span>
+                    {% else %}
+                        <span class="badge rounded-pill" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); font-size: 0.78rem; padding: 0.35rem 0.75rem;">
+                            <i class="fa-solid fa-shield-halved me-1"></i> Super Admin
+                        </span>
+                    {% endif %}
+
+                    <!-- Account Status Badge -->
+                    {% set status_val = (swimmer.account_status if p_type == 'swimmer' else (trainer.profile_approval_status if p_type == 'trainer' else 'Active')) or 'Active' %}
+                    <span class="badge rounded-pill" style="background: rgba({{ '16, 185, 129' if status_val == 'Active' or status_val == 'Approved' else '245, 158, 11' }}, 0.15); color: {{ '#34d399' if status_val == 'Active' or status_val == 'Approved' else '#fbbf24' }}; border: 1px solid rgba({{ '16, 185, 129' if status_val == 'Active' or status_val == 'Approved' else '245, 158, 11' }}, 0.3); font-size: 0.78rem; padding: 0.35rem 0.75rem;">
+                        <i class="fa-solid fa-circle-check me-1"></i> {{ status_val }}
+                    </span>
+                </div>
+
+                <p class="text-muted small mb-3">
+                    {% if p_type == 'swimmer' %}
+                        {{ swimmer.preferred_location or 'Hyderabad' }} • {{ swimmer.skill_level or 'Beginner' }} Swimmer
+                    {% elif p_type == 'trainer' %}
+                        {{ trainer.professional_title or 'Senior Swimming Coach' }} • {{ trainer.experience or '5+ yrs' }} Exp
+                    {% else %}
+                        Central Administration & Management Portal
+                    {% endif %}
+                </p>
+
+                <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-start gap-3">
+                    <!-- Digital ID Badge with Copy Action -->
+                    <div class="d-inline-flex align-items-center gap-2 px-3 py-1.5 rounded-pill" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem;">
+                        <span class="text-muted">Digital ID:</span>
+                        <span class="text-white fw-bold font-monospace" id="digitalIdVal">{{ id_number }}</span>
+                        <button type="button" class="btn btn-link p-0 text-primary" onclick="copyDigitalId()" title="Copy ID">
+                            <i class="fa-regular fa-copy" id="copyIdIcon"></i>
+                        </button>
+                    </div>
+
+                    <!-- Member Since -->
+                    <div class="d-inline-flex align-items-center gap-1.5 text-muted small">
+                        <i class="fa-regular fa-calendar-check text-primary"></i>
+                        <span>Member since <strong>{{ member_since or '2026' }}</strong></span>
+                    </div>
+
+                    <!-- Verified Proof badge -->
+                    <div class="d-inline-flex align-items-center gap-1.5 text-success small">
+                        <i class="fa-solid fa-shield-check"></i>
+                        <span>Identity Verified</span>
                     </div>
                 </div>
             </div>
+
+            <!-- Header Quick Action -->
+            <div class="d-flex flex-column gap-2">
+                <button type="button" class="btn btn-outline-light btn-sm px-4 py-2 rounded-pill" onclick="triggerDigitalIdModal()">
+                    <i class="fa-solid fa-id-card me-1.5 text-primary"></i> View Digital ID
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ============================================================= -->
+    <!-- 1. SWIMMER PROFILE VIEW (Swimmer or Admin Overriding Swimmer)   -->
+    <!-- ============================================================= -->
+    {% if p_type == 'swimmer' %}
+    <form action="/profile{% if is_admin_override %}?user_type=swimmer&id={{ admin_target_id }}{% endif %}" method="POST" id="profileForm">
+        
+        <div class="row g-4">
             
-            <div class="glass-panel" style="padding: 1.5rem;">
-                <h5 class="font-display text-white mb-2" style="font-size: 1.1rem;">
-                    <i class="fa-solid fa-camera text-primary me-2"></i> Training Album & Gallery
-                </h5>
-                <p class="text-muted small mb-3">
-                    Upload training photos or action shots to showcase your coaching style. Submissions are reviewed by admin and featured on the public landing page gallery.
-                </p>
+            <!-- Left Column: Navigation / Safety & Account Summary -->
+            <div class="col-lg-4">
                 
+                <!-- Section 05: Account & Verification Information -->
+                <div class="profile-section-card">
+                    <div class="section-header-badge">
+                        <span class="section-number-pill">05</span>
+                        <span>Account & Security</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Swimmer ID</label>
+                        <input type="text" class="form-control" value="{{ id_number }}" readonly>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Account Status</label>
+                        {% if is_admin_override %}
+                            <select name="account_status" class="form-select border-warning">
+                                <option value="Active" {% if swimmer.account_status == 'Active' %}selected{% endif %}>Active (Full Access)</option>
+                                <option value="Pending" {% if swimmer.account_status == 'Pending' %}selected{% endif %}>Pending Review</option>
+                                <option value="Suspended" {% if swimmer.account_status == 'Suspended' %}selected{% endif %}>Suspended (Restricted)</option>
+                            </select>
+                            <small class="text-warning" style="font-size: 0.72rem;">* Admin Override privilege</small>
+                        {% else %}
+                            <div class="d-flex align-items-center gap-2 p-2.5 rounded" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2);">
+                                <i class="fa-solid fa-circle-check text-success"></i>
+                                <span class="text-white fw-bold small">{{ swimmer.account_status or 'Active' }} Account</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Verification Status</label>
+                        <div class="d-flex flex-column gap-2">
+                            <div class="d-flex align-items-center justify-content-between p-2 rounded" style="background: rgba(255,255,255,0.03);">
+                                <span class="text-muted small"><i class="fa-solid fa-phone me-1.5 text-primary"></i> Phone Verified</span>
+                                <span class="badge bg-success/20 text-success small"><i class="fa-solid fa-check"></i> Verified</span>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-between p-2 rounded" style="background: rgba(255,255,255,0.03);">
+                                <span class="text-muted small"><i class="fa-solid fa-envelope me-1.5 text-primary"></i> Email Verified</span>
+                                <span class="badge bg-success/20 text-success small"><i class="fa-solid fa-check"></i> Verified</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-top border-white-10">
+                        <span class="text-muted small d-block mb-1">Registration Date</span>
+                        <span class="text-white small fw-bold">{{ member_since or '2026' }}</span>
+                    </div>
+                </div>
+
+                <!-- Section 04: Swimmer Details & Emergency Safety -->
+                <div class="profile-section-card">
+                    <div class="section-header-badge">
+                        <span class="section-number-pill">04</span>
+                        <span>Swimmer Details & Safety</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="swimmerType" class="form-label">Swimmer Category</label>
+                        <select id="swimmerType" name="swimmer_type" class="form-select">
+                            <option value="Adult Learner" {% if swimmer.swimmer_type == 'Adult Learner' %}selected{% endif %}>Adult Learner</option>
+                            <option value="Child (Junior)" {% if swimmer.swimmer_type == 'Child (Junior)' %}selected{% endif %}>Child / Junior (Under 16)</option>
+                            <option value="Student" {% if swimmer.swimmer_type == 'Student' %}selected{% endif %}>College / Student</option>
+                            <option value="Senior Citizen" {% if swimmer.swimmer_type == 'Senior Citizen' %}selected{% endif %}>Senior Citizen</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="swimmerHeight" class="form-label">Height (Optional, in cm)</label>
+                        <input type="number" id="swimmerHeight" name="height" class="form-control" placeholder="e.g. 172" value="{{ swimmer.height or '' }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="emergencyName" class="form-label">Emergency Contact Name</label>
+                        <input type="text" id="emergencyName" name="emergency_name" class="form-control" placeholder="Parent / Spouse / Guardian" value="{{ swimmer.emergency_name or '' }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="emergencyPhone" class="form-label">Emergency Contact Phone</label>
+                        <input type="tel" id="emergencyPhone" name="emergency_phone" class="form-control" placeholder="10-digit mobile number" value="{{ swimmer.emergency_phone or '' }}" maxlength="10">
+                    </div>
+
+                    <div class="mb-0">
+                        <label for="medicalNotes" class="form-label">Medical & Safety Notes</label>
+                        <textarea id="medicalNotes" name="medical_notes" class="form-control" rows="3" placeholder="Disclose allergies, asthma, ear issues, or water anxiety...">{{ swimmer.medical_notes or '' }}</textarea>
+                    </div>
+                </div>
+
+                <!-- Security PIN / Password Update Panel -->
+                <div class="profile-section-card">
+                    <div class="section-header-badge">
+                        <i class="fa-solid fa-key text-primary me-1"></i>
+                        <span>Security Credentials</span>
+                    </div>
+                    <p class="text-muted small mb-3">Update your access PIN / password to secure your account.</p>
+
+                    <button type="button" class="btn btn-outline-light w-100 py-2.5 rounded-pill" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                        <i class="fa-solid fa-lock me-1.5 text-primary"></i> Change Password / PIN
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Personal Info, Address, Swimming Details -->
+            <div class="col-lg-8">
+                
+                <!-- Section 01: Personal Information -->
+                <div class="profile-section-card">
+                    <div class="section-header-badge">
+                        <span class="section-number-pill">01</span>
+                        <span>Personal Information</span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="swimmerName" class="form-label">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" id="swimmerName" name="name" class="form-control" value="{{ swimmer.name or '' }}" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="swimmerDob" class="form-label">Date of Birth</label>
+                            <input type="date" id="swimmerDob" name="dob" class="form-control" value="{{ swimmer.dob or '' }}">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="swimmerGender" class="form-label">Gender</label>
+                            <select id="swimmerGender" name="gender" class="form-select">
+                                <option value="">Select Gender</option>
+                                <option value="Male" {% if swimmer.gender == 'Male' %}selected{% endif %}>Male</option>
+                                <option value="Female" {% if swimmer.gender == 'Female' %}selected{% endif %}>Female</option>
+                                <option value="Other" {% if swimmer.gender == 'Other' %}selected{% endif %}>Other</option>
+                                <option value="Prefer not to say" {% if swimmer.gender == 'Prefer not to say' %}selected{% endif %}>Prefer not to say</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="swimmerPhone" class="form-label">Contact Number <span class="text-danger">*</span></label>
+                            <input type="tel" id="swimmerPhone" name="phone" class="form-control" value="{{ swimmer.phone or '' }}" {% if not is_admin_override %}readonly{% endif %} required maxlength="10">
+                            {% if not is_admin_override %}
+                                <span class="text-muted" style="font-size: 0.72rem;">Primary account identifier (Read-only)</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12">
+                            <label for="swimmerEmail" class="form-label">Email Address</label>
+                            <input type="email" id="swimmerEmail" name="email" class="form-control" placeholder="swimmer@example.com" value="{{ swimmer.email or '' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 02: Address & Location -->
+                <div class="profile-section-card">
+                    <div class="section-header-badge">
+                        <span class="section-number-pill">02</span>
+                        <span>Address & Location</span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label for="swimmerAddress" class="form-label">Residential Address</label>
+                            <input type="text" id="swimmerAddress" name="address" class="form-control" placeholder="Apartment / Flat, Street, Area" value="{{ swimmer.address or '' }}">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="swimmerCity" class="form-label">City</label>
+                            <input type="text" id="swimmerCity" name="city" class="form-control" placeholder="Hyderabad" value="{{ swimmer.city or 'Hyderabad' }}">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="swimmerState" class="form-label">State</label>
+                            <select id="swimmerState" name="state" class="form-select">
+                                <option value="Telangana" {% if swimmer.state == 'Telangana' or not swimmer.state %}selected{% endif %}>Telangana</option>
+                                <option value="Andhra Pradesh" {% if swimmer.state == 'Andhra Pradesh' %}selected{% endif %}>Andhra Pradesh</option>
+                                <option value="Karnataka" {% if swimmer.state == 'Karnataka' %}selected{% endif %}>Karnataka</option>
+                                <option value="Tamil Nadu" {% if swimmer.state == 'Tamil Nadu' %}selected{% endif %}>Tamil Nadu</option>
+                                <option value="Maharashtra" {% if swimmer.state == 'Maharashtra' %}selected{% endif %}>Maharashtra</option>
+                                <option value="Other" {% if swimmer.state == 'Other' %}selected{% endif %}>Other</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="swimmerPincode" class="form-label">PIN Code</label>
+                            <input type="text" id="swimmerPincode" name="pincode" class="form-control" placeholder="500032" value="{{ swimmer.pincode or '' }}" maxlength="6">
+                        </div>
+
+                        <div class="col-12">
+                            <label for="preferredLocation" class="form-label">Preferred Training Location / Facility</label>
+                            <select id="preferredLocation" name="preferred_location" class="form-select">
+                                <option value="Gachibowli Stadium Pool" {% if swimmer.preferred_location == 'Gachibowli Stadium Pool' or not swimmer.preferred_location %}selected{% endif %}>Gachibowli Stadium Pool (Main Complex)</option>
+                                <option value="Kondapur Aquatic Center" {% if swimmer.preferred_location == 'Kondapur Aquatic Center' %}selected{% endif %}>Kondapur Aquatic Center</option>
+                                <option value="Madhapur Sports Club" {% if swimmer.preferred_location == 'Madhapur Sports Club' %}selected{% endif %}>Madhapur Sports Club</option>
+                                <option value="Jubilee Hills Club" {% if swimmer.preferred_location == 'Jubilee Hills Club' %}selected{% endif %}>Jubilee Hills Club</option>
+                                <option value="Hitec City Olympic Pool" {% if swimmer.preferred_location == 'Hitec City Olympic Pool' %}selected{% endif %}>Hitec City Olympic Pool</option>
+                                <option value="Other Facility" {% if swimmer.preferred_location == 'Other Facility' %}selected{% endif %}>Other Facility</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 03: Swimming Information & Goals -->
+                <div class="profile-section-card">
+                    <div class="section-header-badge">
+                        <span class="section-number-pill">03</span>
+                        <span>Swimming Information & Preferences</span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="swimmerSkill" class="form-label">Current Skill Level</label>
+                            <select id="swimmerSkill" name="skill_level" class="form-select">
+                                <option value="Beginner" {% if swimmer.skill_level == 'Beginner' or not swimmer.skill_level %}selected{% endif %}>Beginner (Level 1 - Learning Basics)</option>
+                                <option value="Intermediate" {% if swimmer.skill_level == 'Intermediate' %}selected{% endif %}>Intermediate (Level 2 - Stroke Refinement)</option>
+                                <option value="Advanced" {% if swimmer.skill_level == 'Advanced' %}selected{% endif %}>Advanced (Level 3 - Endurance & Speed)</option>
+                                <option value="Competitive" {% if swimmer.skill_level == 'Competitive' %}selected{% endif %}>Competitive (Level 4 - Race Training)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="swimmerExp" class="form-label">Previous Experience</label>
+                            <select id="swimmerExp" name="experience" class="form-select">
+                                <option value="None" {% if swimmer.experience == 'None' or not swimmer.experience %}selected{% endif %}>None (First Time Learner)</option>
+                                <option value="1-6 Months" {% if swimmer.experience == '1-6 Months' %}selected{% endif %}>1 - 6 Months</option>
+                                <option value="6-12 Months" {% if swimmer.experience == '6-12 Months' %}selected{% endif %}>6 - 12 Months</option>
+                                <option value="1-3 Years" {% if swimmer.experience == '1-3 Years' %}selected{% endif %}>1 - 3 Years</option>
+                                <option value="3+ Years" {% if swimmer.experience == '3+ Years' %}selected{% endif %}>3+ Years</option>
+                            </select>
+                        </div>
+
+                        <!-- Swimming Goals Interactive Multi-Select Pills -->
+                        <div class="col-12 mt-3">
+                            <label class="form-label">Swimming Goals (Select all that apply)</label>
+                            <div class="stp-pill-container" id="swimmerGoalsGroup">
+                                {% set available_goals = ['Learn to Swim', 'General Fitness', 'Technique Correction', 'Competitive Training', 'Weight Loss', 'Water Phobia Overcome', 'Endurance Building', 'Lifesaving Skills'] %}
+                                {% for goal in available_goals %}
+                                    <div class="stp-select-pill {% if goal in swimmer_goals %}active{% endif %}" data-value="{{ goal }}" data-name="swimming_goals">
+                                        <i class="fa-solid fa-check check-icon"></i>
+                                        <span>{{ goal }}</span>
+                                        <input type="checkbox" name="swimming_goals" value="{{ goal }}" {% if goal in swimmer_goals %}checked{% endif %} style="display: none;">
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mt-3">
+                            <label for="trainingType" class="form-label">Preferred Training Format</label>
+                            <select id="trainingType" name="training_type" class="form-select">
+                                <option value="1-on-1 Personal" {% if swimmer.training_type == '1-on-1 Personal' or not swimmer.training_type %}selected{% endif %}>1-on-1 Personal Coaching</option>
+                                <option value="Small Group (2-4)" {% if swimmer.training_type == 'Small Group (2-4)' %}selected{% endif %}>Small Group Sessions (2-4 Swimmers)</option>
+                                <option value="Weekend Intensive" {% if swimmer.training_type == 'Weekend Intensive' %}selected{% endif %}>Weekend Intensive Batch</option>
+                                <option value="Open Practice" {% if swimmer.training_type == 'Open Practice' %}selected{% endif %}>Self Practice with Coach Guidance</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mt-3">
+                            <label for="preferredTime" class="form-label">Preferred Time Slot</label>
+                            <select id="preferredTime" name="preferred_time" class="form-select">
+                                <option value="Morning 6:00 AM - 7:00 AM" {% if swimmer.preferred_time == 'Morning 6:00 AM - 7:00 AM' or not swimmer.preferred_time %}selected{% endif %}>Morning: 6:00 AM - 7:00 AM</option>
+                                <option value="Morning 7:00 AM - 8:00 AM" {% if swimmer.preferred_time == 'Morning 7:00 AM - 8:00 AM' %}selected{% endif %}>Morning: 7:00 AM - 8:00 AM</option>
+                                <option value="Evening 5:00 PM - 6:00 PM" {% if swimmer.preferred_time == 'Evening 5:00 PM - 6:00 PM' %}selected{% endif %}>Evening: 5:00 PM - 6:00 PM</option>
+                                <option value="Evening 6:00 PM - 7:00 PM" {% if swimmer.preferred_time == 'Evening 6:00 PM - 7:00 PM' %}selected{% endif %}>Evening: 6:00 PM - 7:00 PM</option>
+                                <option value="Evening 7:00 PM - 8:00 PM" {% if swimmer.preferred_time == 'Evening 7:00 PM - 8:00 PM' %}selected{% endif %}>Evening: 7:00 PM - 8:00 PM</option>
+                                <option value="Flexible" {% if swimmer.preferred_time == 'Flexible' %}selected{% endif %}>Flexible / As per schedule</option>
+                            </select>
+                        </div>
+
+                        <!-- Preferred Days Interactive Multi-Select Pills -->
+                        <div class="col-12 mt-3">
+                            <label class="form-label">Preferred Days</label>
+                            <div class="stp-pill-container" id="swimmerDaysGroup">
+                                {% set week_days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
+                                {% for day in week_days %}
+                                    <div class="stp-select-pill {% if day in swimmer_days %}active{% endif %}" data-value="{{ day }}" data-name="preferred_days">
+                                        <i class="fa-solid fa-check check-icon"></i>
+                                        <span>{{ day }}</span>
+                                        <input type="checkbox" name="preferred_days" value="{{ day }}" {% if day in swimmer_days %}checked{% endif %} style="display: none;">
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Form Action Submit Button -->
+                <div class="d-flex justify-content-end gap-3 mt-4">
+                    <button type="submit" id="saveProfileBtn" class="btn btn-primary px-5 py-3 rounded-pill fw-bold shadow-lg">
+                        <i class="fa-solid fa-circle-check me-2"></i> Save Swimmer Profile
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    </form>
+    {% endif %}
+
+
+    <!-- ============================================================= -->
+    <!-- 2. TRAINER PROFILE VIEW (Trainer or Admin Overriding Trainer)   -->
+    <!-- ============================================================= -->
+    {% if p_type == 'trainer' %}
+    <div class="row g-4">
+        
+        <!-- Left Column: Training Album & Gallery Uploader (KAN-8) + Security -->
+        <div class="col-lg-4">
+            
+            <!-- Section 05: Account & Verification Status -->
+            <div class="profile-section-card">
+                <div class="section-header-badge">
+                    <span class="section-number-pill">05</span>
+                    <span>Account & Verification</span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Coach Username</label>
+                    <input type="text" class="form-control" value="{{ trainer.username }}" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Verified ID Proof</label>
+                    <div class="d-flex align-items-center gap-2 p-2 rounded" style="background: rgba(255,255,255,0.03);">
+                        <i class="fa-solid fa-id-badge text-primary"></i>
+                        <span class="text-white small fw-bold">{{ trainer.id_proof or 'Aadhaar / Gov ID' }}</span>
+                        <span class="badge bg-success ms-auto" style="font-size: 0.65rem;">Verified</span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Profile Approval Status</label>
+                    {% if is_admin_override %}
+                        <form action="/profile?user_type=trainer&id={{ admin_target_id }}" method="POST" id="adminTrainerStatusForm">
+                            <select name="profile_approval_status" class="form-select border-warning mb-2" onchange="document.getElementById('profileForm').submit()">
+                                <option value="Approved" {% if trainer.profile_approval_status == 'Approved' %}selected{% endif %}>Approved (Live)</option>
+                                <option value="Pending" {% if trainer.profile_approval_status == 'Pending' %}selected{% endif %}>Pending Review</option>
+                                <option value="Rejected" {% if trainer.profile_approval_status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                            </select>
+                        </form>
+                    {% else %}
+                        <div class="d-flex align-items-center gap-2 p-2.5 rounded" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2);">
+                            <i class="fa-solid fa-circle-check text-success"></i>
+                            <span class="text-white fw-bold small">{{ trainer.profile_approval_status or 'Approved' }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if is_admin_override %}
+                <div class="mb-0">
+                    <label class="form-label">Block / Active Status</label>
+                    <select name="is_blocked" form="profileForm" class="form-select border-danger">
+                        <option value="false" {% if not trainer.is_blocked %}selected{% endif %}>Active (Allowed Access)</option>
+                        <option value="true" {% if trainer.is_blocked %}selected{% endif %}>Blocked (Restricted Access)</option>
+                    </select>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Training Album & Gallery Uploader Card (Jira KAN-8) -->
+            <div class="profile-section-card">
+                <div class="section-header-badge">
+                    <i class="fa-solid fa-camera text-primary me-1"></i>
+                    <span>Training Album & Gallery</span>
+                </div>
+                <p class="text-muted small mb-3">
+                    Upload training photos or action shots. Submissions are reviewed by admin and featured on the public gallery.
+                </p>
+
                 <form id="uploadPhotoForm" action="/profile/upload-photo" method="POST" enctype="multipart/form-data">
                     <div class="mb-3">
-                        <label class="form-label text-white small fw-bold">Target Gallery Section</label>
-                        <select name="section" class="form-select bg-black border-secondary text-white" required>
+                        <label class="form-label">Target Gallery Section</label>
+                        <select name="section" class="form-select" required>
                             <option value="coaching" selected>Coach & Learners (coaching)</option>
                             <option value="achievements">Medals & Achievements (achievements)</option>
                             <option value="swimmers">Swimmers in Action (swimmers)</option>
@@ -106,8 +803,8 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label text-white small fw-bold">Caption / Activity Description</label>
-                        <input type="text" name="caption" class="form-control bg-black border-secondary text-white" placeholder="e.g. Kickboard & breathing rhythm drill with young learner">
+                        <label class="form-label">Caption / Activity Description</label>
+                        <input type="text" name="caption" class="form-control" placeholder="e.g. Kickboard & breathing rhythm drill">
                     </div>
 
                     <!-- Modern File Uploader Card (Jira KAN-8) -->
@@ -136,7 +833,7 @@
                                style="display: none;">
                     </div>
                     
-                    <button type="submit" id="uploadSubmitBtn" class="btn btn-primary w-100 py-2.5 fw-bold">
+                    <button type="submit" id="uploadSubmitBtn" class="btn btn-primary w-100 py-2.5 fw-bold rounded-pill">
                         <i class="fa-solid fa-cloud-arrow-up me-1"></i> Submit Photos for Gallery
                     </button>
                 </form>
@@ -144,7 +841,7 @@
                 <!-- Coach's Uploaded Photos List -->
                 {% if coach_photos and coach_photos|length > 0 %}
                 <div class="mt-4 pt-3 border-top border-white-10">
-                    <h6 class="text-white small fw-bold text-uppercase mb-2">Your Uploaded Photos ({{ coach_photos|length }})</h6>
+                    <h6 class="text-white small fw-bold text-uppercase mb-2">Uploaded Photos ({{ coach_photos|length }})</h6>
                     <div class="d-flex flex-column gap-2" style="max-height: 240px; overflow-y: auto;">
                         {% for cp in coach_photos %}
                         <div class="d-flex align-items-center gap-2 p-2 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
@@ -166,104 +863,588 @@
                 </div>
                 {% endif %}
             </div>
-        </div>
-        
-        <!-- Right Details Sheet -->
-        <div class="lg:col-span-2 flex flex-col gap-6">
-            
-            <div class="glass-panel" style="padding: 2.5rem;">
-                <h3 class="font-display text-white mb-4" style="font-size: 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1rem;"><i class="fa-solid fa-address-card text-primary me-2"></i> Profile Credentials</h3>
-                
-                <form action="/profile" method="POST" id="profileForm">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="form-group">
-                            <label for="profileName" class="form-label">Full Name</label>
-                            <input type="text" id="profileName" name="name" class="form-control" value="{{ trainer.name }}" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="profilePhone" class="form-label">Contact Number</label>
-                            <input type="tel" id="profilePhone" name="phone" class="form-control" value="{{ trainer.phone }}" required>
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="form-group">
-                            <label for="profileEmail" class="form-label">Email Address</label>
-                            <input type="email" id="profileEmail" name="email" class="form-control" value="{{ trainer.email }}" placeholder="coach@example.com" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="profileWhatsapp" class="form-label">WhatsApp Number</label>
-                            <input type="tel" id="profileWhatsapp" name="whatsapp" class="form-control" value="{{ trainer.whatsapp }}" maxlength="10" pattern="[0-9]{10}" inputmode="numeric" required>
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="form-group">
-                            <label for="profileExperience" class="form-label">Coaching Experience</label>
-                            <input type="text" id="profileExperience" name="experience" class="form-control" value="{{ trainer.experience }}" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="profileQualification" class="form-label">Specialist Qualification</label>
-                            <input type="text" id="profileQualification" name="qualification" class="form-control" value="{{ trainer.qualification }}" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="profileWorking" class="form-label">Currently Working At</label>
-                        <input type="text" id="profileWorking" name="currently_working" class="form-control" value="{{ trainer.currently_working }}" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="profileResidence" class="form-label">Location of Residence</label>
-                        <input type="text" id="profileResidence" name="residence_location" class="form-control" value="{{ trainer.residence_location }}" required>
-                    </div>
-                    
-                    <div class="flex justify-end mt-4">
-                        <button type="submit" id="saveChangesBtn" class="btn btn-primary px-5 py-3" style="display: none !important;">
-                            <i class="fa-solid fa-circle-check me-2"></i> Save Changes
-                        </button>
-                    </div>
-                </form>
+
+            <!-- Security Credentials -->
+            <div class="profile-section-card">
+                <div class="section-header-badge">
+                    <i class="fa-solid fa-key text-primary me-1"></i>
+                    <span>Security Settings</span>
+                </div>
+                <button type="button" class="btn btn-outline-light w-100 py-2.5 rounded-pill" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                    <i class="fa-solid fa-lock me-1.5 text-primary"></i> Change Password
+                </button>
             </div>
-            
-            <!-- Security Panel -->
-            <div class="glass-panel" style="padding: 2.5rem;">
-                <h3 class="font-display text-white mb-4" style="font-size: 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1rem;"><i class="fa-solid fa-shield-halved text-primary me-2"></i> Security Settings</h3>
+
+        </div>
+
+        <!-- Right Column: Sections 01 to 06 -->
+        <div class="col-lg-8">
+            <form action="/profile{% if is_admin_override %}?user_type=trainer&id={{ admin_target_id }}{% endif %}" method="POST" id="profileForm">
                 
-                <form action="/profile/update_password" method="POST" id="passwordForm">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="form-group">
-                            <label class="form-label">New Password</label>
-                            <div style="display: flex;">
-                                <input type="password" id="newPassword" name="new_password" class="form-control" required minlength="6" placeholder="Enter new password" style="border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: none;">
-                                <button class="btn btn-secondary" type="button" onclick="togglePasswordVisibility('newPassword', this)" style="border-top-left-radius: 0; border-bottom-left-radius: 0; border: 1px solid rgba(255,255,255,0.1); border-left: none; padding: 0 1rem;">
+                <!-- Section 01: Personal Information -->
+                <div class="profile-section-card">
+                    <div class="section-header-badge">
+                        <span class="section-number-pill">01</span>
+                        <span>Personal Information</span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="trainerName" class="form-label">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" id="trainerName" name="name" class="form-control" value="{{ trainer.name }}" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="trainerPhone" class="form-label">Contact Number <span class="text-danger">*</span></label>
+                            <input type="tel" id="trainerPhone" name="phone" class="form-control" value="{{ trainer.phone }}" required maxlength="10">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="trainerWhatsapp" class="form-label">WhatsApp Number <span class="text-danger">*</span></label>
+                            <input type="tel" id="trainerWhatsapp" name="whatsapp" class="form-control" value="{{ trainer.whatsapp or trainer.phone }}" required maxlength="10">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="trainerEmail" class="form-label">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" id="trainerEmail" name="email" class="form-control" value="{{ trainer.email }}" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="trainerDob" class="form-label">Date of Birth</label>
+                            <input type="date" id="trainerDob" name="dob" class="form-control" value="{{ trainer.dob or '' }}">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="trainerGender" class="form-label">Gender</label>
+                            <select id="trainerGender" name="gender" class="form-select">
+                                <option value="Male" {% if trainer.gender == 'Male' or not trainer.gender %}selected{% endif %}>Male</option>
+                                <option value="Female" {% if trainer.gender == 'Female' %}selected{% endif %}>Female</option>
+                                <option value="Other" {% if trainer.gender == 'Other' %}selected{% endif %}>Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 02: Professional Information -->
+                <div class="profile-section-card">
+                    <div class="section-header-badge">
+                        <span class="section-number-pill">02</span>
+                        <span>Professional Information</span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label for="trainerTitle" class="form-label">Professional Coaching Title</label>
+                            <input type="text" id="trainerTitle" name="professional_title" class="form-control" placeholder="e.g. Senior Swimming Coach & Aquatic Specialist" value="{{ trainer.professional_title or '' }}">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="trainerExp" class="form-label">Coaching Experience</label>
+                            <input type="text" id="trainerExp" name="experience" class="form-control" placeholder="e.g. 8+ Years" value="{{ trainer.experience }}" required>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="trainerBio" class="form-label">Short Biography / Philosophy</label>
+                            <textarea id="trainerBio" name="bio" class="form-control" rows="3" placeholder="Describe your coaching methodology and background...">{{ trainer.bio or '' }}</textarea>
+                        </div>
+
+                        <!-- Coaching Specializations Pills -->
+                        <div class="col-12 mt-3">
+                            <label class="form-label">Coaching Specializations</label>
+                            <div class="stp-pill-container" id="trainerSpecGroup">
+                                {% set available_specs = ['Freestyle & Stroke Tech', 'Butterfly Mastery', 'Breaststroke', 'Backstroke', 'Breathing & Endurance', 'Water Safety', 'Junior Racing', 'Adults & Phobia'] %}
+                                {% for spec in available_specs %}
+                                    <div class="stp-select-pill {% if spec in trainer_specialties %}active{% endif %}" data-value="{{ spec }}" data-name="specialties">
+                                        <i class="fa-solid fa-check check-icon"></i>
+                                        <span>{{ spec }}</span>
+                                        <input type="checkbox" name="specialties" value="{{ spec }}" {% if spec in trainer_specialties %}checked{% endif %} style="display: none;">
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Coaching Levels Handled Pills -->
+                        <div class="col-12 mt-3">
+                            <label class="form-label">Coaching Levels Handled</label>
+                            <div class="stp-pill-container" id="trainerLevelsGroup">
+                                {% set available_levels = ['Beginner', 'Intermediate', 'Advanced', 'Elite & National'] %}
+                                {% for lvl in available_levels %}
+                                    <div class="stp-select-pill {% if lvl in trainer_levels %}active{% endif %}" data-value="{{ lvl }}" data-name="coaching_levels">
+                                        <i class="fa-solid fa-check check-icon"></i>
+                                        <span>{{ lvl }}</span>
+                                        <input type="checkbox" name="coaching_levels" value="{{ lvl }}" {% if lvl in trainer_levels %}checked{% endif %} style="display: none;">
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Languages Spoken Pills -->
+                        <div class="col-12 mt-3">
+                            <label class="form-label">Languages Spoken</label>
+                            <div class="stp-pill-container" id="trainerLangGroup">
+                                {% set available_langs = ['English', 'Hindi', 'Telugu', 'Tamil', 'Kannada'] %}
+                                {% for lang in available_langs %}
+                                    <div class="stp-select-pill {% if lang in trainer_languages %}active{% endif %}" data-value="{{ lang }}" data-name="languages">
+                                        <i class="fa-solid fa-check check-icon"></i>
+                                        <span>{{ lang }}</span>
+                                        <input type="checkbox" name="languages" value="{{ lang }}" {% if lang in trainer_languages %}checked{% endif %} style="display: none;">
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 03: Qualifications & Certifications -->
+                <div class="profile-section-card">
+                    <div class="section-header-badge">
+                        <span class="section-number-pill">03</span>
+                        <span>Qualifications & Certifications</span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="trainerQual" class="form-label">Highest Qualification</label>
+                            <input type="text" id="trainerQual" name="qualification" class="form-control" placeholder="e.g. ASCA Level 2 Certified Coach" value="{{ trainer.qualification }}" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="trainerCertDate" class="form-label">Certificate Validity Date</label>
+                            <input type="date" id="trainerCertDate" name="certificate_validity" class="form-control" value="{{ trainer.certificate_validity or '' }}">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="trainerWorking" class="form-label">Currently Working At</label>
+                            <input type="text" id="trainerWorking" name="currently_working" class="form-control" value="{{ trainer.currently_working }}" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="trainerResidence" class="form-label">Location of Residence</label>
+                            <input type="text" id="trainerResidence" name="residence_location" class="form-control" value="{{ trainer.residence_location }}" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 04: Training Availability -->
+                <div class="profile-section-card">
+                    <div class="section-header-badge">
+                        <span class="section-number-pill">04</span>
+                        <span>Training Availability & Slots</span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="trainerLocations" class="form-label">Coaching Pool Locations</label>
+                            <input type="text" id="trainerLocations" name="training_locations" class="form-control" placeholder="e.g. Gachibowli, Madhapur, Kondapur" value="{{ trainer.training_locations or 'Gachibowli Stadium Pool' }}">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="trainerTimeSlots" class="form-label">Available Time Slots</label>
+                            <input type="text" id="trainerTimeSlots" name="available_slots" class="form-control" placeholder="e.g. 6:00 AM - 9:00 AM, 5:00 PM - 8:00 PM" value="{{ trainer.available_slots or '' }}">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="trainerTrainingType" class="form-label">Training Mode</label>
+                            <select id="trainerTrainingType" name="training_type" class="form-select">
+                                <option value="1-on-1 Personal" {% if trainer.training_type == '1-on-1 Personal' %}selected{% endif %}>1-on-1 Personal</option>
+                                <option value="Group Sessions" {% if trainer.training_type == 'Group Sessions' %}selected{% endif %}>Group Sessions</option>
+                                <option value="Hybrid (Both)" {% if trainer.training_type == 'Hybrid (Both)' or not trainer.training_type %}selected{% endif %}>Hybrid (Both 1-on-1 & Group)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="trainerMaxStudents" class="form-label">Max Students per Batch</label>
+                            <input type="number" id="trainerMaxStudents" name="max_students" class="form-control" min="1" max="25" value="{{ trainer.max_students or 5 }}">
+                        </div>
+
+                        <!-- Preferred Training Days Pills -->
+                        <div class="col-12 mt-3">
+                            <label class="form-label">Preferred Training Days</label>
+                            <div class="stp-pill-container" id="trainerDaysGroup">
+                                {% set week_days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
+                                {% for day in week_days %}
+                                    <div class="stp-select-pill {% if day in trainer_days %}active{% endif %}" data-value="{{ day }}" data-name="preferred_training_days">
+                                        <i class="fa-solid fa-check check-icon"></i>
+                                        <span>{{ day }}</span>
+                                        <input type="checkbox" name="preferred_training_days" value="{{ day }}" {% if day in trainer_days %}checked{% endif %} style="display: none;">
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 06: Public Profile Settings -->
+                <div class="profile-section-card">
+                    <div class="section-header-badge">
+                        <span class="section-number-pill">06</span>
+                        <span>Public Profile & Visibility</span>
+                    </div>
+                    <p class="text-muted small mb-3">Control which details appear on your public coach profile and landing page.</p>
+
+                    <div class="stp-toggle-item">
+                        <div>
+                            <div class="text-white fw-bold small">Public Profile Visible</div>
+                            <div class="text-muted" style="font-size: 0.76rem;">Allow your coach card to appear on the Coaches directory</div>
+                        </div>
+                        <label class="stp-switch">
+                            <input type="checkbox" name="public_profile_visible" value="true" {% if trainer.public_profile_visible is not defined or trainer.public_profile_visible %}checked{% endif %}>
+                            <span class="stp-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="stp-toggle-item">
+                        <div>
+                            <div class="text-white fw-bold small">Show Experience Details</div>
+                            <div class="text-muted" style="font-size: 0.76rem;">Display years of coaching experience on your public card</div>
+                        </div>
+                        <label class="stp-switch">
+                            <input type="checkbox" name="show_experience" value="true" {% if trainer.show_experience is not defined or trainer.show_experience %}checked{% endif %}>
+                            <span class="stp-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="stp-toggle-item">
+                        <div>
+                            <div class="text-white fw-bold small">Show Qualifications & Badges</div>
+                            <div class="text-muted" style="font-size: 0.76rem;">Display verified certifications on your public profile</div>
+                        </div>
+                        <label class="stp-switch">
+                            <input type="checkbox" name="show_qualifications" value="true" {% if trainer.show_qualifications is not defined or trainer.show_qualifications %}checked{% endif %}>
+                            <span class="stp-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="stp-toggle-item mb-0">
+                        <div>
+                            <div class="text-white fw-bold small">Show Profile Photo to Visitors</div>
+                            <div class="text-muted" style="font-size: 0.76rem;">Show high-resolution photo on public landing page</div>
+                        </div>
+                        <label class="stp-switch">
+                            <input type="checkbox" name="show_profile_photo" value="true" {% if trainer.show_profile_photo is not defined or trainer.show_profile_photo %}checked{% endif %}>
+                            <span class="stp-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Form Action Submit Button -->
+                <div class="d-flex justify-content-end gap-3 mt-4">
+                    <button type="submit" id="saveTrainerBtn" class="btn btn-primary px-5 py-3 rounded-pill fw-bold shadow-lg">
+                        <i class="fa-solid fa-circle-check me-2"></i> Save Coach Profile
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+
+    <!-- ============================================================= -->
+    <!-- 3. ADMIN PROFILE OVERVIEW & USER DIRECTORY                     -->
+    <!-- ============================================================= -->
+    {% if p_type == 'admin' %}
+    <div class="row g-4">
+        
+        <!-- Left: Super Admin Credentials -->
+        <div class="col-lg-4">
+            <div class="profile-section-card">
+                <div class="section-header-badge">
+                    <i class="fa-solid fa-user-shield text-warning me-1"></i>
+                    <span>Super Admin Credentials</span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Admin Username</label>
+                    <input type="text" class="form-control" value="{{ admin_username }}" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Assigned Admin ID</label>
+                    <input type="text" class="form-control" value="{{ id_number }}" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">System Role</label>
+                    <div class="d-flex align-items-center gap-2 p-2.5 rounded" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2);">
+                        <i class="fa-solid fa-crown text-warning"></i>
+                        <span class="text-white fw-bold small">Full Platform Super Admin</span>
+                    </div>
+                </div>
+
+                <div class="pt-3 border-top border-white-10">
+                    <button type="button" class="btn btn-outline-warning w-100 py-2.5 rounded-pill" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                        <i class="fa-solid fa-key me-1.5"></i> Update Admin Password
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Platform Overview Card -->
+            <div class="profile-section-card">
+                <div class="section-header-badge">
+                    <i class="fa-solid fa-chart-pie text-primary me-1"></i>
+                    <span>Platform Directory Stats</span>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between p-3 rounded mb-2" style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2);">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-person-swimming text-primary fs-4"></i>
+                        <div>
+                            <div class="text-white fw-bold">Swimmer Profiles</div>
+                            <div class="text-muted small">Registered learners</div>
+                        </div>
+                    </div>
+                    <span class="fs-4 fw-bold text-primary font-monospace">{{ all_swimmers|length }}</span>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between p-3 rounded" style="background: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.2);">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-award text-purple-400 fs-4"></i>
+                        <div>
+                            <div class="text-white fw-bold">Swimming Coaches</div>
+                            <div class="text-muted small">Active trainers</div>
+                        </div>
+                    </div>
+                    <span class="fs-4 fw-bold text-purple-400 font-monospace">{{ all_trainers|length }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Swimmer & Coach Directory Tables (with Admin Override link) -->
+        <div class="col-lg-8">
+            <div class="profile-section-card">
+                
+                <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 mb-4 pb-3 border-bottom border-white-10">
+                    <div>
+                        <h4 class="font-display text-white mb-1" style="font-size: 1.3rem;">
+                            <i class="fa-solid fa-users-gear text-primary me-2"></i> User Directory & Override
+                        </h4>
+                        <p class="text-muted small mb-0">Select any swimmer or coach to review and override their profile attributes.</p>
+                    </div>
+
+                    <!-- Search Input -->
+                    <div class="position-relative" style="min-width: 240px;">
+                        <input type="text" id="directorySearchInput" class="form-control form-control-sm ps-4" placeholder="Search name or phone...">
+                        <i class="fa-solid fa-magnifying-glass text-muted position-absolute" style="top: 10px; left: 12px; font-size: 0.75rem;"></i>
+                    </div>
+                </div>
+
+                <!-- Tabs for Swimmers and Coaches -->
+                <ul class="nav nav-pills mb-4" id="directoryTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active rounded-pill px-4 py-2 small fw-bold" id="swimmers-tab" data-bs-toggle="pill" data-bs-target="#swimmers-pane" type="button" role="tab">
+                            <i class="fa-solid fa-person-swimming me-1.5"></i> Swimmers ({{ all_swimmers|length }})
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill px-4 py-2 small fw-bold ms-2" id="coaches-tab" data-bs-toggle="pill" data-bs-target="#coaches-pane" type="button" role="tab">
+                            <i class="fa-solid fa-award me-1.5"></i> Coaches ({{ all_trainers|length }})
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="directoryTabContent">
+                    
+                    <!-- Swimmers Directory Pane -->
+                    <div class="tab-pane fade show active" id="swimmers-pane" role="tabpanel">
+                        <div class="table-responsive" style="max-height: 480px; overflow-y: auto;">
+                            <table class="table table-dark table-hover align-middle mb-0" id="swimmersTable" style="background: transparent;">
+                                <thead>
+                                    <tr class="text-muted small text-uppercase" style="border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 0.74rem;">
+                                        <th>Swimmer</th>
+                                        <th>Contact / Location</th>
+                                        <th>Level</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for sw in all_swimmers %}
+                                    <tr class="directory-row" data-search="{{ sw.name }} {{ sw.phone }} {{ sw.city }}">
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2.5">
+                                                <div class="rounded-circle overflow-hidden flex-shrink-0" style="width: 36px; height: 36px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); display: flex; align-items: center; justify-content: center;">
+                                                    {% if sw.photo %}
+                                                        <img src="{{ sw.photo if sw.photo.startswith('http') else url_for('static', filename='profile_pictures/' + sw.photo) }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                                    {% else %}
+                                                        <span style="font-size: 0.9rem;">🏊</span>
+                                                    {% endif %}
+                                                </div>
+                                                <div>
+                                                    <div class="text-white fw-bold small">{{ sw.name }}</div>
+                                                    <div class="text-muted" style="font-size: 0.72rem;">Reg: {{ sw.registered }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="text-white small font-monospace">{{ sw.phone }}</div>
+                                            <div class="text-muted" style="font-size: 0.72rem;">{{ sw.city }}</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-dark border border-secondary text-info" style="font-size: 0.72rem;">{{ sw.skill_level }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success/20 text-success" style="font-size: 0.72rem;">{{ sw.account_status }}</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <a href="/profile?user_type=swimmer&id={{ sw.phone }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1" style="font-size: 0.78rem;">
+                                                <i class="fa-solid fa-pen-to-square me-1"></i> Review & Override
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4 small">No swimmer profiles found.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Coaches Directory Pane -->
+                    <div class="tab-pane fade" id="coaches-pane" role="tabpanel">
+                        <div class="table-responsive" style="max-height: 480px; overflow-y: auto;">
+                            <table class="table table-dark table-hover align-middle mb-0" id="coachesTable" style="background: transparent;">
+                                <thead>
+                                    <tr class="text-muted small text-uppercase" style="border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 0.74rem;">
+                                        <th>Coach</th>
+                                        <th>Experience / Title</th>
+                                        <th>Approval Status</th>
+                                        <th>Access</th>
+                                        <th class="text-end">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for co in all_trainers %}
+                                    <tr class="directory-row" data-search="{{ co.name }} {{ co.username }} {{ co.phone }}">
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2.5">
+                                                <div class="rounded-circle overflow-hidden flex-shrink-0" style="width: 36px; height: 36px; background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); display: flex; align-items: center; justify-content: center;">
+                                                    {% if co.photo %}
+                                                        <img src="{{ co.photo if co.photo.startswith('http') else url_for('static', filename='profile_pictures/' + co.photo) }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                                    {% else %}
+                                                        <span style="font-size: 0.9rem;">👨‍🏫</span>
+                                                    {% endif %}
+                                                </div>
+                                                <div>
+                                                    <div class="text-white fw-bold small">{{ co.name }}</div>
+                                                    <div class="text-muted" style="font-size: 0.72rem;">@{{ co.username }} • {{ co.phone }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="text-white small">{{ co.experience }}</div>
+                                            <div class="text-muted text-truncate" style="font-size: 0.72rem; max-width: 160px;">{{ co.qualification }}</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge {{ 'bg-success/20 text-success' if co.status == 'Approved' else 'bg-warning/20 text-warning' }}" style="font-size: 0.72rem;">
+                                                {{ co.status }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if co.is_blocked %}
+                                                <span class="badge bg-danger/20 text-danger" style="font-size: 0.72rem;">Blocked</span>
+                                            {% else %}
+                                                <span class="badge bg-success/20 text-success" style="font-size: 0.72rem;">Active</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            <a href="/profile?user_type=trainer&id={{ co.username }}" class="btn btn-sm btn-outline-warning rounded-pill px-3 py-1" style="font-size: 0.78rem;">
+                                                <i class="fa-solid fa-pen-to-square me-1"></i> Review & Override
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4 small">No coach accounts found.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+    {% endif %}
+
+
+    <!-- ============================================================= -->
+    <!-- FLOATING SAVE BAR (Shows when fields have unsaved edits)      -->
+    <!-- ============================================================= -->
+    {% if p_type in ['swimmer', 'trainer'] %}
+    <div class="floating-save-bar" id="floatingSaveBar">
+        <div class="d-flex align-items-center gap-2">
+            <span class="spinner-grow spinner-grow-sm text-primary" role="status"></span>
+            <span class="text-white small fw-bold">Unsaved changes detected</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-link text-muted btn-sm text-decoration-none px-2" onclick="resetFormChanges()">
+                Discard
+            </button>
+            <button type="button" class="btn btn-primary btn-sm px-4 py-2 rounded-pill fw-bold" onclick="document.getElementById('profileForm').submit()">
+                <i class="fa-solid fa-floppy-disk me-1"></i> Save Changes
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+
+    <!-- ============================================================= -->
+    <!-- PASSWORD / PIN CHANGE MODAL                                   -->
+    <!-- ============================================================= -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-panel border border-secondary text-white shadow-2xl" style="background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); border-radius: 20px;">
+                <div class="modal-header border-bottom border-white-10 pb-3">
+                    <h5 class="modal-title font-display text-white" id="changePasswordModalLabel">
+                        <i class="fa-solid fa-shield-halved text-primary me-2"></i> Update Security Credentials
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <form action="/profile/update_password" method="POST" id="modalPasswordForm">
+                    <div class="modal-body py-4">
+                        <div class="mb-3">
+                            <label class="form-label">New Password / PIN</label>
+                            <div class="input-group">
+                                <input type="password" id="modalNewPassword" name="new_password" class="form-control" placeholder="Enter new password (min 6 chars)" minlength="6" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('modalNewPassword', this)">
                                     <i class="fa-solid fa-eye text-muted"></i>
                                 </button>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Confirm New Password</label>
-                            <div style="display: flex;">
-                                <input type="password" id="confirmPassword" name="confirm_password" class="form-control" required minlength="6" placeholder="Confirm new password" style="border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: none;">
-                                <button class="btn btn-secondary" type="button" onclick="togglePasswordVisibility('confirmPassword', this)" style="border-top-left-radius: 0; border-bottom-left-radius: 0; border: 1px solid rgba(255,255,255,0.1); border-left: none; padding: 0 1rem;">
+
+                        <div class="mb-3">
+                            <label class="form-label">Confirm New Password / PIN</label>
+                            <div class="input-group">
+                                <input type="password" id="modalConfirmPassword" name="confirm_password" class="form-control" placeholder="Confirm new password" minlength="6" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('modalConfirmPassword', this)">
                                     <i class="fa-solid fa-eye text-muted"></i>
                                 </button>
                             </div>
                         </div>
+
+                        <p class="text-muted small mb-0">
+                            <i class="fa-solid fa-circle-info text-info me-1"></i>
+                            Your new password will take effect immediately. Keep your login credentials confidential.
+                        </p>
                     </div>
-                    <div class="flex justify-end mt-4">
-                        <button type="submit" class="btn btn-outline py-2.5 px-4" style="border-color: var(--color-primary); color: var(--color-primary);">
-                            <i class="fa-solid fa-key me-2"></i> Update Password
+
+                    <div class="modal-footer border-top border-white-10 pt-3">
+                        <button type="button" class="btn btn-outline-light btn-sm px-4 rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm px-4 py-2 rounded-pill fw-bold">
+                            <i class="fa-solid fa-key me-1.5"></i> Update Password
                         </button>
                     </div>
                 </form>
             </div>
-            
         </div>
-        
     </div>
 
 </div>
@@ -273,213 +1454,383 @@
 <script src="{{ url_for('static', filename='common.js') }}"></script>
 <script>
 (function() {
-    function initCoachProfileScripts() {
-        // Upload album picture progress tracking
-        const saveChangesBtn = document.getElementById('saveChangesBtn');
-        const inputs = document.querySelectorAll('#profileForm .form-control');
+    // -------------------------------------------------------------
+    // 1. Digital ID Copy Action
+    // -------------------------------------------------------------
+    window.copyDigitalId = function() {
+        const idElem = document.getElementById('digitalIdVal');
+        const iconElem = document.getElementById('copyIdIcon');
+        if (!idElem) return;
         
-        const initialValues = {};
-        inputs.forEach(input => {
-            if (input.id) {
-                initialValues[input.id] = input.value;
+        navigator.clipboard.writeText(idElem.textContent.trim()).then(() => {
+            if (iconElem) {
+                iconElem.className = 'fa-solid fa-check text-success';
+                setTimeout(() => {
+                    iconElem.className = 'fa-regular fa-copy';
+                }, 2000);
             }
+        }).catch(err => {
+            console.error('Copy failed:', err);
         });
+    };
 
-        const profilePhone = document.getElementById('profilePhone');
-        if (profilePhone) {
-            profilePhone.addEventListener('input', () => {
-                profilePhone.value = profilePhone.value.replace(/\D/g, '').slice(0, 10);
-            });
+    window.triggerDigitalIdModal = function() {
+        // Trigger Digital ID modal from base navbar if available
+        const navIdBtn = document.querySelector('[data-bs-target="#digitalIdModal"]') || document.querySelector('[onclick*="openDigitalIdModal"]');
+        if (navIdBtn) {
+            navIdBtn.click();
+        } else {
+            const modalEl = document.getElementById('digitalIdModal');
+            if (modalEl && typeof bootstrap !== 'undefined') {
+                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.show();
+            } else {
+                alert('Digital ID: ' + (document.getElementById('digitalIdVal') ? document.getElementById('digitalIdVal').textContent.trim() : 'Active'));
+            }
         }
+    };
 
-        const profileWhatsapp = document.getElementById('profileWhatsapp');
-        if (profileWhatsapp) {
-            profileWhatsapp.addEventListener('input', () => {
-                profileWhatsapp.value = profileWhatsapp.value.replace(/\D/g, '').slice(0, 10);
-            });
-        }
-        
-        inputs.forEach(input => {
-            input.addEventListener('input', () => {
-                let modified = false;
-                inputs.forEach(inp => {
-                    if (inp.id && inp.value !== initialValues[inp.id]) {
-                        modified = true;
-                    }
-                });
-                
-                if (saveChangesBtn) {
-                    if (modified) {
-                        saveChangesBtn.style.setProperty('display', 'inline-block', 'important');
+    // -------------------------------------------------------------
+    // 2. Avatar Photo Upload via Cloudinary API
+    // -------------------------------------------------------------
+    const avatarWrap = document.getElementById('avatarUploadWrap');
+    const avatarInput = document.getElementById('profilePicInput');
+    const avatarImg = document.getElementById('profileAvatarImg');
+
+    if (avatarWrap && avatarInput) {
+        avatarWrap.addEventListener('click', () => avatarInput.click());
+
+        avatarInput.addEventListener('change', function() {
+            if (!this.files || !this.files[0]) return;
+            const file = this.files[0];
+
+            const formData = new FormData();
+            formData.append('profile_pic', file);
+            {% if is_admin_override and id_number %}
+                formData.append('target_id_number', '{{ id_number }}');
+            {% endif %}
+
+            // Show uploading state
+            avatarWrap.style.opacity = '0.5';
+
+            fetch('/api/upload_id_card_photo', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                avatarWrap.style.opacity = '1';
+                if (data.success && data.photo) {
+                    if (avatarImg) {
+                        avatarImg.src = data.photo;
                     } else {
-                        saveChangesBtn.style.setProperty('display', 'none', 'important');
+                        avatarWrap.innerHTML = `
+                            <img id="profileAvatarImg" src="${data.photo}" alt="Profile Photo">
+                            <div class="profile-avatar-overlay">
+                                <i class="fa-solid fa-camera fs-5 mb-1"></i>
+                                <span>Upload</span>
+                            </div>
+                        `;
                     }
+                    alert('Profile photo updated successfully!');
+                } else {
+                    alert(data.error || 'Failed to update profile photo.');
                 }
+            })
+            .catch(err => {
+                avatarWrap.style.opacity = '1';
+                console.error('Avatar upload error:', err);
+                alert('An error occurred during photo upload.');
             });
         });
+    }
 
-        // Modern File Uploader for Coach Album (Jira KAN-8)
-        const coachFileInput = document.getElementById('coachTrainingPicsInput');
-        const coachDropzone = document.getElementById('coachDropzone');
-        const coachFileList = document.getElementById('coachFileList');
-        const coachCounter = document.getElementById('coachUploadCounter');
-        const uploadSubmitBtn = document.getElementById('uploadSubmitBtn');
-        let coachSelectedFiles = [];
+    // -------------------------------------------------------------
+    // 3. Interactive Multi-Select Pills Logic
+    // -------------------------------------------------------------
+    function initPills() {
+        const pills = document.querySelectorAll('.stp-select-pill');
+        pills.forEach(pill => {
+            pill.addEventListener('click', function(e) {
+                // Toggle active class
+                this.classList.toggle('active');
+                
+                // Toggle internal hidden checkbox
+                const checkbox = this.querySelector('input[type="checkbox"]');
+                if (checkbox) {
+                    checkbox.checked = this.classList.contains('active');
+                }
 
-        function formatBytes(bytes) {
-            if (!bytes || bytes === 0) return '0 B';
-            const k = 1024;
-            const sizes = ['B', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-        }
+                // Trigger change detection for floating save bar
+                triggerChangeDetection();
+            });
+        });
+    }
 
-        function getFileExt(filename) {
-            const parts = filename.split('.');
-            return parts.length > 1 ? parts.pop().toUpperCase().slice(0, 4) : 'FILE';
-        }
+    // -------------------------------------------------------------
+    // 4. Dirty Change Detection & Floating Save Bar
+    // -------------------------------------------------------------
+    const profileForm = document.getElementById('profileForm');
+    const floatingSaveBar = document.getElementById('floatingSaveBar');
+    let formSnapshot = {};
 
-        let isSyncingCoachInput = false;
-        function syncCoachNativeInput() {
-            if (!coachFileInput || isSyncingCoachInput) return;
-            try {
-                isSyncingCoachInput = true;
-                const dt = new DataTransfer();
-                coachSelectedFiles.forEach(f => dt.items.add(f));
-                coachFileInput.files = dt.files;
-            } catch (err) {
-                console.warn('DataTransfer sync:', err);
-            } finally {
-                isSyncingCoachInput = false;
+    function captureSnapshot() {
+        if (!profileForm) return;
+        formSnapshot = {};
+        const elements = profileForm.querySelectorAll('input, select, textarea');
+        elements.forEach((el, idx) => {
+            const key = el.name || el.id || ('idx_' + idx);
+            if (el.type === 'checkbox' || el.type === 'radio') {
+                formSnapshot[key] = el.checked;
+            } else {
+                formSnapshot[key] = el.value;
+            }
+        });
+    }
+
+    function triggerChangeDetection() {
+        if (!profileForm || !floatingSaveBar) return;
+        let isDirty = false;
+        const elements = profileForm.querySelectorAll('input, select, textarea');
+        
+        for (let el of elements) {
+            const key = el.name || el.id;
+            if (!key) continue;
+            
+            if (el.type === 'checkbox' || el.type === 'radio') {
+                if (el.checked !== formSnapshot[key]) {
+                    isDirty = true;
+                    break;
+                }
+            } else {
+                if (el.value !== formSnapshot[key]) {
+                    isDirty = true;
+                    break;
+                }
             }
         }
 
-        function renderCoachFileList() {
-            if (!coachFileList || !coachCounter) return;
-
-            const count = coachSelectedFiles.length;
-            if (count === 0) {
-                coachCounter.className = 'stp-uploader-counter text-muted';
-                coachCounter.innerHTML = '<i class="fa-regular fa-image me-1"></i> No photos selected';
-                coachFileList.innerHTML = '';
-                if (uploadSubmitBtn) {
-                    uploadSubmitBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up me-1"></i> Submit Photos for Gallery';
-                }
-                return;
-            }
-
-            const countLabel = count === 1 ? '1 photo selected' : `${count} photos selected`;
-            coachCounter.className = 'stp-uploader-counter text-success fw-bold';
-            coachCounter.innerHTML = `<i class="fa-solid fa-circle-check text-success me-1"></i> ${countLabel} (ready to upload)`;
-
-            if (uploadSubmitBtn) {
-                uploadSubmitBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up me-1"></i> Submit ${count} ${count === 1 ? 'Photo' : 'Photos'} for Gallery`;
-            }
-
-            coachFileList.innerHTML = coachSelectedFiles.map((file, idx) => {
-                const ext = getFileExt(file.name);
-                const badgeClass = `badge-${ext.toLowerCase()}`;
-                const previewUrl = URL.createObjectURL(file);
-                return `
-                    <div class="stp-uploader-item">
-                        <img src="${previewUrl}" class="stp-file-thumb" alt="${file.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="stp-file-badge ${badgeClass}" style="display: none;">${ext}</div>
-                        <div class="stp-file-details">
-                            <p class="stp-file-name" title="${file.name}">${file.name}</p>
-                            <div class="stp-file-meta">
-                                <span>${formatBytes(file.size)}</span>
-                                <span>•</span>
-                                <span class="stp-file-status completed"><i class="fa-solid fa-check-circle me-1"></i>Ready to upload</span>
-                            </div>
-                            <div class="stp-progress-track">
-                                <div class="stp-progress-fill" style="width: 100%;"></div>
-                            </div>
-                        </div>
-                        <button type="button" class="stp-file-action-btn" title="Remove photo" onclick="removeCoachFile(${idx})">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        window.removeCoachFile = function(index) {
-            coachSelectedFiles.splice(index, 1);
-            syncCoachNativeInput();
-            renderCoachFileList();
-        };
-
-        function addCoachFiles(newFiles) {
-            if (!newFiles || !newFiles.length) return;
-            Array.from(newFiles).forEach(file => {
-                const exists = coachSelectedFiles.some(f => f.name === file.name && f.size === file.size);
-                if (!exists) {
-                    coachSelectedFiles.push(file);
-                }
-            });
-            syncCoachNativeInput();
-            renderCoachFileList();
-        }
-
-        if (coachFileInput) {
-            coachFileInput.addEventListener('change', function(e) {
-                if (isSyncingCoachInput) return;
-                const files = this.files || (e.target && e.target.files);
-                if (files && files.length) {
-                    addCoachFiles(files);
-                }
-            });
-            // Clear value on click so re-selecting same files triggers change event
-            coachFileInput.addEventListener('click', function() {
-                this.value = '';
-            });
-        }
-
-        if (coachDropzone) {
-            ['dragenter', 'dragover'].forEach(name => {
-                coachDropzone.addEventListener(name, (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    coachDropzone.classList.add('drag-over');
-                });
-            });
-            ['dragleave'].forEach(name => {
-                coachDropzone.addEventListener(name, (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    coachDropzone.classList.remove('drag-over');
-                });
-            });
-            coachDropzone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                coachDropzone.classList.remove('drag-over');
-                if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
-                    addCoachFiles(e.dataTransfer.files);
-                }
-            });
-        }
-
-        const uploadForm = document.getElementById('uploadPhotoForm');
-        if (uploadForm) {
-            uploadForm.addEventListener('submit', (e) => {
-                if (coachSelectedFiles.length === 0 && (!coachFileInput || !coachFileInput.files || coachFileInput.files.length === 0)) {
-                    e.preventDefault();
-                    alert('Please select or drop at least one photo to upload.');
-                    return;
-                }
-                if (uploadSubmitBtn) {
-                    uploadSubmitBtn.disabled = true;
-                    uploadSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Uploading Photos...';
-                }
-            });
+        if (isDirty) {
+            floatingSaveBar.classList.add('visible');
+        } else {
+            floatingSaveBar.classList.remove('visible');
         }
     }
 
+    window.resetFormChanges = function() {
+        if (!profileForm) return;
+        profileForm.reset();
+        
+        // Reset pills according to snapshot
+        const pills = document.querySelectorAll('.stp-select-pill');
+        pills.forEach(pill => {
+            const cb = pill.querySelector('input[type="checkbox"]');
+            if (cb) {
+                if (cb.checked) {
+                    pill.classList.add('active');
+                } else {
+                    pill.classList.remove('active');
+                }
+            }
+        });
+
+        if (floatingSaveBar) floatingSaveBar.classList.remove('visible');
+    };
+
+    if (profileForm) {
+        profileForm.addEventListener('input', triggerChangeDetection);
+        profileForm.addEventListener('change', triggerChangeDetection);
+    }
+
+    // -------------------------------------------------------------
+    // 5. Admin Directory Real-time Search Filter
+    // -------------------------------------------------------------
+    const dirSearch = document.getElementById('directorySearchInput');
+    if (dirSearch) {
+        dirSearch.addEventListener('input', function() {
+            const term = this.value.toLowerCase().trim();
+            const rows = document.querySelectorAll('.directory-row');
+            rows.forEach(row => {
+                const searchData = (row.getAttribute('data-search') || '').toLowerCase();
+                if (!term || searchData.includes(term)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    // -------------------------------------------------------------
+    // 6. Modern Coach Album Multi-file Uploader (Jira KAN-8)
+    // -------------------------------------------------------------
+    const coachFileInput = document.getElementById('coachTrainingPicsInput');
+    const coachDropzone = document.getElementById('coachDropzone');
+    const coachFileList = document.getElementById('coachFileList');
+    const coachCounter = document.getElementById('coachUploadCounter');
+    const uploadSubmitBtn = document.getElementById('uploadSubmitBtn');
+    let coachSelectedFiles = [];
+
+    function formatBytes(bytes) {
+        if (!bytes || bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function getFileExt(filename) {
+        const parts = filename.split('.');
+        return parts.length > 1 ? parts.pop().toUpperCase().slice(0, 4) : 'FILE';
+    }
+
+    let isSyncingCoachInput = false;
+    function syncCoachNativeInput() {
+        if (!coachFileInput || isSyncingCoachInput) return;
+        try {
+            isSyncingCoachInput = true;
+            const dt = new DataTransfer();
+            coachSelectedFiles.forEach(f => dt.items.add(f));
+            coachFileInput.files = dt.files;
+        } catch (err) {
+            console.warn('DataTransfer sync:', err);
+        } finally {
+            isSyncingCoachInput = false;
+        }
+    }
+
+    function renderCoachFileList() {
+        if (!coachFileList || !coachCounter) return;
+
+        const count = coachSelectedFiles.length;
+        if (count === 0) {
+            coachCounter.className = 'stp-uploader-counter text-muted';
+            coachCounter.innerHTML = '<i class="fa-regular fa-image me-1"></i> No photos selected';
+            coachFileList.innerHTML = '';
+            if (uploadSubmitBtn) {
+                uploadSubmitBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up me-1"></i> Submit Photos for Gallery';
+            }
+            return;
+        }
+
+        const countLabel = count === 1 ? '1 photo selected' : `${count} photos selected`;
+        coachCounter.className = 'stp-uploader-counter text-success fw-bold';
+        coachCounter.innerHTML = `<i class="fa-solid fa-circle-check text-success me-1"></i> ${countLabel} (ready to upload)`;
+
+        if (uploadSubmitBtn) {
+            uploadSubmitBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up me-1"></i> Submit ${count} ${count === 1 ? 'Photo' : 'Photos'} for Gallery`;
+        }
+
+        coachFileList.innerHTML = coachSelectedFiles.map((file, idx) => {
+            const ext = getFileExt(file.name);
+            const badgeClass = `badge-${ext.toLowerCase()}`;
+            const previewUrl = URL.createObjectURL(file);
+            return `
+                <div class="stp-uploader-item">
+                    <img src="${previewUrl}" class="stp-file-thumb" alt="${file.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="stp-file-badge ${badgeClass}" style="display: none;">${ext}</div>
+                    <div class="stp-file-details">
+                        <p class="stp-file-name" title="${file.name}">${file.name}</p>
+                        <div class="stp-file-meta">
+                            <span>${formatBytes(file.size)}</span>
+                            <span>•</span>
+                            <span class="stp-file-status completed"><i class="fa-solid fa-check-circle me-1"></i>Ready to upload</span>
+                        </div>
+                        <div class="stp-progress-track">
+                            <div class="stp-progress-fill" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <button type="button" class="stp-file-action-btn" title="Remove photo" onclick="removeCoachFile(${idx})">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    window.removeCoachFile = function(index) {
+        coachSelectedFiles.splice(index, 1);
+        syncCoachNativeInput();
+        renderCoachFileList();
+    };
+
+    function addCoachFiles(newFiles) {
+        if (!newFiles || !newFiles.length) return;
+        Array.from(newFiles).forEach(file => {
+            const exists = coachSelectedFiles.some(f => f.name === file.name && f.size === file.size);
+            if (!exists) {
+                coachSelectedFiles.push(file);
+            }
+        });
+        syncCoachNativeInput();
+        renderCoachFileList();
+    }
+
+    if (coachFileInput) {
+        coachFileInput.addEventListener('change', function(e) {
+            if (isSyncingCoachInput) return;
+            const files = this.files || (e.target && e.target.files);
+            if (files && files.length) {
+                addCoachFiles(files);
+            }
+        });
+        coachFileInput.addEventListener('click', function() {
+            this.value = '';
+        });
+    }
+
+    if (coachDropzone) {
+        ['dragenter', 'dragover'].forEach(name => {
+            coachDropzone.addEventListener(name, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                coachDropzone.classList.add('drag-over');
+            });
+        });
+        ['dragleave'].forEach(name => {
+            coachDropzone.addEventListener(name, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                coachDropzone.classList.remove('drag-over');
+            });
+        });
+        coachDropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            coachDropzone.classList.remove('drag-over');
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+                addCoachFiles(e.dataTransfer.files);
+            }
+        });
+    }
+
+    const uploadForm = document.getElementById('uploadPhotoForm');
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', (e) => {
+            if (coachSelectedFiles.length === 0 && (!coachFileInput || !coachFileInput.files || coachFileInput.files.length === 0)) {
+                e.preventDefault();
+                alert('Please select or drop at least one photo to upload.');
+                return;
+            }
+            if (uploadSubmitBtn) {
+                uploadSubmitBtn.disabled = true;
+                uploadSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Uploading Photos...';
+            }
+        });
+    }
+
+    // -------------------------------------------------------------
+    // 7. Initialization on DOMContentLoaded
+    // -------------------------------------------------------------
+    function init() {
+        initPills();
+        captureSnapshot();
+    }
+
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initCoachProfileScripts);
+        document.addEventListener('DOMContentLoaded', init);
     } else {
-        initCoachProfileScripts();
+        init();
     }
 })();
 </script>

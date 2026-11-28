@@ -311,6 +311,55 @@ def ensure_database_tables():
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS facebook TEXT")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS twitter TEXT")
     
+    # Extended Trainer Profile Redesign columns (Jira KAN-10)
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS dob TEXT")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS gender TEXT")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS professional_title TEXT")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS coaching_levels TEXT")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS languages TEXT")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS training_locations TEXT")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS preferred_training_days TEXT")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS training_type TEXT")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS max_students INTEGER DEFAULT 5")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS certificate_validity TEXT")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS public_profile_visible BOOLEAN DEFAULT TRUE")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS show_experience BOOLEAN DEFAULT TRUE")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS show_qualifications BOOLEAN DEFAULT TRUE")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS show_profile_photo BOOLEAN DEFAULT TRUE")
+    cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS profile_approval_status TEXT DEFAULT 'Approved'")
+    
+    # Swimmer / Guest Profiles (Jira KAN-10)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS swimmer_profiles (
+        phone TEXT PRIMARY KEY,
+        name TEXT,
+        dob TEXT,
+        gender TEXT,
+        email TEXT,
+        address TEXT,
+        city TEXT,
+        state TEXT,
+        pincode TEXT,
+        preferred_location TEXT,
+        skill_level TEXT,
+        experience TEXT,
+        swimming_goals TEXT,
+        training_type TEXT,
+        preferred_days TEXT,
+        preferred_time TEXT,
+        swimmer_type TEXT,
+        height TEXT,
+        emergency_name TEXT,
+        emergency_phone TEXT,
+        medical_notes TEXT,
+        account_status TEXT DEFAULT 'Active',
+        email_verified BOOLEAN DEFAULT FALSE,
+        phone_verified BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+    
     # Trainer Payment Settings
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS upi_id TEXT")
     cursor.execute("ALTER TABLE trainers ADD COLUMN IF NOT EXISTS qr_code TEXT")
