@@ -156,6 +156,43 @@
         font-size: 0.72rem;
     }
 
+    /* 15-Minute Time Interval Pills (Item 8) */
+    .stp-time-pill {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #cbd5e1;
+        padding: 0.35rem 0.65rem;
+        border-radius: 8px;
+        font-size: 0.76rem;
+        font-family: var(--bs-font-monospace, monospace);
+        cursor: pointer;
+        user-select: none;
+        transition: all 0.18s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .stp-time-pill:hover {
+        background: rgba(56, 189, 248, 0.1);
+        border-color: rgba(56, 189, 248, 0.4);
+        color: #fff;
+        transform: translateY(-1px);
+    }
+    .stp-time-pill.active {
+        background: rgba(56, 189, 248, 0.22);
+        border-color: #38bdf8;
+        color: #38bdf8;
+        font-weight: 700;
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+    }
+    .stp-time-pill.active i.check-icon {
+        display: inline-block !important;
+    }
+    .stp-time-pill i.check-icon {
+        display: none;
+        font-size: 0.65rem;
+    }
+
     /* iOS-Style Modern Toggle Switch */
     .stp-toggle-item {
         display: flex;
@@ -336,25 +373,10 @@
                             {{ admin_name or 'Super Admin' }}
                         {% endif %}
                     </h2>
-                    
-                    <!-- Role Badge -->
-                    {% if p_type == 'swimmer' %}
-                        <span class="badge rounded-pill" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); font-size: 0.78rem; padding: 0.35rem 0.75rem;">
-                            <i class="fa-solid fa-person-swimming me-1"></i> Active Swimmer
-                        </span>
-                    {% elif p_type == 'trainer' %}
-                        <span class="badge rounded-pill" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); font-size: 0.78rem; padding: 0.35rem 0.75rem;">
-                            <i class="fa-solid fa-award me-1"></i> Swimming Coach
-                        </span>
-                    {% else %}
-                        <span class="badge rounded-pill" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); font-size: 0.78rem; padding: 0.35rem 0.75rem;">
-                            <i class="fa-solid fa-shield-halved me-1"></i> Super Admin
-                        </span>
-                    {% endif %}
 
-                    <!-- Account Status Badge -->
+                    <!-- Account Status Badge (Single status tag beside name per Item 1 / Image reference) -->
                     {% set status_val = (swimmer.account_status if p_type == 'swimmer' else (trainer.profile_approval_status if p_type == 'trainer' else 'Active')) or 'Active' %}
-                    <span class="badge rounded-pill" style="background: rgba({{ '16, 185, 129' if status_val == 'Active' or status_val == 'Approved' else '245, 158, 11' }}, 0.15); color: {{ '#34d399' if status_val == 'Active' or status_val == 'Approved' else '#fbbf24' }}; border: 1px solid rgba({{ '16, 185, 129' if status_val == 'Active' or status_val == 'Approved' else '245, 158, 11' }}, 0.3); font-size: 0.78rem; padding: 0.35rem 0.75rem;">
+                    <span class="badge rounded-pill text-uppercase" style="background: rgba({{ '16, 185, 129' if status_val == 'Active' or status_val == 'Approved' else '245, 158, 11' }}, 0.15); color: {{ '#34d399' if status_val == 'Active' or status_val == 'Approved' else '#fbbf24' }}; border: 1px solid rgba({{ '16, 185, 129' if status_val == 'Active' or status_val == 'Approved' else '245, 158, 11' }}, 0.3); font-size: 0.78rem; padding: 0.35rem 0.75rem; letter-spacing: 0.5px;">
                         <i class="fa-solid fa-circle-check me-1"></i> {{ status_val }}
                     </span>
                 </div>
@@ -393,9 +415,9 @@
                 </div>
             </div>
 
-            <!-- Header Quick Action -->
+            <!-- Header Quick Action: Open Digital ID Card Modal (Item 2) -->
             <div class="d-flex flex-column gap-2">
-                <button type="button" class="btn btn-outline-light btn-sm px-4 py-2 rounded-pill" onclick="triggerDigitalIdModal()">
+                <button type="button" class="btn btn-outline-light btn-sm px-4 py-2 rounded-pill" onclick="showMyIdCard(); return false;">
                     <i class="fa-solid fa-id-card me-1.5 text-primary"></i> View Digital ID
                 </button>
             </div>
@@ -423,7 +445,28 @@
 
                     <div class="mb-3">
                         <label class="form-label">Swimmer ID</label>
-                        <input type="text" class="form-control" value="{{ id_number }}" readonly>
+                        <input type="text" class="form-control font-monospace" value="{{ id_number }}" readonly>
+                    </div>
+
+                    <!-- Item 3: Auto-filled Registered Mobile Number & Email -->
+                    <div class="mb-3">
+                        <label class="form-label">Registered Mobile Number</label>
+                        <div class="d-flex align-items-center justify-content-between p-2.5 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">
+                            <div>
+                                <span class="text-white small fw-bold font-monospace"><i class="fa-solid fa-phone me-2 text-primary"></i>{{ swimmer.phone or session.get('phone') }}</span>
+                            </div>
+                            <span class="badge bg-success/20 text-success small"><i class="fa-solid fa-check me-1"></i> VERIFIED</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Registered Email Address</label>
+                        <div class="d-flex align-items-center justify-content-between p-2.5 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">
+                            <div class="min-w-0">
+                                <span class="text-white small fw-bold text-truncate d-block"><i class="fa-solid fa-envelope me-2 text-primary"></i>{{ swimmer.email or session.get('email') or 'devansh@example.com' }}</span>
+                            </div>
+                            <span class="badge bg-success/20 text-success small flex-shrink-0 ms-2"><i class="fa-solid fa-check me-1"></i> VERIFIED</span>
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -441,20 +484,6 @@
                                 <span class="text-white fw-bold small">{{ swimmer.account_status or 'Active' }} Account</span>
                             </div>
                         {% endif %}
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Verification Status</label>
-                        <div class="d-flex flex-column gap-2">
-                            <div class="d-flex align-items-center justify-content-between p-2 rounded" style="background: rgba(255,255,255,0.03);">
-                                <span class="text-muted small"><i class="fa-solid fa-phone me-1.5 text-primary"></i> Phone Verified</span>
-                                <span class="badge bg-success/20 text-success small"><i class="fa-solid fa-check"></i> Verified</span>
-                            </div>
-                            <div class="d-flex align-items-center justify-content-between p-2 rounded" style="background: rgba(255,255,255,0.03);">
-                                <span class="text-muted small"><i class="fa-solid fa-envelope me-1.5 text-primary"></i> Email Verified</span>
-                                <span class="badge bg-success/20 text-success small"><i class="fa-solid fa-check"></i> Verified</span>
-                            </div>
-                        </div>
                     </div>
 
                     <div class="pt-2 border-top border-white-10">
@@ -599,15 +628,39 @@
                         </div>
 
                         <div class="col-12">
-                            <label for="preferredLocation" class="form-label">Preferred Training Location / Facility</label>
-                            <select id="preferredLocation" name="preferred_location" class="form-select">
-                                <option value="Gachibowli Stadium Pool" {% if swimmer.preferred_location == 'Gachibowli Stadium Pool' or not swimmer.preferred_location %}selected{% endif %}>Gachibowli Stadium Pool (Main Complex)</option>
-                                <option value="Kondapur Aquatic Center" {% if swimmer.preferred_location == 'Kondapur Aquatic Center' %}selected{% endif %}>Kondapur Aquatic Center</option>
-                                <option value="Madhapur Sports Club" {% if swimmer.preferred_location == 'Madhapur Sports Club' %}selected{% endif %}>Madhapur Sports Club</option>
-                                <option value="Jubilee Hills Club" {% if swimmer.preferred_location == 'Jubilee Hills Club' %}selected{% endif %}>Jubilee Hills Club</option>
-                                <option value="Hitec City Olympic Pool" {% if swimmer.preferred_location == 'Hitec City Olympic Pool' %}selected{% endif %}>Hitec City Olympic Pool</option>
-                                <option value="Other Facility" {% if swimmer.preferred_location == 'Other Facility' %}selected{% endif %}>Other Facility</option>
-                            </select>
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-1">
+                                <label for="preferredLocation" class="form-label mb-0">Preferred Training Location / Facility</label>
+                                <div class="d-flex align-items-center gap-2">
+                                    <button type="button" class="btn btn-link text-info p-0 small text-decoration-none fw-semibold" onclick="locatePoolOnMaps()">
+                                        <i class="fa-solid fa-map-location-dot me-1"></i> Locate Pool on Maps
+                                    </button>
+                                    <span class="text-muted small">•</span>
+                                    <button type="button" class="btn btn-link text-primary p-0 small text-decoration-none fw-semibold" onclick="detectCurrentLocationPool()">
+                                        <i class="fa-solid fa-crosshairs me-1"></i> Detect Near Me
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-text bg-dark border-secondary text-primary">
+                                    <i class="fa-solid fa-location-dot"></i>
+                                </span>
+                                <input type="text" 
+                                       id="preferredLocation" 
+                                       name="preferred_location" 
+                                       list="statePoolDatalist" 
+                                       class="form-control" 
+                                       placeholder="Type pool name or select from state suggestions..." 
+                                       value="{{ swimmer.preferred_location or 'Gachibowli Stadium Pool' }}">
+                                <button class="btn btn-outline-info" type="button" onclick="locatePoolOnMaps()" title="Locate on Google Maps">
+                                    <i class="fa-solid fa-magnifying-glass-location"></i>
+                                </button>
+                            </div>
+                            <datalist id="statePoolDatalist">
+                                <!-- Populated dynamically based on selected State -->
+                            </datalist>
+                            <small class="text-muted d-block mt-1" style="font-size: 0.74rem;">
+                                Suggestions automatically adapt based on your State and City. You can also type any pool or locate it via Google Maps.
+                            </small>
                         </div>
                     </div>
                 </div>
@@ -726,9 +779,30 @@
                     <span>Account & Verification</span>
                 </div>
 
+                <!-- Item 6: Coach name locked, username editable -->
                 <div class="mb-3">
-                    <label class="form-label">Coach Username</label>
-                    <input type="text" class="form-control" value="{{ trainer.username }}" readonly>
+                    <label class="form-label">Coach Full Name</label>
+                    <div class="d-flex align-items-center justify-content-between p-2 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">
+                        <span class="text-white small fw-bold"><i class="fa-solid fa-user-check me-1.5 text-primary"></i> {{ trainer.name }}</span>
+                        <span class="badge bg-secondary text-muted small"><i class="fa-solid fa-lock me-1"></i> Locked</span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="trainerUsername" class="form-label">Coach Username <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-primary">@</span>
+                        <input type="text" 
+                               id="trainerUsername" 
+                               name="username" 
+                               form="profileForm" 
+                               class="form-control font-monospace" 
+                               value="{{ trainer.username }}" 
+                               required 
+                               pattern="[a-zA-Z0-9_-]{3,30}" 
+                               title="Username must be 3-30 characters (letters, numbers, underscore, hyphen)">
+                    </div>
+                    <small class="text-muted" style="font-size: 0.72rem;">Unique login handle (Editable)</small>
                 </div>
 
                 <div class="mb-3">
@@ -825,28 +899,36 @@
                     </button>
                 </form>
 
-                <!-- Coach's Uploaded Photos List -->
+                <!-- Coach's Uploaded Photos List (KAN-16 redesign matching reference: thumbnail + status pill + section pill, no unwanted text) -->
                 {% if coach_photos and coach_photos|length > 0 %}
                 <div class="mt-4 pt-3 border-top border-white-10">
-                    <h6 class="text-white small fw-bold text-uppercase mb-2">Uploaded Photos ({{ coach_photos|length }})</h6>
-                    <div class="d-flex flex-column gap-2" style="max-height: 240px; overflow-y: auto;">
+                    <h6 class="text-white small fw-bold text-uppercase mb-3">Uploaded Photos ({{ coach_photos|length }})</h6>
+                    <div class="d-flex flex-column gap-2.5" style="max-height: 280px; overflow-y: auto;">
                         {% for cp in coach_photos %}
-                        <div class="d-flex align-items-center gap-2 p-2 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
-                            <img src="{{ cp.url }}" alt="{{ cp.caption }}" style="width: 46px; height: 46px; object-fit: cover; border-radius: 6px;">
-                            <div class="flex-grow-1 min-w-0">
-                                <div class="text-white small text-truncate fw-semibold">{{ cp.caption or 'Training Photo' }}</div>
-                                <div class="d-flex align-items-center gap-1.5 mt-0.5">
-                                    <span class="badge bg-dark border border-secondary text-muted" style="font-size: 0.65rem;">{{ cp.section|title }}</span>
-                                    {% if cp.is_published %}
-                                    <span class="badge bg-success shadow-sm" style="font-size: 0.65rem;"><i class="fa-solid fa-circle-check me-0.5"></i> Live</span>
-                                    {% else %}
-                                    <span class="badge bg-warning text-dark fw-bold" style="font-size: 0.65rem;"><i class="fa-solid fa-clock me-0.5"></i> In Review</span>
-                                    {% endif %}
-                                </div>
+                        <div class="d-flex align-items-center gap-3 p-2.5 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">
+                            <img src="{{ cp.url }}" alt="Uploaded Photo" style="width: 52px; height: 52px; object-fit: cover; border-radius: 8px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.1);">
+                            <div class="d-flex flex-column align-items-start gap-1.5 min-w-0">
+                                {% if cp.is_published %}
+                                    <span class="badge rounded-pill text-white fw-bold px-3 py-1" style="background: #15803d; font-size: 0.72rem; letter-spacing: 0.5px;">
+                                        <i class="fa-solid fa-circle-check me-1"></i> LIVE
+                                    </span>
+                                {% else %}
+                                    <span class="badge rounded-pill text-dark fw-bold px-3 py-1" style="background: #f59e0b; font-size: 0.72rem; letter-spacing: 0.5px;">
+                                        <i class="fa-solid fa-clock me-1"></i> IN REVIEW
+                                    </span>
+                                {% endif %}
+                                <span class="badge rounded-pill text-uppercase px-3 py-1" style="border: 1px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.05); color: #cbd5e1; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px;">
+                                    {{ cp.section }}
+                                </span>
                             </div>
                         </div>
                         {% endfor %}
                     </div>
+                </div>
+                {% else %}
+                <div class="mt-4 pt-3 border-top border-white-10">
+                    <h6 class="text-white small fw-bold text-uppercase mb-2" style="font-size: 0.75rem;">Uploaded Photos (0)</h6>
+                    <p class="text-muted small mb-0" style="font-size: 0.76rem;">No photos uploaded to gallery yet.</p>
                 </div>
                 {% endif %}
             </div>
@@ -878,7 +960,10 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label for="trainerName" class="form-label">Full Name <span class="text-danger">*</span></label>
-                            <input type="text" id="trainerName" name="name" class="form-control" value="{{ trainer.name }}" required>
+                            <input type="text" id="trainerName" name="name" class="form-control" value="{{ trainer.name }}" {% if not is_admin_override %}readonly{% endif %} required>
+                            {% if not is_admin_override %}
+                                <small class="text-muted" style="font-size: 0.72rem;"><i class="fa-solid fa-lock me-1 text-primary"></i> Registered coach name cannot be changed</small>
+                            {% endif %}
                         </div>
 
                         <div class="col-md-6">
@@ -1012,7 +1097,7 @@
                     </div>
                 </div>
 
-                <!-- Section 04: Training Availability -->
+                <!-- Section 04: Training Availability & Slots (Item 8) -->
                 <div class="profile-section-card">
                     <div class="section-header-badge">
                         <span class="section-number-pill">04</span>
@@ -1020,17 +1105,112 @@
                     </div>
 
                     <div class="row g-3">
+                        <!-- Item 8: Updated label to COACHING AVAILABLE LOCATION -->
                         <div class="col-md-6">
-                            <label for="trainerLocations" class="form-label">Coaching Pool Locations</label>
+                            <label for="trainerLocations" class="form-label text-uppercase fw-bold text-info" style="font-size: 0.78rem; letter-spacing: 0.5px;">
+                                <i class="fa-solid fa-location-dot me-1"></i> Coaching Available Location
+                            </label>
                             <input type="text" id="trainerLocations" name="training_locations" class="form-control" placeholder="e.g. Gachibowli, Madhapur, Kondapur" value="{{ trainer.training_locations or 'Gachibowli Stadium Pool' }}">
                         </div>
 
+                        <!-- Item 8: Updated label to AVAILABLE TIME SLOTS & Auto-synced with pills -->
                         <div class="col-md-6">
-                            <label for="trainerTimeSlots" class="form-label">Available Time Slots</label>
-                            <input type="text" id="trainerTimeSlots" name="available_slots" class="form-control" placeholder="e.g. 6:00 AM - 9:00 AM, 5:00 PM - 8:00 PM" value="{{ trainer.available_slots or '' }}">
+                            <label for="trainerTimeSlots" class="form-label text-uppercase fw-bold text-primary" style="font-size: 0.78rem; letter-spacing: 0.5px;">
+                                <i class="fa-solid fa-clock me-1"></i> Available Time Slots
+                            </label>
+                            <input type="text" id="trainerTimeSlots" name="available_slots" class="form-control font-monospace" placeholder="e.g. 06:00 AM - 09:00 AM, 05:00 PM - 08:00 PM" value="{{ trainer.available_slots or '' }}">
+                            <small class="text-muted d-block mt-1" style="font-size: 0.72rem;">
+                                Auto-synced with the time slot selector below, or type custom intervals.
+                            </small>
                         </div>
 
-                        <div class="col-md-6">
+                        <!-- Item 8: Dedicated 15-Minute Time Slot Selector Section -->
+                        <div class="col-12 mt-3">
+                            <div class="p-3.5 p-md-4 rounded-3" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.2); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);">
+                                <!-- Header & Quick Select Presets -->
+                                <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2 mb-3 pb-2.5 border-bottom border-white-10">
+                                    <div>
+                                        <h6 class="text-white fw-bold mb-1 d-flex align-items-center gap-2">
+                                            <i class="fa-solid fa-calendar-check text-primary"></i>
+                                            <span>Time Slot Picker (15-min Intervals)</span>
+                                        </h6>
+                                        <span class="text-muted" style="font-size: 0.74rem;">
+                                            Select available slots from <strong>05:30 AM to 10:00 PM</strong>. Active slots reflect dynamically in AVAILABLE TIME SLOTS.
+                                        </span>
+                                    </div>
+                                    <!-- Quick Presets -->
+                                    <div class="d-flex flex-wrap gap-1.5">
+                                        <button type="button" class="btn btn-outline-info btn-xs rounded-pill px-2.5 py-1" onclick="applyTimePreset('morning')" style="font-size: 0.72rem;">
+                                            <i class="fa-solid fa-sun me-1"></i> Morning (06:00 - 09:00 AM)
+                                        </button>
+                                        <button type="button" class="btn btn-outline-warning btn-xs rounded-pill px-2.5 py-1" onclick="applyTimePreset('evening')" style="font-size: 0.72rem;">
+                                            <i class="fa-solid fa-moon me-1"></i> Evening (05:00 - 08:00 PM)
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary btn-xs rounded-pill px-2 py-1" onclick="applyTimePreset('clear')" style="font-size: 0.72rem;">
+                                            <i class="fa-solid fa-rotate-left me-1"></i> Clear
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Morning Sessions (05:30 AM - 11:45 AM) -->
+                                <div class="mb-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="text-info small fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                                            <i class="fa-solid fa-cloud-sun me-1.5"></i> Morning Sessions (05:30 AM - 11:45 AM)
+                                        </span>
+                                        <button type="button" class="btn btn-link text-info p-0 text-decoration-none fw-semibold" style="font-size: 0.7rem;" onclick="toggleRangeSlots('05:30 AM', '11:45 AM')">
+                                            Toggle All Morning
+                                        </button>
+                                    </div>
+                                    <div class="stp-pill-container" id="morningSlotsContainer">
+                                        <!-- Dynamically generated 15-min pills -->
+                                    </div>
+                                </div>
+
+                                <!-- Afternoon Sessions (12:00 PM - 04:45 PM) -->
+                                <div class="mb-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="text-warning small fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                                            <i class="fa-solid fa-sun me-1.5"></i> Afternoon Sessions (12:00 PM - 04:45 PM)
+                                        </span>
+                                        <button type="button" class="btn btn-link text-warning p-0 text-decoration-none fw-semibold" style="font-size: 0.7rem;" onclick="toggleRangeSlots('12:00 PM', '04:45 PM')">
+                                            Toggle All Afternoon
+                                        </button>
+                                    </div>
+                                    <div class="stp-pill-container" id="afternoonSlotsContainer">
+                                        <!-- Dynamically generated 15-min pills -->
+                                    </div>
+                                </div>
+
+                                <!-- Evening Sessions (05:00 PM - 10:00 PM) -->
+                                <div>
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="text-purple-400 small fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px; color: #c084fc;">
+                                            <i class="fa-solid fa-moon me-1.5"></i> Evening / Night Sessions (05:00 PM - 10:00 PM)
+                                        </span>
+                                        <button type="button" class="btn btn-link p-0 text-decoration-none fw-semibold" style="font-size: 0.7rem; color: #c084fc;" onclick="toggleRangeSlots('05:00 PM', '10:00 PM')">
+                                            Toggle All Evening
+                                        </button>
+                                    </div>
+                                    <div class="stp-pill-container" id="eveningSlotsContainer">
+                                        <!-- Dynamically generated 15-min pills -->
+                                    </div>
+                                </div>
+
+                                <!-- Summary & Real-time Active Slots Preview -->
+                                <div class="mt-3 pt-2.5 border-top border-white-10 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                    <div class="text-muted small" style="font-size: 0.74rem;">
+                                        <i class="fa-solid fa-circle-check text-success me-1"></i>
+                                        <span id="selectedSlotsCountBadge" class="text-white fw-bold">0 slots selected</span>
+                                    </div>
+                                    <div class="font-monospace small text-info text-end" id="selectedSlotsDisplayPreview" style="font-size: 0.76rem;">
+                                        None selected
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mt-3">
                             <label for="trainerTrainingType" class="form-label">Training Mode</label>
                             <select id="trainerTrainingType" name="training_type" class="form-select">
                                 <option value="1-on-1 Personal" {% if trainer.training_type == '1-on-1 Personal' %}selected{% endif %}>1-on-1 Personal</option>
@@ -1039,7 +1219,7 @@
                             </select>
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-md-6 mt-3">
                             <label for="trainerMaxStudents" class="form-label">Max Students per Batch</label>
                             <input type="number" id="trainerMaxStudents" name="max_students" class="form-control" min="1" max="25" value="{{ trainer.max_students or 5 }}">
                         </div>
@@ -1462,12 +1642,15 @@
     };
 
     window.triggerDigitalIdModal = function() {
-        // Trigger Digital ID modal from base navbar if available
-        const navIdBtn = document.querySelector('[data-bs-target="#digitalIdModal"]') || document.querySelector('[onclick*="openDigitalIdModal"]');
+        if (typeof showMyIdCard === 'function') {
+            showMyIdCard();
+            return;
+        }
+        const navIdBtn = document.querySelector('[data-bs-target="#digitalIdModal"]') || document.querySelector('[onclick*="openDigitalIdModal"]') || document.querySelector('[onclick*="showMyIdCard"]');
         if (navIdBtn) {
             navIdBtn.click();
         } else {
-            const modalEl = document.getElementById('digitalIdModal');
+            const modalEl = document.getElementById('idCardModal') || document.getElementById('digitalIdModal');
             if (modalEl && typeof bootstrap !== 'undefined') {
                 const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
                 modal.show();
@@ -1807,10 +1990,340 @@
     }
 
     // -------------------------------------------------------------
-    // 7. Initialization on DOMContentLoaded
+    // 7. Dynamic State-Based Pools & Maps Locator (Item 4)
+    // -------------------------------------------------------------
+    const statePoolsData = {
+        'Telangana': [
+            'Gachibowli Stadium Aquatic Complex, Hyderabad',
+            'Kondapur Aquatic Center, Hyderabad',
+            'Madhapur Sports Club Swimming Pool, Hyderabad',
+            'Jubilee Hills Club Aquatic Center, Hyderabad',
+            'Hitec City Olympic Pool, Hyderabad',
+            'Secunderabad Club Swimming Pool, Secunderabad',
+            'BRS Aquatic Academy, Kukatpally, Hyderabad',
+            'Warangal Municipal Swimming Complex, Warangal'
+        ],
+        'Andhra Pradesh': [
+            'ACA Aquatic Complex, Vijayawada',
+            'Sir Vizzy Swimming Pool, Visakhapatnam',
+            'Aqua Sports Complex, Beach Road, Visakhapatnam',
+            'Rajahmundry Municipal Aquatic Center, Rajahmundry',
+            'Guntur District Sports Stadium Pool, Guntur',
+            'Tirupati Municipal Swimming Pool, Tirupati',
+            'Nellore Golden Jubilee Aquatic Center, Nellore',
+            'Kurnool Olympic Size Pool, Kurnool'
+        ],
+        'Karnataka': [
+            'Basavanagudi Aquatic Centre (BAC), Bengaluru',
+            'Bangalore Swimming Research Center, Bengaluru',
+            'Dolphin Aquatics, Padukone-Dravid Centre, Bengaluru',
+            'PM Swimming Centre, Jayanagar, Bengaluru',
+            'Netkalappa Aquatic Centre, Bengaluru',
+            'Chamundi Vihar Stadium Pool, Mysuru',
+            'Mangala Stadium Swimming Pool, Mangaluru'
+        ],
+        'Tamil Nadu': [
+            'SDAT Aquatic Complex, Velachery, Chennai',
+            'Shenoy Nagar Swimming Pool, Chennai',
+            'Marina Swimming Pool, Marina Beach, Chennai',
+            'Anna Swimming Pool, Chennai',
+            'Coimbatore Corporation Swimming Pool, Coimbatore',
+            'Madurai Race Course Aquatic Complex, Madurai'
+        ],
+        'Maharashtra': [
+            'Balewadi Sports Complex Aquatic Center, Pune',
+            'Deccan Gymkhana Swimming Pool, Pune',
+            'MGMO Olympic Swimming Pool, Shivaji Park, Mumbai',
+            'Khar Gymkhana Aquatic Center, Mumbai',
+            'PM Bath Swimming Pool, Chowpatty, Mumbai',
+            'Goregaon Sports Club Pool, Mumbai',
+            'NIT Swimming Pool Complex, Nagpur'
+        ],
+        'Other': [
+            'Talkatora Swimming Pool Complex, New Delhi',
+            'Dr. Shyama Prasad Mukherjee Swimming Pool Complex, New Delhi',
+            'Kolkata Sports Complex Aquatic Center, Kolkata'
+        ]
+    };
+
+    function updateStatePoolOptions(selectedState) {
+        const datalist = document.getElementById('statePoolDatalist');
+        if (!datalist) return;
+        const pools = statePoolsData[selectedState] || statePoolsData['Telangana'] || [];
+        datalist.innerHTML = pools.map(p => `<option value="${p}">`).join('');
+    }
+
+    function initDynamicStatePools() {
+        const stateSelect = document.getElementById('swimmerState');
+        if (stateSelect) {
+            stateSelect.addEventListener('change', function() {
+                updateStatePoolOptions(this.value);
+                triggerChangeDetection();
+            });
+            updateStatePoolOptions(stateSelect.value || 'Telangana');
+        }
+    }
+
+    window.locatePoolOnMaps = function() {
+        const city = document.getElementById('swimmerCity')?.value?.trim() || 'Hyderabad';
+        const state = document.getElementById('swimmerState')?.value?.trim() || 'Telangana';
+        const query = encodeURIComponent(`swimming pools in ${city}, ${state}`);
+        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
+        window.open(mapsUrl, '_blank');
+    };
+
+    window.detectCurrentLocationPool = function() {
+        if (!navigator.geolocation) {
+            window.locatePoolOnMaps();
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            function(pos) {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                const mapsUrl = `https://www.google.com/maps/search/?api=1&query=swimming+pools&near=${lat},${lng}`;
+                window.open(mapsUrl, '_blank');
+            },
+            function() {
+                window.locatePoolOnMaps();
+            },
+            { timeout: 7000 }
+        );
+    };
+
+    // -------------------------------------------------------------
+    // 8. Interactive 15-Minute Time Slot Picker & Auto-Sync (Item 8)
+    // -------------------------------------------------------------
+    const trainerTimeSlotsInput = document.getElementById('trainerTimeSlots');
+    const morningSlotsContainer = document.getElementById('morningSlotsContainer');
+    const afternoonSlotsContainer = document.getElementById('afternoonSlotsContainer');
+    const eveningSlotsContainer = document.getElementById('eveningSlotsContainer');
+    const selectedSlotsCountBadge = document.getElementById('selectedSlotsCountBadge');
+    const selectedSlotsDisplayPreview = document.getElementById('selectedSlotsDisplayPreview');
+
+    function formatTime12h(totalMinutes) {
+        let hours = Math.floor(totalMinutes / 60);
+        const mins = totalMinutes % 60;
+        const period = hours >= 12 ? 'PM' : 'AM';
+        let h12 = hours % 12;
+        if (h12 === 0) h12 = 12;
+        const hStr = h12 < 10 ? '0' + h12 : '' + h12;
+        const mStr = mins < 10 ? '0' + mins : '' + mins;
+        return `${hStr}:${mStr} ${period}`;
+    }
+
+    function parseTimeToMinutes(str) {
+        if (!str) return null;
+        const match = str.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+        if (!match) return null;
+        let h = parseInt(match[1], 10);
+        const m = parseInt(match[2], 10);
+        const p = (match[3] || 'AM').toUpperCase();
+        if (p === 'PM' && h < 12) h += 12;
+        if (p === 'AM' && h === 12) h = 0;
+        return h * 60 + m;
+    }
+
+    function buildPillHtml(mins) {
+        const timeStr = formatTime12h(mins);
+        return `
+            <div class="stp-time-pill" data-minutes="${mins}" data-time="${timeStr}">
+                <i class="fa-solid fa-check check-icon"></i>
+                <span>${timeStr}</span>
+            </div>
+        `;
+    }
+
+    function renderTimeSlotsGrid() {
+        if (!morningSlotsContainer || !afternoonSlotsContainer || !eveningSlotsContainer) return;
+
+        let morningHtml = '';
+        let afternoonHtml = '';
+        let eveningHtml = '';
+
+        // 05:30 AM (330 min) to 10:00 PM (1320 min) with 15 min steps
+        for (let mins = 330; mins <= 1320; mins += 15) {
+            const pillHtml = buildPillHtml(mins);
+            if (mins < 720) { // Before 12:00 PM
+                morningHtml += pillHtml;
+            } else if (mins < 1020) { // 12:00 PM to 04:45 PM
+                afternoonHtml += pillHtml;
+            } else { // 05:00 PM to 10:00 PM
+                eveningHtml += pillHtml;
+            }
+        }
+
+        morningSlotsContainer.innerHTML = morningHtml;
+        afternoonSlotsContainer.innerHTML = afternoonHtml;
+        eveningSlotsContainer.innerHTML = eveningHtml;
+
+        // Bind click handler on all pills
+        document.querySelectorAll('.stp-time-pill').forEach(pill => {
+            pill.addEventListener('click', function() {
+                this.classList.toggle('active');
+                syncPillsToInput();
+            });
+        });
+    }
+
+    function syncPillsToInput() {
+        const activePills = Array.from(document.querySelectorAll('.stp-time-pill.active'));
+        const minutesList = activePills.map(p => parseInt(p.getAttribute('data-minutes'), 10)).sort((a, b) => a - b);
+
+        const count = minutesList.length;
+        if (selectedSlotsCountBadge) {
+            selectedSlotsCountBadge.textContent = count === 0 ? '0 slots selected' : (count === 1 ? '1 slot selected' : `${count} slots selected`);
+        }
+
+        if (count === 0) {
+            if (trainerTimeSlotsInput) trainerTimeSlotsInput.value = '';
+            if (selectedSlotsDisplayPreview) selectedSlotsDisplayPreview.textContent = 'None selected';
+            triggerChangeDetection();
+            return;
+        }
+
+        // Group consecutive 15-minute intervals into ranges
+        const ranges = [];
+        let rangeStart = minutesList[0];
+        let prev = minutesList[0];
+
+        for (let i = 1; i < minutesList.length; i++) {
+            const curr = minutesList[i];
+            if (curr === prev + 15) {
+                prev = curr;
+            } else {
+                ranges.push(rangeStart === prev ? formatTime12h(rangeStart) : `${formatTime12h(rangeStart)} - ${formatTime12h(prev)}`);
+                rangeStart = curr;
+                prev = curr;
+            }
+        }
+        ranges.push(rangeStart === prev ? formatTime12h(rangeStart) : `${formatTime12h(rangeStart)} - ${formatTime12h(prev)}`);
+
+        const formattedResult = ranges.join(', ');
+        if (trainerTimeSlotsInput) {
+            trainerTimeSlotsInput.value = formattedResult;
+        }
+        if (selectedSlotsDisplayPreview) {
+            selectedSlotsDisplayPreview.textContent = formattedResult;
+        }
+
+        triggerChangeDetection();
+    }
+
+    function syncInputToPills() {
+        if (!trainerTimeSlotsInput) return;
+        const raw = trainerTimeSlotsInput.value.trim();
+        const allPills = document.querySelectorAll('.stp-time-pill');
+        allPills.forEach(p => p.classList.remove('active'));
+
+        if (!raw) {
+            if (selectedSlotsCountBadge) selectedSlotsCountBadge.textContent = '0 slots selected';
+            if (selectedSlotsDisplayPreview) selectedSlotsDisplayPreview.textContent = 'None selected';
+            return;
+        }
+
+        const segments = raw.split(',');
+        segments.forEach(seg => {
+            const trimmed = seg.trim();
+            if (trimmed.includes('-')) {
+                const parts = trimmed.split('-');
+                if (parts.length === 2) {
+                    const startMin = parseTimeToMinutes(parts[0]);
+                    const endMin = parseTimeToMinutes(parts[1]);
+                    if (startMin !== null && endMin !== null) {
+                        const low = Math.min(startMin, endMin);
+                        const high = Math.max(startMin, endMin);
+                        allPills.forEach(p => {
+                            const m = parseInt(p.getAttribute('data-minutes'), 10);
+                            if (m >= low && m <= high) {
+                                p.classList.add('active');
+                            }
+                        });
+                    }
+                }
+            } else {
+                const singleMin = parseTimeToMinutes(trimmed);
+                if (singleMin !== null) {
+                    allPills.forEach(p => {
+                        const m = parseInt(p.getAttribute('data-minutes'), 10);
+                        if (m === singleMin) {
+                            p.classList.add('active');
+                        }
+                    });
+                }
+            }
+        });
+
+        const activeCount = document.querySelectorAll('.stp-time-pill.active').length;
+        if (selectedSlotsCountBadge) {
+            selectedSlotsCountBadge.textContent = activeCount === 0 ? '0 slots selected' : (activeCount === 1 ? '1 slot selected' : `${activeCount} slots selected`);
+        }
+        if (selectedSlotsDisplayPreview) {
+            selectedSlotsDisplayPreview.textContent = raw;
+        }
+    }
+
+    window.applyTimePreset = function(preset) {
+        const allPills = document.querySelectorAll('.stp-time-pill');
+        if (preset === 'clear') {
+            allPills.forEach(p => p.classList.remove('active'));
+        } else if (preset === 'morning') {
+            // 06:00 AM (360) to 09:00 AM (540)
+            allPills.forEach(p => {
+                const m = parseInt(p.getAttribute('data-minutes'), 10);
+                if (m >= 360 && m <= 540) p.classList.add('active');
+            });
+        } else if (preset === 'evening') {
+            // 05:00 PM (1020) to 08:00 PM (1200)
+            allPills.forEach(p => {
+                const m = parseInt(p.getAttribute('data-minutes'), 10);
+                if (m >= 1020 && m <= 1200) p.classList.add('active');
+            });
+        }
+        syncPillsToInput();
+    };
+
+    window.toggleRangeSlots = function(startStr, endStr) {
+        const startMin = parseTimeToMinutes(startStr);
+        const endMin = parseTimeToMinutes(endStr);
+        if (startMin === null || endMin === null) return;
+
+        const low = Math.min(startMin, endMin);
+        const high = Math.max(startMin, endMin);
+        const targetPills = Array.from(document.querySelectorAll('.stp-time-pill')).filter(p => {
+            const m = parseInt(p.getAttribute('data-minutes'), 10);
+            return m >= low && m <= high;
+        });
+
+        const allActive = targetPills.every(p => p.classList.contains('active'));
+        targetPills.forEach(p => {
+            if (allActive) {
+                p.classList.remove('active');
+            } else {
+                p.classList.add('active');
+            }
+        });
+
+        syncPillsToInput();
+    };
+
+    function initTimeSlotPicker() {
+        if (!morningSlotsContainer) return;
+        renderTimeSlotsGrid();
+        syncInputToPills();
+
+        if (trainerTimeSlotsInput) {
+            trainerTimeSlotsInput.addEventListener('blur', syncInputToPills);
+        }
+    }
+
+    // -------------------------------------------------------------
+    // 9. Initialization on DOMContentLoaded
     // -------------------------------------------------------------
     function init() {
         initPills();
+        initDynamicStatePools();
+        initTimeSlotPicker();
         captureSnapshot();
     }
 

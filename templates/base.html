@@ -537,34 +537,27 @@
                             {% endif %}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="avatarDropdown" style="min-width: 260px; padding: 0.75rem; border-radius: 14px; background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.7), 0 0 20px rgba(6, 182, 212, 0.15);">
-                            <!-- Profile Header Card inside Dropdown -->
-                            <li style="padding: 0.6rem 0.8rem; background: rgba(255, 255, 255, 0.04); border-radius: 10px; margin-bottom: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.06);">
-                                <div class="d-flex align-items-center gap-2.5">
-                                    <div style="width: 38px; height: 38px; border-radius: 50%; background: rgba(6, 182, 212, 0.15); border: 1.5px solid rgba(6, 182, 212, 0.5); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: #38bdf8; flex-shrink: 0;">
+                            <!-- Profile Header Card inside Dropdown (KAN-16: Circle Icon, Name, ID with clean gap) -->
+                            <li style="padding: 0.75rem 0.95rem; background: rgba(255, 255, 255, 0.04); border-radius: 12px; margin-bottom: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.08);">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div style="width: 42px; height: 42px; border-radius: 50%; background: rgba(56, 189, 248, 0.15); border: 2px solid rgba(56, 189, 248, 0.5); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; color: #38bdf8; flex-shrink: 0; box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);">
                                         {% if session.get('role') == 'admin' %}
                                             👑
                                         {% elif session.get('role') == 'trainer' %}
-                                            <i class="fa-solid fa-certificate"></i>
+                                            <i class="fa-solid fa-chalkboard-user"></i>
                                         {% else %}
                                             <i class="fa-solid fa-person-swimming"></i>
                                         {% endif %}
                                     </div>
                                     <div class="min-w-0 flex-grow-1">
-                                        <div class="text-white fw-bold text-truncate" style="font-size: 0.92rem; line-height: 1.25;">
+                                        <div class="text-white fw-bold text-truncate" style="font-size: 0.98rem; line-height: 1.2; margin-bottom: 0.25rem;">
                                             {{ session.get('user_name')|title }}
                                         </div>
-                                        <div class="d-flex align-items-center gap-1.5 mt-1">
-                                            {% if session.get('role') == 'admin' %}
-                                                <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); font-size: 0.65rem; padding: 0.2rem 0.45rem;">Super Admin</span>
-                                            {% elif session.get('role') == 'trainer' %}
-                                                <span class="badge" style="background: rgba(6, 182, 212, 0.2); color: #38bdf8; border: 1px solid rgba(6, 182, 212, 0.35); font-size: 0.65rem; padding: 0.2rem 0.45rem;">Swimming Coach</span>
-                                            {% else %}
-                                                <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); font-size: 0.65rem; padding: 0.2rem 0.45rem;">Active Swimmer</span>
-                                            {% endif %}
-                                            {% if session.get('id_number') %}
-                                                <span class="text-muted" style="font-size: 0.7rem; font-family: monospace;">{{ session.get('id_number') }}</span>
-                                            {% endif %}
-                                        </div>
+                                        {% if session.get('id_number') %}
+                                            <div style="color: #38bdf8; font-size: 0.78rem; font-family: monospace; font-weight: 600; letter-spacing: 0.5px;">
+                                                ID: {{ session.get('id_number') }}
+                                            </div>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </li>

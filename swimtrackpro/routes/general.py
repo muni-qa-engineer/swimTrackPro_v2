@@ -350,7 +350,39 @@ def profile_page():
         trainer_user = admin_target_id if (current_role == "admin" and admin_target_id) else (session.get("trainer_username") or "asdf")
 
         if request.method == "POST":
+            # Item 6: Handle Username change if submitted
+            new_username = request.form.get("username", "").strip()
+            if new_username and new_username != trainer_user:
+                cursor.execute("SELECT username FROM trainers WHERE LOWER(username) = LOWER(%s) AND username != %s", (new_username, trainer_user))
+                if cursor.fetchone():
+                    conn.close()
+                    flash(f"Username '@{new_username}' is already in use by another coach. Please choose another.", "danger")
+                    return redirect(url_for("profile_page"))
+
+                # Cascade username update across tables
+                cursor.execute("UPDATE trainers SET username = %s WHERE username = %s", (new_username, trainer_user))
+                cursor.execute("UPDATE bookings SET trainer_username = %s WHERE trainer_username = %s", (new_username, trainer_user))
+                try:
+                    cursor.execute("UPDATE gallery_photos SET coach_username = %s WHERE coach_username = %s", (new_username, trainer_user))
+                except Exception:
+                    pass
+                try:
+                    cursor.execute("UPDATE coach_feedback SET trainer_username = %s WHERE trainer_username = %s", (new_username, trainer_user))
+                except Exception:
+                    pass
+
+                if current_role == "trainer":
+                    session["trainer_username"] = new_username
+                trainer_user = new_username
+
             name = request.form.get("name", "").strip()
+            # Item 6: Coach name cannot be changed by Trainer role (only Admin override can change)
+            if current_role == "trainer":
+                cursor.execute("SELECT name FROM trainers WHERE username = %s", (trainer_user,))
+                existing_name = cursor.fetchone()
+                if existing_name and existing_name[0]:
+                    name = existing_name[0]
+
             phone = request.form.get("phone", "").strip()
             email = request.form.get("email", "").strip()
             whatsapp = request.form.get("whatsapp", "").strip()
